@@ -1,0 +1,47 @@
+@import '../../utils/theme/base.css';
+.login-panel {
+    width: 355px;
+    height: auto;
+    border: 0.5px solid #adb9c1;
+    background-color: #fff;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -144px 0 0 -177.5px;
+    padding: 40px;
+    border-radius: 2px;
+    box-sizing: border-box;
+}
+
+.logo {
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 30px;
+    vertical-align: text-bottom;
+    font-size: 16px;
+    display: inline-block;
+    font-weight: bold;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.van-field__control {
+    padding: 13px 20px;
+    font-size: 14px;
+    line-height: 1;
+    height: auto;
+    margin-bottom: 24px;
+    width: 274px;
+}
+
+.van-button--default {
+    width: 100%;
+    height: auto;
+    padding: 13px;
+    line-height: 1;
+    color: #fff;
+    background-color: #00ba6e;
+    border-color: #00ba6e;
+    font-size: 14px;
+    border-radius: 2px;
+}

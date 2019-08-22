@@ -1,0 +1,17 @@
+@import "./iconfont/iconfont.css";
+@import "./font/iconfont.css";
+@import "./webim2/iconfont.css";
+html,
+body {
+    width: 100%;
+    height: 100%;
+    background-color: #ececec;
+}
+
+#app {
+    margin-top: 0 !important;
+}
+
+* {
+    box-sizing: border-box;
+}
