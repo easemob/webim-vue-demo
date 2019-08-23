@@ -10,9 +10,8 @@ import store from './store';
 Vue.use(vant);
 Vue.config.productionTip = false
 
-console.log(WebIM)
-    /* eslint-disable no-new */
-new Vue({
+/* eslint-disable no-new */
+window.Vue = new Vue({
     el: '#app',
     router,
     components: { App },

@@ -1,13 +1,14 @@
-@import '../../utils/theme/base.css';
+.login {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -144px 0 0 -177.5px;
+}
 .login-panel {
     width: 355px;
     height: auto;
     border: 0.5px solid #adb9c1;
     background-color: #fff;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    margin: -144px 0 0 -177.5px;
     padding: 40px;
     border-radius: 2px;
     box-sizing: border-box;
@@ -44,4 +45,15 @@
     border-color: #00ba6e;
     font-size: 14px;
     border-radius: 2px;
+}
+.tip {
+    color: #cccccc;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+}
+.green {
+    color: #00ba6e;
+    margin-left: 5px;
+    cursor: pointer;
 }

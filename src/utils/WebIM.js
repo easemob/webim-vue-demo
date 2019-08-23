@@ -1,5 +1,5 @@
 import config from './WebIMConfig'
-import websdk from 'easemob-websdk'
+import websdk from 'easemob-websdk';
 
 function ack(message) {
     var bodyId = message.id; // 需要发送已读回执的消息id
@@ -38,13 +38,14 @@ if (!WebIM.conn.apiUrl) {
 //注册监听回调
 WebIM.conn.listen({
     onOpened: function(message) { //连接成功回调
-        // 如果isAutoLogin设置为false，那么必须手动设置上线，否则无法收消息
-        // 手动上线指的是调用conn.setPresence(); 如果conn初始化时已将isAutoLogin设置为true
-        // 则无需调用conn.setPresence(); 
-        console.log('onOpened', message);
+        // 登录或注册成功后 跳转到好友页面
+        const username = Vue.$store.state.login.username;
+        const path =location.pathname.indexOf("login") !== -1 || location.pathname.indexOf("register") !== -1 ? "/contact" : location.pathname
+        const redirectUrl = `${path}?username=${username}`;
+        Vue.$router.push({path:redirectUrl});
     },
     onClosed: function(message) {
-        console.log('onClosed', message)
+        Vue.$router.push({path:'/login'});
     }, //连接关闭回调
     onTextMessage: function(message) {
         console.log('onTextMessage', message)
