@@ -12,32 +12,28 @@
     <div class="content">
       <van-tabs v-model="activeKey" @click="contactTypeChange">
         <van-tab title="好友" name="contact">
-          好友聊天
+          <MessageBox
+            type="contact"
+          />
         </van-tab>
         <van-tab title="群组" name="group">
-          群组聊天
+          <MessageBox
+            type="group"
+          />
         </van-tab>
         <van-tab title="聊天室" name="chatroom">
-          聊天室
+          <MessageBox
+            type="chatroom"
+          />
         </van-tab>
       </van-tabs>
-      <div class="userlist"></div>
-      <div class="messagebox">
-        <div class="messagebox-header">
-          <div>{{username}}</div>
-        </div>
-        <div class="messagebox-content"></div>
-        <div class="messagebox-footer">
-          <div class="footer-icon"></div>
-          <div class="fotter-send"></div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script>
-import "./index.css";
+import MessageBox from "../../components/chat/index.vue";
+import "./index.less";
 import { mapState, mapActions } from "vuex";
 export default {
   data() {
@@ -63,6 +59,8 @@ export default {
       this.$data.activeKey = type;
     }
   },
-  components: {}
+  components: {
+    MessageBox
+  }
 };
 </script>

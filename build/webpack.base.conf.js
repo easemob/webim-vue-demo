@@ -31,7 +31,8 @@ module.exports = {
     module: {
         unknownContextCritical: false,
         exprContextCritical: false,
-        rules: [{
+        rules: [
+            {
                 test: /\.vue$/,
                 loader: 'vue-loader',
                 options: vueLoaderConfig
@@ -56,6 +57,11 @@ module.exports = {
                     limit: 10000,
                     name: utils.assetsPath('media/[name].[hash:7].[ext]')
                 }
+            },
+            {
+                test: /\.less$/,
+                loader: "less-loader",
+                include:[] 
             },
             {
                 test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,

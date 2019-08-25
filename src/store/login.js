@@ -14,14 +14,28 @@ const Login = {
     },
     actions: {
         onLogin: function (context, payload) {
-            context.commit('setUserName', payload.username)
-            var options = {
-                apiUrl: WebIM.config.apiURL,
-                user: payload.username,
-                pwd: payload.password,
-                appKey: WebIM.config.appkey
-            };
-            WebIM.conn.open(options);
+            if (payload.username == '' && payload.password == '') {
+                Toast('请输入用户名和密码登陆');
+                console.log("请输入用户名和密码登陆");
+                return;
+            } else if (payload.username == '') {
+                this.Toast("请输入用户名");
+                // console.log("请输入用户名");
+                return;
+            } else if (payload.password == '') {
+                // console.log("请输入密码");
+                this.Toast("请输入用户名");
+                return;
+            } else {
+                context.commit('setUserName', payload.username)
+                var options = {
+                    apiUrl: WebIM.config.apiURL,
+                    user: payload.username,
+                    pwd: payload.password,
+                    appKey: WebIM.config.appkey
+                };
+                WebIM.conn.open(options);
+            }
         },
         onLogout: function (context) {
             context.commit('setUserName', '')
@@ -37,12 +51,11 @@ const Login = {
                 nickname: payload.nickname,
                 appKey: WebIM.config.appkey,
                 success: () => {
-                    // Toast.success('注册成功');
-                    debugger
-                    _this.dispatch('onLogin', {
-                        username: payload.username,
-                        password: payload.password,
-                    })
+                    Toast.success('注册成功');
+                    // _this.dispatch('onLogin', {
+                    //     username: payload.username,
+                    //     password: payload.password,
+                    // })
                 }
             };
             WebIM.conn.registerUser(options);
@@ -52,6 +65,8 @@ const Login = {
             Vue.$router.push(path)
             context.commit('setRegisterFlag', flag)
         }
+
+
     },
     getters: {
 

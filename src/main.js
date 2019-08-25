@@ -7,6 +7,7 @@ import vant from 'vant';
 import WebIM from './utils/WebIM';
 import store from './store';
 
+
 Vue.use(vant);
 Vue.config.productionTip = false
 

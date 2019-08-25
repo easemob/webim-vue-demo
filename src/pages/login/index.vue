@@ -23,7 +23,7 @@
 </template>
 
 <script>
-import "./index.css";
+import "./index.less";
 import { mapState, mapActions } from "vuex";
 export default {
   data() {
@@ -43,7 +43,7 @@ export default {
   computed: {
     isRegister() {
       return this.$store.state.login.isRegister;
-    }
+		},
   },
   methods: {
     ...mapActions(["onLogin", "setRegisterFlag", "onRegister"]),
@@ -62,7 +62,7 @@ export default {
     },
     changeType() {
       this.setRegisterFlag(!this.isRegister);
-    }
+		}
   }
 };
 </script>
