@@ -17,7 +17,10 @@
       </div>
       <div class="messagebox-content"></div>
       <div class="messagebox-footer">
-        <div class="footer-icon"></div>
+        <div class="footer-icon">
+          <van-icon name="smile-o" size="20" color="rgba(0, 0, 0, 0.65)"/>
+          <van-icon name="photo-o" size="20" color="rgba(0, 0, 0, 0.65)"/>
+        </div>
         <div class="fotter-send"></div>
       </div>
     </div>
@@ -81,7 +84,14 @@ export default {
     },
     select(key) {
       this.$data.activedKey[this.type] = key;
+      console.log(key);
       if (this.type === "chatroom") {
+        WebIM.conn.joinChatRoom({
+          roomId: key.id, // 聊天室id
+          success: function() {
+            console.log("加入聊天室成功");
+          }
+        });
       }
     }
   }

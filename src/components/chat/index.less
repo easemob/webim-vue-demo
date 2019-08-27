@@ -1,70 +1,88 @@
 .chat-message {
-    height: 100%;
-    background: #fff;
-    .userlist {
-        border-right: 1px solid #d6dce0;
-        width: 300px;
-        height: 100%;
-        float: left;
-        overflow-y: auto;
-        background: #fff;
-        .van-cell {
-            padding-left: 24px;
-            padding: 0 16px;
-            font-size: 14px;
-            line-height: 42px;
-            height: 80px;
-            overflow: hidden;
-            -o-text-overflow: ellipsis;
-            text-overflow: ellipsis;
-            color: #000;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            text-align: left;
-            cursor: pointer;
-        }
-        .active {
-            background: rgba(113, 134, 161, 0.1)
-        }
-    }
-    .messagebox {
-        width: calc(100% - 300px);
-        height: 100%;
-        float: left;
-        .messagebox-header{
-            border-bottom: 1px solid #d6dce0;;
-            box-sizing: border-box;
-            height: 50px;
-            line-height: 50px;
-            outline: none;
-            margin-bottom: 0;
-            padding-left: 0;
-            list-style: none;
-            z-index: 1050;
-            color: rgba(0, 0, 0, 0.65);
-            background: #fff;
-            padding: 0 16px;
-            font-size: 12px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-align: left; 
-        }
-        .messagebox-content {
-            border-bottom: 1px solid;
-            position: absolute;
-            width: calc(100% - 300px);
-            height: 500px;
-            background:#fff;
-            padding: 0 16px;
-            overflow: scroll;
-        }
-        .messagebox-footer{
-            position: absolute;
-            width: calc(100% - 300px);
-            height: 140px;
-            background: #fff;
-            margin-top:480px;
-        }
-    }
+	height    : 100%;
+	background: #fff;
+
+	.userlist {
+		border-right: 1px solid #d6dce0;
+		width       : 300px;
+		height      : 100%;
+		float       : left;
+		overflow-y  : auto;
+		background  : #fff;
+
+		.van-cell {
+			padding-left    : 24px;
+			padding         : 0 16px;
+			font-size       : 14px;
+			line-height     : 42px;
+			height          : 80px;
+			overflow        : hidden;
+			-o-text-overflow: ellipsis;
+			text-overflow   : ellipsis;
+			color           : #000;
+			border-bottom   : 1px solid rgba(0, 0, 0, 0.05);
+			text-align      : left;
+			cursor          : pointer;
+		}
+
+		.active {
+			background: rgba(113, 134, 161, 0.1)
+		}
+	}
+
+	.messagebox {
+		width : calc(100% - 300px);
+		height: 100%;
+		float : left;
+
+		.messagebox-header {
+			border-bottom: 1px solid #d6dce0;
+			box-sizing   : border-box;
+			height       : 50px;
+			line-height  : 50px;
+			outline      : none;
+			margin-bottom: 0;
+			padding-left : 0;
+			list-style   : none;
+			z-index      : 1050;
+			color        : rgba(0, 0, 0, 0.65);
+			background   : #fff;
+			padding      : 0 16px;
+			font-size    : 12px;
+			overflow     : hidden;
+			text-overflow: ellipsis;
+			text-align   : left;
+		}
+
+		.messagebox-content {
+			position     : absolute;
+			width        : calc(100% - 300px);
+			height       : 480px;
+			background   : #fff;
+			padding      : 0 16px;
+			overflow     : scroll;
+		}
+
+		.messagebox-footer {
+			border-top: 1px solid #d6dce0;
+			position  : absolute;
+			width     : calc(100% - 300px);
+			height    : 140px;
+			color: rgba(0, 0, 0, 0.65);
+			background: #fff;
+			margin-top: 480px;
+
+			.footer-icon {
+				padding: 15px 10px;
+				.van-icon {
+					margin-left: 8px;
+					cursor: pointer;
+				}
+			}
+
+			.fotter-send {
+				background: blue;
+			}
+		}
+	}
 }
-
-
