@@ -48,7 +48,18 @@ WebIM.conn.listen({
         Vue.$router.push({path:'/login'});
     }, //连接关闭回调
     onTextMessage: function(message) {
-        console.log('onTextMessage', message)
+        // console.log('onTextMessage', message)
+        const typeMap = {
+            chat: 'contact',
+            // groupchat: 'group',
+            // chatroom: 'chatroom'
+        }
+        Vue.$store.commit('updateMsgList', {
+            chatType: typeMap[message.type],
+            chatId: message.from,
+            msg: message.data,
+            bySelf: false
+        })
         ack(message);
     }, //收到文本消息
     onEmojiMessage: function(message) {
