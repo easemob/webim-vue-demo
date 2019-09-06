@@ -30,33 +30,51 @@
       display    : inline-block;
       margin-left: 12px;
       margin-top : 12px;
+    }
+    .options {
+      position          : absolute;
+      top               : 40px;
+      width             : 130px;
+      background-color  : #fff;
+      list-style-type   : none;
+      padding           : 0;
+      margin            : 0;
+      text-align        : left;
+      background-color  : #fff;
+      border-radius     : 2px;
+      -webkit-box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+      box-shadow        : 0 1px 6px rgba(0, 0, 0, 0.2);
 
-      .options {
-        position          : absolute;
-        top               : 40px;
-        width             : 130px;
-        background-color  : #fff;
-        list-style-type   : none;
-        padding           : 0;
-        margin            : 0;
-        text-align        : left;
-        background-color  : #fff;
-        border-radius     : 2px;
-        -webkit-box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
-        box-shadow        : 0 1px 6px rgba(0, 0, 0, 0.2);
-
-        .option {
-          width      : 100%;
-          padding    : 7px 8px;
-          margin     : 0;
-          clear      : both;
-          font-size  : 14px;
-          font-weight: normal;
-          color      : rgba(0, 0, 0, 0.65);
-          white-space: nowrap;
-          cursor     : pointer;
-        }
+      .option {
+        width      : 100%;
+        padding    : 7px 8px;
+        margin     : 0;
+        clear      : both;
+        font-size  : 14px;
+        font-weight: normal;
+        color      : rgba(0, 0, 0, 0.65);
+        white-space: nowrap;
+        cursor     : pointer;
       }
+    }
+    .options2{
+      right: 10px;
+      text-align: center;
+      z-index: 999;
+    }
+    .option2{
+      display: flex;
+      justify-content: center;
+    }
+    .option2:hover{
+      background-color: rgb(219, 219, 219)
+    }
+    .add-style{
+      // display: inline-block;
+      margin-right: 12px;
+      margin-top: 12px;
+      float:right;
+      cursor: pointer;
     }
 
     .username {

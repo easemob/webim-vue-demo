@@ -5,13 +5,14 @@ body {
     width: 100%;
     height: 100%;
     background-color: #ececec;
+    margin: 0;
 }
 
 #app {
     margin-top: 0 !important;
     width: 100%;
     height: 100%;
-    /* text-align: left !important; */
+    text-align: left !important;
 }
 
 * {

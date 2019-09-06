@@ -1,40 +1,21 @@
 // import WebIM from "../utils/WebIM";
+
 const Chat = {
     state: {
         userList: {
             contactUserList: [],
             groupUserList: [],
             chatroomUserList: []
-        },
-        msgList: {
-            contact: {},
-            group: {},
-            chatRoom: {},
-        },
-        currentMsgs: []
+        }
     },
     mutations: {
         updateUserList(state, payload) {
+            
             const { userList, type } = payload;
             state.userList[type] = userList;
-        },
-        updateMsgList(state, payload) {
-            const { chatType, chatId, msg, bySelf } = payload;
-            if (!state.msgList[chatType][chatId]) {
-                state.msgList[chatType][chatId] = [{
-                    msg,
-                    bySelf
-                }]
-            } else {
-                state.msgList[chatType][chatId].push({
-                    msg,
-                    bySelf
-                })
-            }
-            state.currentMsgs = state.msgList[chatType][chatId];
-        },
-        updateCurrentMsgList(state, messages) {
-            state.currentMsgs = messages;
+            console.log('type>>',type);
+            
+            console.log('state>>',state,'payload>>',state.userList[type]);
         }
     },
     actions: {
@@ -50,6 +31,7 @@ const Chat = {
             });
         },
         onGetGroupUserList: function (context, payload) {
+            console.log('onGetGroupUserList')
             var options = {
                 success: function (resp) {
                     let userList = resp.data;
@@ -61,11 +43,12 @@ const Chat = {
                         type: "groupUserList"
                     })
                 },
-                error: function (e) { },
+                error: function (e) {},
             }
             WebIM.conn.getGroup(options);
         },
         onGetChatroomUserList: function (context, payload) {
+            console.log('onGetChatroomUserList');
             var option = {
                 apiUrl: 'https://a1.easemob.com',
                 pagenum: 1,                                 // 页数
@@ -82,44 +65,6 @@ const Chat = {
             };
             WebIM.conn.getChatRooms(option);
         },
-        //获取当前聊天对象的记录 @payload： {key, type}
-        onGetCurrentChatObjMsg: function (context, payload) {
-            const { id, type } = payload;
-            context.commit('updateCurrentMsgList', context.state.msgList[type][id])
-        },
-        onSendText: function (context, payload) {
-            const { chatType, chatId, message } = payload;
-            const id = WebIM.conn.getUniqueId();
-            const chatroom = chatType === 'chatroom';
-            const type = chatType === 'contact' ? 'singleChat' : 'groupChat';
-            const jid = {
-                contact: "name",
-                group: "groupid",
-                chatroom: "id"
-            }
-            const msgObj = new WebIM.message('txt', id);
-            msgObj.set({
-                msg: message,
-                to: chatId[jid[chatType]],
-                chatType: type,
-                roomType: chatroom,
-                success: function (id, serverMsgId) {
-                    context.commit('updateMsgList', {
-                        chatType,
-                        chatId: chatId[jid[chatType]],
-                        msg: message,
-                        bySelf: true
-                    })
-                },
-                fail: function (e) {
-                    console.log("Send private text error");
-                }
-            });
-            // if(!this.state.chat.msgList[type] == "contact"){
-            //     msg.setGroup('groupchat');
-            // }
-            WebIM.conn.send(msgObj.body);
-        }
     },
     getters: {
         onGetContactUserList(state) {
@@ -130,9 +75,6 @@ const Chat = {
         },
         onGetChatroomUserList(state) {
             return state.userList.chatroomUserList;
-        },
-        onGetCurrentChatObjMsg(state) {
-            return state.currentMsgs;
         }
     }
 

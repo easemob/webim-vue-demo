@@ -1,5 +1,6 @@
 .chat-message {
 	height    : 100%;
+	background: #fff;
 
 	.userlist {
 		border-right: 1px solid #d6dce0;
@@ -54,76 +55,33 @@
 		}
 
 		.messagebox-content {
-			width        : 100%;
-			height       : calc(100% - 200px);
-			margin-bottom: 150px;
-			top          : 50px;
+			position     : absolute;
+			width        : calc(100% - 300px);
+			height       : 480px;
 			background   : #fff;
 			padding      : 0 16px;
 			overflow     : scroll;
-			ul {
-				padding: 0;
-				li {
-					list-style: none;
-					max-width: 80%;
-					min-width: 100px;
-					background: #fff;
-					text-align: left;
-					padding: 13px 15px;
-					margin-top: 11px;
-					border-radius: 25px;
-					border: 1px solid #eceff1;
-					float: left;
-					clear: both;
-					&.byself {
-						background: #eceff1;
-						float: right;
-					}
-				}
-			}
 		}
 
 		.messagebox-footer {
-			border-top   : 1px solid #d6dce0;
-			position     : absolute;
-			bottom       : 0;
-			width        : calc(100% - 300px);
-			height       : 150px;
-			color        : rgba(0, 0, 0, 0.65);
-			background   : #fff;
+			border-top: 1px solid #d6dce0;
+			position  : absolute;
+			width     : calc(100% - 300px);
+			height    : 120px;
+			color: rgba(0, 0, 0, 0.65);
+			background: #fff;
+			bottom: 0;
 
 			.footer-icon {
-				padding   : 15px 10px;
-				text-align: left;
-				height    : 50px;
-
+				padding: 15px 10px;
 				.van-icon {
 					margin-left: 8px;
-					cursor     : pointer;
+					cursor: pointer;
 				}
 			}
 
 			.fotter-send {
-				height    : 100px;
-				width     : 100%;
-				padding-left: 10px;
-				.sengTxt {
-					text-align: left;
-					height: 100%;
-					width: 100%;
-					box-sizing: border-box;
-					bottom       : 5px;
-					font-size: 14px;
-					padding-left: 10px;
-					box-shadow: 0 0 0 0;
-					border: 1px solid #fff;
-					outline-style: none
-				}
-				.van-icon {
-					position:absolute;
-					right: 10px;
-					top:45px;
-				}
+				background: blue;
 			}
 		}
 	}
