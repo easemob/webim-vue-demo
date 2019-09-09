@@ -7,8 +7,10 @@ import vant from 'vant';
 import WebIM from './utils/WebIM';
 import store from './store';
 
+import ElementUI from 'element-ui'
+import 'element-ui/lib/theme-chalk/index.css'
 
-Vue.use(vant);
+Vue.use(ElementUI).use(vant)
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */
@@ -17,5 +19,6 @@ window.Vue = new Vue({
     router,
     components: { App },
     template: '<App/>',
-    store
+    store,
+    render: h => h(App)
 })

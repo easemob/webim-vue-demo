@@ -48,8 +48,8 @@ WebIM.conn.listen({
         Vue.$router.push({path:'/login'});
     }, //连接关闭回调
     onTextMessage: function(message) {
-        // console.log('onTextMessage', message)
-        const typeMap = {
+         // console.log('onTextMessage', message)
+         const typeMap = {
             chat: 'contact',
             // groupchat: 'group',
             // chatroom: 'chatroom'
@@ -91,6 +91,22 @@ WebIM.conn.listen({
     }, //收到视频消息
     onPresence: function(message) {
         console.log('onPresence', message)
+        switch (message.type) {
+            case 'subscribe':
+                let options = {
+                    isShow:true,
+                    ...message
+                }
+                Vue.$store.commit("changeFriendRequestState", options)
+                break;
+            case 'subscribed':
+                Vue.$store.dispatch('onGetContactUserList')
+                break;
+            case 'unsubscribed':
+                Vue.$store.dispatch('onGetContactUserList')
+            default:
+                break;
+        }
     }, //处理“广播”或“发布-订阅”消息，如联系人订阅请求、处理群组、聊天室被踢解散等消息
     onRoster: function(message) {
         console.log('onRoster', message)
@@ -107,27 +123,27 @@ WebIM.conn.listen({
     onError: function(message) {
         console.log('onError', message);
         //报错返回到登录页面
-        Vue.$router.push({path:'/login'});
+        Vue.$router.push({ path: '/login' });
     }, //失败回调
-    onBlacklistUpdate: function(list) { //黑名单变动
+    onBlacklistUpdate: function (list) { //黑名单变动
         // 查询黑名单，将好友拉黑，将好友从黑名单移除都会回调这个函数，list则是黑名单现有的所有好友信息
         console.log('onBlacklistUpdate', list);
     },
-    onReceivedMessage: function(message) {
+    onReceivedMessage: function (message) {
         console.log('onReceivedMessage', message);
     }, //收到消息送达服务器回执
-    onDeliveredMessage: function(message) {
+    onDeliveredMessage: function (message) {
         console.log('onDeliveredMessage', message);
     }, //收到消息送达客户端回执
-    onReadMessage: function(message) {
+    onReadMessage: function (message) {
         console.log('onReadMessage', message);
     }, //收到消息已读回执
-    onCreateGroup: function(message) {
+    onCreateGroup: function (message) {
         console.log('onCreateGroup', message);
     }, //创建群组成功回执（需调用createGroupNew）
-    onMutedMessage: function(message) {
-            console.log('onMutedMessage', message);
-        } //如果用户在A群组被禁言，在A群发消息会走这个回调并且消息不会传递给群其它成员
+    onMutedMessage: function (message) {
+        console.log('onMutedMessage', message);
+    } //如果用户在A群组被禁言，在A群发消息会走这个回调并且消息不会传递给群其它成员
 });
 
 export default WebIM;
