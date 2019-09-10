@@ -26,8 +26,6 @@ export default {
 
     // }),
     isShowFriendRequest() {
-        console.log('this.$store.state>>>',this.$store.state);
-        
       return this.$store.state.friendModule.friendRequest.isShow;
     }
   },

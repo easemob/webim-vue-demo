@@ -84,6 +84,8 @@ const Chat = {
         },
         //获取当前聊天对象的记录 @payload： {key, type}
         onGetCurrentChatObjMsg: function (context, payload) {
+            console.log('payload>>>',payload,'context>>>',context)
+            
             const { id, type } = payload;
             context.commit('updateCurrentMsgList', context.state.msgList[type][id])
         },
