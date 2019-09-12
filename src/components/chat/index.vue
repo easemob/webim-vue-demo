@@ -18,9 +18,18 @@
       <div class="messagebox-content">
         <ul>
           <li v-for="item in msgList" :key="item.msg" :class="{ 'byself': item.bySelf}">
+            <!-- 图片消息 -->
+            <img
+              :key="item.msg"
+              :src="item.msg?item.msg:''"
+              v-if="item.type === 'img'"
+              class="img-style"
+            />
             <!-- TODO 实现方式欠妥 后期需优化 -->
-            <img :src="imgSrc(item.msg)" class="img-style" />
-            <span>{{removeEmoji(item.msg)}}</span>
+            <span v-else>
+              <img :src="imgSrc(item.msg)" class="emoji-style" />
+              {{removeEmoji(item.msg)}}
+            </span>
           </li>
         </ul>
       </div>
@@ -29,7 +38,8 @@
           <!-- <van-icon name="smile-o" size="20" color="rgba(0, 0, 0, 0.65)"/> -->
           <!-- 表情组件 -->
           <ChatEmoji v-on:selectEmoji="selectEmoji" />
-          <van-icon name="photo-o" size="20" color="rgba(0, 0, 0, 0.65)" />
+          <!-- 上传图片组件 -->
+          <UpLoadImage :type="this.type" :chatId="activedKey[type]" />
         </div>
         <div class="fotter-send">
           <textarea
@@ -50,6 +60,7 @@
 <script>
 import ChatEmoji from "../chatEmoji/index.vue";
 import emoji from "../../config/emoji";
+import UpLoadImage from "../upLoadImage/index.vue";
 import "./index.less";
 import { mapActions, mapGetters } from "vuex";
 export default {
@@ -58,7 +69,7 @@ export default {
       activedKey: {
         contact: "",
         group: "",
-        chatroom: "",
+        chatroom: ""
       },
       message: ""
     };
@@ -127,38 +138,6 @@ export default {
       this.$data.message = v;
     },
 
-    // rendEmoji2(txt) {
-    //   const regex = /(\[.*?\])/g;
-    //   let rnTxt = [];
-    //   let match = regex.exec(txt);
-    //   let start = 0;
-    //   let index = 0;
-    //   while (match) {
-    //     index = match.index;
-    //     if (index > start) {
-    //       rnTxt.push(txt.substring(start, index));
-    //     }
-    //     if (match[1] in emoji.obj) {
-    //       const v = emoji.obj[match[1]];
-    //       rnTxt.push(
-    //         <img
-    //           key={WebIM.conn.getUniqueId()}
-    //           // src={require(`../../themes/faces/${v}`)}
-    //           width={20}
-    //           height={20}
-    //         />
-    //       );
-    //     } else {
-    //       rnTxt.push(match[1]);
-    //     }
-    //     start = index + match[1].length;
-    //   }
-    //   rnTxt.push(txt.substring(start, txt.length));
-    //   console.log("rnTxt>>>>>", rnTxt);
-
-    //   return rnTxt;
-    // },
-
     rendEmoji(txt) {
       const regex = /(\[.*?\])/g;
       let rnTxt = [];
@@ -198,14 +177,19 @@ export default {
     }
   },
   components: {
-    ChatEmoji
+    ChatEmoji,
+    UpLoadImage
   }
 };
 </script>
 
 <style scoped>
-.img-style {
+.emoji-style {
   width: 22px;
   float: left;
+}
+.img-style{
+  max-width: 400px;
+  float: right;
 }
 </style>

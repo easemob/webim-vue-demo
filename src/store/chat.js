@@ -19,16 +19,18 @@ const Chat = {
             state.userList[type] = userList;
         },
         updateMsgList(state, payload) {
-            const { chatType, chatId, msg, bySelf } = payload;
+            const { chatType, chatId, msg, bySelf, type } = payload;
             if (!state.msgList[chatType][chatId]) {
                 state.msgList[chatType][chatId] = [{
                     msg,
-                    bySelf
+                    bySelf,
+                    type: type || null
                 }]
             } else {
                 state.msgList[chatType][chatId].push({
                     msg,
-                    bySelf
+                    bySelf,
+                    type: type || null
                 })
             }
             state.currentMsgs = state.msgList[chatType][chatId];
@@ -84,8 +86,6 @@ const Chat = {
         },
         //获取当前聊天对象的记录 @payload： {key, type}
         onGetCurrentChatObjMsg: function (context, payload) {
-            console.log('payload>>>',payload,'context>>>',context)
-            
             const { id, type } = payload;
             context.commit('updateCurrentMsgList', context.state.msgList[type][id])
         },
@@ -120,6 +120,41 @@ const Chat = {
             // if(!this.state.chat.msgList[type] == "contact"){
             //     msg.setGroup('groupchat');
             // }
+            WebIM.conn.send(msgObj.body);
+        },
+        sendImgMessage: function (context, payload) {
+            const { chatType, chatId, roomType, file, callback } = payload
+            const id = WebIM.conn.getUniqueId()
+            const jid = {
+                contact: "name",
+                group: "groupid",
+                chatroom: "id"
+            }
+            const msgObj = new WebIM.message('img', id)
+            msgObj.set({
+                apiUrl: WebIM.config.apiURL,
+                file: file,
+                to: chatId[jid[chatType]],
+                roomType: roomType,
+                onFileUploadError: function (error) {
+                    console.log('图片上传失败', error);
+                    callback()
+                },
+                onFileUploadComplete: function (data) {
+                    let url = data.uri + '/' + data.entities[0].uuid
+                    context.commit('updateMsgList', {
+                        msg: url,
+                        chatType,
+                        chatId: chatId[jid[chatType]],
+                        bySelf: true,
+                        type: 'img'
+                    })
+                    callback()
+                },
+                success: function(){
+                    console.log('图片发送成功')
+                }
+            })
             WebIM.conn.send(msgObj.body);
         }
     },

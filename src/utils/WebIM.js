@@ -37,19 +37,19 @@ if (!WebIM.conn.apiUrl) {
 
 //注册监听回调
 WebIM.conn.listen({
-    onOpened: function(message) { //连接成功回调
+    onOpened: function (message) { //连接成功回调
         // 登录或注册成功后 跳转到好友页面
         const username = Vue.$store.state.login.username;
-        const path =location.pathname.indexOf("login") !== -1 || location.pathname.indexOf("register") !== -1 ? "/contact" : location.pathname
+        const path = location.pathname.indexOf("login") !== -1 || location.pathname.indexOf("register") !== -1 ? "/contact" : location.pathname
         const redirectUrl = `${path}?username=${username}`;
-        Vue.$router.push({path:redirectUrl});
+        Vue.$router.push({ path: redirectUrl });
     },
-    onClosed: function(message) {
-        Vue.$router.push({path:'/login'});
+    onClosed: function (message) {
+        Vue.$router.push({ path: '/login' });
     }, //连接关闭回调
-    onTextMessage: function(message) {
-         // console.log('onTextMessage', message)
-         const typeMap = {
+    onTextMessage: function (message) {
+        // console.log('onTextMessage', message)
+        const typeMap = {
             chat: 'contact',
             // groupchat: 'group',
             // chatroom: 'chatroom'
@@ -62,39 +62,51 @@ WebIM.conn.listen({
         })
         ack(message);
     }, //收到文本消息
-    onEmojiMessage: function(message) {
+    onEmojiMessage: function (message) {
         console.log('onEmojiMessage', message)
         ack(message);
     }, //收到表情消息
-    onPictureMessage: function(message) {
-        console.log('onPictureMessage', message)
+    onPictureMessage: function (message) {
+        // console.log('onPictureMessage', message)
+        const typeMap = {
+            chat: 'contact',
+            // groupchat: 'group',
+            // chatroom: 'chatroom'
+        }
+        Vue.$store.commit('updateMsgList', {
+            chatType: typeMap[message.type],
+            chatId: message.from,
+            msg: message.url,
+            bySelf: false,
+            type: 'img'
+        })
         ack(message);
     }, //收到图片消息
-    onCmdMessage: function(message) {
+    onCmdMessage: function (message) {
         console.log('onCmdMessage', message)
     }, //收到命令消息
-    onAudioMessage: function(message) {
+    onAudioMessage: function (message) {
         console.log('onAudioMessage', message)
         ack(message);
     }, //收到音频消息
-    onLocationMessage: function(message) {
+    onLocationMessage: function (message) {
         console.log('onLocationMessage', message)
         ack(message);
     }, //收到位置消息
-    onFileMessage: function(message) {
+    onFileMessage: function (message) {
         console.log('onFileMessage', message)
         ack(message);
     }, //收到文件消息
-    onVideoMessage: function(message) {
+    onVideoMessage: function (message) {
         console.log('onVideoMessage', message)
         ack(message);
     }, //收到视频消息
-    onPresence: function(message) {
+    onPresence: function (message) {
         console.log('onPresence', message)
         switch (message.type) {
             case 'subscribe':
                 let options = {
-                    isShow:true,
+                    isShow: true,
                     ...message
                 }
                 Vue.$store.commit("changeFriendRequestState", options)
@@ -108,19 +120,19 @@ WebIM.conn.listen({
                 break;
         }
     }, //处理“广播”或“发布-订阅”消息，如联系人订阅请求、处理群组、聊天室被踢解散等消息
-    onRoster: function(message) {
+    onRoster: function (message) {
         console.log('onRoster', message)
     }, //处理好友申请
-    onInviteMessage: function(message) {
+    onInviteMessage: function (message) {
         console.log('onInviteMessage', message)
     }, //处理群组邀请
-    onOnline: function() {
+    onOnline: function () {
         console.log('onOnline 网络已连接')
     }, //本机网络连接成功
-    onOffline: function() {
+    onOffline: function () {
         console.log('onOffline 网络已断开')
     }, //本机网络掉线
-    onError: function(message) {
+    onError: function (message) {
         console.log('onError', message);
         //报错返回到登录页面
         Vue.$router.push({ path: '/login' });
