@@ -95,7 +95,21 @@ WebIM.conn.listen({
         ack(message);
     }, //收到位置消息
     onFileMessage: function (message) {
-        console.log('onFileMessage', message)
+        const typeMap = {
+            chat: 'contact',
+            // groupchat: 'group',
+            // chatroom: 'chatroom'
+        }
+        Vue.$store.commit('updateMsgList', {
+            chatType: typeMap[message.type],
+            chatId: message.from,
+            msg: message.url,
+            bySelf: false,
+            type: 'file',
+            filename:message.filename,
+            file_length:message.file_length
+        })
+        // console.log('onFileMessage', message)
         ack(message);
     }, //收到文件消息
     onVideoMessage: function (message) {

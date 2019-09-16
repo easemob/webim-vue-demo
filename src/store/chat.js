@@ -24,13 +24,15 @@ const Chat = {
                 state.msgList[chatType][chatId] = [{
                     msg,
                     bySelf,
-                    type: type || null
+                    type: type || '',
+                    ...payload
                 }]
             } else {
                 state.msgList[chatType][chatId].push({
                     msg,
                     bySelf,
-                    type: type || null
+                    type: type || '',
+                    ...payload
                 })
             }
             state.currentMsgs = state.msgList[chatType][chatId];
@@ -110,7 +112,9 @@ const Chat = {
                         chatType,
                         chatId: chatId[jid[chatType]],
                         msg: message,
-                        bySelf: true
+                        bySelf: true,
+                        // filename:message.filename,
+                        // file_length:message.file_length
                     })
                 },
                 fail: function (e) {
@@ -151,7 +155,7 @@ const Chat = {
                     })
                     callback()
                 },
-                success: function(){
+                success: function () {
                     console.log('图片发送成功')
                 }
             })
@@ -177,6 +181,46 @@ const Chat = {
                 WebIM.call.caller = userInfo.userId
                 WebIM.call.makeVoiceCall(to)
             }
+        },
+        sendFileMessage: function (context, payload) {
+            const { chatType, chatId, roomType, file, callback } = payload
+            const id = WebIM.conn.getUniqueId()
+            const jid = {
+                contact: "name",
+                group: "groupid",
+                chatroom: "id"
+            }
+            const msgObj = new WebIM.message('file', id)
+            msgObj.set({
+                apiUrl: WebIM.config.apiURL,
+                file: file,
+                ext: {
+                    file_length: file.data.size
+                },
+                to: chatId[jid[chatType]],
+                roomType: roomType,
+                onFileUploadError: function (error) {
+                    console.log('文件上传失败', error);
+                    callback()
+                },
+                onFileUploadComplete: function (data) {
+                    let url = data.uri + '/' + data.entities[0].uuid
+                    context.commit('updateMsgList', {
+                        msg: url,
+                        chatType,
+                        chatId: chatId[jid[chatType]],
+                        bySelf: true,
+                        type: 'file',
+                        filename:file.data.name,
+                        file_length:file.data.size
+                    })
+                    callback()
+                },
+                success: function () {
+                    console.log('文件发送成功')
+                }
+            })
+            WebIM.conn.send(msgObj.body);
         }
     },
     getters: {

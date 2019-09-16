@@ -25,6 +25,21 @@
               v-if="item.type === 'img'"
               class="img-style"
             />
+            <!-- 文件card -->
+            <div v-else-if="item.type==='file'" class="file-style">
+              <el-card :body-style="{ padding: '0px' }">
+                <div style="padding: 14px;">
+                  <p>文件</p>
+                  <span>
+                    <h3>{{item.filename}}</h3>
+                  </span>
+                  <div class="bottom clearfix">
+                    <span>{{readablizeBytes(item.file_length)}}</span>
+                    <a :href="item.msg" :download="item.filename">点击下载</a>
+                  </div>
+                </div>
+              </el-card>
+            </div>
             <!-- TODO 实现方式欠妥 后期需优化 -->
             <span v-else>
               <img :src="imgSrc(item.msg)" class="emoji-style" />
@@ -35,16 +50,15 @@
       </div>
       <div class="messagebox-footer">
         <div class="footer-icon">
-
-          <!-- <van-icon name="smile-o" size="20" color="rgba(0, 0, 0, 0.65)"/> -->
           <!-- 表情组件 -->
           <ChatEmoji v-on:selectEmoji="selectEmoji" />
           <!-- 上传图片组件 -->
           <UpLoadImage :type="this.type" :chatId="activedKey[type]" />
+          <!-- 上传文件组件 -->
+          <UpLoadFile :type="this.type" :chatId="activedKey[type]" />
 
           <i class="el-icon-video-camera icon" @click="callVideo" v-show="isHttps"></i>
           <i class="el-icon-mic icon" @click="callVoice" v-show="isHttps"></i>
-
         </div>
         <div class="fotter-send">
           <textarea
@@ -59,7 +73,7 @@
         </div>
       </div>
     </div>
-    <EmediaModal ref="emediaModal"/>
+    <EmediaModal ref="emediaModal" />
   </div>
 </template>
 
@@ -67,6 +81,7 @@
 import ChatEmoji from "../chatEmoji/index.vue";
 import emoji from "../../config/emoji";
 import UpLoadImage from "../upLoadImage/index.vue";
+import UpLoadFile from "../upLoadFile/index.vue";
 import "./index.less";
 import { mapActions, mapGetters } from "vuex";
 import EmediaModal from "../emediaModal/index";
@@ -77,10 +92,10 @@ export default {
       activedKey: {
         contact: "",
         group: "",
-        chatroom: "",
+        chatroom: ""
       },
       message: "",
-      isHttps: window.location.protocol === "https:" ? true : false,
+      isHttps: window.location.protocol === "https:" ? true : false
     };
   },
 
@@ -188,30 +203,74 @@ export default {
         return;
       }
     },
-    callVideo(){
-        this.$refs.emediaModal.showEmediaModal()
-        this.onCallVideo({chatType: this.type, to: this.$data.activedKey[this.type].name})
+    callVideo() {
+      this.$refs.emediaModal.showEmediaModal();
+      this.onCallVideo({
+        chatType: this.type,
+        to: this.$data.activedKey[this.type].name
+      });
     },
-    callVoice(){
-        this.$refs.emediaModal.showEmediaModal()
-        this.onCallVoice({chatType: this.type, to: this.$data.activedKey[this.type].name})
+    callVoice() {
+      this.$refs.emediaModal.showEmediaModal();
+      this.onCallVoice({
+        chatType: this.type,
+        to: this.$data.activedKey[this.type].name
+      });
     },
+    readablizeBytes(value) {
+      let s = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
+      let e = Math.floor(Math.log(value) / Math.log(1024));
+      return (value / Math.pow(1024, Math.floor(e))).toFixed(2) + " " + s[e];
+    }
   },
   components: {
     EmediaModal,
     ChatEmoji,
-    UpLoadImage
-  },
+    UpLoadImage,
+    UpLoadFile
+  }
 };
 </script>
 
-<style scoped>
+<style scoped lang='less'>
 .emoji-style {
   width: 22px;
   float: left;
 }
-.img-style{
+.img-style {
   max-width: 400px;
   float: right;
+}
+.file-style {
+  width: 240px;
+  margin: 2px 2px 2px 0;
+  font-size: 13px;
+  p {
+    border-bottom: 1px solid #e0e0e0;
+  }
+  h3 {
+    max-width: 100%;
+    font-size: 15px;
+    height: 20px;
+    line-height: 20px;
+    font-weight: 600;
+    -o-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  .bottom {
+    span {
+      color: #999999;
+      text-align: left;
+    }
+  }
+  a {
+    color: #999999;
+    float: right;
+    text-decoration: none;
+  }
 }
 </style>
