@@ -21,7 +21,8 @@ const Login = {
                     pwd: payload.password,
                     appKey: WebIM.config.appkey
                 };
-                WebIM.conn.open(options);    
+                WebIM.conn.open(options);
+                localStorage.setItem("userInfo", JSON.stringify({userId: payload.username}))
         },
         onLogout: function (context) {
             context.commit('setUserName', '')

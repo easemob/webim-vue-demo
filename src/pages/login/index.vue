@@ -35,6 +35,7 @@ export default {
   },
   mounted: function() {
     const path = this.isRegister ? "/register" : "/login";
+    
     if (path !== location.pathname) {
       this.$router.push(path);
     }

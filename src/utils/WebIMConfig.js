@@ -98,7 +98,7 @@ var config = {
     /**
      * webrtc supports WebKit and https only
      */
-    isWebRTC: window.RTCPeerConnection && /^https\:$/.test(window.location.protocol),
+    isWebRTC: true,//window.RTCPeerConnection && /^https\:$/.test(window.location.protocol),
     /**
      *  cn: chinese
      *  us: english

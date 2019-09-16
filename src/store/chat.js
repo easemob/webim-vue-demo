@@ -156,6 +156,27 @@ const Chat = {
                 }
             })
             WebIM.conn.send(msgObj.body);
+		},
+        onCallVideo: function(context, payload) {
+            const { chatType, to } = payload;
+            const type = chatType === 'contact' ? 'singleChat' : 'groupChat';
+            const userInfo = JSON.parse(localStorage.getItem("userInfo"))
+            if (chatType === "contact") {
+                // this.setState({
+                //     showWebRTC: true
+                // })
+                WebIM.call.caller = userInfo.userId
+                WebIM.call.makeVideoCall(to)
+            }
+        },
+        onCallVoice: function(context, payload){
+            const { chatType, to } = payload;
+            const type = chatType === 'contact' ? 'singleChat' : 'groupChat';
+            const userInfo = JSON.parse(localStorage.getItem("userInfo"))
+            if (chatType === "contact") {
+                WebIM.call.caller = userInfo.userId
+                WebIM.call.makeVoiceCall(to)
+            }
         }
     },
     getters: {

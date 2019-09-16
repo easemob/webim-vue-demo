@@ -35,11 +35,16 @@
       </div>
       <div class="messagebox-footer">
         <div class="footer-icon">
+
           <!-- <van-icon name="smile-o" size="20" color="rgba(0, 0, 0, 0.65)"/> -->
           <!-- 表情组件 -->
           <ChatEmoji v-on:selectEmoji="selectEmoji" />
           <!-- 上传图片组件 -->
           <UpLoadImage :type="this.type" :chatId="activedKey[type]" />
+
+          <i class="el-icon-video-camera icon" @click="callVideo" v-show="isHttps"></i>
+          <i class="el-icon-mic icon" @click="callVoice" v-show="isHttps"></i>
+
         </div>
         <div class="fotter-send">
           <textarea
@@ -54,6 +59,7 @@
         </div>
       </div>
     </div>
+    <EmediaModal ref="emediaModal"/>
   </div>
 </template>
 
@@ -63,17 +69,21 @@ import emoji from "../../config/emoji";
 import UpLoadImage from "../upLoadImage/index.vue";
 import "./index.less";
 import { mapActions, mapGetters } from "vuex";
+import EmediaModal from "../emediaModal/index";
+
 export default {
   data() {
     return {
       activedKey: {
         contact: "",
         group: "",
-        chatroom: ""
+        chatroom: "",
       },
-      message: ""
+      message: "",
+      isHttps: window.location.protocol === "https:" ? true : false,
     };
   },
+
   beforeMount() {
     if (this.type === "contact") {
       this.onGetContactUserList();
@@ -108,7 +118,9 @@ export default {
       "onGetGroupUserList",
       "onGetChatroomUserList",
       "onGetCurrentChatObjMsg",
-      "onSendText"
+      "onSendText",
+      "onCallVideo",
+      "onCallVoice"
     ]),
     select(key) {
       this.$data.activedKey[this.type] = key;
@@ -131,6 +143,7 @@ export default {
         chatId: this.$data.activedKey[this.type],
         message: this.$data.message
       });
+
       this.$data.message = "";
     },
 
@@ -174,12 +187,21 @@ export default {
       } else {
         return;
       }
-    }
+    },
+    callVideo(){
+        this.$refs.emediaModal.showEmediaModal()
+        this.onCallVideo({chatType: this.type, to: this.$data.activedKey[this.type].name})
+    },
+    callVoice(){
+        this.$refs.emediaModal.showEmediaModal()
+        this.onCallVoice({chatType: this.type, to: this.$data.activedKey[this.type].name})
+    },
   },
   components: {
+    EmediaModal,
     ChatEmoji,
     UpLoadImage
-  }
+  },
 };
 </script>
 

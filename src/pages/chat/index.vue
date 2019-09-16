@@ -103,7 +103,7 @@ export default {
   components: {
     MessageBox,
     AddFriend,
-    GetFriendRequest
+    GetFriendRequest,
   }
 };
 </script>

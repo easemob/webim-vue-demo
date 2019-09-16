@@ -10,11 +10,11 @@ export default new Router({
     routes: [
         { 
             path: '',
-            redirect: '/login'
+            redirect: '/contact'
         },
         { 
             path: '/',
-            redirect: '/login'
+            redirect: '/contact'
         },
         {
             path: '/login',

@@ -1,5 +1,7 @@
 import config from './WebIMConfig'
 import websdk from 'easemob-websdk';
+import emedia from 'easemob-emedia';
+import webrtc from 'easemob-webrtc'
 
 function ack(message) {
     var bodyId = message.id; // 需要发送已读回执的消息id
@@ -10,8 +12,6 @@ function ack(message) {
     });
     WebIM.conn.send(msg.body);
 }
-
-
 
 //初始化IM SDK
 var WebIM = {};
@@ -34,6 +34,7 @@ WebIM.conn = new WebIM.connection({
 if (!WebIM.conn.apiUrl) {
     WebIM.conn.apiUrl = WebIM.config.apiURL
 }
+
 
 //注册监听回调
 WebIM.conn.listen({
@@ -147,8 +148,8 @@ WebIM.conn.listen({
     onDeliveredMessage: function (message) {
         console.log('onDeliveredMessage', message);
     }, //收到消息送达客户端回执
-    onReadMessage: function (message) {
-        console.log('onReadMessage', message);
+    onReadMessage: function(message) {
+        //console.log('onReadMessage', message);
     }, //收到消息已读回执
     onCreateGroup: function (message) {
         console.log('onCreateGroup', message);
@@ -158,4 +159,6 @@ WebIM.conn.listen({
     } //如果用户在A群组被禁言，在A群发消息会走这个回调并且消息不会传递给群其它成员
 });
 
+WebIM.WebRTC = webrtc;
+WebIM.EMedia = emedia;
 export default WebIM;
