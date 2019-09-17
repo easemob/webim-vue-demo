@@ -10,26 +10,51 @@ export default new Router({
     routes: [
         { 
             path: '',
-            redirect: '/contact'
+            redirect: '/login'
         },
         { 
             path: '/',
-            redirect: '/contact'
+            redirect: '/login'
         },
         {
             path: '/login',
-            name: 'Login',
+            name: 'login',
             component: Login
         },
         {
             path: '/register',
-            name: 'Login',
+            name: 'login',
             component: Login
         },
         {
-            path: '/contact',
-            name: 'Contact',
+            path: '/contact/:id',
+            name: 'contact',
             component: Contact
-        }
+        },
+        {
+            path: '/contact',
+            name: 'contact',
+            component: Contact
+        },
+        {
+            path: '/group/:id',
+            name: 'group',
+            component: Contact
+        },
+        {
+            path: '/group',
+            name: 'group',
+            component: Contact
+        },
+        {
+            path: '/chatroom/:id',
+            name: 'chatroom',
+            component: Contact
+        },
+        {
+            path: '/chatroom',
+            name: 'chatroom',
+            component: Contact
+        },
     ]
 })

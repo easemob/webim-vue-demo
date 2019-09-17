@@ -5,9 +5,38 @@
 </template>
 
 <script>
+import WebIM from './utils/WebIM';
+import { mapState, mapActions } from "vuex";
+    
     export default {
         name: 'App',
+
+        methods: {
+          ...mapActions([
+            "onGetContactUserList",
+          ])
+        },
+
+        beforeMount(){
+          const userInfo = JSON.parse(localStorage.getItem("userInfo"))
+          if(userInfo){
+            const userName = userInfo.userId;
+            const password = userInfo.password;
+            var options = {
+                apiUrl: WebIM.config.apiURL,
+                user: userName,
+                pwd: password,
+                appKey: WebIM.config.appkey
+            };
+            WebIM.conn.open(options);
+            setTimeout(()=>{
+              this.onGetContactUserList()
+            },100)
+            
+          }
+        }
     }
+    
 </script>
 
 <style>

@@ -85,6 +85,7 @@ export default {
     },
     contactTypeChange(type) {
       this.$data.activeKey = type;
+      this.$router.push(`/${type}`)
     },
     addModalChange() {
       this.$data.showAddOptions = !this.$data.showAddOptions;

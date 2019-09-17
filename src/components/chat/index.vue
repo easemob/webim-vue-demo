@@ -138,11 +138,16 @@ export default {
       "onCallVoice"
     ]),
     select(key) {
+      if(this.type == 'group'){
+        this.$router.push({ name: this.type, params: { id: key.groupid }})
+      }
       this.$data.activedKey[this.type] = key;
       if (this.type === "contact") {
+        this.$router.push({ name: this.type, params: { id: key.name }})
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
       }
       if (this.type === "chatroom") {
+        this.$router.push({ name: this.type, params: { id: key.id }})
         WebIM.conn.joinChatRoom({
           roomId: key.id, // 聊天室id
           success: function() {

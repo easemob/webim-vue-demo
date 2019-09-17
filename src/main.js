@@ -10,6 +10,13 @@ import store from './store';
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
+import Router from 'vue-router'
+
+const originalPush = Router.prototype.push
+Router.prototype.push = function push(location) {
+  return originalPush.call(this, location).catch(err => err)
+}
+
 Vue.use(ElementUI).use(vant)
 Vue.config.productionTip = false
 
@@ -20,5 +27,6 @@ window.Vue = new Vue({
     components: { App },
     template: '<App/>',
     store,
+    WebIM,
     render: h => h(App)
 })
