@@ -118,7 +118,7 @@ const Chat = {
                     })
                 },
                 fail: function (e) {
-                    console.log("Send private text error");
+                    console.log('Send private text error',e);
                 }
             });
             // if(!this.state.chat.msgList[type] == "contact"){

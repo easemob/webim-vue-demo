@@ -1,5 +1,5 @@
 module.exports = {
-    path: '../../theme/faces/',
+    path: '../../../static/faces',
     obj: {
         '[):]': 'ee_1.png',
         '[:D]': 'ee_2.png',

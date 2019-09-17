@@ -3,7 +3,7 @@
     <el-popover ref="popover5" placement="top-start" width="360" v-model="showModal">
       <img
         v-for="(v,i) in emojiList"
-        :src="require(`../../theme/faces/${v}`)"
+        :src="require(`../../../static/faces/${v}`)"
         :key="i"
         @click="selectEmoji(i)"
         class="img-style"
@@ -26,20 +26,23 @@ export default {
   },
   methods: {
     selectEmoji(e) {
-      this.$data.currentEmoji = e;
+      let value = (this.inpMessage || "") + e;
       this.$data.showModal = false;
-      this.$emit("selectEmoji", e);
+      this.$emit("selectEmoji", value);
     }
+  },
+  props: {
+    inpMessage: String
   }
 };
 </script>
 <style scoped>
-.img-style{
+.img-style {
   width: 22px;
   margin: 5px;
   cursor: pointer;
 }
-.img-style:hover{
+.img-style:hover {
   background-color: aquamarine;
 }
 </style>

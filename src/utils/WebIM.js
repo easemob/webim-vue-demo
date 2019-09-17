@@ -106,8 +106,8 @@ WebIM.conn.listen({
             msg: message.url,
             bySelf: false,
             type: 'file',
-            filename:message.filename,
-            file_length:message.file_length
+            filename: message.filename,
+            file_length: message.file_length
         })
         // console.log('onFileMessage', message)
         ack(message);
@@ -162,7 +162,7 @@ WebIM.conn.listen({
     onDeliveredMessage: function (message) {
         console.log('onDeliveredMessage', message);
     }, //收到消息送达客户端回执
-    onReadMessage: function(message) {
+    onReadMessage: function (message) {
         //console.log('onReadMessage', message);
     }, //收到消息已读回执
     onCreateGroup: function (message) {

@@ -40,10 +40,9 @@
                 </div>
               </el-card>
             </div>
-            <!-- TODO 实现方式欠妥 后期需优化 -->
+            <!-- 聊天消息 -->
             <span v-else>
-              <img :src="imgSrc(item.msg)" class="emoji-style" />
-              {{removeEmoji(item.msg)}}
+              <p v-html="renderTxt(item.msg)"></p>
             </span>
           </li>
         </ul>
@@ -51,7 +50,7 @@
       <div class="messagebox-footer">
         <div class="footer-icon">
           <!-- 表情组件 -->
-          <ChatEmoji v-on:selectEmoji="selectEmoji" />
+          <ChatEmoji v-on:selectEmoji="selectEmoji" :inpMessage="message" />
           <!-- 上传图片组件 -->
           <UpLoadImage :type="this.type" :chatId="activedKey[type]" />
           <!-- 上传文件组件 -->
@@ -68,6 +67,7 @@
             class="sengTxt"
             v-on:keyup.enter="onSendTextMsg"
             style="resize:none"
+            ref="txtDom"
           />
           <template />
         </div>
@@ -138,16 +138,11 @@ export default {
       "onCallVoice"
     ]),
     select(key) {
-      if(this.type == 'group'){
-        this.$router.push({ name: this.type, params: { id: key.groupid }})
-      }
       this.$data.activedKey[this.type] = key;
       if (this.type === "contact") {
-        this.$router.push({ name: this.type, params: { id: key.name }})
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
       }
       if (this.type === "chatroom") {
-        this.$router.push({ name: this.type, params: { id: key.id }})
         WebIM.conn.joinChatRoom({
           roomId: key.id, // 聊天室id
           success: function() {
@@ -163,12 +158,39 @@ export default {
         chatId: this.$data.activedKey[this.type],
         message: this.$data.message
       });
-
       this.$data.message = "";
     },
 
     selectEmoji(v) {
       this.$data.message = v;
+      this.$refs.txtDom.focus();
+    },
+
+    customEmoji(value) {
+      return `<img src="../../../static/faces/${value}" style="width:20px"/>`;
+    },
+
+    renderTxt(txt) {
+      let rnTxt = [];
+      let match = null;
+      const regex = /(\[.*?\])/g;
+      let start = 0;
+      let index = 0;
+      while ((match = regex.exec(txt))) {
+        index = match.index;
+        if (index > start) {
+          rnTxt.push(txt.substring(start, index));
+        }
+        if (match[1] in emoji.obj) {
+          const v = emoji.obj[match[1]];
+          rnTxt.push(this.customEmoji(v));
+        } else {
+          rnTxt.push(match[1]);
+        }
+        start = index + match[1].length;
+      }
+      rnTxt.push(txt.substring(start, txt.length));
+      return rnTxt.toString().replace(/,/g, "");
     },
 
     rendEmoji(txt) {
@@ -202,7 +224,7 @@ export default {
       if (regex.test(msg)) {
         let url = "";
         let value = this.rendEmoji(msg);
-        url = require(`../../theme/faces/${value}`);
+        url = require(`../../../static/faces/${value}`);
         return url;
       } else {
         return;
