@@ -154,7 +154,9 @@ WebIM.conn.listen({
     }, //失败回调
     onBlacklistUpdate: function (list) { //黑名单变动
         // 查询黑名单，将好友拉黑，将好友从黑名单移除都会回调这个函数，list则是黑名单现有的所有好友信息
-        console.log('onBlacklistUpdate', list);
+        // console.log('onBlacklistUpdate', list);
+        let blackList = list;
+        Vue.$store.commit('updateBlackList', blackList)
     },
     onReceivedMessage: function (message) {
         console.log('onReceivedMessage', message);
