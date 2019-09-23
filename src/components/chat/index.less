@@ -1,5 +1,5 @@
 .chat-message {
-	height    : 100%;
+	height: 100%;
 
 	.userlist {
 		border-right: 1px solid #d6dce0;
@@ -55,32 +55,37 @@
 
 		.messagebox-content {
 			width        : 100%;
-			height       : calc(100% - 200px);
+			height       : calc(100% - 150px);
 			margin-bottom: 150px;
 			top          : 50px;
 			background   : #fff;
-			padding      : 0 16px;
+			padding      : 10px 16px;
 			overflow     : scroll;
-			ul {
-				padding: 0;
-				li {
-					list-style: none;
-					max-width: 80%;
-					min-width: 100px;
-					background: #fff;
-					text-align: left;
-					padding: 13px 15px;
-					margin-top: 11px;
+
+			.message-group {
+				padding-top: 3px;
+				font-size  : 14px;
+				line-height: 1.5;
+				clear      : both;
+
+				p {
+					list-style   : none;
+					min-width    : 100px;
+					background   : #fff;
+					text-align   : left;
+					padding      : 13px 15px;
+					margin       : 5px 0 0 0;
 					border-radius: 25px;
-					border: 1px solid #eceff1;
-					float: left;
-					clear: both;
+					border       : 1px solid #eceff1;
+					float        : left;
+
 					&.byself {
 						background: #eceff1;
-						float: right;
+						float     : right;
 					}
 				}
 			}
+
 		}
 
 		.messagebox-footer {
@@ -88,7 +93,7 @@
 			position     : absolute;
 			bottom       : 0;
 			width        : calc(100% - 300px);
-			height       : 150px;
+			// height    : 150px;
 			color        : rgba(0, 0, 0, 0.65);
 			background   : #fff;
 
@@ -97,37 +102,41 @@
 				text-align: left;
 				height    : 50px;
 				display   : flex;
+
 				.van-icon {
 					margin-left: 8px;
 					cursor     : pointer;
 				}
+
 				.icon {
-					color: rgba(0, 0, 0, 0.65);
-					font-size: 20px;
+					color      : rgba(0, 0, 0, 0.65);
+					font-size  : 20px;
 					margin-left: 8px;
 				}
 			}
 
 			.fotter-send {
-				height    : 100px;
-				width     : 100%;
+				height      : 50px;
+				width       : 100%;
 				padding-left: 10px;
+
 				.sengTxt {
-					text-align: left;
-					height: 100%;
-					width: 100%;
-					box-sizing: border-box;
+					text-align   : left;
+					height       : 100%;
+					width        : 100%;
+					box-sizing   : border-box;
 					bottom       : 5px;
-					font-size: 14px;
-					padding-left: 10px;
-					box-shadow: 0 0 0 0;
-					border: 1px solid #fff;
+					font-size    : 14px;
+					padding-left : 10px;
+					box-shadow   : 0 0 0 0;
+					border       : 1px solid #fff;
 					outline-style: none
 				}
+
 				.van-icon {
-					position:absolute;
-					right: 10px;
-					top:45px;
+					position: absolute;
+					right   : 10px;
+					top     : 45px;
 				}
 			}
 		}

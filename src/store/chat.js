@@ -94,6 +94,7 @@ const Chat = {
         onSendText: function (context, payload) {
             const { chatType, chatId, message } = payload;
             const id = WebIM.conn.getUniqueId();
+            const time = +new Date()
             const chatroom = chatType === 'chatroom';
             const type = chatType === 'contact' ? 'singleChat' : 'groupChat';
             const jid = {
@@ -113,12 +114,11 @@ const Chat = {
                         chatId: chatId[jid[chatType]],
                         msg: message,
                         bySelf: true,
-                        // filename:message.filename,
-                        // file_length:message.file_length
+                        time: time
                     })
                 },
                 fail: function (e) {
-                    console.log('Send private text error',e);
+                    console.log('Send private text error', e);
                 }
             });
             // if(!this.state.chat.msgList[type] == "contact"){
@@ -151,7 +151,8 @@ const Chat = {
                         chatType,
                         chatId: chatId[jid[chatType]],
                         bySelf: true,
-                        type: 'img'
+                        type: 'img',
+                        time: data.timestamp
                     })
                     callback()
                 },
@@ -160,27 +161,6 @@ const Chat = {
                 }
             })
             WebIM.conn.send(msgObj.body);
-		},
-        onCallVideo: function(context, payload) {
-            const { chatType, to } = payload;
-            const type = chatType === 'contact' ? 'singleChat' : 'groupChat';
-            const userInfo = JSON.parse(localStorage.getItem("userInfo"))
-            if (chatType === "contact") {
-                // this.setState({
-                //     showWebRTC: true
-                // })
-                WebIM.call.caller = userInfo.userId
-                WebIM.call.makeVideoCall(to)
-            }
-        },
-        onCallVoice: function(context, payload){
-            const { chatType, to } = payload;
-            const type = chatType === 'contact' ? 'singleChat' : 'groupChat';
-            const userInfo = JSON.parse(localStorage.getItem("userInfo"))
-            if (chatType === "contact") {
-                WebIM.call.caller = userInfo.userId
-                WebIM.call.makeVoiceCall(to)
-            }
         },
         sendFileMessage: function (context, payload) {
             const { chatType, chatId, roomType, file, callback } = payload
@@ -212,7 +192,8 @@ const Chat = {
                         bySelf: true,
                         type: 'file',
                         filename:file.data.name,
-                        file_length:file.data.size
+                        file_length:file.data.size,
+                        time: data.timestamp,
                     })
                     callback()
                 },
@@ -221,7 +202,28 @@ const Chat = {
                 }
             })
             WebIM.conn.send(msgObj.body);
-        }
+        },
+        onCallVideo: function (context, payload) {
+            const { chatType, to } = payload;
+            const type = chatType === 'contact' ? 'singleChat' : 'groupChat';
+            const userInfo = JSON.parse(localStorage.getItem("userInfo"))
+            if (chatType === "contact") {
+                // this.setState({
+                //     showWebRTC: true
+                // })
+                WebIM.call.caller = userInfo.userId
+                WebIM.call.makeVideoCall(to)
+            }
+        },
+        onCallVoice: function (context, payload) {
+            const { chatType, to } = payload;
+            const type = chatType === 'contact' ? 'singleChat' : 'groupChat';
+            const userInfo = JSON.parse(localStorage.getItem("userInfo"))
+            if (chatType === "contact") {
+                WebIM.call.caller = userInfo.userId
+                WebIM.call.makeVoiceCall(to)
+            }
+        },
     },
     getters: {
         onGetContactUserList(state) {

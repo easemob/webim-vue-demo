@@ -13,6 +13,8 @@
     "easemob-emedia": "^2.1.1",
     "easemob-webrtc": "^3.0.6",
     "element-ui": "^2.12.0",
+    "lodash": "^4.17.15",
+    "moment": "^2.24.0",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1",
     "vuedraggable": "^2.23.0",

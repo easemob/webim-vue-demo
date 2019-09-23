@@ -5,10 +5,21 @@
         <van-cell
           v-for="item in userList[type]"
           :key="item.name"
-          :title="item.name"
+          :value="getLatestMessage().id === item.name?getLatestMessage().latestMessage:''"
           @click="select(item)"
           :class="{ 'active': activedKey[type] && activedKey[type].name ===  item.name }"
-        />
+        >
+          <template slot="title">
+            <span class="custom-title">{{item.name}}</span>
+            <!-- <div class="icon-style">
+              <span>消息数</span>
+            </div>-->
+            <span
+              class="time-style"
+              style="float:right"
+            >{{getLatestMessage().id === item.name?getLatestMessage().latestTime:''}}</span>
+          </template>
+        </van-cell>
       </van-list>
     </div>
     <div class="messagebox" v-if="activedKey[type]">
@@ -16,36 +27,43 @@
         <div>{{activedKey[type].name}}</div>
       </div>
       <div class="messagebox-content">
-        <ul>
-          <li v-for="item in msgList" :key="item.msg" :class="{ 'byself': item.bySelf}">
-            <!-- 图片消息 -->
-            <img
-              :key="item.msg"
-              :src="item.msg?item.msg:''"
-              v-if="item.type === 'img'"
-              class="img-style"
-            />
-            <!-- 文件card -->
-            <div v-else-if="item.type==='file'" class="file-style">
-              <el-card :body-style="{ padding: '0px' }">
-                <div style="padding: 14px;">
-                  <p>文件</p>
-                  <span>
-                    <h3>{{item.filename}}</h3>
-                  </span>
-                  <div class="bottom clearfix">
-                    <span>{{readablizeBytes(item.file_length)}}</span>
-                    <a :href="item.msg" :download="item.filename">点击下载</a>
-                  </div>
+        <div
+          v-for="(item,i) in msgList"
+          :key="i"
+          class="message-group"
+          :style="{'float':item.bySelf ? 'right':'left'}"
+        >
+          <h4 style="text-align: left;margin:0">{{item.from}}</h4>
+          <!-- 图片消息 -->
+          <img
+            :key="item.msg"
+            :src="item.msg?item.msg:''"
+            v-if="item.type === 'img'"
+            class="img-style"
+          />
+          <!-- 文件card -->
+          <div v-else-if="item.type==='file'" class="file-style">
+            <el-card :body-style="{ padding: '0px' }">
+              <div style="padding: 14px;">
+                <h2>文件</h2>
+                <span>
+                  <h3>{{item.filename}}</h3>
+                </span>
+                <div class="bottom clearfix">
+                  <span>{{readablizeBytes(item.file_length)}}</span>
+                  <a :href="item.msg" :download="item.filename">点击下载</a>
                 </div>
-              </el-card>
-            </div>
-            <!-- 聊天消息 -->
-            <span v-else>
-              <p v-html="renderTxt(item.msg)"></p>
-            </span>
-          </li>
-        </ul>
+              </div>
+            </el-card>
+          </div>
+          <!-- 聊天消息 -->
+          <p v-else v-html="renderTxt(item.msg)" :class="{ 'byself': item.bySelf}" />
+          <!-- 聊天时间 -->
+          <div
+            class="time-style"
+            :style="{'text-align':item.bySelf ? 'right':'left'}"
+          >{{renderTime(item.time)}}</div>
+        </div>
       </div>
       <div class="messagebox-footer">
         <div class="footer-icon">
@@ -85,6 +103,8 @@ import UpLoadFile from "../upLoadFile/index.vue";
 import "./index.less";
 import { mapActions, mapGetters } from "vuex";
 import EmediaModal from "../emediaModal/index";
+import moment from "moment";
+import _ from "lodash";
 
 export default {
   data() {
@@ -138,11 +158,16 @@ export default {
       "onCallVoice"
     ]),
     select(key) {
+      if (this.type == "group") {
+        this.$router.push({ name: this.type, params: { id: key.groupid } });
+      }
       this.$data.activedKey[this.type] = key;
       if (this.type === "contact") {
+        this.$router.push({ name: this.type, params: { id: key.name } });
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
       }
       if (this.type === "chatroom") {
+        this.$router.push({ name: this.type, params: { id: key.id } });
         WebIM.conn.joinChatRoom({
           roomId: key.id, // 聊天室id
           success: function() {
@@ -193,43 +218,6 @@ export default {
       return rnTxt.toString().replace(/,/g, "");
     },
 
-    rendEmoji(txt) {
-      const regex = /(\[.*?\])/g;
-      let rnTxt = [];
-      let match = regex.exec(txt);
-      let index = 0;
-      let value = "";
-      while (match) {
-        index = match.index;
-        if (match[1] in emoji.obj) {
-          value = emoji.obj[match[1]];
-        } else {
-          rnTxt.push(match[1]);
-        }
-        return value;
-      }
-    },
-    removeEmoji(txt) {
-      const regex = /(\[.*?\])/g;
-      if (regex.test(txt)) {
-        let value = "";
-        value = txt.replace(regex, "");
-        return value;
-      } else {
-        return txt;
-      }
-    },
-    imgSrc(msg) {
-      const regex = /(\[.*?\])/g;
-      if (regex.test(msg)) {
-        let url = "";
-        let value = this.rendEmoji(msg);
-        url = require(`../../../static/faces/${value}`);
-        return url;
-      } else {
-        return;
-      }
-    },
     callVideo() {
       this.$refs.emediaModal.showEmediaModal();
       this.onCallVideo({
@@ -248,6 +236,44 @@ export default {
       let s = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
       let e = Math.floor(Math.log(value) / Math.log(1024));
       return (value / Math.pow(1024, Math.floor(e))).toFixed(2) + " " + s[e];
+    },
+
+    // TODO 可以抽离到utils
+    renderTime(time) {
+      const nowStr = new Date();
+      const localStr = time ? new Date(time) : nowStr;
+      const localMoment = moment(localStr);
+      const localFormat = localMoment.format("MM-DD hh:mm A");
+      return localFormat;
+    },
+    // TODO 可以抽离到utils
+    getLatestMessage() {
+      console.log("this.store", this.$store.state.chat);
+      const { name, params } = this.$route;
+      let currentMsgs = this.$store.state.chat.msgList[name] || "";
+      console.log("currentMsgs>>>", currentMsgs);
+      let data = [];
+      if (name === "contact") {
+        data = currentMsgs[params.id] || [];
+      }
+      let latestMessage = "";
+      let latestTime = "";
+      if (data.length > 0) {
+        const latestData = data[data.length - 1];
+        const latestType = _.get(latestData, "type", "");
+        console.log("latestData>>", latestData, "latestType>>", latestType);
+        if (!latestType) {
+          latestMessage = _.get(latestData, "msg", "");
+        } else if (latestType === "img") {
+          latestMessage = "[image]";
+        }
+        latestTime = this.renderTime(latestData.time);
+      }
+      return {
+        latestMessage,
+        latestTime,
+        id:params.id
+      };
     }
   },
   components: {
@@ -260,20 +286,41 @@ export default {
 </script>
 
 <style scoped lang='less'>
+.custom-title {
+  font-weight: 500;
+}
+.icon-style {
+  display: inline-block;
+  background-color: #f04134;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: white;
+  line-height: 1.5;
+  text-align: center;
+}
 .emoji-style {
   width: 22px;
   float: left;
 }
 .img-style {
   max-width: 400px;
-  float: right;
+}
+.time-style {
+  clear: both;
+  margin-left: 2px;
+  margin-top: 3px;
+  font-size: 12px;
+  color: #888c98;
 }
 .file-style {
   width: 240px;
   margin: 2px 2px 2px 0;
   font-size: 13px;
-  p {
+  h2 {
     border-bottom: 1px solid #e0e0e0;
+    font-weight: 300;
+    text-align: left;
   }
   h3 {
     max-width: 100%;

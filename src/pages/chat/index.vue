@@ -10,6 +10,7 @@
       </span>
       <span class="add-style">
         <van-icon name="add-o" size="24" color="#fff" @click="addModalChange" />
+        <div class="mask" v-show="showAddOptions" @click="showAddOptions =false"></div>
         <ul class="options options2" v-show="showAddOptions">
           <li
             class="option option2"

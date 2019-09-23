@@ -50,6 +50,7 @@ WebIM.conn.listen({
     }, //连接关闭回调
     onTextMessage: function (message) {
         // console.log('onTextMessage', message)
+        const time = +new Date()
         const typeMap = {
             chat: 'contact',
             // groupchat: 'group',
@@ -59,7 +60,10 @@ WebIM.conn.listen({
             chatType: typeMap[message.type],
             chatId: message.from,
             msg: message.data,
-            bySelf: false
+            bySelf: false,
+            from:message.from,
+            time:time,
+            mid:message.id
         })
         ack(message);
     }, //收到文本消息
@@ -79,7 +83,8 @@ WebIM.conn.listen({
             chatId: message.from,
             msg: message.url,
             bySelf: false,
-            type: 'img'
+            type: 'img',
+            from:message.from
         })
         ack(message);
     }, //收到图片消息
@@ -107,7 +112,8 @@ WebIM.conn.listen({
             bySelf: false,
             type: 'file',
             filename: message.filename,
-            file_length: message.file_length
+            file_length: message.file_length,
+            from:message.from
         })
         // console.log('onFileMessage', message)
         ack(message);
@@ -117,7 +123,7 @@ WebIM.conn.listen({
         ack(message);
     }, //收到视频消息
     onPresence: function (message) {
-        console.log('onPresence', message)
+        // console.log('onPresence', message)
         switch (message.type) {
             case 'subscribe':
                 let options = {
