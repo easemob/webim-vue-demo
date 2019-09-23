@@ -91,7 +91,9 @@
         </div>
       </div>
     </div>
-    <EmediaModal ref="emediaModal" />
+      <EmediaModal ref="emediaModal"  />
+      <MultiAVModal :to="activedKey[type]"/>
+    <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]"/>
   </div>
 </template>
 
@@ -105,6 +107,8 @@ import { mapActions, mapGetters } from "vuex";
 import EmediaModal from "../emediaModal/index";
 import moment from "moment";
 import _ from "lodash";
+import AddAVMemberModal from "../emediaModal/addAVMemberModal";
+import MultiAVModal from "../emediaModal/multiAVModal";
 
 export default {
   data() {
@@ -155,7 +159,8 @@ export default {
       "onGetCurrentChatObjMsg",
       "onSendText",
       "onCallVideo",
-      "onCallVoice"
+      "onCallVoice",
+      "getGroupMembers"
     ]),
     select(key) {
       if (this.type == "group") {
@@ -219,11 +224,20 @@ export default {
     },
 
     callVideo() {
-      this.$refs.emediaModal.showEmediaModal();
-      this.onCallVideo({
-        chatType: this.type,
-        to: this.$data.activedKey[this.type].name
-      });
+      if(this.type == 'contact'){
+        this.$refs.emediaModal.showEmediaModal();
+        this.onCallVideo({
+          chatType: this.type,
+          to: this.$data.activedKey[this.type].name
+        });
+      }
+      else if(this.type == 'group'){
+        console.log(this.$data.activedKey[this.type])
+        this.getGroupMembers(this.$data.activedKey[this.type].groupid)
+        this.$refs.addAvMembertModal.show()
+        console.log(Vue.$store.state)
+      }
+      
     },
     callVoice() {
       this.$refs.emediaModal.showEmediaModal();
@@ -278,9 +292,11 @@ export default {
   },
   components: {
     EmediaModal,
+    AddAVMemberModal,
     ChatEmoji,
     UpLoadImage,
-    UpLoadFile
+    UpLoadFile,
+    MultiAVModal
   }
 };
 </script>

@@ -66,6 +66,17 @@ WebIM.conn.listen({
             mid:message.id
         })
         ack(message);
+        console.log(12345)
+        if(WebIM && WebIM.call && message && message.ext && message.ext.msg_extension){
+            var msgExtension = message.ext.msg_extension&&JSON.parse(message.ext.msg_extension)
+            var options = {
+                confrId: message.ext.conferenceId,
+                password: message.ext.password || '',
+                gid: msgExtension.group_id,
+                inviter: msgExtension.inviter
+            }
+            WebIM.call.listener.onInvite(message.from, options)
+        }
     }, //收到文本消息
     onEmojiMessage: function (message) {
         console.log('onEmojiMessage', message)

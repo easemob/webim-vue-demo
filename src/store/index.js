@@ -4,6 +4,7 @@ import Login from './login';
 import Chat from './chat';
 import FriendModule from './friendModule';
 import Group from './group';
+import Emedia from './emedia';
 
 Vue.use(Vuex);
 
@@ -12,7 +13,8 @@ const store = new Vuex.Store({
         login: Login,
         chat: Chat,
         friendModule:FriendModule,
-        group: Group
+        group: Group,
+        emedia: Emedia
     }
 })
 

@@ -1,0 +1,139 @@
+<template>
+    <el-dialog
+        title="选择成员"
+        :visible="addAVMemberModalVisible"
+        width="30%"
+        @update:visible="hide"
+        center>
+        <div>
+            <el-checkbox-group v-model="checkList" class="checkboxGroup" :max="6">
+                <el-checkbox
+                v-for="item in groupMembers"
+                :key="item.member"
+                :label="item.member||item.owner"
+                :disabled="item.member == username?true:false"
+                class="checkbox"
+                />
+            </el-checkbox-group>
+        </div>
+        <span slot="footer" class="dialog-footer">
+            <el-button type="primary" @click="start">开始</el-button>
+        </span>
+    </el-dialog>
+</template>
+
+<style>
+    .checkboxGroup{
+        overflow: scroll;
+        height: 150px;
+    }
+    .checkbox{
+        display: block;
+    }
+</style>
+
+<script>
+    import { mapActions, mapGetters } from "vuex";
+    const username = localStorage.getItem('userInfo')&&JSON.parse(localStorage.getItem('userInfo')).userId
+    export default {
+        data() {
+            return {
+                dialogVisible: false,
+                checkList: [username],
+                username,
+            };
+        },
+        props: [
+            "to"
+        ],
+        computed: {
+            groupMembers(){
+                return Vue.$store.state.emedia.groupMembers
+            },
+            multiAVModalVisible () {
+                return Vue.$store.state.emedia.multiAVModalVisible
+            },
+            confr(){
+                return Vue.$store.state.emedia.confr
+            },
+            addAVMemberModalVisible(){
+                return Vue.$store.state.emedia.addAVMemberModalVisible
+            }
+        },
+        
+        methods: {
+            ...mapActions([
+                "showMultiAVModal",
+                "hideMultiAVModal",
+                "setConfr",
+                "setAVMemeberModalVisible"
+            ]),
+            show(){
+                this.$data.checkList = [username]
+                //this.$data.dialogVisible = true
+                this.setAVMemeberModalVisible({addAVMemberModalVisible: true})
+            },
+            hide(){
+                //this.$data.dialogVisible = false
+                this.setAVMemeberModalVisible({addAVMemberModalVisible: false})
+            },
+            start() {
+                const me = this
+                if(me.multiAVModalVisible){
+                    //发送邀请
+                    const appkey = WebIM.config.appkey;
+                    const spHost = WebIM.config.Host;
+                    const { confrId, password } = me.confr
+                    const gid = me.to.groupid
+                    let jids = [];
+
+                    for (let elem of me.$data.checkList) {
+                        if(elem != me.$data.username){
+                            jids.push(appkey + '_' + elem + '@' + spHost)
+                        }
+                    }
+                    
+                    for (let jid of jids) {
+                        WebIM.call.inviteConference(confrId, password, jid, gid)
+                    }
+
+                    return
+                }
+                this.showMultiAVModal()
+                var pwd = Math.random().toString(36).substr(2)
+                pwd = '';
+                emedia.mgr.createConference(emedia.mgr.ConfrType.COMMUNICATION_MIX, pwd, false, false).then(function (confr) {
+                    console.log("%c会议的信息", "color: red", confr) //可以在这里拿到会议id confrId 来查服务端录制 
+                    me.setConfr({confr})
+                    const tkt = confr.ticket
+                    WebIM.EMService.joined(confr.confrId) || WebIM.EMService.joinConferenceWithTicket(confr.confrId, tkt, 'user ext field').then(function () {
+                        WebIM.EMService.publish({ audio: true, video: true }, 'user ext field').catch(function (e) {
+                            console.error(e)
+                        })
+                    }).catch(function (e) {
+                        console.error(e)
+                    })
+
+                    //发送邀请
+                    const appkey = WebIM.config.appkey;
+                    const spHost = WebIM.config.Host;
+                    const { confrId, password } = confr
+                    const gid = me.to.groupid
+                    let jids = [];
+
+                    for (let elem of me.$data.checkList) {
+                        if(elem != me.$data.username){
+                            jids.push(appkey + '_' + elem + '@' + spHost)
+                        }
+                    }
+                    
+                    for (let jid of jids) {
+                        WebIM.call.inviteConference(confrId, password, jid, gid)
+                    }
+                })
+                
+                this.hide()
+            }
+        },
+    };
+</script>

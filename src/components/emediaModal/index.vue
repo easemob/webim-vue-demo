@@ -12,6 +12,7 @@
 </template>
 
 <script>
+import { mapActions, mapGetters } from "vuex";
 import "./index.less";
 import Draggable from '../draggable'
 export default{
@@ -28,6 +29,10 @@ export default{
         }
     },
     methods: {
+        ...mapActions([
+            "showMultiAVModal",
+            "hideMultiAVModal"
+        ]),
         initWebRTC() {
             console.log('InitWebRTC..........')
             // if (WebIM.call) {
@@ -122,7 +127,7 @@ export default{
 
                                 me.rtcTimeoutID = setTimeout(function () {
                                     if (!(WebIM.call.pattern && WebIM.call.pattern.hangup)) {
-                                        this.$message.success('Target is offline')
+                                        me.$message.success('Target is offline')
                                         me.closeEmediaModal()
                                     }
                                 }, 10000)
@@ -157,40 +162,60 @@ export default{
                     onInvite: function (from, rtcOption) {
                         const { confrId, password, gid } = rtcOption
                         const { appkey, xmppURL } = WebIM.config
-                        const { avModal, multiAV } = me.props
+                        //const { avModal, multiAV } = me.props
                         let host = xmppURL.split('.')
                         host = '@' + host[1] + '.' + host[2]
                         from = from.replace(appkey + '_', '')
                         from = from.replace(host, '')
                         let callback = (confr) => {
-                            me.props.setRtcOptions(confr)
-                            confirm({
-                                title: from + '邀请您进入多人会议',
-                                okText: '确认',
-                                cancelText: '拒绝',
-                                onOk() {
-                                    if(avModal){
-                                        this.$message.info('您正在进行视频通话，不能接受其它邀请')
-                                        return
-                                    }
-                                    me.props.showMultiAVModal()
-                                    me.props.setGid(gid)
-
-                                    setTimeout(() => {
-                                        const tkt = confr.ticket
-                                        WebIM.EMService.joinConferenceWithTicket(confr.confrId, tkt, 'user ext field').then(function () {
-                                            WebIM.EMService.publish({ audio: true, video: true }, 'user ext field').catch(function (e) {
-                                                console.error(e)
-                                            })
-                                        }).catch(function (e) {
+                            me.$confirm(from + '邀请您进入多人会议', '提示', {
+                                confirmButtonText: '确认',
+                                cancelButtonText: '拒绝',
+                                type: 'info'
+                            }).then(() => {
+                                me.showMultiAVModal()
+                                setTimeout(() => {
+                                    const tkt = confr.ticket
+                                    WebIM.EMService.joinConferenceWithTicket(confr.confrId, tkt, 'user ext field').then(function () {
+                                        WebIM.EMService.publish({ audio: true, video: true }, 'user ext field').catch(function (e) {
                                             console.error(e)
                                         })
-                                    }, 0)
-                                },
-                                onCancel() {
-                                    console.log('Cancel')
-                                }
-                            })
+                                    }).catch(function (e) {
+                                        console.error(e)
+                                    })
+                                }, 0)
+
+                            }).catch(action => {
+                            });
+
+                            // me.props.setRtcOptions(confr)
+                            // confirm({
+                            //     title: from + '邀请您进入多人会议',
+                            //     okText: '确认',
+                            //     cancelText: '拒绝',
+                            //     onOk() {
+                            //         if(avModal){
+                            //             this.$message.info('您正在进行视频通话，不能接受其它邀请')
+                            //             return
+                            //         }
+                            //         me.props.showMultiAVModal()
+                            //         me.props.setGid(gid)
+
+                            //         setTimeout(() => {
+                            //             const tkt = confr.ticket
+                            //             WebIM.EMService.joinConferenceWithTicket(confr.confrId, tkt, 'user ext field').then(function () {
+                            //                 WebIM.EMService.publish({ audio: true, video: true }, 'user ext field').catch(function (e) {
+                            //                     console.error(e)
+                            //                 })
+                            //             }).catch(function (e) {
+                            //                 console.error(e)
+                            //             })
+                            //         }, 0)
+                            //     },
+                            //     onCancel() {
+                            //         console.log('Cancel')
+                            //     }
+                            // })
                         }
                         emedia.mgr.getConferenceTkt(confrId, password).then(function (confr) {
                             callback(confr)
