@@ -102,7 +102,10 @@
                 this.showMultiAVModal()
                 var pwd = Math.random().toString(36).substr(2)
                 pwd = '';
-                emedia.mgr.createConference(emedia.mgr.ConfrType.COMMUNICATION_MIX, pwd, false, false).then(function (confr) {
+                const videoSetting = JSON.parse(localStorage.getItem('videoSetting'))
+                const recMerge = videoSetting&&videoSetting.recMerge || false
+                const rec = videoSetting&&videoSetting.rec || false
+                emedia.mgr.createConference(emedia.mgr.ConfrType.COMMUNICATION_MIX, pwd, rec, recMerge).then(function (confr) {
                     console.log("%c会议的信息", "color: red", confr) //可以在这里拿到会议id confrId 来查服务端录制 
                     me.setConfr({confr})
                     const tkt = confr.ticket

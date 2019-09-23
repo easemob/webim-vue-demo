@@ -226,9 +226,13 @@ export default {
     callVideo() {
       if(this.type == 'contact'){
         this.$refs.emediaModal.showEmediaModal();
+        const recMerge = videoSetting&&videoSetting.recMerge || false
+        const rec = videoSetting&&videoSetting.rec || false
         this.onCallVideo({
           chatType: this.type,
-          to: this.$data.activedKey[this.type].name
+          to: this.$data.activedKey[this.type].name,
+          rec,
+          recMerge
         });
       }
       else if(this.type == 'group'){
@@ -241,9 +245,14 @@ export default {
     },
     callVoice() {
       this.$refs.emediaModal.showEmediaModal();
+      const videoSetting = JSON.parse(localStorage.getItem('videoSetting'))
+      const recMerge = videoSetting&&videoSetting.recMerge || false
+      const rec = videoSetting&&videoSetting.rec || false
       this.onCallVoice({
         chatType: this.type,
-        to: this.$data.activedKey[this.type].name
+        to: this.$data.activedKey[this.type].name,
+        rec,
+        recMerge
       });
     },
     readablizeBytes(value) {

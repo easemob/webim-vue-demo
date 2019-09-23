@@ -212,7 +212,7 @@ const Chat = {
                 //     showWebRTC: true
                 // })
                 WebIM.call.caller = userInfo.userId
-                WebIM.call.makeVideoCall(to)
+                WebIM.call.makeVideoCall(to, null, payload.rec, payload.recMerge)
             }
         },
         onCallVoice: function (context, payload) {
@@ -221,7 +221,7 @@ const Chat = {
             const userInfo = JSON.parse(localStorage.getItem("userInfo"))
             if (chatType === "contact") {
                 WebIM.call.caller = userInfo.userId
-                WebIM.call.makeVoiceCall(to)
+                WebIM.call.makeVoiceCall(to, null, payload.rec, payload.recMerge)
             }
         },
     },

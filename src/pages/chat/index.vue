@@ -4,6 +4,7 @@
       <span class="setting">
         <van-icon name="setting-o" size="24" color="#fff" @click="optionsVisibleChange" />
         <ul class="options" v-show="showSettingOptions">
+          <li class="option" @click="recEmedia">音视频录制</li>
           <li class="option" @click="GetFirendBlack">好友黑名单</li>
           <li class="option" @click="toLogout">退出</li>
         </ul>
@@ -45,6 +46,7 @@
     <FirendBlack ref="firendModel" />
     <AddGroupUser ref="addGroupModel" />
     <CreateGroup ref="createGroupModel" />
+    <VidoeSetting ref="videoSetting"/>
   </div>
 </template>
 
@@ -56,6 +58,7 @@ import GetFriendRequest from "../../components/addModal/getFriendRequest.vue";
 import FirendBlack from "../../components/addModal/firendBlack.vue";
 import AddGroupUser from "../../components/group/addGroupUser.vue";
 import CreateGroup from "../../components/group/createGroup.vue";
+import VidoeSetting from "../../components/videoSetting/index";
 import "./index.less";
 import { mapState, mapActions } from "vuex";
 export default {
@@ -111,6 +114,9 @@ export default {
         default:
           break;
       }
+    },
+    recEmedia(){
+      this.$refs.videoSetting.show()
     }
   },
   components: {
@@ -119,7 +125,8 @@ export default {
     GetFriendRequest,
     FirendBlack,
     AddGroupUser,
-    CreateGroup
+    CreateGroup,
+    VidoeSetting
   }
 };
 </script>
