@@ -1,5 +1,6 @@
 <template>
   <div class="chat-message">
+    <!-- 联系人列表 -->
     <div class="userlist">
       <van-list>
         <van-cell
@@ -22,11 +23,13 @@
         </van-cell>
       </van-list>
     </div>
+    <!-- 消息列表 -->
     <div class="messagebox" v-if="activedKey[type]">
       <div class="messagebox-header">
         <div>{{activedKey[type].name}}</div>
       </div>
       <div class="messagebox-content">
+        <div class="moreMsgs" @click="loadMoreMsgs">{{loadText}}</div>
         <div
           v-for="(item,i) in msgList"
           :key="i"
@@ -91,8 +94,8 @@
         </div>
       </div>
     </div>
-      <EmediaModal ref="emediaModal"  />
-      <MultiAVModal :to="activedKey[type]"/>
+    <EmediaModal ref="emediaModal"  />
+    <MultiAVModal :to="activedKey[type]"/>
     <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]"/>
   </div>
 </template>
@@ -119,7 +122,8 @@ export default {
         chatroom: ""
       },
       message: "",
-      isHttps: window.location.protocol === "https:" ? true : false
+      isHttps: window.location.protocol === "https:" ? true : false,
+      loadText: "加载更多"
     };
   },
 
@@ -131,6 +135,9 @@ export default {
     } else if (this.type === "chatroom") {
       this.onGetChatroomUserList();
     }
+  },
+  updated(){
+    console.log("数据", this.$store)
   },
   computed: {
     ...mapGetters({
@@ -160,16 +167,22 @@ export default {
       "onSendText",
       "onCallVideo",
       "onCallVoice",
-      "getGroupMembers"
+      "getGroupMembers",
+      "getHistoryMessage"
     ]),
     select(key) {
       if (this.type == "group") {
         this.$router.push({ name: this.type, params: { id: key.groupid } });
+        this.getHistoryMessage({name: key.name, isGroup: true})
       }
       this.$data.activedKey[this.type] = key;
       if (this.type === "contact") {
         this.$router.push({ name: this.type, params: { id: key.name } });
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
+        if(!this.msgList){
+          console.log('33333', this.msgList)
+          this.getHistoryMessage({name: key.name, isGroup: false})
+        }
       }
       if (this.type === "chatroom") {
         this.$router.push({ name: this.type, params: { id: key.id } });
@@ -181,7 +194,19 @@ export default {
         });
       }
     },
-
+    loadMoreMsgs(){
+      if (this.type === "contact") {
+        const name = this.$data.activedKey[this.type].name
+        const me = this
+        const success = function(msgs){
+          console.log('成功的数据', msgs)
+          if(msgs.length === 0){
+            me.$data.loadText = '已无更多数据'
+          }
+        }
+        this.getHistoryMessage({name: name, isGroup: false, success: success})
+      }
+    },
     onSendTextMsg() {
       this.onSendText({
         chatType: this.type,
@@ -239,7 +264,6 @@ export default {
         console.log(this.$data.activedKey[this.type])
         this.getGroupMembers(this.$data.activedKey[this.type].groupid)
         this.$refs.addAvMembertModal.show()
-        console.log(Vue.$store.state)
       }
       
     },
@@ -271,10 +295,8 @@ export default {
     },
     // TODO 可以抽离到utils
     getLatestMessage() {
-      console.log("this.store", this.$store.state.chat);
       const { name, params } = this.$route;
       let currentMsgs = this.$store.state.chat.msgList[name] || "";
-      console.log("currentMsgs>>>", currentMsgs);
       let data = [];
       if (name === "contact") {
         data = currentMsgs[params.id] || [];
@@ -284,7 +306,7 @@ export default {
       if (data.length > 0) {
         const latestData = data[data.length - 1];
         const latestType = _.get(latestData, "type", "");
-        console.log("latestData>>", latestData, "latestType>>", latestType);
+        //console.log("latestData>>", latestData, "latestType>>", latestType);
         if (!latestType) {
           latestMessage = _.get(latestData, "msg", "");
         } else if (latestType === "img") {
@@ -314,6 +336,11 @@ export default {
 .custom-title {
   font-weight: 500;
 }
+.moreMsgs {
+    background: #ccc !important;
+    border-radius: 8px;
+    cursor: pointer;
+  }
 .icon-style {
   display: inline-block;
   background-color: #f04134;
