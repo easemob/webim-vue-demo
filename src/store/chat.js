@@ -37,11 +37,23 @@ const Chat = {
                 state.msgList[chatType][chatId] = state.msgList[chatType][chatId].sort((a, b) => {
                     return a.time - b.time
                 })
+                //state.msgList[chatType][chatId] = _unique(state.msgList[chatType][chatId])
             }
             if (chatType === 'chatroom') {
                 state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], 'mid');
             } else {
                 state.currentMsgs = state.msgList[chatType][chatId];
+
+            function _unique(arr){            
+                for(var i=0; i<arr.length; i++){
+                    for(var j=i+1; j<arr.length; j++){
+                        if(arr[i].time==arr[j].time){         //第一个等同于第二个，splice方法删除第二个
+                            arr.splice(j,1);
+                            j--;
+                        }
+                    }
+                }
+                return arr;
             }
         },
         updateCurrentMsgList(state, messages) {

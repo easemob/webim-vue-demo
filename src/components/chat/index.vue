@@ -6,7 +6,7 @@
         <van-cell
           v-for="item in userList[type]"
           :key="item.name"
-          :value="getLatestMessage().id === item.name?getLatestMessage().latestMessage:''"
+          :value="getLastMsg(item).lastMsg"
           @click="select(item)"
           :class="{ 'active': activedKey[type] && activedKey[type].name ===  item.name }"
         >
@@ -14,11 +14,11 @@
             <span class="custom-title">{{item.name}}</span>
             <!-- <div class="icon-style">
               <span>消息数</span>
-            </div>-->
+            </div> -->
             <span
               class="time-style"
               style="float:right"
-            >{{getLatestMessage().id === item.name?getLatestMessage().latestTime:''}}</span>
+            >{{getLastMsg(item).msgTime}}</span>
           </template>
         </van-cell>
       </van-list>
@@ -295,32 +295,41 @@ export default {
       const localFormat = localMoment.format("MM-DD hh:mm A");
       return localFormat;
     },
-    // TODO 可以抽离到utils
-    getLatestMessage() {
+    getLastMsg(item){
       const { name, params } = this.$route;
-      let currentMsgs = this.$store.state.chat.msgList[name] || "";
-      let data = [];
-      if (name === "contact") {
-        data = currentMsgs[params.id] || [];
-      }
-      let latestMessage = "";
-      let latestTime = "";
-      if (data.length > 0) {
-        const latestData = data[data.length - 1];
-        const latestType = _.get(latestData, "type", "");
-        if (!latestType) {
-          latestMessage = _.get(latestData, "msg", "");
-        } else if (latestType === "img") {
-          latestMessage = "[image]";
-        }
-        latestTime = this.renderTime(latestData.time);
-      }
-      return {
-        latestMessage,
-        latestTime,
-        id: params.id
-      };
+      const chatList = this.$store.state.chat.msgList[name]
+      const currentMsgs = chatList[item.name] || []
+      const lastMsg = currentMsgs.length?currentMsgs[currentMsgs.length-1].msg: ""
+      const msgTime = currentMsgs.length?this.renderTime(currentMsgs[currentMsgs.length-1].time): ''
+      return {lastMsg, msgTime}
     },
+    // TODO 可以抽离到utils
+    // getLatestMessage() {
+    //   const { name, params } = this.$route;
+    //   let currentMsgs = this.$store.state.chat.msgList[name] || "";
+    //   let data = [];
+    //   if (name === "contact") {
+    //     data = currentMsgs[params.id] || [];
+    //   }
+    //   let latestMessage = "";
+    //   let latestTime = "";
+    //   if (data.length > 0) {
+    //     const latestData = data[data.length - 1];
+    //     const latestType = _.get(latestData, "type", "");
+    //     //console.log("latestData>>", latestData, "latestType>>", latestType);
+    //     if (!latestType) {
+    //       latestMessage = _.get(latestData, "msg", "");
+    //     } else if (latestType === "img") {
+    //       latestMessage = "[image]";
+    //     }
+    //     latestTime = this.renderTime(latestData.time);
+    //   }
+    //   return {
+    //     latestMessage,
+    //     latestTime,
+    //     id:params.id
+    //   };
+    // }
   },
   components: {
     EmediaModal,
