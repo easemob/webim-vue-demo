@@ -20,6 +20,9 @@ const Chat = {
         },
         updateMsgList(state, payload) {
             const { chatType, chatId, msg, bySelf, type } = payload;
+            const { name, params } = Vue.$route
+            if (!(params.id === chatId && name === chatType)) return //解决串屏
+         
             if (!state.msgList[chatType][chatId]) {
                 state.msgList[chatType][chatId] = [{
                     msg,
@@ -39,21 +42,11 @@ const Chat = {
                 })
                 //state.msgList[chatType][chatId] = _unique(state.msgList[chatType][chatId])
             }
-            if (chatType === 'chatroom') {
+
+            if (chatType === 'chatroom' && !bySelf) { // 聊天室消息去重处理
                 state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], 'mid');
             } else {
                 state.currentMsgs = state.msgList[chatType][chatId];
-            }
-            function _unique(arr){            
-                for(var i=0; i<arr.length; i++){
-                    for(var j=i+1; j<arr.length; j++){
-                        if(arr[i].time==arr[j].time){         //第一个等同于第二个，splice方法删除第二个
-                            arr.splice(j,1);
-                            j--;
-                        }
-                    }
-                }
-                return arr;
             }
         },
         updateCurrentMsgList(state, messages) {
@@ -254,7 +247,7 @@ const Chat = {
             const options = {
                 queue: payload.name,
                 isGroup: payload.isGroup,
-                count: 10,
+                count: 10, // 每次获取消息条数
                 success: function (msgs) {
                     try {
                         payload.success && payload.success(msgs)

@@ -1,6 +1,7 @@
 <template>
   <div class="contact">
     <div class="header">
+      <div class="mask" v-show="showSettingOptions" @click="showSettingOptions=false"></div>
       <span class="setting">
         <van-icon name="setting-o" size="24" color="#fff" @click="optionsVisibleChange" />
         <ul class="options" v-show="showSettingOptions">

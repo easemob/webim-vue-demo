@@ -28,7 +28,7 @@
       <div class="messagebox-header">
         <div>{{type ==='chatroom'?activedKey[type].id:activedKey[type].name}}</div>
       </div>
-      <div class="messagebox-content">
+      <div class="messagebox-content" ref="msgContent">
         <div class="moreMsgs" @click="loadMoreMsgs">{{loadText}}</div>
         <div
           v-for="(item,i) in msgList"
@@ -136,8 +136,9 @@ export default {
       this.onGetChatroomUserList();
     }
   },
-  updated(){
-    console.log("数据", this.$store)
+  updated() {
+    // console.log("数据", this.$store);
+    this.scollBottom()
   },
   computed: {
     ...mapGetters({
@@ -180,14 +181,13 @@ export default {
       if (this.type === "contact") {
         this.$router.push({ name: this.type, params: { id: key.name } });
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
-        if(!this.msgList){
-          console.log('33333', this.msgList)
-          this.getHistoryMessage({name: key.name, isGroup: false})
+        if (!this.msgList) {
+          this.getHistoryMessage({ name: key.name, isGroup: false })
         }
       }
       if (this.type === "chatroom") {
         this.$router.push({ name: this.type, params: { id: key.id } });
-         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
+        this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
         WebIM.conn.joinChatRoom({
           roomId: key.id, // 聊天室id
           success: function() {
@@ -196,17 +196,21 @@ export default {
         });
       }
     },
-    loadMoreMsgs(){
+    loadMoreMsgs() {
       if (this.type === "contact") {
-        const name = this.$data.activedKey[this.type].name
-        const me = this
-        const success = function(msgs){
-          console.log('成功的数据', msgs)
-          if(msgs.length === 0){
-            me.$data.loadText = '已无更多数据'
+        const name = this.$data.activedKey[this.type].name;
+        const me = this;
+        const success = function(msgs) {
+          console.log("成功的数据", msgs);
+          if (msgs.length === 0) {
+            me.$data.loadText = "已无更多数据";
           }
-        }
-        this.getHistoryMessage({name: name, isGroup: false, success: success})
+        };
+        this.getHistoryMessage({
+          name: name,
+          isGroup: false,
+          success: success
+        });
       }
     },
     onSendTextMsg() {
@@ -251,29 +255,27 @@ export default {
     },
 
     callVideo() {
-      if(this.type == 'contact'){
+      if (this.type == "contact") {
         this.$refs.emediaModal.showEmediaModal();
-        const recMerge = videoSetting&&videoSetting.recMerge || false
-        const rec = videoSetting&&videoSetting.rec || false
+        const recMerge = (videoSetting && videoSetting.recMerge) || false;
+        const rec = (videoSetting && videoSetting.rec) || false;
         this.onCallVideo({
           chatType: this.type,
           to: this.$data.activedKey[this.type].name,
           rec,
           recMerge
         });
+      } else if (this.type == "group") {
+        console.log(this.$data.activedKey[this.type]);
+        this.getGroupMembers(this.$data.activedKey[this.type].groupid);
+        this.$refs.addAvMembertModal.show();
       }
-      else if(this.type == 'group'){
-        console.log(this.$data.activedKey[this.type])
-        this.getGroupMembers(this.$data.activedKey[this.type].groupid)
-        this.$refs.addAvMembertModal.show()
-      }
-      
     },
     callVoice() {
       this.$refs.emediaModal.showEmediaModal();
-      const videoSetting = JSON.parse(localStorage.getItem('videoSetting'))
-      const recMerge = videoSetting&&videoSetting.recMerge || false
-      const rec = videoSetting&&videoSetting.rec || false
+      const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
+      const recMerge = (videoSetting && videoSetting.recMerge) || false;
+      const rec = (videoSetting && videoSetting.rec) || false;
       this.onCallVoice({
         chatType: this.type,
         to: this.$data.activedKey[this.type].name,
@@ -303,33 +305,13 @@ export default {
       const msgTime = currentMsgs.length?this.renderTime(currentMsgs[currentMsgs.length-1].time): ''
       return {lastMsg, msgTime}
     },
-    // TODO 可以抽离到utils
-    // getLatestMessage() {
-    //   const { name, params } = this.$route;
-    //   let currentMsgs = this.$store.state.chat.msgList[name] || "";
-    //   let data = [];
-    //   if (name === "contact") {
-    //     data = currentMsgs[params.id] || [];
-    //   }
-    //   let latestMessage = "";
-    //   let latestTime = "";
-    //   if (data.length > 0) {
-    //     const latestData = data[data.length - 1];
-    //     const latestType = _.get(latestData, "type", "");
-    //     //console.log("latestData>>", latestData, "latestType>>", latestType);
-    //     if (!latestType) {
-    //       latestMessage = _.get(latestData, "msg", "");
-    //     } else if (latestType === "img") {
-    //       latestMessage = "[image]";
-    //     }
-    //     latestTime = this.renderTime(latestData.time);
-    //   }
-    //   return {
-    //     latestMessage,
-    //     latestTime,
-    //     id:params.id
-    //   };
-    // }
+    scollBottom() {
+      setTimeout(() => {
+        const dom = this.$refs.msgContent;
+        if (!dom) return
+        dom.scrollTop = dom.scrollHeight;
+      }, 0);
+    }
   },
   components: {
     EmediaModal,
@@ -347,10 +329,10 @@ export default {
   font-weight: 500;
 }
 .moreMsgs {
-    background: #ccc !important;
-    border-radius: 8px;
-    cursor: pointer;
-  }
+  background: #ccc !important;
+  border-radius: 8px;
+  cursor: pointer;
+}
 .icon-style {
   display: inline-block;
   background-color: #f04134;
