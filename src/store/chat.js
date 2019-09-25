@@ -38,9 +38,11 @@ const Chat = {
                     return a.time - b.time
                 })
             }
-            state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], 'mid');
-            console.log('state.currentMsgs>>', state.currentMsgs);
-
+            if (chatType === 'chatroom') {
+                state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], 'mid');
+            } else {
+                state.currentMsgs = state.msgList[chatType][chatId];
+            }
         },
         updateCurrentMsgList(state, messages) {
             state.currentMsgs = messages;
