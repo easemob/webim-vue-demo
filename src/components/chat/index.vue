@@ -12,9 +12,9 @@
         >
           <template slot="title">
             <span class="custom-title">{{item.name}}</span>
-            <!-- <div class="icon-style">
-              <span>消息数</span>
-            </div> -->
+            <div class="icon-style" v-if="getUnreadNum(item) != 0">
+              <span class="unreadNum">{{getUnreadNum(item)}}</span>
+            </div>
             <span
               class="time-style"
               style="float:right"
@@ -61,6 +61,8 @@
           </div>
           <!-- 聊天消息 -->
           <p v-else v-html="renderTxt(item.msg)" :class="{ 'byself': item.bySelf}" />
+
+          <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div>
           <!-- 聊天时间 -->
           <div
             class="time-style"
@@ -123,7 +125,12 @@ export default {
       },
       message: "",
       isHttps: window.location.protocol === "https:" ? true : false,
-      loadText: "加载更多"
+      loadText: "加载更多",
+      status: {
+        sending: "发送中",
+        sent: "已发送",
+        read: "已读"
+      },
     };
   },
 
@@ -171,6 +178,18 @@ export default {
       "getGroupMembers",
       "getHistoryMessage"
     ]),
+    getUnreadNum(item){
+      const { name, params } = this.$route;
+      const chatList = this.$store.state.chat.msgList[name]
+      const currentMsgs = chatList[item.name] || []
+      let unReadNum = 0
+      currentMsgs.forEach(msg => {
+        if(msg.status !== 'read' && !msg.bySelf){
+          unReadNum ++
+        }
+      });
+      return unReadNum
+    },
     select(key) {
       if (this.type === "group") {
         this.$router.push({ name: this.type, params: { id: key.groupid } });
@@ -181,8 +200,13 @@ export default {
       if (this.type === "contact") {
         this.$router.push({ name: this.type, params: { id: key.name } });
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
-        if (!this.msgList) {
-          this.getHistoryMessage({ name: key.name, isGroup: false })
+        setTimeout(() => {
+           Vue.$store.commit('updateMessageStatus', {action: "readMsgs"})
+           this.$forceUpdate()
+        }, 100)
+       
+        if(!this.msgList){
+          this.getHistoryMessage({name: key.name, isGroup: false})
         }
       }
       if (this.type === "chatroom") {
@@ -333,6 +357,18 @@ export default {
   border-radius: 8px;
   cursor: pointer;
 }
+  .status{
+    display: inline;
+    position: relative;
+    top: 20px;
+    font-size: 12px;
+    left: -6px;
+    color: #736c6c;
+  }
+  .unreadNum{
+    float: left;
+    width: 100%;
+  }
 .icon-style {
   display: inline-block;
   background-color: #f04134;

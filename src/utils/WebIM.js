@@ -181,13 +181,22 @@ WebIM.conn.listen({
     },
     onReceivedMessage: function (message) {
         console.log('onReceivedMessage', message);
+        Vue.$store.commit('updateMessageMid', message)
+        message.status = 'sent'
+        Vue.$store.commit('updateMessageStatus', message)
     }, //收到消息送达服务器回执
+
     onDeliveredMessage: function (message) {
         console.log('onDeliveredMessage', message);
+       // Vue.$store.commit('updateMessageStatus', message)
     }, //收到消息送达客户端回执
+
     onReadMessage: function (message) {
-        //console.log('onReadMessage', message);
+        console.log('onReadMessage', message);
+        message.status = 'read'
+        Vue.$store.commit('updateMessageStatus', message)
     }, //收到消息已读回执
+
     onCreateGroup: function (message) {
         console.log('onCreateGroup', message);
     }, //创建群组成功回执（需调用createGroupNew）

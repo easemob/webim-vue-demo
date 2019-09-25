@@ -51,6 +51,40 @@ const Chat = {
         },
         updateCurrentMsgList(state, messages) {
             state.currentMsgs = messages;
+        },
+        updateMessageMid(state, message){
+            const { id, mid } = message
+            const { name, params } = Vue.$route;
+            // state.currentMsgs.forEach((item) => {
+            //     if(item.mid == id){
+            //         item.mid = mid
+            //     }
+            // })
+            Object.keys(state.msgList[name]).forEach((user) => {
+                if(state.msgList[name][user].length){
+                    state.msgList[name][user].forEach((msg) => {
+                        if(msg.mid == id){
+                            msg.mid = mid
+                        }
+                    })
+                }
+            })
+        },
+        updateMessageStatus(state, message){
+            const { id, mid, action} = message
+            const { name, params } = Vue.$route;
+            Object.keys(state.msgList[name]).forEach((user) => {
+                if(state.msgList[name][user].length){
+                    state.msgList[name][user].forEach((msg) => {
+                        if(action === 'readMsgs' && !msg.bySelf){
+                            msg.status = 'read'
+                        }
+                        else if(msg.mid == id || msg.mid == mid){
+                            msg.status = message.status
+                        }
+                    })
+                }
+            })
         }
     },
     actions: {
@@ -126,7 +160,9 @@ const Chat = {
                         chatId: chatId[jid[chatType]],
                         msg: message,
                         bySelf: true,
-                        time: time
+                        time: time,
+                        mid: id,
+                        status: 'sending'
                     })
                 },
                 fail: function (e) {
@@ -164,7 +200,9 @@ const Chat = {
                         chatId: chatId[jid[chatType]],
                         bySelf: true,
                         type: 'img',
-                        time: data.timestamp
+                        time: data.timestamp,
+                        mid: id,
+                        status: 'sending'
                     })
                     callback()
                 },
@@ -209,6 +247,8 @@ const Chat = {
                         filename: file.data.name,
                         file_length: file.data.size,
                         time: data.timestamp,
+                        mid: id,
+                        status: 'sending'
                     })
                     callback()
                 },
@@ -264,7 +304,9 @@ const Chat = {
                                         chatId: bySelf ? item.to : item.from,
                                         msg: item.data,
                                         bySelf: bySelf,
-                                        time: time
+                                        time: time,
+                                        mid: item.id,
+                                        status: 'read'
                                     }
                                 } else if (!item.ext.file_length) {
                                     msg = {
@@ -273,7 +315,9 @@ const Chat = {
                                         chatId: bySelf ? item.to : item.from,
                                         bySelf: bySelf,
                                         type: 'img',
-                                        time: time
+                                        time: time,
+                                        mid: item.id,
+                                        status: 'read'
                                     }
                                 } else {
                                     msg = {
@@ -285,11 +329,14 @@ const Chat = {
                                         filename: item.filename,
                                         file_length: item.file_length,
                                         time: time,
+                                        mid: item.id,
+                                        status: 'read'
                                     }
                                 }
                                 msg.isHistory = true
                                 context.commit('updateMsgList', msg)
                             })
+                            context.commit('updateMessageStatus', {action: 'readMsgs'})
                         }
                     } catch (e) {
                         console.log('错误', e)
