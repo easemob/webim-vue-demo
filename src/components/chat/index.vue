@@ -26,7 +26,7 @@
     <!-- 消息列表 -->
     <div class="messagebox" v-if="activedKey[type]">
       <div class="messagebox-header">
-        <div>{{activedKey[type].name}}</div>
+        <div>{{type ==='chatroom'?activedKey[type].id:activedKey[type].name}}</div>
       </div>
       <div class="messagebox-content">
         <div class="moreMsgs" @click="loadMoreMsgs">{{loadText}}</div>
@@ -171,9 +171,10 @@ export default {
       "getHistoryMessage"
     ]),
     select(key) {
-      if (this.type == "group") {
+      if (this.type === "group") {
         this.$router.push({ name: this.type, params: { id: key.groupid } });
         this.getHistoryMessage({name: key.name, isGroup: true})
+        this.onGetCurrentChatObjMsg({ type: this.type, id: key.groupid });
       }
       this.$data.activedKey[this.type] = key;
       if (this.type === "contact") {
@@ -186,6 +187,7 @@ export default {
       }
       if (this.type === "chatroom") {
         this.$router.push({ name: this.type, params: { id: key.id } });
+         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
         WebIM.conn.joinChatRoom({
           roomId: key.id, // 聊天室id
           success: function() {
@@ -306,7 +308,6 @@ export default {
       if (data.length > 0) {
         const latestData = data[data.length - 1];
         const latestType = _.get(latestData, "type", "");
-        //console.log("latestData>>", latestData, "latestType>>", latestType);
         if (!latestType) {
           latestMessage = _.get(latestData, "msg", "");
         } else if (latestType === "img") {
@@ -317,9 +318,9 @@ export default {
       return {
         latestMessage,
         latestTime,
-        id:params.id
+        id: params.id
       };
-    }
+    },
   },
   components: {
     EmediaModal,

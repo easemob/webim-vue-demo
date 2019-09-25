@@ -50,20 +50,20 @@ WebIM.conn.listen({
     }, //连接关闭回调
     onTextMessage: function (message) {
         // console.log('onTextMessage', message)
-        const time = +new Date()
+        const { from, to, type } = message
+        const chatId = type !== 'chat' ? to :from
         const typeMap = {
             chat: 'contact',
-            // groupchat: 'group',
-            // chatroom: 'chatroom'
+            groupchat: 'group',
+            chatroom: 'chatroom'
         }
         Vue.$store.commit('updateMsgList', {
             chatType: typeMap[message.type],
-            chatId: message.from,
+            chatId: chatId,
             msg: message.data,
             bySelf: false,
-            from:message.from,
-            time:time,
-            mid:message.id
+            from: message.from,
+            mid: message.id
         })
         ack(message);
         console.log(12345)
@@ -84,18 +84,20 @@ WebIM.conn.listen({
     }, //收到表情消息
     onPictureMessage: function (message) {
         // console.log('onPictureMessage', message)
+        const { from, to, type } = message
+        const chatId = type !== 'chat' ? to :from
         const typeMap = {
             chat: 'contact',
-            // groupchat: 'group',
-            // chatroom: 'chatroom'
+            groupchat: 'group',
+            chatroom: 'chatroom'
         }
         Vue.$store.commit('updateMsgList', {
             chatType: typeMap[message.type],
-            chatId: message.from,
+            chatId: chatId,
             msg: message.url,
             bySelf: false,
             type: 'img',
-            from:message.from
+            from: message.from
         })
         ack(message);
     }, //收到图片消息
@@ -111,20 +113,22 @@ WebIM.conn.listen({
         ack(message);
     }, //收到位置消息
     onFileMessage: function (message) {
+        const { from, to, type } = message
+        const chatId = type !== 'chat' ? to :from
         const typeMap = {
             chat: 'contact',
-            // groupchat: 'group',
-            // chatroom: 'chatroom'
+            groupchat: 'group',
+            chatroom: 'chatroom'
         }
         Vue.$store.commit('updateMsgList', {
             chatType: typeMap[message.type],
-            chatId: message.from,
+            chatId: chatId,
             msg: message.url,
             bySelf: false,
             type: 'file',
             filename: message.filename,
             file_length: message.file_length,
-            from:message.from
+            from: message.from
         })
         // console.log('onFileMessage', message)
         ack(message);

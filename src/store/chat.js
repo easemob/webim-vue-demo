@@ -9,7 +9,7 @@ const Chat = {
         msgList: {
             contact: {},
             group: {},
-            chatRoom: {},
+            chatroom: {},
         },
         currentMsgs: []
     },
@@ -111,7 +111,7 @@ const Chat = {
                 to: chatId[jid[chatType]],
                 chatType: type,
                 roomType: chatroom,
-                success: function (id, serverMsgId) {
+                success: function () {
                     context.commit('updateMsgList', {
                         chatType,
                         chatId: chatId[jid[chatType]],
@@ -124,9 +124,9 @@ const Chat = {
                     console.log('Send private text error', e);
                 }
             });
-            // if(!this.state.chat.msgList[type] == "contact"){
-            //     msg.setGroup('groupchat');
-            // }
+            if (chatType === 'group' || chatType === 'chatroom') {
+                msgObj.setGroup('groupchat')
+            }
             WebIM.conn.send(msgObj.body);
         },
         sendImgMessage: function (context, payload) {
@@ -163,6 +163,9 @@ const Chat = {
                     console.log('图片发送成功')
                 }
             })
+            if (chatType === 'group' || chatType === 'chatroom') {
+                msgObj.setGroup('groupchat')
+            }
             WebIM.conn.send(msgObj.body);
         },
         sendFileMessage: function (context, payload) {
@@ -194,8 +197,8 @@ const Chat = {
                         chatId: chatId[jid[chatType]],
                         bySelf: true,
                         type: 'file',
-                        filename:file.data.name,
-                        file_length:file.data.size,
+                        filename: file.data.name,
+                        file_length: file.data.size,
                         time: data.timestamp,
                     })
                     callback()
@@ -204,6 +207,9 @@ const Chat = {
                     console.log('文件发送成功')
                 }
             })
+            if (chatType === 'group' || chatType === 'chatroom') {
+                msgObj.setGroup('groupchat')
+            }
             WebIM.conn.send(msgObj.body);
         },
         onCallVideo: function (context, payload) {
@@ -296,6 +302,9 @@ const Chat = {
             return state.userList.chatroomUserList;
         },
         onGetCurrentChatObjMsg(state) {
+            return state.currentMsgs;
+        },
+        fetchHistoryMessages(state) {
             return state.currentMsgs;
         }
     }
