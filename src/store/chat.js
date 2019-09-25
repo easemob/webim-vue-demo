@@ -38,7 +38,9 @@ const Chat = {
                     return a.time - b.time
                 })
             }
-            state.currentMsgs = state.msgList[chatType][chatId];
+            state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], 'mid');
+            console.log('state.currentMsgs>>', state.currentMsgs);
+
         },
         updateCurrentMsgList(state, messages) {
             state.currentMsgs = messages;
@@ -234,59 +236,59 @@ const Chat = {
             }
         },
 
-        getHistoryMessage: function(context, payload){
+        getHistoryMessage: function (context, payload) {
             const options = {
                 queue: payload.name,
                 isGroup: payload.isGroup,
                 count: 10,
-                success: function(msgs){
-                    try{
-                    payload.success&&payload.success(msgs)
-                    if(msgs.length){
-                        const userInfo = JSON.parse(localStorage.getItem('userInfo'))
-                        const userId = userInfo && userInfo.userId
-                        msgs.forEach((item) => {
-                            let time = Number(item.time)
-                            let msg = {}
-                            const bySelf = item.from == userId
-                            if(!item.filename){
-                                msg = {
-                                    chatType: payload.isGroup?"group":'contact',
-                                    chatId: bySelf?item.to:item.from,
-                                    msg: item.data,
-                                    bySelf: bySelf,
-                                    time: time
+                success: function (msgs) {
+                    try {
+                        payload.success && payload.success(msgs)
+                        if (msgs.length) {
+                            const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+                            const userId = userInfo && userInfo.userId
+                            msgs.forEach((item) => {
+                                let time = Number(item.time)
+                                let msg = {}
+                                const bySelf = item.from == userId
+                                if (!item.filename) {
+                                    msg = {
+                                        chatType: payload.isGroup ? "group" : 'contact',
+                                        chatId: bySelf ? item.to : item.from,
+                                        msg: item.data,
+                                        bySelf: bySelf,
+                                        time: time
+                                    }
+                                } else if (!item.ext.file_length) {
+                                    msg = {
+                                        msg: item.url,
+                                        chatType: payload.isGroup ? "group" : 'contact',
+                                        chatId: bySelf ? item.to : item.from,
+                                        bySelf: bySelf,
+                                        type: 'img',
+                                        time: time
+                                    }
+                                } else {
+                                    msg = {
+                                        msg: item.url,
+                                        chatType: payload.isGroup ? "group" : 'contact',
+                                        chatId: bySelf ? item.to : item.from,
+                                        bySelf: bySelf,
+                                        type: 'file',
+                                        filename: item.filename,
+                                        file_length: item.file_length,
+                                        time: time,
+                                    }
                                 }
-                            }else if(!item.ext.file_length){
-                                msg = {
-                                    msg: item.url,
-                                    chatType: payload.isGroup?"group":'contact',
-                                    chatId: bySelf?item.to:item.from,
-                                    bySelf: bySelf,
-                                    type: 'img',
-                                    time: time
-                                }
-                            }else{
-                                msg = {
-                                    msg: item.url,
-                                    chatType: payload.isGroup?"group":'contact',
-                                    chatId: bySelf?item.to:item.from,
-                                    bySelf: bySelf,
-                                    type: 'file',
-                                    filename: item.filename,
-                                    file_length: item.file_length,
-                                    time: time,
-                                }
-                            }
-                            msg.isHistory = true
-                            context.commit('updateMsgList', msg)
-                        })
+                                msg.isHistory = true
+                                context.commit('updateMsgList', msg)
+                            })
+                        }
+                    } catch (e) {
+                        console.log('错误', e)
                     }
-                }catch(e){
-                    console.log('错误', e)
-                }
                 },
-                fail: function(){}
+                fail: function () { }
             }
             WebIM.conn.fetchHistoryMessages(options)
         }
