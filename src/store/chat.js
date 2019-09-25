@@ -43,7 +43,7 @@ const Chat = {
                 state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], 'mid');
             } else {
                 state.currentMsgs = state.msgList[chatType][chatId];
-
+            }
             function _unique(arr){            
                 for(var i=0; i<arr.length; i++){
                     for(var j=i+1; j<arr.length; j++){
