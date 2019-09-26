@@ -20,14 +20,11 @@ const Chat = {
         },
         updateMsgList(state, payload) {
             const { chatType, chatId, msg, bySelf, type, id} = payload;
-            const { name, params } = Vue.$route
-
+            const { params } = Vue.$route
             let status = 'unread'
             if(params.id == payload.from){
                 status = 'read'
             }
-            if (!(params.id === chatId && name === chatType)) return //解决串屏
-
             if (!state.msgList[chatType][chatId]) {
                 state.msgList[chatType][chatId] = [{
                     msg,
@@ -55,7 +52,7 @@ const Chat = {
             if (chatType === 'chatroom' && !bySelf) { // 聊天室消息去重处理
                 state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], 'mid');
             } else {
-                state.currentMsgs = state.msgList[chatType][chatId];
+                state.currentMsgs = Object.assign({}, state.msgList[chatType][params.id]);
             }
         },
         updateCurrentMsgList(state, messages) {
