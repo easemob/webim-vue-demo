@@ -51,7 +51,7 @@ WebIM.conn.listen({
     onTextMessage: function (message) {
         // console.log('onTextMessage', message)
         const { from, to, type } = message
-        const chatId = type !== 'chat' ? to :from
+        const chatId = type !== 'chat' ? to : from
         const typeMap = {
             chat: 'contact',
             groupchat: 'group',
@@ -66,9 +66,8 @@ WebIM.conn.listen({
             mid: message.id
         })
         ack(message);
-        console.log(12345)
-        if(WebIM && WebIM.call && message && message.ext && message.ext.msg_extension){
-            var msgExtension = message.ext.msg_extension&&JSON.parse(message.ext.msg_extension)
+        if (WebIM && WebIM.call && message && message.ext && message.ext.msg_extension) {
+            var msgExtension = message.ext.msg_extension && JSON.parse(message.ext.msg_extension)
             var options = {
                 confrId: message.ext.conferenceId,
                 password: message.ext.password || '',
@@ -85,7 +84,7 @@ WebIM.conn.listen({
     onPictureMessage: function (message) {
         // console.log('onPictureMessage', message)
         const { from, to, type } = message
-        const chatId = type !== 'chat' ? to :from
+        const chatId = type !== 'chat' ? to : from
         const typeMap = {
             chat: 'contact',
             groupchat: 'group',
@@ -105,7 +104,32 @@ WebIM.conn.listen({
         console.log('onCmdMessage', message)
     }, //收到命令消息
     onAudioMessage: function (message) {
-        console.log('onAudioMessage', message)
+        // console.log('onAudioMessage', message)
+        const typeMap = {
+            chat: 'contact',
+            groupchat: 'group',
+            chatroom: 'chatroom'
+        }
+        const chatId = message.type !== 'chat' ? message.to : message.from
+        let options = {
+            url: message.url,
+            headers: { 'Accept': 'audio/mp3' },
+            onFileDownloadComplete: function (response) {
+                let objectUrl = WebIM.utils.parseDownloadResponse.call(WebIM.conn, response)
+                Vue.$store.commit('updateMsgList', {
+                    chatType: typeMap[message.type],
+                    chatId: chatId,
+                    msg: objectUrl,
+                    bySelf: false,
+                    type: 'audio',
+                    from: message.from
+                })
+            },
+            onFileDownloadError: function () {
+                console.log('音频下载失败');
+            }
+        }
+        WebIM.utils.download.call(WebIM.conn, options)
         ack(message);
     }, //收到音频消息
     onLocationMessage: function (message) {
@@ -114,7 +138,7 @@ WebIM.conn.listen({
     }, //收到位置消息
     onFileMessage: function (message) {
         const { from, to, type } = message
-        const chatId = type !== 'chat' ? to :from
+        const chatId = type !== 'chat' ? to : from
         const typeMap = {
             chat: 'contact',
             groupchat: 'group',
@@ -135,6 +159,37 @@ WebIM.conn.listen({
     }, //收到文件消息
     onVideoMessage: function (message) {
         console.log('onVideoMessage', message)
+        const { from, to, type } = message
+        const chatId = type !== 'chat' ? to : from
+        const typeMap = {
+            chat: 'contact',
+            groupchat: 'group',
+            chatroom: 'chatroom'
+        }
+        let options = {
+            url: message.url,
+            headers: {
+                'Accept': 'audio/mp4'
+            },
+            onFileDownloadComplete: function (response) {
+                debugger
+                let objectURL = WebIM.utils.parseDownloadResponse.call(WebIM.conn, response)
+                Vue.$store.commit('updateMsgList', {
+                    chatType: typeMap[message.type],
+                    chatId: chatId,
+                    msg: objectURL,
+                    bySelf: false,
+                    type: 'video',
+                    filename: message.filename,
+                    file_length: message.file_length,
+                    from: message.from
+                })
+            },
+            onFileDownloadError: function () {
+                console.log('视频下载失败')
+            }
+        };
+        WebIM.utils.download.call(WebIM.conn, options)
         ack(message);
     }, //收到视频消息
     onPresence: function (message) {

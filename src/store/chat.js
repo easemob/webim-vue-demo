@@ -21,10 +21,13 @@ const Chat = {
         updateMsgList(state, payload) {
             const { chatType, chatId, msg, bySelf, type, id} = payload;
             const { name, params } = Vue.$route
+
             let status = 'unread'
             if(params.id == payload.from){
                 status = 'read'
             }
+            if (!(params.id === chatId && name === chatType)) return //解决串屏
+
             if (!state.msgList[chatType][chatId]) {
                 state.msgList[chatType][chatId] = [{
                     msg,
@@ -314,7 +317,7 @@ const Chat = {
                                         mid: item.id,
                                         status: 'read'
                                     }
-                                } else if (!item.ext.file_length) {
+                                } else if (!item.ext.file_length && item.filename !== 'audio' && item.filename.substring(item.filename.length - 3) !== 'mp4') { // 为图片的情况
                                     msg = {
                                         msg: item.url,
                                         chatType: payload.isGroup ? "group" : 'contact',
@@ -324,6 +327,22 @@ const Chat = {
                                         time: time,
                                         mid: item.id,
                                         status: 'read'
+                                    }
+                                } else if (item.filename === 'audio') {
+                                    msg = {
+                                        msg: item.url,
+                                        chatType: payload.isGroup ? "group" : 'contact',
+                                        chatId: bySelf ? item.to : item.from,
+                                        bySelf: bySelf,
+                                        type: 'audio'
+                                    }
+                                } else if (item.filename.substring(item.filename.length - 3) === 'mp4') {
+                                    msg = {
+                                        msg: item.url,
+                                        chatType: payload.isGroup ? "group" : 'contact',
+                                        chatId: bySelf ? item.to : item.from,
+                                        bySelf: bySelf,
+                                        type: 'video'
                                     }
                                 } else {
                                     msg = {

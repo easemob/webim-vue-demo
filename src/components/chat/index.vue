@@ -59,6 +59,14 @@
               </div>
             </el-card>
           </div>
+          <!-- 音频消息 -->
+          <div v-else-if="item.type==='audio'">
+              <audio :src="item.msg" controls></audio>
+          </div>
+          <!-- 视频消息 -->
+          <div v-else-if="item.type==='video'">
+            <video :src="item.msg" width="100%" controls></video>
+          </div>
           <!-- 聊天消息 -->
           <p v-else v-html="renderTxt(item.msg)" :class="{ 'byself': item.bySelf}" />
 
