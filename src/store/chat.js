@@ -19,15 +19,19 @@ const Chat = {
             state.userList[type] = userList;
         },
         updateMsgList(state, payload) {
-            const { chatType, chatId, msg, bySelf, type } = payload;
+            const { chatType, chatId, msg, bySelf, type, id} = payload;
             const { name, params } = Vue.$route
-            if (!(params.id === chatId && name === chatType)) return //解决串屏
-         
+            let status = 'unread'
+            if(params.id == payload.from){
+                status = 'read'
+            }
             if (!state.msgList[chatType][chatId]) {
                 state.msgList[chatType][chatId] = [{
                     msg,
                     bySelf,
                     type: type || '',
+                    mid: id,
+                    status: status,
                     ...payload
                 }]
             } else {
@@ -35,6 +39,8 @@ const Chat = {
                     msg,
                     bySelf,
                     type: type || '',
+                    mid: id,
+                    status,
                     ...payload
                 })
                 state.msgList[chatType][chatId] = state.msgList[chatType][chatId].sort((a, b) => {
