@@ -33,11 +33,14 @@ export default {
         },
         show(){
             const videoSetting = JSON.parse(localStorage.getItem('videoSetting'))
-            const checkedList = videoSetting&&Object.keys(videoSetting).filter(( key ) => {
-                if(videoSetting[key]){
-                    return key
-                }
-            })
+            let checkedList = [];
+            if(videoSetting){
+                checkedList = Object.keys(videoSetting).filter(( key ) => {
+                    if(videoSetting[key]){
+                        return key
+                    }
+                })
+            }
             this.$data.checkList = checkedList
             this.$data.recModalVisible = true
         },
