@@ -80,7 +80,7 @@
           <UpLoadFile :type="this.type" :chatId="activedKey[type]" />
 
           <i class="el-icon-video-camera icon" @click="callVideo" v-show="isHttps"></i>
-          <i class="el-icon-mic icon" @click="callVoice" v-show="isHttps"></i>
+          <i v-if="type === 'contact'" class="el-icon-microphone icon" @click="callVoice" v-show="isHttps"></i>
         </div>
         <div class="fotter-send">
           <textarea
@@ -281,6 +281,7 @@ export default {
     callVideo() {
       if (this.type == "contact") {
         this.$refs.emediaModal.showEmediaModal();
+        const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
         const recMerge = (videoSetting && videoSetting.recMerge) || false;
         const rec = (videoSetting && videoSetting.rec) || false;
         this.onCallVideo({

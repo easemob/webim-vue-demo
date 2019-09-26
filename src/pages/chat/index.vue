@@ -26,7 +26,7 @@
           </li>
         </ul>
       </span>
-      <span class="username">{{username}}</span>
+      <span class="username">{{userName}}</span>
     </div>
     <div class="content">
       <van-tabs v-model="activeKey" @click="contactTypeChange">
@@ -73,13 +73,14 @@ export default {
         { name: "添加好友", id: "1", icon: "chat" },
         { name: "申请入群", id: "2", icon: "friends" },
         { name: "创建群组", id: "3", icon: "comment" }
-      ]
+      ],
+      userName: localStorage.getItem('userInfo')&&JSON.parse(localStorage.getItem('userInfo')).userId
     };
   },
   computed: {
-    username() {
-      return this.$store.state.login.username;
-    }
+    // username() {
+    //   return this.$store.state.login.username;
+    // }
   },
   methods: {
     ...mapActions(["onLogout", "onGetFirendBlack"]),
