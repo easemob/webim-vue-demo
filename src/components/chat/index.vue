@@ -281,6 +281,7 @@ export default {
     callVideo() {
       if (this.type == "contact") {
         this.$refs.emediaModal.showEmediaModal();
+        this.$refs.emediaModal.showCallerWait(this.$data.activedKey[this.type].name);
         const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
         const recMerge = (videoSetting && videoSetting.recMerge) || false;
         const rec = (videoSetting && videoSetting.rec) || false;
@@ -298,6 +299,7 @@ export default {
     },
     callVoice() {
       this.$refs.emediaModal.showEmediaModal();
+      this.$refs.emediaModal.showCallerWait(this.$data.activedKey[this.type].name);
       const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
       const recMerge = (videoSetting && videoSetting.recMerge) || false;
       const rec = (videoSetting && videoSetting.rec) || false;

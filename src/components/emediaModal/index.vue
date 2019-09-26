@@ -1,13 +1,18 @@
 <template>
     <Draggable v-show="emediaModalVisible">
-        <video ref='localVideo' v-bind:class="{localVideo: toggle, remoteVideo: !toggle}" autoPlay playsInline/>
-        <video ref='remoteVideo' v-bind:class="{localVideo: !toggle, remoteVideo: toggle}"  autoPlay playsInline/>
+        <div v-bind:class="{rtcVoiceContent: streamType=='语音', rtcVideoContent: streamType=='视频'}" >
+        <div v-if="callerWaitVisible" class="mask">正在等待{{contact}}接受邀请</div>
+        <div v-if="calleeWaitVisible" class="mask">{{contact}}请求{{streamType}}通话</div>
+        <div v-if="voiceCallVisible" class="voiceCall">正在与{{contact}}通话</div>
+        <video v-show="streamType == '视频'" ref='localVideo' v-bind:class="{localVideo: toggle, remoteVideo: !toggle}" autoPlay playsInline/>
+        <video v-show="streamType == '视频'" ref='remoteVideo' v-bind:class="{localVideo: !toggle, remoteVideo: toggle}"  autoPlay playsInline/>
         <i v-show="showMute" class="el-icon-turn-off-microphone font microphone" isopen="true" ref='audio' @click="controlStream('audioControl')"></i>
         <i v-show="showAccept" class="el-icon-phone font accept" isopen="true" @click="accept"></i>
-        <i v-show="showMute" class="el-icon-video-camera font camera" ref='video' isopen="true" @click="controlStream('videoControl')"></i>
+        <i v-show="showMute && streamType=='视频'" class="el-icon-video-camera font camera" ref='video' isopen="true" @click="controlStream('videoControl')"></i>
         <i v-show="showMute" class="el-icon-headset font mute" ref="mute" @click="mute"></i>
         <i class="el-icon-switch-button close" @click="close"></i>
-        <i v-show="showMute" class="el-icon-refresh font toggle" @click="toggleClick"></i>
+        <i v-show="showMute && streamType=='视频'" class="el-icon-refresh font toggle" @click="toggleClick"></i>
+        </div>
     </Draggable>
 </template>
 
@@ -15,12 +20,18 @@
 import { mapActions, mapGetters } from "vuex";
 import "./index.less";
 import Draggable from '../draggable'
+import WebIM from '../../utils/WebIM';
 export default{
     data(){
         return{
             emediaModalVisible: false,
             showAccept: false,
             showMute: false,
+            callerWaitVisible: false,
+            calleeWaitVisible: false,
+            voiceCallVisible: false,
+            contact: '',
+            streamType: '视频',
             toggle: true,
             serverStyle:{
                 width: "360px",
@@ -76,18 +87,37 @@ export default{
                         console.log('onAcceptCall', from, options, enableVoice, enableVideo)
                     },
                     onGotRemoteStream: function (stream, streamType) {
-                        console.log('onGotRemoteStream')
-                        //me.channel.setRemote(stream, streamType)
+                        if(streamType == 'VOICE'){
+                            me.$data.voiceCallVisible = true
+                            me.$data.streamType = '语音'
+                        }else{
+                            me.$data.voiceCallVisible = false
+                            me.$data.streamType = '视频'
+                        }
                         me.$refs.remoteVideo.srcObject = stream
+                        me.$data.callerWaitVisible = false
                     },
                     onGotLocalStream: function (stream, streamType) {
-                        console.log('onGotLocalStream ', 'Stream Type: ', streamType)
-                        console.log(stream)
-                        //me.channel.setLocal(stream, streamType)
+                        if(streamType == 'VOICE'){
+                            me.$data.voiceCallVisible = true
+                            me.$data.streamType = '语音'
+                        }else{
+                            me.$data.voiceCallVisible = false
+                            me.$data.streamType = '视频'
+                        }
                         me.$refs.localVideo.srcObject = stream
+                        me.$data.calleeWaitVisible = false
                     },
                     onRinging: function (caller, streamType) {
                         console.log('onRinging', caller)
+                        if(streamType != 'VOICE'){
+                            me.$data.calleeWaitVisible = true
+                            me.$data.streamType = '视频'
+                        }else{
+                            me.$data.calleeWaitVisible = true
+                            me.$data.streamType = '语音'
+                        }
+                        me.$data.contact = caller
                         me.$data.emediaModalVisible = true;
                         me.$data.showAccept = true;
                         me.$data.showMute = false;
@@ -187,35 +217,6 @@ export default{
 
                             }).catch(action => {
                             });
-
-                            // me.props.setRtcOptions(confr)
-                            // confirm({
-                            //     title: from + '邀请您进入多人会议',
-                            //     okText: '确认',
-                            //     cancelText: '拒绝',
-                            //     onOk() {
-                            //         if(avModal){
-                            //             this.$message.info('您正在进行视频通话，不能接受其它邀请')
-                            //             return
-                            //         }
-                            //         me.props.showMultiAVModal()
-                            //         me.props.setGid(gid)
-
-                            //         setTimeout(() => {
-                            //             const tkt = confr.ticket
-                            //             WebIM.EMService.joinConferenceWithTicket(confr.confrId, tkt, 'user ext field').then(function () {
-                            //                 WebIM.EMService.publish({ audio: true, video: true }, 'user ext field').catch(function (e) {
-                            //                     console.error(e)
-                            //                 })
-                            //             }).catch(function (e) {
-                            //                 console.error(e)
-                            //             })
-                            //         }, 0)
-                            //     },
-                            //     onCancel() {
-                            //         console.log('Cancel')
-                            //     }
-                            // })
                         }
                         emedia.mgr.getConferenceTkt(confrId, password).then(function (confr) {
                             callback(confr)
@@ -275,6 +276,10 @@ export default{
             //     width: 360 + "px",
             //     height: 360 + "px"
             // }
+        },
+        showCallerWait(to){
+            this.$data.callerWaitVisible = true
+            this.$data.contact = to
         }
     },
     components: {
@@ -290,3 +295,27 @@ export default{
     },
 }
 </script>
+<style scoped>
+.rtcVoiceContent{
+    min-width: 360px;
+    min-height: 90px;
+}
+.rtcVideoContent{
+    min-width: 360px;
+    min-height: 360px;
+}
+.mask{
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    cursor: default;
+    left: 0;
+    background: #ccc;
+    z-index: 3;
+}
+.voiceCall{
+    height: 200px;
+    background: #ccc;
+    z-index: 3;
+}
+</style>
