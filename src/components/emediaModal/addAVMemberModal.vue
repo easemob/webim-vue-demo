@@ -4,6 +4,7 @@
         :visible="addAVMemberModalVisible"
         width="30%"
         @update:visible="hide"
+        @closed="onClosed"
         center>
         <div>
             <el-checkbox-group v-model="checkList" class="checkboxGroup" :max="6">
@@ -77,6 +78,9 @@
                 //this.$data.dialogVisible = false
                 this.setAVMemeberModalVisible({addAVMemberModalVisible: false})
             },
+            onClosed(){
+                this.$data.checkList = [username]
+            },
             start() {
                 const me = this
                 if(me.multiAVModalVisible){
@@ -97,7 +101,7 @@
                         WebIM.call.inviteConference(confrId, password, jid, gid)
                     }
 
-                    return
+                    return this.hide();
                 }
                 this.showMultiAVModal()
                 var pwd = Math.random().toString(36).substr(2)

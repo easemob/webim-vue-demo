@@ -173,8 +173,9 @@ export default {
                 const located = stream.located()
                 if (located) {
                     let localVideo = me.$refs.rv_local
+                    const nickName = member.name
                     let lv = {
-                        nickName: member.name,
+                        nickName,
                         stream: stream,
                         localStreamId: stream.id,
                         openVideo: true,
@@ -184,6 +185,7 @@ export default {
 
                     emedia.mgr.onMediaChanaged(localVideo, function (constaints){
                         let lv = {
+                            nickName,
                             stream: stream,
                             localStreamId: stream.id,
                             openVideo: constaints.video,
@@ -245,6 +247,7 @@ export default {
                             console.warn(streamId, 'voff:', this.getAttribute('voff'))
                             console.warn(streamId, 'aoff:', this.getAttribute('aoff'))
                         })
+                        me.$forceUpdate()
                         //emedia.mgr.streamBindVideo(stream, video);
                         emedia.mgr.subscribe(member, stream, true, true, video)
                     }
@@ -343,8 +346,9 @@ export default {
     background-color: #f9fafc;
   }
   .video{
-    width: 140px;
-    height: 140px;
+    height: 139px;
+    width: 100%;
+    border-radius: 2px;
   }
   .hangup{
          width: 50px;
