@@ -22,9 +22,17 @@ const Chat = {
             const { chatType, chatId, msg, bySelf, type, id} = payload;
             const { params } = Vue.$route
             let status = 'unread'
-            if(params.id == payload.from){
-                status = 'read'
+            if(payload.chatType == "contact"){
+                if(params.id == payload.from){
+                    status = 'read'
+                }
             }
+            else if(payload.chatType == "group"){
+                if(params.id == payload.chatId){
+                    status = 'read' 
+                }
+            }
+
             if (!state.msgList[chatType][chatId]) {
                 state.msgList[chatType][chatId] = [{
                     msg,
@@ -314,6 +322,11 @@ const Chat = {
                                         mid: item.id,
                                         status: 'read'
                                     }
+                                    if(payload.isGroup){
+                                        msg.chatId = item.to
+                                    }else{
+                                        msg.chatId = bySelf ? item.to : item.from
+                                    }
                                 } else if (!item.ext.file_length && item.filename !== 'audio' && item.filename.substring(item.filename.length - 3) !== 'mp4') { // 为图片的情况
                                     msg = {
                                         msg: item.url,
@@ -325,6 +338,11 @@ const Chat = {
                                         mid: item.id,
                                         status: 'read'
                                     }
+                                    if(payload.isGroup){
+                                        msg.chatId = item.to
+                                    }else{
+                                        msg.chatId = bySelf ? item.to : item.from
+                                    }
                                 } else if (item.filename === 'audio') {
                                     msg = {
                                         msg: item.url,
@@ -333,6 +351,11 @@ const Chat = {
                                         bySelf: bySelf,
                                         type: 'audio'
                                     }
+                                    if(payload.isGroup){
+                                        msg.chatId = item.to
+                                    }else{
+                                        msg.chatId = bySelf ? item.to : item.from
+                                    }
                                 } else if (item.filename.substring(item.filename.length - 3) === 'mp4') {
                                     msg = {
                                         msg: item.url,
@@ -340,6 +363,11 @@ const Chat = {
                                         chatId: bySelf ? item.to : item.from,
                                         bySelf: bySelf,
                                         type: 'video'
+                                    }
+                                    if(payload.isGroup){
+                                        msg.chatId = item.to
+                                    }else{
+                                        msg.chatId = bySelf ? item.to : item.from
                                     }
                                 } else {
                                     msg = {
@@ -353,6 +381,11 @@ const Chat = {
                                         time: time,
                                         mid: item.id,
                                         status: 'read'
+                                    }
+                                    if(payload.isGroup){
+                                        msg.chatId = item.to
+                                    }else{
+                                        msg.chatId = bySelf ? item.to : item.from
                                     }
                                 }
                                 msg.isHistory = true

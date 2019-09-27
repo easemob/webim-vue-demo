@@ -152,7 +152,7 @@ export default {
     }
   },
   updated() {
-    // console.log("数据", this.$store);
+    //console.log("数据", this.$store);
     this.scollBottom()
   },
   computed: {
@@ -189,7 +189,17 @@ export default {
     getUnreadNum(item){
       const { name, params } = this.$route;
       const chatList = this.$store.state.chat.msgList[name]
-      const currentMsgs = chatList[item.name] || []
+      let userId = ''
+      if(name == 'contact'){
+        userId = item.name
+      }
+      else if(name == 'group'){
+        userId = item.groupid
+      }
+      else{
+        userId = item.id
+      }
+      const currentMsgs = chatList[userId] || []
       let unReadNum = 0
       currentMsgs.forEach(msg => {
         if(msg.status !== 'read' && !msg.bySelf){
@@ -199,13 +209,23 @@ export default {
       return unReadNum
     },
     select(key) {
+      this.$data.activedKey[this.type] = key;
+      const me = this;
+      me.$data.loadText = "加载更多";
       if (this.type === "group") {
         this.$router.push({ name: this.type, params: { id: key.groupid } });
-        this.getHistoryMessage({name: key.name, isGroup: true})
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.groupid });
+
+        setTimeout(() => {
+           Vue.$store.commit('updateMessageStatus', {action: "readMsgs"})
+           this.$forceUpdate()
+        }, 100)
+
+        if(!this.msgList){
+          this.getHistoryMessage({name: key.groupid, isGroup: true})
+        }
       }
-      this.$data.activedKey[this.type] = key;
-      if (this.type === "contact") {
+      else if (this.type === "contact") {
         this.$router.push({ name: this.type, params: { id: key.name } });
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
         setTimeout(() => {
@@ -217,33 +237,45 @@ export default {
           this.getHistoryMessage({name: key.name, isGroup: false})
         }
       }
-      if (this.type === "chatroom") {
+      else if (this.type === "chatroom") {
         this.$router.push({ name: this.type, params: { id: key.id } });
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
         WebIM.conn.joinChatRoom({
           roomId: key.id, // 聊天室id
           success: function() {
             console.log("加入聊天室成功");
+            if(!me.msgList){
+              me.getHistoryMessage({name: key.id, isGroup: true})
+            }
           }
         });
       }
     },
     loadMoreMsgs() {
+      const me = this;
+      const success = function(msgs) {
+        console.log("成功的数据", msgs);
+        if (msgs.length === 0) {
+          me.$data.loadText = "已无更多数据";
+        }
+      };
+      let name = ''
+      let isGroup = false
       if (this.type === "contact") {
-        const name = this.$data.activedKey[this.type].name;
-        const me = this;
-        const success = function(msgs) {
-          console.log("成功的数据", msgs);
-          if (msgs.length === 0) {
-            me.$data.loadText = "已无更多数据";
-          }
-        };
-        this.getHistoryMessage({
-          name: name,
-          isGroup: false,
-          success: success
-        });
+        name = this.$data.activedKey[this.type].name;
       }
+      else if(this.type === "group"){
+        name = this.$data.activedKey[this.type].groupid;
+        isGroup = true
+      }else if(this.type === "chatroom"){
+        name = this.$data.activedKey[this.type].id;
+        isGroup = true
+      }
+      this.getHistoryMessage({
+        name,
+        isGroup,
+        success
+      });
     },
     onSendTextMsg() {
       this.onSendText({
@@ -335,7 +367,17 @@ export default {
     getLastMsg(item){
       const { name, params } = this.$route;
       const chatList = this.$store.state.chat.msgList[name]
-      const currentMsgs = chatList[item.name] || []
+      let userId = ''
+      if(name == 'contact'){
+        userId = item.name
+      }
+      else if(name == 'group'){
+        userId = item.groupid
+      }
+      else{
+        userId = item.id
+      }
+      const currentMsgs = chatList[userId] || []
       const lastMsg = currentMsgs.length?currentMsgs[currentMsgs.length-1].msg: ""
       const msgTime = currentMsgs.length?this.renderTime(currentMsgs[currentMsgs.length-1].time): ''
       return {lastMsg, msgTime}
