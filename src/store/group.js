@@ -58,6 +58,7 @@ const Group = {
 		onGetGroupinfo: function (context, payload) {
 			console.log("onGetGroupinfo", payload)
 			let gid = payload.groupid;
+			let select_id = payload.groupid;
 			let options = {
 				groupId: gid,  //群组id
 				success: function (resp) {
@@ -254,6 +255,17 @@ const Group = {
 				}
 			};
 			WebIM.conn.getGroupBlacklistNew(option);
+		},
+		//移除群组成员
+		onRemoveGroupUser: function (context,payload) {
+			const { select_id, select_name } = payload
+			let options = {
+                groupId: select_id,
+                username: select_name,
+                success: function(resp){ },
+                error: {}
+			}
+			WebIM.conn.removeSingleGroupMember(options);
 		},
 		//退出群组
 		onQuitGroup: function (context, payload) {

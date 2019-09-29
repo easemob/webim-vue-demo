@@ -1,12 +1,12 @@
 <template>
   <el-drawer
     title="群组信息"
-    :modal=true
-    :append-to-body=true
+    :modal="true"
+    :append-to-body="true"
     :visible.sync="showGroupInfoModel"
     lable="rtl"
     style="margin-top: 95px; list-style-type:none"
-    :wrapperClosable=true
+    :wrapperClosable="true"
   >
     <div class="info-modal">
       <div>
@@ -21,7 +21,12 @@
         </div>
         <div>
           <table>
-            <tr v-for="(item,index) in groupinfoList.members" id="index" :key="index" @click="select(index)">
+            <tr
+              v-for="(item,index) in groupinfoList.members"
+              id="index"
+              :key="index"
+              @click="select(item)"
+            >
               <td class="info-name">{{item.member}}</td>
               <td v-if="!item.owner && username == groupinfoList.admin" class="info-icon">
                 <el-tooltip
@@ -69,7 +74,7 @@
                   :content="setRemove"
                   placement="bottom-start"
                 >
-                  <i class="el-icon-circle-close"></i>
+                  <i class="el-icon-circle-close" @click="openRemoveGroupUser"></i>
                 </el-tooltip>
               </td>
             </tr>
@@ -78,15 +83,13 @@
         </div>
       </div>
     </div>
-    <GetGroupSetting ref="groupSettingModel"/>
+    <GetGroupSetting ref="groupSettingModel" />
   </el-drawer>
-  
-  
 </template>
 
 <script>
 import { mapActions } from "vuex";
-import GetGroupSetting from "./groupSetting.vue"
+import GetGroupSetting from "./groupSetting.vue";
 import "./group.less";
 export default {
   data() {
@@ -119,7 +122,15 @@ export default {
     }
   },
   methods: {
-    ...mapActions(["onGetGroupinfo", "onSetAdmin", "onRemoveAdmin","onAddMute","onRemoveMute","onAddGroupBlack"]),
+    ...mapActions([
+      "onGetGroupinfo",
+      "onSetAdmin",
+      "onRemoveAdmin",
+      "onAddMute",
+      "onRemoveMute",
+      "onAddGroupBlack",
+      "onRemoveGroupUser"
+    ]),
 
     chengeInfoModel() {
       this.$data.showGroupInfoModel = !this.$data.showGroupInfoModel;
@@ -128,7 +139,7 @@ export default {
       }
     },
     chengeSetModel() {
-        this.$refs.groupSettingModel.changeSettingModel();
+      this.$refs.groupSettingModel.changeSettingModel();
     },
     chengeAdminIcon() {
       this.$data.showAdminIcon = !this.$data.showAdminIcon;
@@ -139,7 +150,7 @@ export default {
 
     select(key) {
       console.log(key);
-      // this.$data.select_name = key.member;
+      this.$data.select_name = key.member;
     },
     openSetAdmin() {
       this.$confirm("确认操作: 设为管理员", {
@@ -179,7 +190,7 @@ export default {
         })
         .catch(() => {});
     },
-    openSetMute(){
+    openSetMute() {
       this.$confirm("确认操作: 禁言", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
@@ -196,10 +207,10 @@ export default {
             message: "禁言成功"
           });
         })
-        .catch(() => {});  
+        .catch(() => {});
     },
     openRemoveMute() {
-       this.$confirm("确认操作: 移除禁言", {
+      this.$confirm("确认操作: 移除禁言", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning"
@@ -215,10 +226,10 @@ export default {
             message: "移除禁言列表成功"
           });
         })
-        .catch(() => {});   
+        .catch(() => {});
     },
-    openGroupBlack(){
-        this.$confirm("确认操作: 加入群黑名单", {
+    openGroupBlack() {
+      this.$confirm("确认操作: 加入群黑名单", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning"
@@ -234,11 +245,30 @@ export default {
             message: "加入群黑名单成功"
           });
         })
-        .catch(() => {});   
+        .catch(() => {});
+    },
+    openRemoveGroupUser() {
+      this.$confirm("确认操作: 从本群移除", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          this.onRemoveGroupUser({
+            select_id: this.$store.state.group.groupInfo.gid,
+            select_name: this.$data.select_name
+          });
+          this.chengeMuteIcon();
+          this.$message({
+            type: "success",
+            message: "移除成员成功"
+          });
+        })
+        .catch(() => {});
     }
   },
-  components:{
-      GetGroupSetting
+  components: {
+    GetGroupSetting
   }
 };
 </script>
@@ -255,7 +285,7 @@ export default {
   position: absolute;
   right: 30px;
   cursor: pointer;
-  overflow: hidden
+  overflow: hidden;
 }
 .info-name ::selection {
   width: 40px;

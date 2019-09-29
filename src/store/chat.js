@@ -19,17 +19,17 @@ const Chat = {
             state.userList[type] = userList;
         },
         updateMsgList(state, payload) {
-            const { chatType, chatId, msg, bySelf, type, id} = payload;
+            const { chatType, chatId, msg, bySelf, type, id } = payload;
             const { params } = Vue.$route
             let status = 'unread'
-            if(payload.chatType == "contact"){
-                if(params.id == payload.from){
+            if (payload.chatType == "contact") {
+                if (params.id == payload.from) {
                     status = 'read'
                 }
             }
-            else if(payload.chatType == "group"){
-                if(params.id == payload.chatId){
-                    status = 'read' 
+            else if (payload.chatType == "group") {
+                if (params.id == payload.chatId) {
+                    status = 'read'
                 }
             }
 
@@ -66,7 +66,7 @@ const Chat = {
         updateCurrentMsgList(state, messages) {
             state.currentMsgs = messages;
         },
-        updateMessageMid(state, message){
+        updateMessageMid(state, message) {
             const { id, mid } = message
             const { name, params } = Vue.$route;
             // state.currentMsgs.forEach((item) => {
@@ -75,29 +75,29 @@ const Chat = {
             //     }
             // })
             Object.keys(state.msgList[name]).forEach((user) => {
-                if(state.msgList[name][user].length){
+                if (state.msgList[name][user].length) {
                     state.msgList[name][user].forEach((msg) => {
-                        if(msg.mid == id){
+                        if (msg.mid == id) {
                             msg.mid = mid
                         }
                     })
                 }
             })
         },
-        updateMessageStatus(state, message){
-            const { id, mid, action} = message
+        updateMessageStatus(state, message) {
+            const { id, mid, action } = message
             const { name, params } = Vue.$route;
             Object.keys(state.msgList[name]).forEach((user) => {
-                if(state.msgList[name][user].length){
+                if (state.msgList[name][user].length) {
                     state.msgList[name][user].forEach((msg) => {
-                        if(action === 'readMsgs' && !msg.bySelf){
-                            if(msg.status != 'recall'){
+                        if (action === 'readMsgs' && !msg.bySelf) {
+                            if (msg.status != 'recall') {
                                 msg.status = 'read'
                             }
                         }
-                        else if(msg.mid == id || msg.mid == mid){
+                        else if (msg.mid == id || msg.mid == mid) {
                             msg.status = message.status
-                            if(message.msg){
+                            if (message.msg) {
                                 msg.msg = message.msg
                             }
                         }
@@ -108,18 +108,19 @@ const Chat = {
     },
     actions: {
         onGetContactUserList: function (context, payload) {
-            try{
-            WebIM.conn.getRoster({
-                success: function (roster) {
-                    console.log('roster', roster)
-                    const userList = roster.filter(user => ['both', 'to'].includes(user.subscription));
-                    context.commit('updateUserList', {
-                        userList,
-                        type: "contactUserList"
-                    })
-                }
-            });
-            }catch(e){
+            try {
+                WebIM.conn.getRoster({
+                    success: function (roster) {
+                        console.log('roster', roster)
+                        Vue.$store.dispatch('onGetFirendBlack')
+                        const userList = roster.filter(user => ['both', 'to'].includes(user.subscription));
+                        context.commit('updateUserList', {
+                            userList,
+                            type: "contactUserList"
+                        })
+                    }
+                });
+            } catch (e) {
                 console.log('error222', e)
             }
         },
@@ -332,9 +333,9 @@ const Chat = {
                                         mid: item.id,
                                         status: 'read'
                                     }
-                                    if(payload.isGroup){
+                                    if (payload.isGroup) {
                                         msg.chatId = item.to
-                                    }else{
+                                    } else {
                                         msg.chatId = bySelf ? item.to : item.from
                                     }
                                 } else if (!item.ext.file_length && item.filename !== 'audio' && item.filename.substring(item.filename.length - 3) !== 'mp4') { // 为图片的情况
@@ -348,9 +349,9 @@ const Chat = {
                                         mid: item.id,
                                         status: 'read'
                                     }
-                                    if(payload.isGroup){
+                                    if (payload.isGroup) {
                                         msg.chatId = item.to
-                                    }else{
+                                    } else {
                                         msg.chatId = bySelf ? item.to : item.from
                                     }
                                 } else if (item.filename === 'audio') {
@@ -361,9 +362,9 @@ const Chat = {
                                         bySelf: bySelf,
                                         type: 'audio'
                                     }
-                                    if(payload.isGroup){
+                                    if (payload.isGroup) {
                                         msg.chatId = item.to
-                                    }else{
+                                    } else {
                                         msg.chatId = bySelf ? item.to : item.from
                                     }
                                 } else if (item.filename.substring(item.filename.length - 3) === 'mp4') {
@@ -374,9 +375,9 @@ const Chat = {
                                         bySelf: bySelf,
                                         type: 'video'
                                     }
-                                    if(payload.isGroup){
+                                    if (payload.isGroup) {
                                         msg.chatId = item.to
-                                    }else{
+                                    } else {
                                         msg.chatId = bySelf ? item.to : item.from
                                     }
                                 } else {
@@ -392,16 +393,16 @@ const Chat = {
                                         mid: item.id,
                                         status: 'read'
                                     }
-                                    if(payload.isGroup){
+                                    if (payload.isGroup) {
                                         msg.chatId = item.to
-                                    }else{
+                                    } else {
                                         msg.chatId = bySelf ? item.to : item.from
                                     }
                                 }
                                 msg.isHistory = true
                                 context.commit('updateMsgList', msg)
                             })
-                            context.commit('updateMessageStatus', {action: 'readMsgs'})
+                            context.commit('updateMessageStatus', { action: 'readMsgs' })
                         }
                     } catch (e) {
                         console.log('错误', e)
@@ -412,7 +413,7 @@ const Chat = {
             WebIM.conn.fetchHistoryMessages(options)
         },
 
-        recallMessage: function(context, payload){
+        recallMessage: function (context, payload) {
             const { chatType, mid } = payload.message;
             const to = payload.to;
             const me = this
@@ -425,12 +426,12 @@ const Chat = {
                 mid,
                 to,
                 type: chatTypeObj[chatType],
-                success: function(){
+                success: function () {
                     payload.message.status = 'recall'
                     payload.message.msg = '消息已撤回'
                     Vue.$store.commit("updateMessageStatus", payload.message);
                 },
-                fail: function(){
+                fail: function () {
                     //me.$message('消息撤回失败');
                 },
             }

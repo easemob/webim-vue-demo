@@ -192,7 +192,8 @@ WebIM.conn.listen({
         ack(message);
     }, //收到视频消息
     onPresence: function (message) {
-        // console.log('onPresence', message)
+        console.log('onPresence', message)
+        let groupid = Vue.$store.state.group.groupInfo.gid //群组相关操作，更新数据时需要
         switch (message.type) {
             case 'subscribe':
                 let options = {
@@ -207,19 +208,18 @@ WebIM.conn.listen({
             case 'unsubscribed':
                 Vue.$store.dispatch('onGetContactUserList')
                 break;
-             case 'joinGroupNotifications': //收到申请进群的通知
-                // let fromer = message.from;
-                // let groupText = message.reason;
-                // let groupId = message.gid;
+            case 'joinGroupNotifications': //收到申请进群的通知
                 let groupOptions = {
                     isShow: true,
                     ...message
                 }
-                Vue.$store.commit('updateGroupNotifications',groupOptions)
+                Vue.$store.commit('updateGroupNotifications', groupOptions)
                 break;
             case 'memberJoinPublicGroupSuccess': // 进群成功
-                // Vue.$store.dispatch('onGetGroupinfo')
+                Vue.$store.dispatch('onGetGroupinfo', { groupid })
                 break;
+            case 'leaveGroup':
+                Vue.$store.dispatch('onGetGroupinfo', { groupid })
             default:
                 break;
         }
@@ -238,7 +238,7 @@ WebIM.conn.listen({
     }, //本机网络掉线
     onError: function (message) {
         console.log('onError', message);
-        if(message.type == '504'){
+        if (message.type == '504') {
             Message('消息撤回失败');
         }
         //报错返回到登录页面
@@ -265,7 +265,7 @@ WebIM.conn.listen({
 
     onDeliveredMessage: function (message) {
         console.log('onDeliveredMessage', message);
-       // Vue.$store.commit('updateMessageStatus', message)
+        // Vue.$store.commit('updateMessageStatus', message)
     }, //收到消息送达客户端回执
 
     onReadMessage: function (message) {
