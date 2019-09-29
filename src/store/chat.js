@@ -91,10 +91,15 @@ const Chat = {
                 if(state.msgList[name][user].length){
                     state.msgList[name][user].forEach((msg) => {
                         if(action === 'readMsgs' && !msg.bySelf){
-                            msg.status = 'read'
+                            if(msg.status != 'recall'){
+                                msg.status = 'read'
+                            }
                         }
                         else if(msg.mid == id || msg.mid == mid){
                             msg.status = message.status
+                            if(message.msg){
+                                msg.msg = message.msg
+                            }
                         }
                     })
                 }
@@ -103,8 +108,10 @@ const Chat = {
     },
     actions: {
         onGetContactUserList: function (context, payload) {
+            try{
             WebIM.conn.getRoster({
                 success: function (roster) {
+                    console.log('roster', roster)
                     const userList = roster.filter(user => ['both', 'to'].includes(user.subscription));
                     context.commit('updateUserList', {
                         userList,
@@ -112,6 +119,9 @@ const Chat = {
                     })
                 }
             });
+            }catch(e){
+                console.log('error222', e)
+            }
         },
         onGetGroupUserList: function (context, payload) {
             var options = {
@@ -400,6 +410,32 @@ const Chat = {
                 fail: function () { }
             }
             WebIM.conn.fetchHistoryMessages(options)
+        },
+
+        recallMessage: function(context, payload){
+            const { chatType, mid } = payload.message;
+            const to = payload.to;
+            const me = this
+            const chatTypeObj = {
+                contact: 'chat',
+                group: 'groupchat',
+                chatroom: 'chatroom'
+            }
+            const option = {
+                mid,
+                to,
+                type: chatTypeObj[chatType],
+                success: function(){
+                    payload.message.status = 'recall'
+                    payload.message.msg = '消息已撤回'
+                    Vue.$store.commit("updateMessageStatus", payload.message);
+                },
+                fail: function(){
+                    //me.$message('消息撤回失败');
+                },
+            }
+            console.log('option',option)
+            WebIM.conn.recallMessage(option)
         }
     },
     getters: {

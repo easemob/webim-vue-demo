@@ -52,6 +52,17 @@
           :style="{'float':item.bySelf ? 'right':'left'}"
         >
           <h4 style="text-align: left;margin:0">{{item.from}}</h4>
+          <!-- 撤回消息 -->
+          <div v-if="item.status == 'recall'" class="recallMsg">
+            {{item.msg}}
+          </div>
+          <div v-if="item.status == 'recall'" class="recallMsg">
+            {{renderTime(item.time)}}
+          </div>
+          <!-- 撤回消息 end -->
+
+          <el-dropdown v-else @command="handleCommand(item)" trigger="click" :style="{'float':item.bySelf ? 'right':'left'}">
+            <span class="el-dropdown-link">
           <!-- 图片消息 -->
           <img
             :key="item.msg"
@@ -84,10 +95,17 @@
           </div>
           <!-- 聊天消息 -->
           <p v-else v-html="renderTxt(item.msg)" :class="{ 'byself': item.bySelf}" />
-
           <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div>
+
+            </span>
+            <el-dropdown-menu slot="dropdown" >
+              <el-dropdown-item command="a" :disabled="!item.bySelf">撤回</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+          
           <!-- 聊天时间 -->
           <div
+            v-if="item.status !== 'recall'"
             class="time-style"
             :style="{'text-align':item.bySelf ? 'right':'left'}"
           >{{renderTime(item.time)}}</div>
@@ -215,7 +233,8 @@ export default {
       "getHistoryMessage",
       "onAddBlack",
       "onDelteFirend",
-      "onGetGroupinfo"
+      "onGetGroupinfo",
+      "recallMessage"
     ]),
     getUnreadNum(item) {
       const { name, params } = this.$route;
@@ -231,7 +250,7 @@ export default {
       const currentMsgs = chatList[userId] || [];
       let unReadNum = 0;
       currentMsgs.forEach(msg => {
-        if (msg.status !== "read" && !msg.bySelf) {
+        if (msg.status !== "read" && msg.status !== "recall" && !msg.bySelf) {
           unReadNum++;
         }
       });
@@ -351,7 +370,7 @@ export default {
       return `<img src="../../../static/faces/${value}" style="width:20px"/>`;
     },
 
-    renderTxt(txt) {
+    renderTxt(txt = '') {
       let rnTxt = [];
       let match = null;
       const regex = /(\[.*?\])/g;
@@ -450,6 +469,20 @@ export default {
         if (!dom) return;
         dom.scrollTop = dom.scrollHeight;
       }, 0);
+    },
+    handleCommand(item) {
+      console.log(item)
+      //item.status = 'recall'
+      //Vue.$store.commit("updateMessageStatus", item);
+      let name = "";
+      if (this.type === "contact") {
+        name = this.$data.activedKey[this.type].name;
+      } else if (this.type === "group") {
+        name = this.$data.activedKey[this.type].groupid;
+      } else if (this.type === "chatroom") {
+        name = this.$data.activedKey[this.type].id;
+      }
+      this.recallMessage({to: name, message: item})
     }
   },
   components: {
@@ -465,6 +498,15 @@ export default {
 </script>
 
 <style scoped lang='less'>
+.byself{
+    float: right;
+  }
+.recallMsg{
+  font-size: 12px;
+  color: #aaa;
+  width: 100%;
+  text-align: center;
+}
 .custom-title {
   font-weight: 500;
 }
@@ -541,6 +583,13 @@ export default {
     color: #999999;
     float: right;
     text-decoration: none;
+  }
+  .el-dropdown-link {
+    cursor: pointer;
+    color: #409EFF;
+  }
+  .el-icon-arrow-down {
+    font-size: 12px;
   }
 }
 </style>

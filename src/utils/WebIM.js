@@ -2,7 +2,7 @@ import config from './WebIMConfig'
 import websdk from 'easemob-websdk';
 import emedia from 'easemob-emedia';
 import webrtc from 'easemob-webrtc'
-
+import { Message } from 'element-ui';
 function ack(message) {
     var bodyId = message.id; // 需要发送已读回执的消息id
     var msg = new WebIM.message('read', WebIM.conn.getUniqueId());
@@ -238,9 +238,18 @@ WebIM.conn.listen({
     }, //本机网络掉线
     onError: function (message) {
         console.log('onError', message);
+        if(message.type == '504'){
+            Message('消息撤回失败');
+        }
         //报错返回到登录页面
         //Vue.$router.push({ path: '/login' });
     }, //失败回调
+    onRecallMessage: message => {
+        console.log('撤回消息', message)
+        message.status = 'recall'
+        message.msg = '对方撤回了一条消息'
+        Vue.$store.commit('updateMessageStatus', message);
+    },
     onBlacklistUpdate: function (list) { //黑名单变动
         // 查询黑名单，将好友拉黑，将好友从黑名单移除都会回调这个函数，list则是黑名单现有的所有好友信息
         //更新好友黑名单
