@@ -207,6 +207,20 @@ WebIM.conn.listen({
                 break;
             case 'unsubscribed':
                 Vue.$store.dispatch('onGetContactUserList')
+                break;
+             case 'joinGroupNotifications': //收到申请进群的通知
+                // let fromer = message.from;
+                // let groupText = message.reason;
+                // let groupId = message.gid;
+                let groupOptions = {
+                    isShow: true,
+                    ...message
+                }
+                Vue.$store.commit('updateGroupNotifications',groupOptions)
+                break;
+            case 'memberJoinPublicGroupSuccess': // 进群成功
+                // Vue.$store.dispatch('onGetGroupinfo')
+                break;
             default:
                 break;
         }
@@ -230,9 +244,9 @@ WebIM.conn.listen({
     }, //失败回调
     onBlacklistUpdate: function (list) { //黑名单变动
         // 查询黑名单，将好友拉黑，将好友从黑名单移除都会回调这个函数，list则是黑名单现有的所有好友信息
-        // console.log('onBlacklistUpdate', list);
+        //更新好友黑名单
         let blackList = list;
-        Vue.$store.commit('updateBlackList', blackList)
+        Vue.$store.commit('updateBlackList', blackList);
     },
     onReceivedMessage: function (message) {
         console.log('onReceivedMessage', message);
@@ -254,6 +268,7 @@ WebIM.conn.listen({
 
     onCreateGroup: function (message) {
         console.log('onCreateGroup', message);
+        Vue.$store.dispatch('onGetGroupUserList')
     }, //创建群组成功回执（需调用createGroupNew）
     onMutedMessage: function (message) {
         console.log('onMutedMessage', message);

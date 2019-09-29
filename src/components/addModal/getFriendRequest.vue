@@ -46,7 +46,7 @@ export default {
         id: this.$store.state.friendModule.friendRequest.from,
         params: this.$route.query.username
       };
-        this.declineSubscribe(options);
+      this.declineSubscribe(options);
       this.changeModal();
     }
   }

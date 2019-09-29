@@ -7,6 +7,8 @@ import vant from 'vant';
 import WebIM from './utils/WebIM';
 import store from './store';
 
+
+
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 

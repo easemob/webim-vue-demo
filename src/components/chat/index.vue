@@ -107,6 +107,8 @@
     <EmediaModal ref="emediaModal"  />
     <MultiAVModal :to="activedKey[type]"/>
     <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]"/>
+    <EmediaModal ref="emediaModal" />
+    <GetGroupInfo ref="groupInfoModel"/>
   </div>
 </template>
 
@@ -122,6 +124,7 @@ import moment from "moment";
 import _ from "lodash";
 import AddAVMemberModal from "../emediaModal/addAVMemberModal";
 import MultiAVModal from "../emediaModal/multiAVModal";
+import GetGroupInfo from "../group/groupInfo.vue"
 
 export default {
   data() {
@@ -131,6 +134,11 @@ export default {
         group: "",
         chatroom: ""
       },
+      showFirendMenus: false,
+      firendMenus: [
+        { name: "加入黑名单", id: "1", icon: "add-o" },
+        { name: "删除好友", id: "2", icon: "delete" }
+      ],
       message: "",
       isHttps: window.location.protocol === "https:" ? true : false,
       loadText: "加载更多",
@@ -184,7 +192,10 @@ export default {
       "onCallVideo",
       "onCallVoice",
       "getGroupMembers",
-      "getHistoryMessage"
+      "getHistoryMessage",
+      "onAddBlack",
+      "onDelteFirend",
+      "onGetGroupinfo"
     ]),
     getUnreadNum(item){
       const { name, params } = this.$route;
@@ -276,6 +287,38 @@ export default {
         isGroup,
         success
       });
+    changeMenus() {
+      if(this.type === "contact"){
+        this.$data.showFirendMenus = !this.$data.showFirendMenus;
+      }else if(this.type === "group"){
+        this.$refs.groupInfoModel.chengeInfoModel();
+        this.getGroupInfo()
+      }
+      
+    },
+    menuClick(i) {
+      console.log(i);
+      this.changeMenus();
+
+      switch (i) {
+        case "1":
+          console.log("加入黑名单")
+          this.onAddBlack({
+            userId : this.$data.activedKey[this.type]
+          });
+          break;
+        case "2":
+          this.onDelteFirend({
+            userId : this.$data.activedKey[this.type]
+          });
+        default:
+          break;
+      }
+    },
+    getGroupInfo(){
+      this.onGetGroupinfo({
+        groupid:this.$data.activedKey[this.type].groupid
+      })
     },
     onSendTextMsg() {
       this.onSendText({
@@ -396,7 +439,8 @@ export default {
     ChatEmoji,
     UpLoadImage,
     UpLoadFile,
-    MultiAVModal
+    MultiAVModal,
+    GetGroupInfo,
   }
 };
 </script>

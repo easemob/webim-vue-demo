@@ -48,6 +48,7 @@
     <AddGroupUser ref="addGroupModel" />
     <CreateGroup ref="createGroupModel" />
     <VidoeSetting ref="videoSetting"/>
+    <GroupRequest />
   </div>
 </template>
 
@@ -60,6 +61,7 @@ import FirendBlack from "../../components/addModal/firendBlack.vue";
 import AddGroupUser from "../../components/group/addGroupUser.vue";
 import CreateGroup from "../../components/group/createGroup.vue";
 import VidoeSetting from "../../components/videoSetting/index";
+import GroupRequest from "../../components/group/groupRequest.vue"
 import "./index.less";
 import { mapState, mapActions } from "vuex";
 export default {
@@ -128,7 +130,8 @@ export default {
     FirendBlack,
     AddGroupUser,
     CreateGroup,
-    VidoeSetting
+    VidoeSetting,
+    GroupRequest
   }
 };
 </script>
