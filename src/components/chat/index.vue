@@ -246,6 +246,7 @@ export default {
         userId = item.groupid;
       } else {
         userId = item.id;
+        return 0;
       }
       const currentMsgs = chatList[userId] || [];
       let unReadNum = 0;
@@ -260,6 +261,13 @@ export default {
       this.$data.activedKey[this.type] = key;
       const me = this;
       me.$data.loadText = "加载更多";
+      // if( me.roomId){
+      //     WebIM.conn.quitChatRoom({
+      //         roomId: me.roomId // 聊天室id
+      //     });
+      //     me.roomId = ''
+      //   }
+
       if (this.type === "group") {
         this.$router.push({ name: this.type, params: { id: key.groupid } });
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.groupid });
@@ -284,14 +292,21 @@ export default {
           this.getHistoryMessage({ name: key.name, isGroup: false });
         }
       } else if (this.type === "chatroom") {
+        const me = this
+        //me.roomId = key.id
+
         this.$router.push({ name: this.type, params: { id: key.id } });
-        this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
+        this.onGetCurrentChatObjMsg({ type: this.type, id: key.id });
+
         WebIM.conn.joinChatRoom({
           roomId: key.id, // 聊天室id
           success: function() {
             console.log("加入聊天室成功");
             if (!me.msgList) {
               me.getHistoryMessage({ name: key.id, isGroup: true });
+              setTimeout(() => {
+                me.$forceUpdate();
+              },100)
             }
           }
         });

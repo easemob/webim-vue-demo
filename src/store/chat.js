@@ -434,7 +434,6 @@ const Chat = {
                     //me.$message('消息撤回失败');
                 },
             }
-            console.log('option',option)
             WebIM.conn.recallMessage(option)
         }
     },
