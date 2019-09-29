@@ -15,10 +15,7 @@
             <div class="icon-style" v-if="getUnreadNum(item) != 0">
               <span class="unreadNum">{{getUnreadNum(item)}}</span>
             </div>
-            <span
-              class="time-style"
-              style="float:right"
-            >{{getLastMsg(item).msgTime}}</span>
+            <span class="time-style" style="float:right">{{getLastMsg(item).msgTime}}</span>
           </template>
         </van-cell>
       </van-list>
@@ -27,6 +24,24 @@
     <div class="messagebox" v-if="activedKey[type]">
       <div class="messagebox-header">
         <div>{{type ==='chatroom'?activedKey[type].id:activedKey[type].name}}</div>
+        <div>
+          <!-- <label class="select-user">{{activedKey[type].name}}</label> -->
+          <van-icon name="ellipsis" @click="changeMenus" class="icon-setting" />
+        </div>
+        <div v-show="showFirendMenus" class="messagebox-menus">
+          <ul class="menus">
+            <li
+              v-for="item in firendMenus"
+              :key="item.id"
+              id="item.id"
+              class="name-menus"
+              @click="menuClick(item.id)"
+            >
+              <van-icon :name="item.icon" size="18" class="icon-menus" />
+              <span>{{item.name}}</span>
+            </li>
+          </ul>
+        </div>
       </div>
       <div class="messagebox-content" ref="msgContent">
         <div class="moreMsgs" @click="loadMoreMsgs">{{loadText}}</div>
@@ -61,7 +76,7 @@
           </div>
           <!-- 音频消息 -->
           <div v-else-if="item.type==='audio'">
-              <audio :src="item.msg" controls></audio>
+            <audio :src="item.msg" controls></audio>
           </div>
           <!-- 视频消息 -->
           <div v-else-if="item.type==='video'">
@@ -88,7 +103,12 @@
           <UpLoadFile :type="this.type" :chatId="activedKey[type]" />
 
           <i class="el-icon-video-camera icon" @click="callVideo" v-show="isHttps"></i>
-          <i v-if="type === 'contact'" class="el-icon-microphone icon" @click="callVoice" v-show="isHttps"></i>
+          <i
+            v-if="type === 'contact'"
+            class="el-icon-microphone icon"
+            @click="callVoice"
+            v-show="isHttps"
+          ></i>
         </div>
         <div class="fotter-send">
           <textarea
@@ -104,11 +124,11 @@
         </div>
       </div>
     </div>
-    <EmediaModal ref="emediaModal"  />
-    <MultiAVModal :to="activedKey[type]"/>
-    <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]"/>
     <EmediaModal ref="emediaModal" />
-    <GetGroupInfo ref="groupInfoModel"/>
+    <MultiAVModal :to="activedKey[type]" />
+    <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" />
+    <EmediaModal ref="emediaModal" />
+    <GetGroupInfo ref="groupInfoModel" />
   </div>
 </template>
 
@@ -124,7 +144,7 @@ import moment from "moment";
 import _ from "lodash";
 import AddAVMemberModal from "../emediaModal/addAVMemberModal";
 import MultiAVModal from "../emediaModal/multiAVModal";
-import GetGroupInfo from "../group/groupInfo.vue"
+import GetGroupInfo from "../group/groupInfo.vue";
 
 export default {
   data() {
@@ -146,7 +166,7 @@ export default {
         sending: "发送中",
         sent: "已发送",
         read: "已读"
-      },
+      }
     };
   },
 
@@ -161,7 +181,7 @@ export default {
   },
   updated() {
     //console.log("数据", this.$store);
-    this.scollBottom()
+    this.scollBottom();
   },
   computed: {
     ...mapGetters({
@@ -197,27 +217,25 @@ export default {
       "onDelteFirend",
       "onGetGroupinfo"
     ]),
-    getUnreadNum(item){
+    getUnreadNum(item) {
       const { name, params } = this.$route;
-      const chatList = this.$store.state.chat.msgList[name]
-      let userId = ''
-      if(name == 'contact'){
-        userId = item.name
+      const chatList = this.$store.state.chat.msgList[name];
+      let userId = "";
+      if (name == "contact") {
+        userId = item.name;
+      } else if (name == "group") {
+        userId = item.groupid;
+      } else {
+        userId = item.id;
       }
-      else if(name == 'group'){
-        userId = item.groupid
-      }
-      else{
-        userId = item.id
-      }
-      const currentMsgs = chatList[userId] || []
-      let unReadNum = 0
+      const currentMsgs = chatList[userId] || [];
+      let unReadNum = 0;
       currentMsgs.forEach(msg => {
-        if(msg.status !== 'read' && !msg.bySelf){
-          unReadNum ++
+        if (msg.status !== "read" && !msg.bySelf) {
+          unReadNum++;
         }
       });
-      return unReadNum
+      return unReadNum;
     },
     select(key) {
       this.$data.activedKey[this.type] = key;
@@ -228,35 +246,33 @@ export default {
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.groupid });
 
         setTimeout(() => {
-           Vue.$store.commit('updateMessageStatus', {action: "readMsgs"})
-           this.$forceUpdate()
-        }, 100)
+          Vue.$store.commit("updateMessageStatus", { action: "readMsgs" });
+          this.$forceUpdate();
+        }, 100);
 
-        if(!this.msgList){
-          this.getHistoryMessage({name: key.groupid, isGroup: true})
+        if (!this.msgList) {
+          this.getHistoryMessage({ name: key.groupid, isGroup: true });
         }
-      }
-      else if (this.type === "contact") {
+      } else if (this.type === "contact") {
         this.$router.push({ name: this.type, params: { id: key.name } });
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
         setTimeout(() => {
-           Vue.$store.commit('updateMessageStatus', {action: "readMsgs"})
-           this.$forceUpdate()
-        }, 100)
-       
-        if(!this.msgList){
-          this.getHistoryMessage({name: key.name, isGroup: false})
+          Vue.$store.commit("updateMessageStatus", { action: "readMsgs" });
+          this.$forceUpdate();
+        }, 100);
+
+        if (!this.msgList) {
+          this.getHistoryMessage({ name: key.name, isGroup: false });
         }
-      }
-      else if (this.type === "chatroom") {
+      } else if (this.type === "chatroom") {
         this.$router.push({ name: this.type, params: { id: key.id } });
         this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
         WebIM.conn.joinChatRoom({
           roomId: key.id, // 聊天室id
           success: function() {
             console.log("加入聊天室成功");
-            if(!me.msgList){
-              me.getHistoryMessage({name: key.id, isGroup: true})
+            if (!me.msgList) {
+              me.getHistoryMessage({ name: key.id, isGroup: true });
             }
           }
         });
@@ -270,55 +286,52 @@ export default {
           me.$data.loadText = "已无更多数据";
         }
       };
-      let name = ''
-      let isGroup = false
+      let name = "";
+      let isGroup = false;
       if (this.type === "contact") {
         name = this.$data.activedKey[this.type].name;
-      }
-      else if(this.type === "group"){
+      } else if (this.type === "group") {
         name = this.$data.activedKey[this.type].groupid;
-        isGroup = true
-      }else if(this.type === "chatroom"){
+        isGroup = true;
+      } else if (this.type === "chatroom") {
         name = this.$data.activedKey[this.type].id;
-        isGroup = true
+        isGroup = true;
       }
       this.getHistoryMessage({
         name,
         isGroup,
         success
       });
+    },
     changeMenus() {
-      if(this.type === "contact"){
+      if (this.type === "contact") {
         this.$data.showFirendMenus = !this.$data.showFirendMenus;
-      }else if(this.type === "group"){
+      } else if (this.type === "group") {
         this.$refs.groupInfoModel.chengeInfoModel();
-        this.getGroupInfo()
+        this.getGroupInfo();
       }
-      
     },
     menuClick(i) {
-      console.log(i);
       this.changeMenus();
-
       switch (i) {
         case "1":
-          console.log("加入黑名单")
+          console.log("加入黑名单");
           this.onAddBlack({
-            userId : this.$data.activedKey[this.type]
+            userId: this.$data.activedKey[this.type]
           });
           break;
         case "2":
           this.onDelteFirend({
-            userId : this.$data.activedKey[this.type]
+            userId: this.$data.activedKey[this.type]
           });
         default:
           break;
       }
     },
-    getGroupInfo(){
+    getGroupInfo() {
       this.onGetGroupinfo({
-        groupid:this.$data.activedKey[this.type].groupid
-      })
+        groupid: this.$data.activedKey[this.type].groupid
+      });
     },
     onSendTextMsg() {
       this.onSendText({
@@ -364,7 +377,9 @@ export default {
     callVideo() {
       if (this.type == "contact") {
         this.$refs.emediaModal.showEmediaModal();
-        this.$refs.emediaModal.showCallerWait(this.$data.activedKey[this.type].name);
+        this.$refs.emediaModal.showCallerWait(
+          this.$data.activedKey[this.type].name
+        );
         const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
         const recMerge = (videoSetting && videoSetting.recMerge) || false;
         const rec = (videoSetting && videoSetting.rec) || false;
@@ -382,7 +397,9 @@ export default {
     },
     callVoice() {
       this.$refs.emediaModal.showEmediaModal();
-      this.$refs.emediaModal.showCallerWait(this.$data.activedKey[this.type].name);
+      this.$refs.emediaModal.showCallerWait(
+        this.$data.activedKey[this.type].name
+      );
       const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
       const recMerge = (videoSetting && videoSetting.recMerge) || false;
       const rec = (videoSetting && videoSetting.rec) || false;
@@ -407,28 +424,30 @@ export default {
       const localFormat = localMoment.format("MM-DD hh:mm A");
       return localFormat;
     },
-    getLastMsg(item){
+    getLastMsg(item) {
       const { name, params } = this.$route;
-      const chatList = this.$store.state.chat.msgList[name]
-      let userId = ''
-      if(name == 'contact'){
-        userId = item.name
+      const chatList = this.$store.state.chat.msgList[name];
+      let userId = "";
+      if (name == "contact") {
+        userId = item.name;
+      } else if (name == "group") {
+        userId = item.groupid;
+      } else {
+        userId = item.id;
       }
-      else if(name == 'group'){
-        userId = item.groupid
-      }
-      else{
-        userId = item.id
-      }
-      const currentMsgs = chatList[userId] || []
-      const lastMsg = currentMsgs.length?currentMsgs[currentMsgs.length-1].msg: ""
-      const msgTime = currentMsgs.length?this.renderTime(currentMsgs[currentMsgs.length-1].time): ''
-      return {lastMsg, msgTime}
+      const currentMsgs = chatList[userId] || [];
+      const lastMsg = currentMsgs.length
+        ? currentMsgs[currentMsgs.length - 1].msg
+        : "";
+      const msgTime = currentMsgs.length
+        ? this.renderTime(currentMsgs[currentMsgs.length - 1].time)
+        : "";
+      return { lastMsg, msgTime };
     },
     scollBottom() {
       setTimeout(() => {
         const dom = this.$refs.msgContent;
-        if (!dom) return
+        if (!dom) return;
         dom.scrollTop = dom.scrollHeight;
       }, 0);
     }
@@ -440,7 +459,7 @@ export default {
     UpLoadImage,
     UpLoadFile,
     MultiAVModal,
-    GetGroupInfo,
+    GetGroupInfo
   }
 };
 </script>
@@ -454,18 +473,18 @@ export default {
   border-radius: 8px;
   cursor: pointer;
 }
-  .status{
-    display: inline;
-    position: relative;
-    top: 20px;
-    font-size: 12px;
-    left: -6px;
-    color: #736c6c;
-  }
-  .unreadNum{
-    float: left;
-    width: 100%;
-  }
+.status {
+  display: inline;
+  position: relative;
+  top: 20px;
+  font-size: 12px;
+  left: -6px;
+  color: #736c6c;
+}
+.unreadNum {
+  float: left;
+  width: 100%;
+}
 .icon-style {
   display: inline-block;
   background-color: #f04134;

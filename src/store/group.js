@@ -263,7 +263,8 @@ const Group = {
 			let option = {
 				groupId: payload.select_id,
 				success: function () {
-					console.log('You leave room succeed!');
+					Vue.$store.dispatch('onGetGroupUserList')
+					this.$forceUpdate();
 				},
 				error: function () {
 					console.log('Leave room faild');
