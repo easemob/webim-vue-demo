@@ -172,7 +172,6 @@ WebIM.conn.listen({
                 'Accept': 'audio/mp4'
             },
             onFileDownloadComplete: function (response) {
-                debugger
                 let objectURL = WebIM.utils.parseDownloadResponse.call(WebIM.conn, response)
                 Vue.$store.commit('updateMsgList', {
                     chatType: typeMap[message.type],

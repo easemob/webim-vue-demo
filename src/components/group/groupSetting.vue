@@ -93,7 +93,6 @@ export default {
         .catch(() => {});
     },
     updatedGroupInfo() {
-      debugger;
       this.$prompt("群组名", "修改群信息", {
         confirmButtonText: "修改",
         cancelButtonText: "取消"

@@ -39,7 +39,6 @@ const Group = {
 	actions: {
 		//获取公开群组
 		onGetPublicGroup: function (context, payload) {
-			debugger
 			let limit = 50;
 			let options = {
 				limit: limit,// 预期每页获取的记录数
@@ -153,7 +152,6 @@ const Group = {
 		},
 		//修改群组详情
 		onUpdataGroupInfo: function (context, payload) {
-			debugger
 			console.log("onUpdataGroupInfo", payload)
 			const { select_id,updateName,updateDesc } = payload
 			let option = {

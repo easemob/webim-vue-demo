@@ -1,10 +1,10 @@
 <template>
   <el-dialog title="群组黑名单" :visible.sync="showGroupBlackModel">
     <div>
-      <ul v-for="index in groupBlackList" :key="index">
-        {{index}}
-        <label>
-          <i class="el-icon-remove-outline" @click="select(index)"></i>
+      <ul v-for="item in groupBlackList" :key="item">
+        {{item}}
+        <label class="delete-icon">
+          <i class="el-icon-remove-outline" @click="select(item)"></i>
         </label>
       </ul>
     </div>
@@ -24,21 +24,24 @@ export default {
     }
   },
   methods: {
-		...mapActions(["onRemoveGroupBlack"]),
+    ...mapActions(["onRemoveGroupBlack"]),
     chengeBlackModel() {
-      debugger;
       this.$data.showGroupBlackModel = !this.$data.showGroupBlackModel;
     },
     select(key) {
-			console.log(key)
-			let removeGroupBlackName = key;
-			this.onRemoveGroupBlack({
-				select_id: this.$store.state.group.groupInfo.gid,
-				removeGroupName : removeGroupBlackName
-			})
+      console.log(key);
+      let removeGroupBlackName = key;
+      this.onRemoveGroupBlack({
+        select_id: this.$store.state.group.groupInfo.gid,
+        removeGroupName: removeGroupBlackName
+      });
     }
   }
 };
 </script>
 <style scoped>
+.delete-icon {
+  position: absolute;
+  right: 40px;
+}
 </style>

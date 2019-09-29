@@ -81,7 +81,6 @@ export default {
       this.$data.showFriendListModel = !this.$data.showFriendListModel;
     },
     postCreateGroup() {
-      debugger
       this.onCreateGroup({
         groupname: this.$data.form.groName,
         desc: this.$data.form.desc,
