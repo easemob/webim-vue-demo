@@ -1,0 +1,27 @@
+
+dist: trusty
+language: node_js
+node_js: node
+env:
+  global:
+    - "nexus_auth=ci-deploy:Xyc-R5c-SdS-2Qr"
+
+install:
+  - npm install
+jobs:
+  include:
+    # 相同 stage 的 jobs 并行执行
+    - stage: "step1"
+      name: "packing"
+      script: ./travis/pack.sh
+      # if: tag =~ /^v\d+\.\d+\.\d+\.final$/
+      deploy:
+        skip_cleanup: true
+        provider: script
+        script: ./travis/upload.sh
+        on:
+          tags: true
+
+cache:
+  directories:
+    - node_moduels
