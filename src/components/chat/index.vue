@@ -234,7 +234,8 @@ export default {
       "onAddBlack",
       "onDelteFirend",
       "onGetGroupinfo",
-      "recallMessage"
+      "recallMessage",
+      "onGetGroupBlack"
     ]),
     getUnreadNum(item) {
       const { name, params } = this.$route;
@@ -364,7 +365,7 @@ export default {
     },
     getGroupInfo() {
       this.onGetGroupinfo({
-        groupid: this.$data.activedKey[this.type].groupid
+        select_id: this.$data.activedKey[this.type].groupid
       });
     },
     onSendTextMsg() {

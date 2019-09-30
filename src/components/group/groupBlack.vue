@@ -1,5 +1,5 @@
 <template>
-  <el-dialog title="群组黑名单" :visible.sync="showGroupBlackModel">
+  <el-dialog title="群组黑名单" :visible.sync="showGroupBlackModel" :modal=false>
     <div>
       <ul v-for="item in groupBlackList" :key="item">
         {{item}}

@@ -1,7 +1,7 @@
 <template>
   <el-dialog title="申请入群" :visible.sync="showGroupModel">
     <div>
-      <input class="searchInput" v-model="groupId" placeholder="请输入群组ID" />
+      <input class="searchInput" v-model="select_groupid" placeholder="请输入群组ID" />
     </div>
     <div>
       <el-button class="searchBtn" type="success" @click="getGroupinfo">搜索</el-button>
@@ -51,7 +51,6 @@ import Vue from "vue";
 export default {
   data() {
     return {
-      groupId:  "",
       select_groupid: "",
       showGroupModel: false,
       showGroupInfoModel: false,
@@ -82,7 +81,7 @@ export default {
       if (!this.$data.showGroupListModel) {
         this.changeGroupListModel();
       }
-      this.$data.groupId = "";
+      this.$data.select_groupid = "";
       this.getPublicGroup();
     },
     changeGroupListModel() {
@@ -97,20 +96,20 @@ export default {
     },
     getGroupinfo() {
       this.onGetGroupinfo({
-        groupid: this.$data.groupId
+        select_groupid: this.$data.select_groupid
       });
       this.changeGroupListModel();
       // this.chanegGroupInfoModel()
     },
     postJoinGroup() {
       this.onJoinGroup({
-        groupId: this.$data.groupId
+        select_groupid: this.$data.select_groupid
       });
       this.open();
       this.onGetGroupUserList();
     },
     select(key) {
-      this.$data.groupId = key.groupid;
+      this.$data.select_groupid = key.groupid;
       // console.log(this.$data.elect_groupid);
       this.getGroupinfo();
     }

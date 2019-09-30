@@ -193,7 +193,7 @@ WebIM.conn.listen({
     }, //收到视频消息
     onPresence: function (message) {
         console.log('onPresence', message)
-        let groupid = Vue.$store.state.group.groupInfo.gid //群组相关操作，更新数据时需要
+        let select_id = Vue.$store.state.group.groupInfo.gid //群组相关操作，更新数据时需要
         switch (message.type) {
             case 'subscribe':
                 let options = {
@@ -216,10 +216,10 @@ WebIM.conn.listen({
                 Vue.$store.commit('updateGroupNotifications', groupOptions)
                 break;
             case 'memberJoinPublicGroupSuccess': // 进群成功
-                Vue.$store.dispatch('onGetGroupinfo', { groupid })
+                Vue.$store.dispatch('onGetGroupinfo', { select_id })
                 break;
             case 'leaveGroup':
-                Vue.$store.dispatch('onGetGroupinfo', { groupid })
+                Vue.$store.dispatch('onGetGroupinfo', { select_id })
             default:
                 break;
         }

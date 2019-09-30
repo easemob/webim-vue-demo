@@ -88,6 +88,7 @@ export default {
         approval: this.$data.form.radiopom == 2 ? false : true,
         pub: this.$data.form.radio == 2 ? true : false
       });
+      this.changeCreateModel();
     }
   }
 };

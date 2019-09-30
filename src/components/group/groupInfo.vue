@@ -19,7 +19,7 @@
         <div>
           <h3>群组成员</h3>
         </div>
-        <div>
+        <div class="info-user">
           <table>
             <tr
               v-for="(item,index) in groupinfoList.members"
@@ -239,7 +239,6 @@ export default {
             select_id: this.$store.state.group.groupInfo.gid,
             select_name: this.$data.select_name
           });
-          this.chengeMuteIcon();
           this.$message({
             type: "success",
             message: "加入群黑名单成功"
@@ -258,7 +257,6 @@ export default {
             select_id: this.$store.state.group.groupInfo.gid,
             select_name: this.$data.select_name
           });
-          this.chengeMuteIcon();
           this.$message({
             type: "success",
             message: "移除成员成功"
@@ -297,5 +295,8 @@ export default {
   padding-left: 0;
   /* position: absolute;
   right: 30px; */
+}
+.info-user {
+  overflow-y: auto;
 }
 </style>

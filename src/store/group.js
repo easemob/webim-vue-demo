@@ -19,7 +19,7 @@ const Group = {
 			state.publicGroupList = publicGroup;
 		},
 		updateGroupNotifications(state, data) {
-			console.log("updateGroupNotifications",data)
+			console.log("updateGroupNotifications", data)
 			state.groupNotifications = data;
 		},
 		getInfo(state, payload) {
@@ -31,8 +31,8 @@ const Group = {
 			state.groupInfo.membersonly = membersonly;
 			state.groupInfo.members = members
 		},
-		updateGroupBlack(state,payload){
-			console.log("updateGroupBlack",payload)
+		updateGroupBlack(state, payload) {
+			console.log("updateGroupBlack", payload)
 			state.groupBlack = payload
 		}
 	},
@@ -57,12 +57,10 @@ const Group = {
 		//获取群组详情
 		onGetGroupinfo: function (context, payload) {
 			console.log("onGetGroupinfo", payload)
-			let gid = payload.groupid;
-			let select_id = payload.groupid;
+			let gid = payload.select_id;
 			let options = {
 				groupId: gid,  //群组id
 				success: function (resp) {
-					console.log("Response: ", resp);
 					let name = resp.data[0].name;
 					let admin = resp.data[0].owner;
 					let desc = resp.data[0].description;
@@ -84,7 +82,7 @@ const Group = {
 		//申请加入群组
 		onJoinGroup: function (context, payload) {
 			let options = {
-				groupId: payload.groupId,                              // 群组ID
+				groupId: payload.select_groupid,                              // 群组ID
 				success: function (resp) {
 					console.log("Response: ", resp);
 				},
@@ -118,16 +116,16 @@ const Group = {
 		//将好友加入群组
 		onInviteGroup: function (context, payload) {
 			console.log("onInviteGroup", payload)
-			const { select_id,select_name } = payload
+			const { select_id, select_name } = payload
 			let option = {
-				users: select_id,
-				groupId: select_name
+				users: [select_name],
+				groupId: select_id
 			};
 			WebIM.conn.inviteToGroup(option);
 		},
 		//同意申请进群
 		onAgreeJoinGroup: function (context, payload) {
-			const {joinName ,joinGroupId } = payload
+			const { joinName, joinGroupId } = payload
 			let options = {
 				applicant: joinName,                          // 申请加群的用户名
 				groupId: joinGroupId,                              // 群组ID
@@ -140,7 +138,7 @@ const Group = {
 		},
 		//拒绝申请进群
 		onRejectJoinGroup: function (context, payload) {
-			const {joinName ,joinGroupId } = payload
+			const { joinName, joinGroupId } = payload
 			let options = {
 				applicant: joinName,                // 申请加群的用户名
 				groupId: joinGroupId,                    // 群组ID
@@ -154,13 +152,16 @@ const Group = {
 		//修改群组详情
 		onUpdataGroupInfo: function (context, payload) {
 			console.log("onUpdataGroupInfo", payload)
-			const { select_id,updateName,updateDesc } = payload
+			const { select_id, updateName, updateDesc } = payload
 			let option = {
 				groupId: select_id,
-				subject: updateName,                         // 群组名称
+				groupName: updateName,                         // 群组名称
 				description: updateDesc,  // 群组简介
-				success: function () {
-					console.log('Change Group Names Success!');
+				success: function (resp) {
+					console.log(resp);
+					Vue.$store.dispatch('onGetGroupUserList')
+					Vue.$store.dispatch('onGetGroupinfo', { select_id })
+					this.$forceUpdate();
 				}
 			};
 			WebIM.conn.modifyGroup(option);
@@ -217,12 +218,14 @@ const Group = {
 		//添加群组黑名单
 		onAddGroupBlack: function (context, payload) {
 			console.log("onAddGroupBlack", payload)
-			const {select_id,select_name} = payload
+			const { select_id, select_name } = payload
 			let options = {
 				groupId: select_id,                     // 群组ID
 				username: select_name,                         // 将要被加入黑名单的用户名
 				success: function (resp) {
-					console.log("Response: ", resp);
+					Vue.$store.dispatch('onGetGroupinfo', {select_id})
+					this.$forceUpdate();
+					console.log("添加群组黑名单成功")
 				},
 				error: function (e) { }
 			};
@@ -230,12 +233,14 @@ const Group = {
 		},
 		//移除群组黑名单
 		onRemoveGroupBlack: function (context, payload) {
-			const {select_id,removeGroupName} = payload
+			const { select_id, removeGroupName } = payload
 			var options = {
 				groupId: select_id,                     // 群组ID              
 				username: removeGroupName,                             // 需要移除的用户名
 				success: function (resp) {
 					console.log("移除成功Response: ", resp)
+					Vue.$store.dispatch('onGetGroupBlack', { groupid })
+					this.$forceUpdate();
 				},
 				error: function (e) { }
 			}
@@ -244,11 +249,12 @@ const Group = {
 		//获取群组黑名单
 		onGetGroupBlack: function (context, payload) {
 			console.log("onGetGroupBlack", payload)
+			let select_id = payload.groupid
 			let option = {
-				groupId: payload.select_id,
+				groupId: select_id,
 				success: function (list) {
 					let blackName = list.data
-					context.commit("updateGroupBlack",blackName)
+					context.commit("updateGroupBlack", blackName)
 				},
 				error: function () {
 					console.log('Get group black list error.');
@@ -257,13 +263,14 @@ const Group = {
 			WebIM.conn.getGroupBlacklistNew(option);
 		},
 		//移除群组成员
-		onRemoveGroupUser: function (context,payload) {
+		onRemoveGroupUser: function (context, payload) {
 			const { select_id, select_name } = payload
 			let options = {
-                groupId: select_id,
-                username: select_name,
-                success: function(resp){ },
-                error: {}
+				groupId: select_id,
+				username: select_name,
+				success: function (resp) {
+				},
+				error: {}
 			}
 			WebIM.conn.removeSingleGroupMember(options);
 		},
@@ -284,11 +291,10 @@ const Group = {
 		},
 		//解散群组
 		onDissolveGroup: function (context, payload) {
-			console.log("onDissolveGroup",payload)
+			console.log("onDissolveGroup", payload)
 			let option = {
 				groupId: payload.select_id,
 				success: function () {
-					console.log('Destroy group success!');
 					Vue.$store.dispatch('onGetGroupUserList')
 					this.$forceUpdate();
 				}
