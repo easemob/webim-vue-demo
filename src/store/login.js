@@ -1,4 +1,4 @@
-import { Toast } from 'vant';
+import { Message } from 'element-ui';
 const Login = {
     state: {
         isRegister: false,
@@ -38,11 +38,11 @@ const Login = {
                 nickname: payload.nickname,
                 appKey: WebIM.config.appkey,
                 success: () => {
-                    Toast.success('注册成功');
-                    // _this.dispatch('onLogin', {
-                    //     username: payload.username,
-                    //     password: payload.password,
-                    // })
+                    Message({
+                        type: "success",
+                        message: "注册成功"
+                    });
+                    context.commit('setRegisterFlag', false)
                 }
             };
             WebIM.conn.registerUser(options);
