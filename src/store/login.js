@@ -26,6 +26,7 @@ const Login = {
         },
         onLogout: function (context) {
             context.commit('setUserName', '')
+            localStorage.setItem('userInfo', '')
             WebIM.conn.close();
         },
         onRegister: function (context, payload) {

@@ -18,7 +18,7 @@ import { mapState, mapActions } from "vuex";
         },
 
         beforeMount(){
-          const userInfo = JSON.parse(localStorage.getItem("userInfo"))
+          const userInfo = localStorage.getItem("userInfo")&&JSON.parse(localStorage.getItem("userInfo"))
           if(userInfo){
             const userName = userInfo.userId;
             const password = userInfo.password;
