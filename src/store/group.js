@@ -12,7 +12,9 @@ const Group = {
 			membersonly: "",
 			members: []
 		},
-		groupBlack: []
+		groupBlack: [],
+		adminList: [],
+		muteList: [],
 	},
 	mutations: {
 		updatePublicGroup(state, publicGroup) {
@@ -34,6 +36,12 @@ const Group = {
 		updateGroupBlack(state, payload) {
 			console.log("updateGroupBlack", payload)
 			state.groupBlack = payload
+		},
+		updateAdminList(state, payload){
+			state.adminList = payload
+		},
+		updateMuteList(state, payload){
+			state.muteList = payload
 		}
 	},
 	actions: {
@@ -172,7 +180,9 @@ const Group = {
 			let options = {
 				groupId: select_id,            // 群组id
 				username: select_name,              // 用户名
-				success: function (resp) { },
+				success: function (resp) {
+					payload.success&&payload.success()
+				 },
 				error: function (e) { }
 			};
 			WebIM.conn.setAdmin(options);
@@ -183,10 +193,25 @@ const Group = {
 			let options = {
 				groupId: select_id,             // 群组id
 				username: select_name,               // 用户名
-				success: function (resp) { },
+				success: function (resp) {
+					payload.success&&payload.success()
+				},
 				error: function (e) { }
 			};
 			WebIM.conn.removeAdmin(options);
+		},
+		//获取管理员列表
+		getGroupAdmin: function(context, payload){
+			const { select_id, select_name } = payload
+			var options = {
+				groupId: select_id,                 // 群组id
+				success: function (resp) {
+					console.log('所有管理员', resp)
+					context.commit('updateAdminList', resp.data)
+				},
+				error: function(e){}
+			};
+			WebIM.conn.getGroupAdmin(options);
 		},
 		//添加群组禁言
 		onAddMute: function (context, payload) {
@@ -197,7 +222,8 @@ const Group = {
 				muteDuration: 886400000,               // 禁言的时长，单位是毫秒
 				groupId: select_id,
 				success: function (resp) {
-
+					context.commit('updateMuteList', resp.data)
+					payload.success&&payload.success()
 				},
 				error: function (e) { }
 			};
@@ -210,10 +236,26 @@ const Group = {
 			let options = {
 				groupId: select_id,                  // 群组ID
 				username: select_name,                    // 成员用户名
-				success: function (resp) { },
+				success: function (resp) {
+					context.commit('updateMuteList', resp.data)
+					payload.success&&payload.success()
+				 },
 				error: function (e) { }
 			};
 			WebIM.conn.removeMute(options);
+		},
+		//获取禁言列表
+		getMuted: function(context, payload){
+			const { select_id, select_name } = payload
+			var options = {
+				groupId: select_id,                // 群组ID
+				success: function (resp) {
+					console.log('禁言列表', resp)
+					context.commit('updateMuteList', resp.data)
+				},
+				error: function(e){}
+			};
+			WebIM.conn.getMuted(options);
 		},
 		//添加群组黑名单
 		onAddGroupBlack: function (context, payload) {

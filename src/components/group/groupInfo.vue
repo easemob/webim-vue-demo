@@ -10,64 +10,79 @@
   >
     <div class="info-modal">
       <div>
-        <h3>
-          <i class="groInfoName">群组名称</i>
-        </h3>
-        <span>{{groupinfoList.name}}</span>
-      </div>
-      <div>
+        <!-- <span class="groInfoName">群组名称</span> -->
         <div>
-          <h3>群组成员</h3>
+          <i class="groInfoName">群组名称</i>
+        </div>
+        <span class="groupName">{{groupinfoList.name}}</span>
+      </div>
+      <div class="memberBox">
+        <div>
+          <span class="groInfoName">群组成员</span>
         </div>
         <div class="info-user">
-          <table>
-            <tr
-              v-for="(item,index) in groupinfoList.members"
+          <div>
+            <div
+              class="listItem"
+              v-for="(item,index) in groupinfoList.members.filter((i)=>{if(!i.owner){return i}})"
               id="index"
               :key="index"
               @click="select(item)"
             >
-              <td class="info-name">{{item.member}}</td>
-              <td v-if="!item.owner && username == groupinfoList.admin" class="info-icon">
+              <span v-if="!item.owner" class="info-name">{{item.member}}</span>
+
+              <span v-if="!item.owner&&(adminList.includes(username) || groupinfoList.admin == username)&&username != item.member" class="info-icon">
+
+                <!-- 设置管理员 -->
                 <el-tooltip
                   class="item"
                   effect="dark"
                   :content="setAdminIcon"
                   placement="bottom-start"
-                  v-show="!showAdminIcon"
+                  v-show="!adminList.includes(item.member)&&groupinfoList.admin == username"
                 >
                   <i class="el-icon-top" @click="openSetAdmin"></i>
                 </el-tooltip>
+
+                <!-- 移除管理员 -->
                 <el-tooltip
                   class="item"
                   effect="dark"
                   :content="removeAdminIcon"
                   placement="bottom-start"
-                  v-show="showAdminIcon"
+                  v-show="adminList.includes(item.member)&&groupinfoList.admin == username"
                 >
                   <i class="el-icon-bottom" @click="openRemoveAdmin"></i>
                 </el-tooltip>
+
+                <!-- 设置禁言 -->
                 <el-tooltip
                   class="item"
                   effect="dark"
                   :content="setMute"
                   placement="bottom-start"
-                  v-show="!showMuteIcon"
+                  v-show="muteList.filter((muteItem)=>{ return muteItem.user == item.member }).length == 0"
                 >
                   <i class="el-icon-lock" @click="openSetMute"></i>
                 </el-tooltip>
+
+                <!-- 移除禁言 -->
                 <el-tooltip
                   class="item"
                   effect="dark"
                   :content="removeMute"
                   placement="bottom-start"
-                  v-show="showMuteIcon"
+                  v-show="muteList.filter((muteItem)=>{ return muteItem.user == item.member }).length != 0"
                 >
                   <i class="el-icon-unlock" @click="openRemoveMute"></i>
                 </el-tooltip>
+
+                <!-- 加黑名单 -->
                 <el-tooltip class="item" effect="dark" :content="setBlack" placement="bottom-start">
                   <i class="el-icon-warning-outline" @click="openGroupBlack"></i>
                 </el-tooltip>
+
+                <!-- 移出群 -->
                 <el-tooltip
                   class="item"
                   effect="dark"
@@ -76,10 +91,12 @@
                 >
                   <i class="el-icon-circle-close" @click="openRemoveGroupUser"></i>
                 </el-tooltip>
-              </td>
-            </tr>
-            <span>{{groupinfoList.admin}}</span>
-          </table>
+
+              </span>
+            </div>
+
+            <div class="listItem">{{groupinfoList.admin}}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -101,9 +118,9 @@ export default {
       //控制详情页图标
       showInfoIcon: false,
       //控制setAdmin图标
-      showAdminIcon: false,
+      //showAdminIcon: false,
       //控制setMute 图标
-      showMuteIcon: false,
+      //showMuteIcon: false,
 
       setAdminIcon: "设为管理员",
       removeAdminIcon: "移除管理员",
@@ -118,7 +135,14 @@ export default {
       return this.$store.state.group.groupInfo;
     },
     username() {
-      return this.$store.state.login.username;
+      const username = localStorage.getItem('userInfo')&&JSON.parse(localStorage.getItem('userInfo')).userId
+      return username //this.$store.state.login.username;
+    },
+    adminList(){
+      return this.$store.state.group.adminList;
+    },
+    muteList(){
+      return this.$store.state.group.muteList;
     }
   },
   methods: {
@@ -126,6 +150,8 @@ export default {
       "onGetGroupinfo",
       "onSetAdmin",
       "onRemoveAdmin",
+      "getGroupAdmin",
+      "getMuted",
       "onAddMute",
       "onRemoveMute",
       "onAddGroupBlack",
@@ -133,26 +159,36 @@ export default {
     ]),
 
     chengeInfoModel() {
+      console.log(this.groupinfoList,111)
       this.$data.showGroupInfoModel = !this.$data.showGroupInfoModel;
       if (this.$data.showSettingModel) {
         this.chengeSetModel();
       }
+
+      setTimeout(()=>{
+        this.getGroupAdmin({select_id: this.$store.state.group.groupInfo.gid})
+        this.getMuted({select_id: this.$store.state.group.groupInfo.gid})
+      },100)
+      
+      console.log('adminList', this.adminList)
+      console.log('muteList', this.muteList)
     },
     chengeSetModel() {
       this.$refs.groupSettingModel.changeSettingModel();
     },
-    chengeAdminIcon() {
-      this.$data.showAdminIcon = !this.$data.showAdminIcon;
-    },
-    chengeMuteIcon() {
-      this.$data.showMuteIcon = !this.$data.showMuteIcon;
-    },
+    // chengeAdminIcon() {
+    //   this.$data.showAdminIcon = !this.$data.showAdminIcon;
+    // },
+    // chengeMuteIcon() {
+    //   this.$data.showMuteIcon = !this.$data.showMuteIcon;
+    // },
 
     select(key) {
       console.log(key);
       this.$data.select_name = key.member;
     },
     openSetAdmin() {
+      const me = this
       this.$confirm("确认操作: 设为管理员", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
@@ -161,7 +197,11 @@ export default {
         .then(() => {
           this.onSetAdmin({
             select_id: this.$store.state.group.groupInfo.gid,
-            select_name: this.$data.select_name
+            select_name: this.$data.select_name,
+            success: function(){
+              me.getGroupAdmin({select_id: me.$store.state.group.groupInfo.gid})
+              me.$forceUpdate();
+            }
           });
           this.chengeAdminIcon();
           this.$message({
@@ -172,6 +212,7 @@ export default {
         .catch(() => {});
     },
     openRemoveAdmin() {
+      const me = this
       this.$confirm("确认操作: 移除管理员", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
@@ -180,7 +221,11 @@ export default {
         .then(() => {
           this.onRemoveAdmin({
             select_id: this.$store.state.group.groupInfo.gid,
-            select_name: this.$data.select_name
+            select_name: this.$data.select_name,
+            success: function(){
+              me.getGroupAdmin({select_id: me.$store.state.group.groupInfo.gid})
+              me.$forceUpdate();
+            }
           });
           this.chengeAdminIcon();
           this.$message({
@@ -191,6 +236,7 @@ export default {
         .catch(() => {});
     },
     openSetMute() {
+      const me = this
       this.$confirm("确认操作: 禁言", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
@@ -199,9 +245,13 @@ export default {
         .then(() => {
           this.onAddMute({
             select_id: this.$store.state.group.groupInfo.gid,
-            select_name: this.$data.select_name
+            select_name: this.$data.select_name,
+            success: function(){
+              me.getMuted({select_id: me.$store.state.group.groupInfo.gid})
+              me.$forceUpdate();
+            }
           });
-          this.chengeMuteIcon();
+          //this.chengeMuteIcon();
           this.$message({
             type: "success",
             message: "禁言成功"
@@ -210,6 +260,7 @@ export default {
         .catch(() => {});
     },
     openRemoveMute() {
+      const me = this
       this.$confirm("确认操作: 移除禁言", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
@@ -218,9 +269,13 @@ export default {
         .then(() => {
           this.onRemoveMute({
             select_id: this.$store.state.group.groupInfo.gid,
-            select_name: this.$data.select_name
+            select_name: this.$data.select_name,
+            success: function(){
+              me.getMuted({select_id: me.$store.state.group.groupInfo.gid})
+              me.$forceUpdate();
+            }
           });
-          this.chengeMuteIcon();
+          //this.chengeMuteIcon();
           this.$message({
             type: "success",
             message: "移除禁言列表成功"
@@ -272,7 +327,7 @@ export default {
 </script>
 <style scoped>
 .info-modal {
-  padding-left: 10px;
+  padding: 0 10px;
   /* cursor: pointer; */
 }
 .setting-icon {
@@ -298,5 +353,21 @@ export default {
 }
 .info-user {
   overflow-y: auto;
+}
+.listItem{
+  height: 50px;
+  border-bottom: 1px solid #ccc;
+  line-height: 50px;
+  color: #666;
+  font-size: 14px;
+}
+.groupName{
+  color: #666;
+  font-size: 14px;
+  height: 40px;
+  line-height: 40px;
+}
+.memberBox{
+  margin-top: 20px;
 }
 </style>
