@@ -8,16 +8,17 @@ const FriendModule = {
 			state.friendRequest = data
 		},
 		updateBlackList(state, blackList) {
-			console.log("updateBlackList", blackList)
+			console.log("updateBlackList", blackList, 'state>>>', state)
 			state.blackList = blackList
 		}
 	},
 	actions: {
 		addfirend: function (context, payload) {
-			const { id, params } = payload
+			const username = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).userId
+			const { id } = payload
 			WebIM.conn.subscribe({
 				to: id,
-				message: params + '请求添加你为好友'
+				message: username + '请求添加你为好友'
 			});
 		},
 
@@ -31,27 +32,24 @@ const FriendModule = {
 
 		//拒绝好友请求
 		declineSubscribe: function (context, payload) {
-			const { id, params } = payload
+			const username = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).userId
+			const { id } = payload
 			WebIM.conn.unsubscribed({
 				to: id,
-				message: params + '拒绝您的好友请求'
+				message: username + '拒绝您的好友请求'
 			})
 		},
 		//添加黑名单-单人
 		onAddBlack: function (context, payload) {
 			let addName = payload.userId.name
-			console.log("onAddBlack", addName)
+			console.log('addName>>>',addName);
+			
+			console.log("onAddBlack", addName, 'context>>>', context)
+
 			WebIM.conn.addToBlackList({
 				name: addName,
-				success: function () {
-					this.$message("已添加黑名单");
-					Vue.$store.dispatch('onGetContactUserList')
-					this.$forceUpdate();
-				},
-				error: function () {
-					console.log('Add friend to black list error');
-				}
-			});
+			})
+			Vue.$store.dispatch('onGetContactUserList', { type: 'addBlack', addName })
 		},
 		//获取黑名单
 		onGetFirendBlack: function (context, payload) {
@@ -73,8 +71,7 @@ const FriendModule = {
 		},
 
 		//删除好友
-		onDelteFirend: function(context,payload){
-			console.log("onDelteFirend",payload)
+		onDelteFirend: function (context, payload) {
 			let deleteName = payload.userId.name
 			WebIM.conn.removeRoster({
 				to: deleteName,

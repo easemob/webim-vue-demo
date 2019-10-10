@@ -11,11 +11,11 @@ import { mapState, mapActions } from "vuex";
     export default {
         name: 'App',
 
-        methods: {
-          ...mapActions([
-            "onGetContactUserList",
-          ])
-        },
+        // methods: {
+        //   ...mapActions([
+        //     "onGetContactUserList",
+        //   ])
+        // },
 
         beforeMount(){
           const userInfo = localStorage.getItem("userInfo")&&JSON.parse(localStorage.getItem("userInfo"))
@@ -29,10 +29,9 @@ import { mapState, mapActions } from "vuex";
                 appKey: WebIM.config.appkey
             };
             WebIM.conn.open(options);
-            setTimeout(()=>{
-              this.onGetContactUserList()
-            },100)
-            
+            // setTimeout(()=>{
+            //   this.onGetContactUserList()
+            // },100)
           }
         }
     }

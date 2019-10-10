@@ -28,6 +28,7 @@
           <!-- <label class="select-user">{{activedKey[type].name}}</label> -->
           <van-icon name="ellipsis" @click="changeMenus" class="icon-setting" />
         </div>
+        <div class="mask" v-show="showFirendMenus" @click="showFirendMenus =false"></div>
         <div v-show="showFirendMenus" class="messagebox-menus">
           <ul class="menus">
             <li
@@ -53,56 +54,56 @@
         >
           <h4 style="text-align: left;margin:0">{{item.from}}</h4>
           <!-- 撤回消息 -->
-          <div v-if="item.status == 'recall'" class="recallMsg">
-            {{item.msg}}
-          </div>
-          <div v-if="item.status == 'recall'" class="recallMsg">
-            {{renderTime(item.time)}}
-          </div>
+          <div v-if="item.status == 'recall'" class="recallMsg">{{item.msg}}</div>
+          <div v-if="item.status == 'recall'" class="recallMsg">{{renderTime(item.time)}}</div>
           <!-- 撤回消息 end -->
 
-          <el-dropdown v-else @command="handleCommand(item)" trigger="click" :style="{'float':item.bySelf ? 'right':'left'}">
+          <el-dropdown
+            v-else
+            @command="handleCommand(item)"
+            trigger="click"
+            :style="{'float':item.bySelf ? 'right':'left'}"
+          >
             <span class="el-dropdown-link">
-          <!-- 图片消息 -->
-          <img
-            :key="item.msg"
-            :src="item.msg?item.msg:''"
-            v-if="item.type === 'img'"
-            class="img-style"
-          />
-          <!-- 文件card -->
-          <div v-else-if="item.type==='file'" class="file-style">
-            <el-card :body-style="{ padding: '0px' }">
-              <div style="padding: 14px;">
-                <h2>文件</h2>
-                <span>
-                  <h3>{{item.filename}}</h3>
-                </span>
-                <div class="bottom clearfix">
-                  <span>{{readablizeBytes(item.file_length)}}</span>
-                  <a :href="item.msg" :download="item.filename">点击下载</a>
-                </div>
+              <!-- 图片消息 -->
+              <img
+                :key="item.msg"
+                :src="item.msg?item.msg:''"
+                v-if="item.type === 'img'"
+                class="img-style"
+              />
+              <!-- 文件card -->
+              <div v-else-if="item.type==='file'" class="file-style">
+                <el-card :body-style="{ padding: '0px' }">
+                  <div style="padding: 14px;">
+                    <h2>文件</h2>
+                    <span>
+                      <h3>{{item.filename}}</h3>
+                    </span>
+                    <div class="bottom clearfix">
+                      <span>{{readablizeBytes(item.file_length)}}</span>
+                      <a :href="item.msg" :download="item.filename">点击下载</a>
+                    </div>
+                  </div>
+                </el-card>
               </div>
-            </el-card>
-          </div>
-          <!-- 音频消息 -->
-          <div v-else-if="item.type==='audio'">
-            <audio :src="item.msg" controls></audio>
-          </div>
-          <!-- 视频消息 -->
-          <div v-else-if="item.type==='video'">
-            <video :src="item.msg" width="100%" controls></video>
-          </div>
-          <!-- 聊天消息 -->
-          <p v-else v-html="renderTxt(item.msg)" :class="{ 'byself': item.bySelf}" />
-          <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div>
-
+              <!-- 音频消息 -->
+              <div v-else-if="item.type==='audio'">
+                <audio :src="item.msg" controls></audio>
+              </div>
+              <!-- 视频消息 -->
+              <div v-else-if="item.type==='video'">
+                <video :src="item.msg" width="100%" controls></video>
+              </div>
+              <!-- 聊天消息 -->
+              <p v-else v-html="renderTxt(item.msg)" :class="{ 'byself': item.bySelf}" />
+              <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div>
             </span>
-            <el-dropdown-menu slot="dropdown" >
+            <el-dropdown-menu slot="dropdown">
               <el-dropdown-item command="a" :disabled="!item.bySelf">撤回</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
-          
+
           <!-- 聊天时间 -->
           <div
             v-if="item.status !== 'recall'"
@@ -190,15 +191,22 @@ export default {
 
   beforeMount() {
     if (this.type === "contact") {
-      this.onGetContactUserList();
+      setTimeout(() => {
+        this.onGetFirendBlack();
+        this.onGetContactUserList();
+      }, 100);
     } else if (this.type === "group") {
       this.onGetGroupUserList();
     } else if (this.type === "chatroom") {
       this.onGetChatroomUserList();
     }
   },
+  mounted() {
+       // 取到黑名单列表值将黑名单匹配用户列表进行筛选
+      let blackList = this.$store.state.friendModule.blackList;
+      Vue.$store.commit("changeUserList", blackList);
+  },
   updated() {
-    //console.log("数据", this.$store);
     this.scollBottom();
   },
   computed: {
@@ -235,7 +243,8 @@ export default {
       "onDelteFirend",
       "onGetGroupinfo",
       "recallMessage",
-      "onGetGroupBlack"
+      "onGetGroupBlack",
+      "onGetFirendBlack"
     ]),
     getUnreadNum(item) {
       const { name, params } = this.$route;
@@ -262,12 +271,6 @@ export default {
       this.$data.activedKey[this.type] = key;
       const me = this;
       me.$data.loadText = "加载更多";
-      // if( me.roomId){
-      //     WebIM.conn.quitChatRoom({
-      //         roomId: me.roomId // 聊天室id
-      //     });
-      //     me.roomId = ''
-      //   }
 
       if (this.type === "group") {
         this.$router.push({ name: this.type, params: { id: key.groupid } });
@@ -293,7 +296,7 @@ export default {
           this.getHistoryMessage({ name: key.name, isGroup: false });
         }
       } else if (this.type === "chatroom") {
-        const me = this
+        const me = this;
         //me.roomId = key.id
 
         this.$router.push({ name: this.type, params: { id: key.id } });
@@ -307,7 +310,7 @@ export default {
               me.getHistoryMessage({ name: key.id, isGroup: true });
               setTimeout(() => {
                 me.$forceUpdate();
-              },100)
+              }, 100);
             }
           }
         });
@@ -386,7 +389,7 @@ export default {
       return `<img src="../../../static/faces/${value}" style="width:20px"/>`;
     },
 
-    renderTxt(txt = '') {
+    renderTxt(txt = "") {
       let rnTxt = [];
       let match = null;
       const regex = /(\[.*?\])/g;
@@ -487,7 +490,6 @@ export default {
       }, 0);
     },
     handleCommand(item) {
-      console.log(item)
       //item.status = 'recall'
       //Vue.$store.commit("updateMessageStatus", item);
       let name = "";
@@ -498,7 +500,7 @@ export default {
       } else if (this.type === "chatroom") {
         name = this.$data.activedKey[this.type].id;
       }
-      this.recallMessage({to: name, message: item})
+      this.recallMessage({ to: name, message: item });
     }
   },
   components: {
@@ -514,10 +516,10 @@ export default {
 </script>
 
 <style scoped lang='less'>
-.byself{
-    float: right;
-  }
-.recallMsg{
+.byself {
+  float: right;
+}
+.recallMsg {
   font-size: 12px;
   color: #aaa;
   width: 100%;
@@ -602,7 +604,7 @@ export default {
   }
   .el-dropdown-link {
     cursor: pointer;
-    color: #409EFF;
+    color: #409eff;
   }
   .el-icon-arrow-down {
     font-size: 12px;

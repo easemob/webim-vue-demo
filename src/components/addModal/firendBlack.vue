@@ -2,10 +2,10 @@
   <el-dialog title="黑名单" :visible.sync="showBlackModel">
     <div class="black-name">
       <ul v-for="item in fidendList" :key="item.name">
-          {{item.name}}
-          <label class="icon-x"> 
-            <i class="el-icon-remove-outline" @click="select(item)"></i>
-          </label>
+        {{item.name}}
+        <label class="icon-x">
+          <i class="el-icon-remove-outline" @click="select(item)"></i>
+        </label>
       </ul>
     </div>
   </el-dialog>
@@ -31,12 +31,8 @@ export default {
     },
     select(key) {
       let removeName = key.name;
-      this.onRemoveBlack(
-        {
-          removeName: removeName
-        },
-        this.onGetFirendBlack()
-      );
+      this.onRemoveBlack({ removeName: removeName }, 
+      this.onGetFirendBlack());
     }
   }
 };

@@ -1,4 +1,23 @@
 // import WebIM from "../utils/WebIM";
+
+//TODO 处理页面刷新无法获取到音频url
+const res = function (response) {
+    let objectUrl = WebIM.utils.parseDownloadResponse.call(WebIM.conn, response)
+    return objectUrl  //  'blob:http://localhost:8080/536070e2-b3a0-444a-b1cc-f0723cf95588'
+}
+
+function test(url, func) {
+    let options = {
+        url: url,
+        headers: { 'Accept': 'audio/mp3' },
+        onFileDownloadComplete: func,
+        onFileDownloadError: function () {
+            console.log('音频下载失败');
+        }
+    }
+    WebIM.utils.download.call(WebIM.conn, options)
+}
+
 const Chat = {
     state: {
         userList: {
@@ -16,7 +35,15 @@ const Chat = {
     mutations: {
         updateUserList(state, payload) {
             const { userList, type } = payload;
-            state.userList[type] = userList;
+            // 如果是添加黑名单，则从当前用户列表中删掉此人
+            if (payload.black && payload.black.type === "addBlack") {
+                const addName = payload.black.addName
+                const userList = state.userList[type]
+                let newUserList = _.pullAllBy(userList, [{ 'name': addName }], 'name');
+                state.userList[type] = newUserList;
+            } else {
+                state.userList[type] = userList;
+            }
         },
         updateMsgList(state, payload) {
             const { chatType, chatId, msg, bySelf, type, id } = payload;
@@ -104,6 +131,14 @@ const Chat = {
                     })
                 }
             })
+        },
+        // 黑名单筛选用户列表
+        changeUserList(state, payload) {
+            let ary = []
+            _.forIn(payload, function (value, key) {
+                ary.push({ name: key })
+            })
+            state.userList.contactUserList = _.pullAllBy(state.userList.contactUserList, ary, 'name')
         }
     },
     actions: {
@@ -115,7 +150,8 @@ const Chat = {
                         const userList = roster.filter(user => ['both', 'to'].includes(user.subscription));
                         context.commit('updateUserList', {
                             userList,
-                            type: "contactUserList"
+                            type: "contactUserList",
+                            black: payload
                         })
                     }
                 });
