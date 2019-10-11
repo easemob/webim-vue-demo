@@ -8,7 +8,6 @@ const FriendModule = {
 			state.friendRequest = data
 		},
 		updateBlackList(state, blackList) {
-			console.log("updateBlackList", blackList, 'state>>>', state)
 			state.blackList = blackList
 		}
 	},
@@ -42,10 +41,6 @@ const FriendModule = {
 		//添加黑名单-单人
 		onAddBlack: function (context, payload) {
 			let addName = payload.userId.name
-			console.log('addName>>>',addName);
-			
-			console.log("onAddBlack", addName, 'context>>>', context)
-
 			WebIM.conn.addToBlackList({
 				name: addName,
 			})
