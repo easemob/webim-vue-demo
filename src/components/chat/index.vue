@@ -6,7 +6,7 @@
 		:selectedKeys="selectedKeys"
 	>
 		<a-menu-item
-			style="height: 80px; position: relative; textAlign: left"
+			style="height: 80px; position: relative; textAlign: left; borderBottom: 1px solid #eee; margin: 0"
 			v-for="(item, index) in userList[type]"
 			:key="getKey(item)"
 			@click="select2(item, getKey(item))">

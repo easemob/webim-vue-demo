@@ -5,11 +5,25 @@
         <div>
             <a-icon type="left" class="user-goback" v-show="broken" @click="showUserList"/>
           <span>{{activedKey[type].name}}</span>
-          <a-icon type="ellipsis" class="user-ellipsis" @click="changeMenus"/>
-          <!-- <van-icon name="ellipsis" @click="changeMenus" class="icon-setting" /> -->
+          <a-icon v-if="type=='group'" type="ellipsis" class="user-ellipsis" @click="changeMenus"/>
+          <a-dropdown v-else-if="type=='contact'">
+            <a class="ant-dropdown-link user-ellipsis" href="#" @click="changeMenus">
+                <a-icon type="ellipsis"/>
+            </a>
+            <a-menu slot="overlay">
+                <a-menu-item  @click="menuClick('1')">
+                    <a href="javascript:;">加入黑名单</a>
+                </a-menu-item>
+                <a-menu-item  @click="menuClick('2')">
+                    <a href="javascript:;">删除好友</a>
+                </a-menu-item>
+            </a-menu>
+        </a-dropdown>
         </div>
+        
+        
 
-        <div v-show="showFirendMenus" class="messagebox-menus">
+        <!-- <div v-show="showFirendMenus" class="messagebox-menus">
           <ul class="menus">
             <li
               v-for="item in firendMenus"
@@ -22,7 +36,7 @@
               <span>{{item.name}}</span>
             </li>
           </ul>
-        </div>
+        </div> -->
 
       </div>
 
@@ -153,11 +167,6 @@ export default {
         group: "",
         chatroom: ""
       },
-      showFirendMenus: false,
-      firendMenus: [
-        { name: "加入黑名单", id: "1", icon: "add-o" },
-        { name: "删除好友", id: "2", icon: "delete" }
-      ],
       message: "",
       isHttps: window.location.protocol === "https:" ? true : false,
       loadText: "加载更多",
@@ -328,7 +337,6 @@ export default {
 
     changeMenus() { 
       if (this.type === "contact") {
-        this.$data.showFirendMenus = !this.$data.showFirendMenus;
       } else if (this.type === "group") {
         this.$refs.groupInfoModel.chengeInfoModel();
         this.getGroupInfo();
