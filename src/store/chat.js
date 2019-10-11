@@ -89,6 +89,7 @@ const Chat = {
             } else {
                 state.currentMsgs = Object.assign({}, state.msgList[chatType][params.id]);
             }
+            state.msgList = Object.assign({}, state.msgList)
         },
         updateCurrentMsgList(state, messages) {
             state.currentMsgs = messages;

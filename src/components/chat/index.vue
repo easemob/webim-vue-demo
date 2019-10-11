@@ -126,7 +126,10 @@ export default {
         group: this.group,
         chatroom: this.chatroom
       };
-	},
+  },
+  chatList(){
+      return this.$store.state.chat.msgList
+    },
 	selectedKeys(){ return [ this.getKey(this.activedKey[this.type]) || '' ]}
 	
   },
@@ -178,7 +181,7 @@ export default {
 	},
     getUnreadNum(item) {
       const { name, params } = this.$route;
-      const chatList = this.$store.state.chat.msgList[name];
+      const chatList = this.chatList[name];
       let userId = "";
       if (name == "contact") {
         userId = item.name;
@@ -398,7 +401,7 @@ export default {
     },
     getLastMsg(item) {
       const { name, params } = this.$route;
-      const chatList = this.$store.state.chat.msgList[name];
+      const chatList = this.chatList[name];
       let userId = "";
       if (name == "contact") {
         userId = item.name;

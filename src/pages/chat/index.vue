@@ -49,20 +49,20 @@
 			v-model="current"
 			mode="horizontal"
 			:defaultSelectedKeys="['contact']"
-			:style="{ lineHeight: '50px', background: '#000', color: '#fff', textAlign: 'left'}"
+			:style="{ lineHeight: '50px', background: '#434648', color: '#fff', textAlign: 'left'}"
 			@click="contactTypeChange"
 		>
 			<a-menu-item key="contact">
-			<a-icon type="user" />
-			<span>好友</span>
+				<a-icon type="user" class="navMenu-icon"/>
+				<span class="navMenu-text">好友</span>
 			</a-menu-item>
 			<a-menu-item key="group">
-			<a-icon type="team" />
-			<span>群组</span>
+				<a-icon type="team" class="navMenu-icon"/>
+				<span class="navMenu-text">群组</span>
 			</a-menu-item>
 			<a-menu-item key="chatroom">
-			<a-icon type="usergroup-add" />
-			<span>聊天室</span>
+				<a-icon type="usergroup-add" class="navMenu-icon"/>
+				<span class="navMenu-text">聊天室</span>
 			</a-menu-item>
 		</a-menu>
 
