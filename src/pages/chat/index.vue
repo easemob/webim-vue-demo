@@ -223,11 +223,14 @@ export default {
 	  this.onLogout();
 	},
 	onCollapse(collapsed, type) {
-	  console.log(collapsed, type);
-	  this.$data.collapsed = true;
+		console.log(collapsed, type);
+		if(type != 'responsive'){
+			this.$data.collapsed = true;
+		}else{
+			this.$data.collapsed = false;
+		}
 	},
 	onBreakpoint(broken) {
-	  console.log(broken, 222);
 	  this.$data.broken = broken
 	},
 	hideUserList(){
