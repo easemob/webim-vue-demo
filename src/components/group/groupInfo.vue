@@ -5,7 +5,8 @@
     :append-to-body="true"
     :visible.sync="showGroupInfoModel"
     lable="rtl"
-    style="margin-top: 95px; list-style-type:none"
+    size="350px"
+    style="margin-top: 95px; list-style-type:none;"
     :wrapperClosable="true"
   >
     <div class="info-modal">
@@ -328,6 +329,7 @@ export default {
 <style scoped>
 .info-modal {
   padding: 0 10px;
+  /* width: 350px !important; */
   /* cursor: pointer; */
 }
 .setting-icon {

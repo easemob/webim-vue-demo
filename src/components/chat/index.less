@@ -28,134 +28,141 @@
 			background: rgba(113, 134, 161, 0.1)
 		}
 	}
+	
+}
 
+.messagebox {
+	width : 100%;
+	height: 100%;
+	position: relative;
+	.messagebox-header {
+		border-bottom: 1px solid #d6dce0;
+		box-sizing   : border-box;
+		height       : 50px;
+		line-height  : 50px;
+		outline      : none;
+		margin-bottom: 0;
+		padding-left : 0;
+		padding      : 0 16px;
+		list-style   : none;
+		z-index      : 1050;
+		color        : rgba(0, 0, 0, 0.65);
+		background   : #fff;
+		font-size    : 12px;
+		overflow     : hidden;
+		text-overflow: ellipsis;
 
-
-	.messagebox {
-		width : calc(100% - 300px);
-		height: 100%;
-		float : left;
-
-		.messagebox-header {
-			border-bottom: 1px solid #d6dce0;
-			box-sizing   : border-box;
-			height       : 50px;
-			line-height  : 50px;
-			outline      : none;
-			margin-bottom: 0;
-			padding-left : 0;
-			padding      : 0 16px;
-			list-style   : none;
-			z-index      : 1050;
-			color        : rgba(0, 0, 0, 0.65);
-			background   : #fff;
-			font-size    : 12px;
-			overflow     : hidden;
-			text-overflow: ellipsis;
-
-			.select-user {
-				position: absolute;
-				left    : 320px;
-			}
-
-			.icon-setting {
-				position: absolute;
-				right   : 20px;
-				top     : 131px;
-				cursor  : pointer;
-			}
+		.user-ellipsis {
+			float: right;
+			display: inline-block;
+			height: 50px;
+			line-height: 50px;
+			cursor: pointer;
+		}
+		.user-goback{
+			float: left;
+			display: inline-block;
+			height: 50px;
+			line-height: 50px;
+			cursor: pointer;
 		}
 
-		.messagebox-content {
-			width        : 100%;
-			height       : calc(100% - 150px);
-			margin-bottom: 150px;
-			top          : 50px;
-			background   : #fff;
-			padding      : 10px 16px;
-			overflow     : scroll;
-
-			.message-group {
-				padding-top: 3px;
-				font-size  : 14px;
-				line-height: 1.5;
-				clear      : both;
-				width      : 100%;
-
-				p {
-					list-style   : none;
-					min-width    : 100px;
-					background   : #fff;
-					text-align   : left;
-					padding      : 13px 15px;
-					margin       : 5px 0 0 0;
-					border-radius: 25px;
-					border       : 1px solid #eceff1;
-					float        : left;
-
-					&.byself {
-						background: #eceff1;
-						float     : right;
-					}
-				}
-			}
-
+		.icon-setting {
+			position: absolute;
+			right   : 20px;
+			top     : 131px;
+			cursor  : pointer;
 		}
+	}
 
-		.messagebox-footer {
-			border-top   : 1px solid #d6dce0;
-			position     : absolute;
-			bottom       : 0;
-			width        : calc(100% - 300px);
-			// height    : 150px;
-			color        : rgba(0, 0, 0, 0.65);
-			background   : #fff;
+	.messagebox-content {
+		width        : 100%;
+		height       : calc(100% - 50px);
+		top          : 50px;
+		background   : #fff;
+		padding      : 10px 16px;
+		overflow     : scroll;
 
-			.footer-icon {
-				padding   : 15px 10px;
-				text-align: left;
-				height    : 50px;
-				display   : flex;
+		.message-group {
+			padding-top: 3px;
+			font-size  : 14px;
+			line-height: 1.5;
+			clear      : both;
+			width      : 100%;
 
-				.van-icon {
-					margin-left: 8px;
-					cursor     : pointer;
-				}
+			p {
+				list-style   : none;
+				min-width    : 100px;
+				background   : #fff;
+				text-align   : left;
+				padding      : 13px 15px;
+				margin       : 5px 0 0 0;
+				border-radius: 25px;
+				border       : 1px solid #eceff1;
+				float        : left;
 
-				.icon {
-					color      : rgba(0, 0, 0, 0.65);
-					font-size  : 20px;
-					margin-left: 8px;
-				}
-			}
-
-			.fotter-send {
-				height      : 50px;
-				width       : 100%;
-				padding-left: 10px;
-
-				.sengTxt {
-					text-align   : left;
-					height       : 100%;
-					width        : 100%;
-					box-sizing   : border-box;
-					bottom       : 5px;
-					font-size    : 14px;
-					padding-left : 10px;
-					box-shadow   : 0 0 0 0;
-					border       : 1px solid #fff;
-					outline-style: none
-				}
-
-				.van-icon {
-					position: absolute;
-					right   : 10px;
-					top     : 45px;
+				&.byself {
+					background: #eceff1;
+					float     : right;
 				}
 			}
 		}
 	}
 }
+
+.messagebox-footer {
+	border-top   : 1px solid #d6dce0;
+	position     : absolute;
+	bottom       : 0;
+	width        : 100%;
+	// height    : 150px;
+	color        : rgba(0, 0, 0, 0.65);
+	background   : #fff;
+
+	.footer-icon {
+		padding   : 15px 10px;
+		text-align: left;
+		height    : 50px;
+		display   : flex;
+
+		.van-icon {
+			margin-left: 8px;
+			cursor     : pointer;
+		}
+
+		.icon {
+			color      : rgba(0, 0, 0, 0.65);
+			font-size  : 20px;
+			margin-left: 8px;
+		}
+	}
+
+	.fotter-send {
+		height      : 50px;
+		width       : 100%;
+		padding-left: 10px;
+
+		.sengTxt {
+			text-align   : left;
+			height       : 100%;
+			width        : 100%;
+			box-sizing   : border-box;
+			bottom       : 5px;
+			font-size    : 14px;
+			padding-left : 10px;
+			box-shadow   : 0 0 0 0;
+			border       : 1px solid #fff;
+			outline-style: none
+		}
+
+		.van-icon {
+			position: absolute;
+			right   : 10px;
+			top     : 45px;
+		}
+	}
+}
+
 
 .messagebox-menus {
 	position        : fixed;

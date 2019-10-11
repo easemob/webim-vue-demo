@@ -1,59 +1,137 @@
 <template>
-	<div class="userlist">
-	<a-menu
-		style="width: 100%"
-		mode="vertical"
-		:selectedKeys="selectedKeys"
-	>
-		<a-menu-item
-			style="height: 80px; position: relative; textAlign: left"
-			v-for="(item, index) in userList[type]"
-			:key="getKey(item)"
-			@click="select2(item, getKey(item))">
-			<!-- <template slot="title"> -->
-				<span class="custom-title">{{item.name}}</span>
-				<div class="icon-style" v-if="getUnreadNum(item) != 0">
-					<span class="unreadNum">{{getUnreadNum(item)}}</span>
-				</div>
-            	<span class="time-style" style="float:right">{{getLastMsg(item).msgTime}}</span>
-				<div>{{getLastMsg(item).lastMsg}}</div>
-          	<!-- </template> -->
-		</a-menu-item>
-	</a-menu>
-	</div>
+    <div class="messagebox" v-show="activedKey[type]!= ''">
+      <div class="messagebox-header">
+        <!-- <div>{{type}}</div> -->
+        <div>
+            <a-icon type="left" class="user-goback" v-show="broken" @click="showUserList"/>
+          <span>{{activedKey[type].name}}</span>
+          <a-icon type="ellipsis" class="user-ellipsis" @click="changeMenus"/>
+          <!-- <van-icon name="ellipsis" @click="changeMenus" class="icon-setting" /> -->
+        </div>
 
-  <!-- <div class="chat-message"> -->
-    <!-- 联系人列表 -->
-    
-    <!-- <div class="userlist">
-      <van-list>
-        <van-cell
-          v-for="item in userList[type]"
-          :key="item.name"
-          :value="getLastMsg(item).lastMsg"
-          @click="select(item)"
-          :class="{ 'active': activedKey[type] && activedKey[type].name ===  item.name }"
+        <div v-show="showFirendMenus" class="messagebox-menus">
+          <ul class="menus">
+            <li
+              v-for="item in firendMenus"
+              :key="item.id"
+              id="item.id"
+              class="name-menus"
+              @click="menuClick(item.id)"
+            >
+              <van-icon :name="item.icon" size="18" class="icon-menus" />
+              <span>{{item.name}}</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="messagebox-content" ref="msgContent">
+        <div class="moreMsgs" @click="loadMoreMsgs">{{loadText}}</div>
+        <div
+          v-for="(item,i) in msgList"
+          :key="i"
+          class="message-group"
+          :style="{'float':item.bySelf ? 'right':'left'}"
         >
-          <template slot="title">
-            <span class="custom-title">{{item.name}}</span>
-            <div class="icon-style" v-if="getUnreadNum(item) != 0">
-              <span class="unreadNum">{{getUnreadNum(item)}}</span>
-            </div>
-            <span class="time-style" style="float:right">{{getLastMsg(item).msgTime}}</span>
-          </template>
-        </van-cell>
-      </van-list>
-    </div> -->
-    <!-- 消息列表 -->
+          <h4 style="text-align: left;margin:0">{{item.from}}</h4>
+          <!-- 撤回消息 -->
+          <div v-if="item.status == 'recall'" class="recallMsg">
+            {{item.msg}}
+          </div>
+          <div v-if="item.status == 'recall'" class="recallMsg">
+            {{renderTime(item.time)}}
+          </div>
+          <!-- 撤回消息 end -->
 
-    <!-- <EmediaModal ref="emediaModal" />
-    <MultiAVModal :to="activedKey[type]" />
-    <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" />
-    <EmediaModal ref="emediaModal" />
-    <GetGroupInfo ref="groupInfoModel" /> -->
+          <el-dropdown v-else @command="handleCommand(item)" trigger="click" :style="{'float':item.bySelf ? 'right':'left'}">
+            <span class="el-dropdown-link">
+          <!-- 图片消息 -->
+          <img
+            :key="item.msg"
+            :src="item.msg?item.msg:''"
+            v-if="item.type === 'img'"
+            class="img-style"
+          />
+          <!-- 文件card -->
+          <div v-else-if="item.type==='file'" class="file-style" :style="{'float':item.bySelf ? 'right':'left'}">
+            <el-card :body-style="{ padding: '0px' }">
+              <div style="padding: 14px;">
+                <h2>文件</h2>
+                <span>
+                  <h3>{{item.filename}}</h3>
+                </span>
+                <div class="bottom clearfix">
+                  <span>{{readablizeBytes(item.file_length)}}</span>
+                  <a :href="item.msg" :download="item.filename">点击下载</a>
+                </div>
+              </div>
+            </el-card>
+          </div>
+          <!-- 音频消息 -->
+          <div v-else-if="item.type==='audio'">
+            <audio :src="item.msg" controls></audio>
+          </div>
+          <!-- 视频消息 -->
+          <div v-else-if="item.type==='video'">
+            <video :src="item.msg" width="100%" controls></video>
+          </div>
+          <!-- 聊天消息 -->
+          <p v-else v-html="renderTxt(item.msg)" :class="{ 'byself': item.bySelf}" />
+
+          <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div>
+
+            </span>
+            <el-dropdown-menu slot="dropdown" >
+              <el-dropdown-item command="a" :disabled="!item.bySelf">撤回</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+          
+          <!-- 聊天时间 -->
+          <div
+            v-if="item.status !== 'recall'"
+            class="time-style"
+            :style="{'text-align':item.bySelf ? 'right':'left'}"
+          >{{renderTime(item.time)}}</div>
+        </div>
+      </div>
+      <div class="messagebox-footer">
+        <div class="footer-icon">
+          <!-- 表情组件 -->
+          <ChatEmoji v-on:selectEmoji="selectEmoji" :inpMessage="message" />
+          <!-- 上传图片组件 -->
+          <UpLoadImage :type="this.type" :chatId="activedKey[type]" />
+          <!-- 上传文件组件 -->
+          <UpLoadFile :type="this.type" :chatId="activedKey[type]" />
+
+          <i class="el-icon-video-camera icon" @click="callVideo" v-show="isHttps"></i>
+          <i
+            v-if="type === 'contact'"
+            class="el-icon-microphone icon"
+            @click="callVoice"
+            v-show="isHttps"
+          ></i>
+        </div>
+        <div class="fotter-send">
+          <textarea
+            v-model="message"
+            equired
+            placeholder="消息"
+            class="sengTxt"
+            v-on:keyup.enter="onSendTextMsg"
+            style="resize:none"
+            ref="txtDom"
+          />
+          <template />
+        </div>
+      </div>
+      <GetGroupInfo ref="groupInfoModel" />
+
+    </div>
 </template>
 
 <script>
+
 import ChatEmoji from "../chatEmoji/index.vue";
 import emoji from "../../config/emoji";
 import UpLoadImage from "../upLoadImage/index.vue";
@@ -88,29 +166,21 @@ export default {
         sent: "已发送",
         read: "已读"
       },
-	  isCollapse: true,
-	  //selectedKeys: [ this.getKey(this.activedKey[this.type]) ]
+
     };
   },
 
   beforeMount() {
     if (this.type === "contact") {
-      setTimeout(() => {
-        this.onGetFirendBlack();
-        this.onGetContactUserList();
-      }, 100);
+      this.onGetContactUserList();
     } else if (this.type === "group") {
       this.onGetGroupUserList();
     } else if (this.type === "chatroom") {
       this.onGetChatroomUserList();
     }
   },
-  mounted() {
-       // 取到黑名单列表值将黑名单匹配用户列表进行筛选
-      let blackList = this.$store.state.friendModule.blackList;
-      this.$store.commit("changeUserList", blackList);
-  },
   updated() {
+    //console.log("数据", this.$store);
     this.scollBottom();
   },
   computed: {
@@ -126,14 +196,15 @@ export default {
         group: this.group,
         chatroom: this.chatroom
       };
-	},
-	selectedKeys(){ return [ this.getKey(this.activedKey[this.type]) || '' ]}
-	
+    },
+    selectedKeys(){ return [ this.getKey(this.activedKey[this.type]) || '' ]}
   },
   props: [
     "type", // 聊天类型 contact, group, chatroom
-	"username", // 选中的聊天对象
-	"select"
+    "username", // 选中的聊天对象
+    "broken", // 是否适应移动端
+    "showUserList",
+    "hideUserList"
   ],
   methods: {
     ...mapActions([
@@ -150,18 +221,12 @@ export default {
       "onDelteFirend",
       "onGetGroupinfo",
       "recallMessage",
-      "onGetGroupBlack",
-      "onGetFirendBlack"
+      "onGetGroupBlack"
     ]),
-    handleOpen(key, keyPath) {
-        console.log(key, keyPath);
-      },
-      handleClose(key, keyPath) {
-        console.log(key, keyPath);
-	  },
-	getKey(item){
+
+    getKey(item, type){
 		let key = '';
-		switch(this.type){
+		switch(type){
 			case 'contact':
 				key = item.name;
 				break;
@@ -175,36 +240,20 @@ export default {
 				break;
 		}
 		return key
-	},
-    getUnreadNum(item) {
-      const { name, params } = this.$route;
-      const chatList = this.$store.state.chat.msgList[name];
-      let userId = "";
-      if (name == "contact") {
-        userId = item.name;
-      } else if (name == "group") {
-        userId = item.groupid;
-      } else {
-        userId = item.id;
-        return 0;
-      }
-      const currentMsgs = chatList[userId] || [];
-      let unReadNum = 0;
-      currentMsgs.forEach(msg => {
-        if (msg.status !== "read" && msg.status !== "recall" && !msg.bySelf) {
-          unReadNum++;
-        }
-      });
-      return unReadNum;
     },
-    select2(key, index) {
-		console.log(key, index,'kkkk')
-		this.$data.selectedKeys = [index]
-		this.select(key)
-		this.$data.activedKey[this.type] = key;
-		return
+    getCurrentMsg(props){
+        this.onGetCurrentChatObjMsg({ type: props, id: this.getKey(this.activedKey[props], props)});
+    },
+    select(key) {
+      this.$data.activedKey[this.type] = key;
       const me = this;
       me.$data.loadText = "加载更多";
+      // if( me.roomId){
+      //     WebIM.conn.quitChatRoom({
+      //         roomId: me.roomId // 聊天室id
+      //     });
+      //     me.roomId = ''
+      //   }
 
       if (this.type === "group") {
         this.$router.push({ name: this.type, params: { id: key.groupid } });
@@ -230,7 +279,7 @@ export default {
           this.getHistoryMessage({ name: key.name, isGroup: false });
         }
       } else if (this.type === "chatroom") {
-        const me = this;
+        const me = this
         //me.roomId = key.id
 
         this.$router.push({ name: this.type, params: { id: key.id } });
@@ -244,12 +293,13 @@ export default {
               me.getHistoryMessage({ name: key.id, isGroup: true });
               setTimeout(() => {
                 me.$forceUpdate();
-              }, 100);
+              },100)
             }
           }
         });
       }
     },
+
     loadMoreMsgs() {
       const me = this;
       const success = function(msgs) {
@@ -275,7 +325,8 @@ export default {
         success
       });
     },
-    changeMenus() {
+
+    changeMenus() { 
       if (this.type === "contact") {
         this.$data.showFirendMenus = !this.$data.showFirendMenus;
       } else if (this.type === "group") {
@@ -306,6 +357,11 @@ export default {
       });
     },
     onSendTextMsg() {
+        console.log({
+        chatType: this.type,
+        chatId: this.$data.activedKey[this.type],
+        message: this.$data.message
+      },123)
       this.onSendText({
         chatType: this.type,
         chatId: this.$data.activedKey[this.type],
@@ -323,7 +379,7 @@ export default {
       return `<img src="../../../static/faces/${value}" style="width:20px"/>`;
     },
 
-    renderTxt(txt = "") {
+    renderTxt(txt = '') {
       let rnTxt = [];
       let match = null;
       const regex = /(\[.*?\])/g;
@@ -424,6 +480,7 @@ export default {
       }, 0);
     },
     handleCommand(item) {
+      console.log(item)
       //item.status = 'recall'
       //Vue.$store.commit("updateMessageStatus", item);
       let name = "";
@@ -434,7 +491,7 @@ export default {
       } else if (this.type === "chatroom") {
         name = this.$data.activedKey[this.type].id;
       }
-      this.recallMessage({ to: name, message: item });
+      this.recallMessage({to: name, message: item})
     }
   },
   components: {
@@ -450,10 +507,6 @@ export default {
 </script>
 
 <style scoped lang='less'>
-.userlist{
-	height: 100%;
-	overflow-y: scroll;
-}
 .byself{
     float: right;
   }
@@ -465,8 +518,6 @@ export default {
 }
 .custom-title {
   font-weight: 500;
-  width: 100%;
-  height: 50px;
 }
 .moreMsgs {
   background: #ccc !important;
@@ -480,6 +531,7 @@ export default {
   font-size: 12px;
   left: -6px;
   color: #736c6c;
+  float: left;
 }
 .unreadNum {
   float: left;
@@ -508,8 +560,6 @@ export default {
   margin-top: 3px;
   font-size: 12px;
   color: #888c98;
-  position: absolute;
-  right: 5px;
 }
 .file-style {
   width: 240px;
@@ -546,14 +596,11 @@ export default {
   }
   .el-dropdown-link {
     cursor: pointer;
-    color: #409eff;
+    color: #409EFF;
   }
   .el-icon-arrow-down {
     font-size: 12px;
   }
-
-  .el-menu-vertical-demo{
-    width: 100%;
-  }
 }
 </style>
+

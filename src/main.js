@@ -7,12 +7,19 @@ import vant from 'vant';
 import WebIM from './utils/WebIM';
 import store from './store';
 
+import Antd from 'ant-design-vue'
+import 'ant-design-vue/dist/antd.css'
+
 
 
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
 import Router from 'vue-router'
+
+Vue.config.productionTip = false
+Vue.use(Antd)
+
 
 const originalPush = Router.prototype.push
 Router.prototype.push = function push(location) {

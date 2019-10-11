@@ -1,5 +1,6 @@
 
 <template>
+  <el-container>
 	<div class="login">
 		<div class="login-panel">
 			<div class="logo">Web IM</div>
@@ -20,6 +21,7 @@
 			<span class="green" v-on:click="changeType">注册</span>
 		</p>
 	</div>
+  </el-container>
 </template>
 
 <script>
