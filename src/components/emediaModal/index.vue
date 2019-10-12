@@ -4,7 +4,7 @@
             <div v-if="callerWaitVisible" class="mask">正在等待{{contact}}接受邀请</div>
             <div v-if="calleeWaitVisible" class="mask">{{contact}}请求{{streamType}}通话</div>
             <div v-if="voiceCallVisible" class="voiceCall">正在与{{contact}}通话</div>
-            <video v-show="streamType == '视频'" ref='localVideo' v-bind:class="{localVideo: toggle, remoteVideo: !toggle}" autoPlay playsInline/>
+            <video v-show="streamType == '视频'" ref='localVideo' v-bind:class="{localVideo: toggle, remoteVideo: !toggle}" autoPlay muted playsInline/>
             <video v-show="streamType == '视频'" ref='remoteVideo' v-bind:class="{localVideo: !toggle, remoteVideo: toggle}"  autoPlay playsInline/>
             <i v-show="showMute" class="el-icon-turn-off-microphone font microphone" isopen="true" ref='audio' @click="controlStream('audioControl')"></i>
             <i v-show="showAccept" class="el-icon-phone font accept" isopen="true" @click="accept"></i>
@@ -244,17 +244,20 @@ export default{
 			this.$data.toggle = !this.$data.toggle;
 		},
 		mute(){
-			this.$refs.remoteVideo.muted = !this.$refs.remoteVideo.muted;
+			// this.$refs.remoteVideo.muted = !this.$refs.remoteVideo.muted;
 			const muted = this.$refs.remoteVideo.muted;
 			if(muted){
 				this.$refs.mute.style.color = "#4eb1f4";
+				this.$refs.remoteVideo.muted = false;
 			}
 			else{
 				this.$refs.mute.style.color = "#eeeeee";
+				this.$refs.remoteVideo.muted = true;
 			}
 		},
 		controlStream(type){
 			let controlType;
+			let to = WebIM.call.callee.split("@")[0].split("_")[1];
 			if(type === "audioControl"){
 				controlType = this.$refs.audio.isopen ? 0 : 1;
 				this.$refs.audio.style.color = this.$refs.audio.isopen ? "#eeeeee" : "#4eb1f4";
@@ -266,7 +269,6 @@ export default{
 				this.$refs.video.isopen = !this.$refs.video.isopen;
 			}
 			console.log("controlType", controlType);
-			var to = WebIM.call.callee.split("@")[0].split("_")[1];
 			WebIM.call.controlStream(controlType, to);
 		},
 		showEmediaModal(){

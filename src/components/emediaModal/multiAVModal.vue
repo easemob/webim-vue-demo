@@ -5,7 +5,7 @@
             <!-- <div>时间</div> -->
             <el-row type="flex" class="row-bg" justify="space-around">
                 <el-col :span="6"><div class="grid-content bg-purple videoBox">
-                    <video class="video" autoPlay playsInline ref="rv_local"/>
+                    <video class="video" autoPlay playsInline muted ref="rv_local"/>
                     <div class="tools">
                         <span>{{rv_local.nickName}}</span>
                     </div>
