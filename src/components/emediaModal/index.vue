@@ -1,17 +1,17 @@
 <template>
     <Draggable v-show="emediaModalVisible">
         <div v-bind:class="{rtcVoiceContent: streamType=='语音', rtcVideoContent: streamType=='视频'}" >
-        <div v-if="callerWaitVisible" class="mask">正在等待{{contact}}接受邀请</div>
-        <div v-if="calleeWaitVisible" class="mask">{{contact}}请求{{streamType}}通话</div>
-        <div v-if="voiceCallVisible" class="voiceCall">正在与{{contact}}通话</div>
-        <video v-show="streamType == '视频'" ref='localVideo' v-bind:class="{localVideo: toggle, remoteVideo: !toggle}" autoPlay playsInline/>
-        <video v-show="streamType == '视频'" ref='remoteVideo' v-bind:class="{localVideo: !toggle, remoteVideo: toggle}"  autoPlay playsInline/>
-        <i v-show="showMute" class="el-icon-turn-off-microphone font microphone" isopen="true" ref='audio' @click="controlStream('audioControl')"></i>
-        <i v-show="showAccept" class="el-icon-phone font accept" isopen="true" @click="accept"></i>
-        <i v-show="showMute && streamType=='视频'" class="el-icon-video-camera font camera" ref='video' isopen="true" @click="controlStream('videoControl')"></i>
-        <i v-show="showMute" class="el-icon-headset font mute" ref="mute" @click="mute"></i>
-        <i class="el-icon-switch-button close" @click="close"></i>
-        <i v-show="showMute && streamType=='视频'" class="el-icon-refresh font toggle" @click="toggleClick"></i>
+            <div v-if="callerWaitVisible" class="mask">正在等待{{contact}}接受邀请</div>
+            <div v-if="calleeWaitVisible" class="mask">{{contact}}请求{{streamType}}通话</div>
+            <div v-if="voiceCallVisible" class="voiceCall">正在与{{contact}}通话</div>
+            <video v-show="streamType == '视频'" ref='localVideo' v-bind:class="{localVideo: toggle, remoteVideo: !toggle}" autoPlay playsInline/>
+            <video v-show="streamType == '视频'" ref='remoteVideo' v-bind:class="{localVideo: !toggle, remoteVideo: toggle}"  autoPlay playsInline/>
+            <i v-show="showMute" class="el-icon-turn-off-microphone font microphone" isopen="true" ref='audio' @click="controlStream('audioControl')"></i>
+            <i v-show="showAccept" class="el-icon-phone font accept" isopen="true" @click="accept"></i>
+            <i v-show="showMute && streamType=='视频'" class="el-icon-video-camera font camera" ref='video' isopen="true" @click="controlStream('videoControl')"></i>
+            <i v-show="showMute" class="el-icon-headset font mute" ref="mute" @click="mute"></i>
+            <i class="el-icon-switch-button close" @click="close"></i>
+            <i v-show="showMute && streamType=='视频'" class="el-icon-refresh font toggle" @click="toggleClick"></i>
         </div>
     </Draggable>
 </template>
@@ -297,12 +297,14 @@ export default{
 </script>
 <style scoped>
 .rtcVoiceContent{
-    min-width: 360px;
+    min-width: 350px;
     min-height: 90px;
+    border-radius: 5px;
 }
 .rtcVideoContent{
-    min-width: 360px;
-    min-height: 360px;
+    min-width: 350px;
+    min-height: 350px;
+    margin: auto;
 }
 .mask{
     height: 100%;
@@ -312,10 +314,15 @@ export default{
     left: 0;
     background: #ccc;
     z-index: 3;
+    border-radius: 5px;
 }
 .voiceCall{
-    height: 200px;
-    background: #ccc;
+    height: 150px;
+    background: #e2e2e2;
     z-index: 3;
+    border-radius: 5px;
+    border-radius: 5px;
+    line-height: 50px;
+    color: rgba(0,0,0,0.65);
 }
 </style>

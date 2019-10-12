@@ -49,16 +49,16 @@
         ],
         computed: {
             groupMembers(){
-                return Vue.$store.state.emedia.groupMembers
+                return this.$store.state.emedia.groupMembers
             },
             multiAVModalVisible () {
-                return Vue.$store.state.emedia.multiAVModalVisible
+                return this.$store.state.emedia.multiAVModalVisible
             },
             confr(){
-                return Vue.$store.state.emedia.confr
+                return this.$store.state.emedia.confr
             },
             addAVMemberModalVisible(){
-                return Vue.$store.state.emedia.addAVMemberModalVisible
+                return this.$store.state.emedia.addAVMemberModalVisible
             }
         },
         

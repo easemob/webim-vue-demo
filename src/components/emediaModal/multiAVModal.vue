@@ -86,10 +86,10 @@ export default {
     ],
     computed: {
         multiAVModalVisible () {
-            return Vue.$store.state.emedia.multiAVModalVisible
+            return this.$store.state.emedia.multiAVModalVisible
         },
         addAVMemberModalVisible(){
-            return Vue.$store.state.emedia.addAVMemberModalVisible
+            return this.$store.state.emedia.addAVMemberModalVisible
         }
     },
     mounted(){

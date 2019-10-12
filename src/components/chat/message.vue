@@ -141,6 +141,9 @@
       </div>
       <GetGroupInfo ref="groupInfoModel" />
 
+        <EmediaModal ref="emediaModal" />
+        <MultiAVModal :to="activedKey[type]" />
+        <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" />
     </div>
 </template>
 
