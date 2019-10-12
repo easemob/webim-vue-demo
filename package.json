@@ -2,7 +2,7 @@
   "name": "webim-vue",
   "version": "1.0.0",
   "description": "Easemob WebIM Demo",
-  "author": "lzg <lizg@easemob.com>",
+  "author": "easemob",
   "private": true,
   "scripts": {
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
