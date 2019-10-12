@@ -166,10 +166,15 @@ export default {
         this.chengeSetModel();
       }
 
+      const { name, params } = this.$route;
+
       setTimeout(()=>{
-        this.getGroupAdmin({select_id: this.$store.state.group.groupInfo.gid})
-        this.getMuted({select_id: this.$store.state.group.groupInfo.gid})
-      },100)
+        this.getGroupAdmin({select_id: params.id})
+        if(this.adminList.includes(this.username)||this.groupinfoList.admin == this.username){
+          console.log('有权限', this.adminList, this.groupinfoList.admin)
+          this.getMuted({select_id: params.id})
+        }
+      }, 100)
       
       console.log('adminList', this.adminList)
       console.log('muteList', this.muteList)
