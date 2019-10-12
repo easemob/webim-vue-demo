@@ -1,7 +1,7 @@
 <template>
 	<div class="userlist">
 	<a-menu
-		style="width: 100%"
+		style="width: 100%; border-right: 0;"
 		mode="vertical"
 		:selectedKeys="selectedKeys"
 	>
@@ -528,6 +528,7 @@ export default{
 .userlist{
 	height: 100%;
 	overflow-y: scroll;
+	border-right: 1px solid #e8e8e8;
 }
 .byself{
     float: right;
