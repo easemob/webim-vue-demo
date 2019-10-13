@@ -79,7 +79,7 @@
 
 		<a-layout-sider
 			style="background: #fff" :width="broken ? '100%' : 350"
-			breakpoint="lg" 
+			breakpoint="lg"
 			collapsedWidth="0"
 			:trigger="null"
 			v-model="collapsed"
@@ -87,7 +87,7 @@
 			@breakpoint="onBreakpoint"
 			>
 
-		<MessageBox 
+		<MessageBox
 			:type="activeKey"
 			:select="select"
 			ref='messageBox'/>
@@ -95,8 +95,8 @@
 		<MessageBox v-if="activeKey == 'group'" type="group" /> -->
 	  </a-layout-sider>
 
-	  <a-layout-content>
-		<Message 
+	<a-layout-content style="overflow: visible">
+		<Message
 			:type="activeKey"
 			:broken="broken"
 			:hideUserList="hideUserList"
@@ -180,29 +180,29 @@ import VidoeSetting from "../../components/videoSetting/index";
 import GroupRequest from "../../components/group/groupRequest.vue";
 import "./index.less";
 import { mapState, mapActions } from "vuex";
-export default {
-  data() {
-	return {
+export default{
+	data(){
+		return {
 	  showSettingOptions: false,
 	  activeKey: "contact",
-		selectedItem: '',
+			selectedItem: "",
 	  showAddOptions: false,
 	  addList: [
-		{
+				{
 		  name: "添加好友",
 		  id: "1",
 		  icon: "chat"
-		},
-		{
+				},
+				{
 		  name: "申请入群",
 		  id: "2",
 		  icon: "friends"
-		},
-		{
+				},
+				{
 		  name: "创建群组",
 		  id: "3",
 		  icon: "comment"
-		}
+				}
 	  ],
 	  userName:
 		localStorage.getItem("userInfo") &&
@@ -210,100 +210,101 @@ export default {
 	  collapsed: false,
 	  broken: false,
 	  current: ["contact"]
-	};
-  },
-  computed: {
+		};
+	},
+	computed: {
 	// username() {
 	//   return this.$store.state.login.username;
 	// }
-  },
-  methods: {
-	...mapActions(["onLogout", "onGetFirendBlack"]),
-	toLogout() {
+	},
+	methods: {
+		...mapActions(["onLogout", "onGetFirendBlack"]),
+		toLogout(){
 	  this.onLogout();
-	},
-	onCollapse(collapsed, type) {
-		console.log(collapsed, type);
-		if(type != 'responsive'){
+		},
+		onCollapse(collapsed, type){
+			console.log(collapsed, type);
+			if(type != "responsive"){
+				this.$data.collapsed = true;
+			}
+			else{
+				this.$data.collapsed = false;
+			}
+		},
+		onBreakpoint(broken){
+	  this.$data.broken = broken;
+		},
+		hideUserList(){
 			this.$data.collapsed = true;
-		}else{
+		},
+		showUserList(){
 			this.$data.collapsed = false;
-		}
-	},
-	onBreakpoint(broken) {
-	  this.$data.broken = broken
-	},
-	hideUserList(){
-		this.$data.collapsed = true;
-	},
-	showUserList(){
-		this.$data.collapsed = false;
-	},
-	select(i){
-		console.log(i, '选中')
-		this.$refs.messageList.select(i)
-		if(this.broken){this.$data.collapsed = true;}
-	},
-	GetFirendBlack() {
+		},
+		select(i){
+			console.log(i, "选中");
+			this.$refs.messageList.select(i);
+			if(this.broken){this.$data.collapsed = true;}
+		},
+		GetFirendBlack(){
 	  this.onGetFirendBlack();
 	  this.$refs.firendModel.changModel();
-	},
-	optionsVisibleChange() {
+		},
+		optionsVisibleChange(){
 	  this.$data.showSettingOptions = !this.$data.showSettingOptions;
-	},
-	contactTypeChange(type) {
-		this.$data.activeKey = type.key;
-		this.$router.push(`/${type.key}`);
-		if(this.broken&&this.collapsed){this.$data.collapsed = false}
+		},
+		contactTypeChange(type){
+			this.$data.activeKey = type.key;
+			this.$router.push(`/${type.key}`);
+			if(this.broken && this.collapsed){this.$data.collapsed = false;}
 
-		switch(type.key){
-		  case 'contact':
-			this.$refs.messageBox.onGetContactUserList();
-			break;
-		case 'group':
-			this.$refs.messageBox.onGetGroupUserList();
-			break;
-		case 'chatroom':
-			this.$refs.messageBox.onGetChatroomUserList();
-			break;
-		default:
-			break;
-		}
-		this.$refs.messageList.getCurrentMsg(type.key)
-	},
-	addModalChange() {
+			switch(type.key){
+		  case "contact":
+				this.$refs.messageBox.onGetContactUserList();
+				break;
+			case "group":
+				this.$refs.messageBox.onGetGroupUserList();
+				break;
+			case "chatroom":
+				this.$refs.messageBox.onGetChatroomUserList();
+				break;
+			default:
+				break;
+			}
+			this.$refs.messageList.getCurrentMsg(type.key);
+		},
+		addModalChange(){
 	  this.$data.showAddOptions = !this.$data.showAddOptions;
-	},
-	ulClick(i) {
-	  //this.addModalChange();
-	  switch (i) {
-		case "1":
+		},
+		ulClick(i){
+	  // this.addModalChange();
+	  switch(i){
+			case "1":
 		  this.$refs.addFriendMethods.changeModal();
 		  break;
-		case "2":
+			case "2":
 		  this.$refs.addGroupModel.changeGroupModel();
 		  break;
-		case "3":
+			case "3":
 		  this.$refs.createGroupModel.changeCreateModel();
 		  break;
-		default:
+			default:
 		  break;
 	  }
-	},
-	recEmedia() {
+		},
+		recEmedia(){
 	  this.$refs.videoSetting.show();
+		}
+	},
+	components: {
+		MessageBox,
+		Message,
+		AddFriend,
+		GetFriendRequest,
+		FirendBlack,
+		AddGroupUser,
+		CreateGroup,
+		VidoeSetting,
+		GroupRequest
 	}
-  },
-  components: {
-	MessageBox,
-	Message,
-	AddFriend,
-	GetFriendRequest,
-	FirendBlack,
-	AddGroupUser,
-	CreateGroup,
-	VidoeSetting,
-	GroupRequest
-  }
 };
 </script>

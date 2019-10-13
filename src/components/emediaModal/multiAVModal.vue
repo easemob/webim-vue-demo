@@ -1,5 +1,5 @@
 <template>
-    <!-- <Draggable v-show="multiAVModalVisible"> -->
+    <Draggable v-show="multiAVModalVisible" id="drag3">
         <div class="multiAVModal" v-show="multiAVModalVisible">
             <span class="title">{{to.groupname}}</span>
             <!-- <div>时间</div> -->
@@ -56,7 +56,7 @@
                 <el-col :span="3"><el-button class="hangup" type="danger" plain @click="closeModal">挂断</el-button></el-col>
             </div>
         </div>
-    <!-- </Draggable> -->
+    </Draggable>
 </template>
 <script>
 import { mapActions, mapGetters } from "vuex";
@@ -310,7 +310,7 @@ export default{
 	},
 
 	components: {
-		// Draggable
+		Draggable
 	},
 };
 </script>
