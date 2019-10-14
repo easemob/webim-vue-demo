@@ -28,8 +28,8 @@
     <div v-if="showFriendListModel == true">
       <div class="groPub">
         <el-checkbox-group v-model="form.membersList">
-          <li>
-            <el-checkbox v-for="item in firendList" :key="item.name" :label="item.name">
+          <li v-for="item in firendList" :key="item.name" class="friendItem">
+            <el-checkbox  :key="item.name" :label="item.name">
             </el-checkbox>
           </li>
         </el-checkbox-group>
