@@ -474,13 +474,19 @@ export default{
 			else{
 				userId = item.id;
 			}
-			const currentMsgs = chatList[userId] || [];
-			const lastMsg = currentMsgs.length ?
-				currentMsgs[currentMsgs.length - 1].msg :
-				"";
-			const msgTime = currentMsgs.length ?
-				this.renderTime(currentMsgs[currentMsgs.length - 1].time) :
-				"";
+      const currentMsgs = chatList[userId] || [];
+      let lastMsg = ''
+      let lastType = currentMsgs.length && currentMsgs[currentMsgs.length - 1].type
+      if (currentMsgs.length) {
+        if (lastType === 'img') {
+          lastMsg = '[image]'
+        } else if(lastType === 'file'){
+          lastMsg = currentMsgs[currentMsgs.length - 1].filename
+        }else{
+          lastMsg = currentMsgs[currentMsgs.length - 1].msg
+        }
+      }
+			const msgTime = currentMsgs.length ? this.renderTime(currentMsgs[currentMsgs.length - 1].time) : "";
 			return {
 				lastMsg,
 				msgTime
