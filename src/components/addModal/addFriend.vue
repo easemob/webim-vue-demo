@@ -48,6 +48,7 @@ export default{
 			this.changeModal();
 			this.addfirend(option);
 			this.$message.success("已发送请求");
+			this.$data.form.name =''
 		}
 	}
 };
