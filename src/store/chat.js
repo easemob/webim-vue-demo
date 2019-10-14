@@ -1,3 +1,5 @@
+import WebIM from "../utils/WebIM";
+
 // import WebIM from "../utils/WebIM";
 
 //TODO 处理页面刷新无法获取到音频url
@@ -322,6 +324,42 @@ const Chat = {
             }
             WebIM.conn.send(msgObj.body);
         },
+        sendRecorder: function (context, payload) {
+            const { useId, type, input } = payload
+            const id = WebIM.conn.getUniqueId()
+            const msgObj = new WebIM.message('audio', id);
+            let isRoom = type == "chatroom" || type == "groupchat"
+            // console.log('bold>>>', bold);
+            // console.log('newBold>>', WebIM.utils.parseDownloadResponse.call(WebIM.conn, bold));
+            // let newBold = WebIM.utils.parseDownloadResponse.call(WebIM.conn, bold)
+            var file = WebIM.utils.getFileUrl(input)
+            console.log('file>>>', file);
+            msgObj.set({
+                apiUrl: WebIM.config.apiURL,
+                file: file,
+                to: useId,
+                type: 'audio',
+                roomType: isRoom,
+
+                onFileUploadError: function (error) {
+                    console.log('语音上传失败', error);
+                },
+                onFileUploadComplete: function (data) {
+                    console.log('上传成功', data);
+                },
+                success: function () {
+                    console.log('语音发送成功')
+                },
+                flashUpload: WebIM.flashUpload
+            })
+            if (type === 'group' || type === 'chatroom') {
+                msgObj.setGroup('groupchat')
+            }
+            WebIM.conn.send(msgObj.body);
+        },
+
+
+
         onCallVideo: function (context, payload) {
             const { chatType, to } = payload;
             const type = chatType === 'contact' ? 'singleChat' : 'groupChat';

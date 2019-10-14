@@ -117,6 +117,9 @@
           <UpLoadImage :type="this.type" :chatId="activedKey[type]" />
           <!-- 上传文件组件 -->
           <UpLoadFile :type="this.type" :chatId="activedKey[type]" />
+		
+			<!-- 发送语音 -->
+		  <RecordAudio/>
 
           <i class="el-icon-video-camera icon" @click="callVideo" v-show="isHttps"></i>
           <i
@@ -153,6 +156,7 @@ import ChatEmoji from "../chatEmoji/index.vue";
 import emoji from "../../config/emoji";
 import UpLoadImage from "../upLoadImage/index.vue";
 import UpLoadFile from "../upLoadFile/index.vue";
+ import RecordAudio from "../recorder/index.vue";
 import "./index.less";
 import { mapActions, mapGetters } from "vuex";
 import EmediaModal from "../emediaModal/index";
@@ -526,7 +530,8 @@ export default{
 		UpLoadImage,
 		UpLoadFile,
 		MultiAVModal,
-		GetGroupInfo
+		GetGroupInfo,
+		RecordAudio
 	}
 };
 </script>

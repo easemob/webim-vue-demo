@@ -104,7 +104,7 @@ WebIM.conn.listen({
         console.log('onCmdMessage', message)
     }, //收到命令消息
     onAudioMessage: function (message) {
-        // console.log('onAudioMessage', message)
+        debugger
         const typeMap = {
             chat: 'contact',
             groupchat: 'group',
