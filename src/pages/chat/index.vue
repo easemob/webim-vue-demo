@@ -1,7 +1,8 @@
 <template>
-  <a-layout
-  	style="position: absolute;
+		<a-layout
+	style="position: absolute;
 	width: 100%;
+	overflow: hidden;
 	height: 100%;">
 	<a-layout-header class="layout-header">
 	 	<div class="header">
@@ -93,7 +94,7 @@
 			ref='messageBox'/>
 		<!-- <MessageBox v-if="activeKey == 'chatroom'"  type="chatroom" />
 		<MessageBox v-if="activeKey == 'group'" type="group" /> -->
-	  </a-layout-sider>
+	</a-layout-sider>
 
 	<a-layout-content style="overflow: visible">
 		<Message

@@ -1,6 +1,10 @@
 <template>
-  <el-dialog title="创建群组" :visible.sync="showCreateGroupModel">
-    <el-form :model="form" v-if="showCreateModel == true">
+  <a-modal
+    title="创建群组"
+      v-model="showCreateGroupModel"
+      :footer="null"
+    >
+      <el-form :model="form" v-if="showCreateModel == true">
       <div>
         <el-input v-model="form.groName" placeholder="群组名称"></el-input>
       </div>
@@ -40,57 +44,57 @@
         </div>
       </div>
     </div>
-  </el-dialog>
+    </a-modal>
 </template>
 <script>
 import "./group.less";
 import { mapActions } from "vuex";
-export default {
-  data() {
-    return {
-      showCreateGroupModel: false,
-      showCreateModel: true,
-      showFriendListModel: false,
+export default{
+	data(){
+		return {
+			showCreateGroupModel: false,
+			showCreateModel: true,
+			showFriendListModel: false,
 
-      form: {
-        groName: "",
-        desc: "",
-        radio: "2",
-        radiopom: "2",
-        membersList: []
-      }
-    };
-  },
-  computed: {
-    firendList() {
-      return this.$store.state.chat.userList.contactUserList || [];
-    }
-  },
-  methods: {
-    ...mapActions(["onCreateGroup"]),
-    changeCreateModel() {
-      this.$data.showCreateGroupModel = !this.$data.showCreateGroupModel;
-      if (!this.$data.showCreateModel) {
-        this.chenageCreateModel();
-      }
-      this.$data.form.groName = '';
-      this.$data.form.desc = '';
-    },
-    chenageCreateModel() {
-      this.$data.showCreateModel = !this.$data.showCreateModel;
-      this.$data.showFriendListModel = !this.$data.showFriendListModel;
-    },
-    postCreateGroup() {
-      this.onCreateGroup({
-        groupname: this.$data.form.groName,
-        desc: this.$data.form.desc,
-        members: this.$data.form.membersList,
-        approval: this.$data.form.radiopom == 2 ? false : true,
-        pub: this.$data.form.radio == 2 ? true : false
-      });
-      this.changeCreateModel();
-    }
-  }
+			form: {
+				groName: "",
+				desc: "",
+				radio: "2",
+				radiopom: "2",
+				membersList: []
+			}
+		};
+	},
+	computed: {
+		firendList(){
+			return this.$store.state.chat.userList.contactUserList || [];
+		}
+	},
+	methods: {
+		...mapActions(["onCreateGroup"]),
+		changeCreateModel(){
+			this.$data.showCreateGroupModel = !this.$data.showCreateGroupModel;
+			if(!this.$data.showCreateModel){
+				this.chenageCreateModel();
+			}
+			this.$data.form.groName = "";
+			this.$data.form.desc = "";
+		},
+		chenageCreateModel(){
+			this.$data.showCreateModel = !this.$data.showCreateModel;
+			this.$data.showFriendListModel = !this.$data.showFriendListModel;
+		},
+		postCreateGroup(){
+			this.onCreateGroup({
+				groupname: this.$data.form.groName,
+				desc: this.$data.form.desc,
+				members: this.$data.form.membersList,
+				approval: this.$data.form.radiopom != 2,
+				pub: this.$data.form.radio == 2
+			});
+			this.changeCreateModel();
+		}
+	}
 };
 </script>
 <style scoped>
