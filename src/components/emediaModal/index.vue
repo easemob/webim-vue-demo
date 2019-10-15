@@ -151,6 +151,18 @@ export default{
 						WebIM.call.caller = "";
 						WebIM.call.callee = "";
 						me.closeEmediaModal();
+						me.$data.emediaModalVisible = false;
+						me.$data.showAccept = false;
+						me.$data.showMute = false;
+						me.$data.callerWaitVisible = false;
+						me.$data.calleeWaitVisible = false;
+						me.$data.voiceCallVisible = false;
+						me.$data.contact = "";
+						me.$refs.audio.isopen = false;
+						me.$refs.video.isopen = false;
+						me.$refs.video.style.color = "#2c3e50";
+						me.$refs.audio.style.color = "#2c3e50";
+						me.$refs.mute.style.color = "#2c3e50";
 						// me.channel.close()
 					},
 					onIceConnectionStateChange: function(iceState){
@@ -253,7 +265,7 @@ export default{
 				this.$refs.remoteVideo.muted = false;
 			}
 			else{
-				this.$refs.mute.style.color = "#eeeeee";
+				this.$refs.mute.style.color = "#2c3e50";
 				this.$refs.remoteVideo.muted = true;
 			}
 		},
@@ -262,12 +274,12 @@ export default{
 			let to = WebIM.call.callee.split("@")[0].split("_")[1];
 			if(type === "audioControl"){
 				controlType = this.$refs.audio.isopen ? 0 : 1;
-				this.$refs.audio.style.color = this.$refs.audio.isopen ? "#eeeeee" : "#4eb1f4";
+				this.$refs.audio.style.color = this.$refs.audio.isopen ? "#2c3e50" : "#4eb1f4";
 				this.$refs.audio.isopen = !this.$refs.audio.isopen;
 			}
 			else{
 				controlType = this.$refs.video.isopen ? 3 : 2;
-				this.$refs.video.style.color = this.$refs.video.isopen ? "#eeeeee" : "#4eb1f4";
+				this.$refs.video.style.color = this.$refs.video.isopen ? "#2c3e50" : "#4eb1f4";
 				this.$refs.video.isopen = !this.$refs.video.isopen;
 			}
 			console.log("controlType", controlType);
