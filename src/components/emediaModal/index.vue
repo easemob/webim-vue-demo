@@ -258,14 +258,14 @@ export default{
 			this.$data.toggle = !this.$data.toggle;
 		},
 		mute(){
-			// this.$refs.remoteVideo.muted = !this.$refs.remoteVideo.muted;
-			const muted = this.$refs.remoteVideo.muted;
+			let muted = this.$refs.remoteVideo.muted;
 			if(muted){
-				this.$refs.mute.style.color = "#4eb1f4";
+				this.$refs.mute.style.color = "#2c3e50";
 				this.$refs.remoteVideo.muted = false;
 			}
 			else{
-				this.$refs.mute.style.color = "#2c3e50";
+				console.log("no-muted", muted);
+				this.$refs.mute.style.color = "#4eb1f4";
 				this.$refs.remoteVideo.muted = true;
 			}
 		},
