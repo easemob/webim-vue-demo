@@ -64,8 +64,9 @@ const Group = {
 		},
 		//获取群组详情
 		onGetGroupinfo: function (context, payload) {
-			console.log("onGetGroupinfo", payload)
-			let gid = payload.select_id;
+			// console.log("onGetGroupinfo", payload)
+			// TODO
+			let gid = payload.select_id || payload.select_groupid;
 			let options = {
 				groupId: gid,  //群组id
 				success: function (resp) {

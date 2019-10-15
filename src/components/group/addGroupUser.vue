@@ -1,15 +1,12 @@
 <template>
-  <!-- <a-modal
-    title="申请入群"
-      :visible="showGroupModel"
-      :footer="null"
-    > -->
-  <el-dialog title="申请入群" :visible.sync="showGroupModel">
+  <a-modal title="申请入群" v-model="showGroupModel" :footer="null">
     <div>
-      <input class="searchInput" v-model="select_groupid" placeholder="请输入群组ID" />
-    </div>
-    <div>
-      <el-button class="searchBtn" type="success" @click="getGroupinfo">搜索</el-button>
+      <a-input-search
+        placeholder="请输入群组ID"
+        v-model="select_groupid"
+        @search="getGroupinfo"
+        enterButton="搜索"
+      />
     </div>
     <div class="pubGroup" v-if="showGroupListModel == true">
       <ul
@@ -43,82 +40,82 @@
           <i>返回</i>
         </div>
         <div class="groCreate">
-          <el-button type="success" @click="postJoinGroup">申请加群</el-button>
+          <a-button @click="postJoinGroup" type="primary">申请加群</a-button>
         </div>
       </div>
     </div>
-  </el-dialog>
+  </a-modal>
 </template>
 <script>
 import "./group.less";
 import { mapActions, mapGetters } from "vuex";
 import Vue from "vue";
-export default{
-	data(){
-		return {
-			select_groupid: "",
-			showGroupModel: false,
-			showGroupInfoModel: false,
-			showGroupListModel: true
-		};
-	},
-	computed: {
-		publicGroupList(){
-			return this.$store.state.group.publicGroupList;
-		},
-		publicGroupInfo(){
-			return this.$store.state.group.groupInfo;
-		}
-	},
-	methods: {
-		...mapActions([
-			"onGetGroupUserList",
-			"onGetPublicGroup",
-			"onGetGroupinfo",
-			"onJoinGroup",
-			"onGetGroupUserList"
-		]),
-		open(){
-			this.$message("申请加入群组成功，等待群管理员审批");
-		},
-		changeGroupModel(){
-			this.$data.showGroupModel = !this.$data.showGroupModel;
-			if(!this.$data.showGroupListModel){
-				this.changeGroupListModel();
-			}
-			this.$data.select_groupid = "";
-			this.getPublicGroup();
-		},
-		changeGroupListModel(){
-			this.$data.showGroupListModel = !this.$data.showGroupListModel;
-			this.$data.showGroupInfoModel = !this.$data.showGroupInfoModel;
-		},
-		// chanegGroupInfoModel(){
-		//   this.$data.showGroupInfoModel = !this.$data.showGroupInfoModel
-		// },
-		getPublicGroup(){
-			this.onGetPublicGroup();
-		},
-		getGroupinfo(){
-			this.onGetGroupinfo({
-				select_groupid: this.$data.select_groupid
-			});
-			this.changeGroupListModel();
-			// this.chanegGroupInfoModel()
-		},
-		postJoinGroup(){
-			this.onJoinGroup({
-				select_groupid: this.$data.select_groupid
-			});
-			this.open();
-			this.onGetGroupUserList();
-		},
-		select(key){
-			this.$data.select_groupid = key.groupid;
-			// console.log(this.$data.elect_groupid);
-			this.getGroupinfo();
-		}
-	}
+export default {
+  data() {
+    return {
+      select_groupid: "",
+      showGroupModel: false,
+      showGroupInfoModel: false,
+      showGroupListModel: true
+    };
+  },
+  computed: {
+    publicGroupList() {
+      return this.$store.state.group.publicGroupList;
+    },
+    publicGroupInfo() {
+      return this.$store.state.group.groupInfo;
+    }
+  },
+  methods: {
+    ...mapActions([
+      "onGetGroupUserList",
+      "onGetPublicGroup",
+      "onGetGroupinfo",
+      "onJoinGroup",
+      "onGetGroupUserList"
+    ]),
+    open() {
+      this.$message("申请加入群组成功，等待群管理员审批");
+    },
+    changeGroupModel() {
+      this.$data.showGroupModel = !this.$data.showGroupModel;
+      if (!this.$data.showGroupListModel) {
+        this.changeGroupListModel();
+      }
+      this.$data.select_groupid = "";
+      this.getPublicGroup();
+    },
+    changeGroupListModel() {
+      this.$data.showGroupListModel = !this.$data.showGroupListModel;
+      this.$data.showGroupInfoModel = !this.$data.showGroupInfoModel;
+    },
+    // chanegGroupInfoModel(){
+    //   this.$data.showGroupInfoModel = !this.$data.showGroupInfoModel
+    // },
+    getPublicGroup() {
+      this.onGetPublicGroup();
+    },
+    getGroupinfo() {
+      this.onGetGroupinfo({
+        select_groupid: this.$data.select_groupid
+      });
+      this.changeGroupListModel();
+      // this.chanegGroupInfoModel()
+    },
+    postJoinGroup() {
+      this.onJoinGroup({
+        select_groupid: this.$data.select_groupid
+      });
+      this.open();
+      this.onGetGroupUserList();
+    },
+    select(key) {
+      this.$data.select_groupid = key.groupid;
+      // console.log(this.$data.elect_groupid);
+      this.getGroupinfo();
+    }
+  }
 };
 </script>
 <style>
