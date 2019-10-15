@@ -5,11 +5,11 @@
 		:footer="null"
 	>
 		<ul class="black-name">
-			<li v-for="item in fidendList" :key="item.name">
-			{{item.name}}
-			<label class="icon-x">
-				<i class="el-icon-remove-outline" @click="select(item)"></i>
-			</label>
+				<li v-for="item in fidendList" :key="item.name">
+				{{item.name}}
+				<label class="icon-x" @click="select(item)" >
+					<i class="el-icon-remove-outline"></i>
+				</label>
 			</li>
 		</ul>
 	</a-modal>
@@ -35,8 +35,8 @@ export default{
 		},
 		select(key){
 			let removeName = key.name;
-			this.onRemoveBlack({ removeName: removeName },
-				this.onGetFirendBlack());
+			this.onRemoveBlack({ removeName: removeName });
+			this.onGetFirendBlack();
 		}
 	}
 };

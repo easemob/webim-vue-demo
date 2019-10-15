@@ -131,10 +131,17 @@ export default{
 		}),
 		userList(){
 			return {
-				contact: this.contact,
+				contact: this.contact.filter((item) => {
+					if(item && !this.blackList.includes(item.name)){
+						return item;
+					}
+				}),
 				group: this.group,
 				chatroom: this.chatroom
 			};
+		},
+		blackList(){
+			return Object.keys(this.$store.state.friendModule.blackList);
 		},
 		chatList(){
 			return this.$store.state.chat.msgList;
@@ -342,24 +349,7 @@ export default{
 				this.getGroupInfo();
 			}
 		},
-		menuClick(i){
-			this.changeMenus();
-			switch(i){
-			case "1":
-				console.log("加入黑名单");
-				this.onAddBlack({
-					userId: this.$data.activedKey[this.type]
-				});
-				break;
-			case "2":
-				this.onDelteFirend({
-					userId: this.$data.activedKey[this.type]
-				});
-				break;
-			default:
-				break;
-			}
-		},
+
 		getGroupInfo(){
 			this.onGetGroupinfo({
 				select_id: this.$data.activedKey[this.type].groupid

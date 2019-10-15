@@ -365,6 +365,10 @@ export default{
 				this.onAddBlack({
 					userId: this.$data.activedKey[this.type]
 				});
+				this.$data.activedKey.contact = "";
+				this.$router.push({  // 核心语句
+					path: "/contact",   // 跳转的路径
+				});
 				break;
 			case "2":
 				this.onDelteFirend({

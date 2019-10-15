@@ -38,15 +38,16 @@ const Chat = {
 		updateUserList(state, payload){
 			const { userList, type } = payload;
 			// 如果是添加黑名单，则从当前用户列表中删掉此人
-			if(payload.black && payload.black.type === "addBlack"){
-				const addName = payload.black.addName;
-				const userList = state.userList[type];
-				let newUserList = _.pullAllBy(userList, [{ name: addName }], "name");
-				state.userList[type] = newUserList;
-			}
-			else{
-				state.userList[type] = userList;
-			}
+			// if(payload.black && payload.black.type === "addBlack"){
+			// 	const addName = payload.black.addName;
+			// 	const userList = state.userList[type];
+			// 	let newUserList = _.pullAllBy(userList, [{ name: addName }], "name");
+			// 	state.userList[type] = newUserList;
+			// }
+			// else{
+			// 	state.userList[type] = userList;
+			// }
+			state.userList[type] = userList;
 		},
 		updateMsgList(state, payload){
 			const { chatType, chatId, msg, bySelf, type, id } = payload;
