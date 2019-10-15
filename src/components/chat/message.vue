@@ -57,9 +57,11 @@
             {{renderTime(item.time)}}
           </div>
           <!-- 撤回消息 end -->
-
-          <el-dropdown v-else @command="handleCommand(item)" trigger="click" :style="{'float':item.bySelf ? 'right':'left'}">
-            <span class="el-dropdown-link">
+          <a-dropdown v-else :trigger="['contextmenu']" :style="{'float':item.bySelf ? 'right':'left'}"
+          :disabled="!item.bySelf">
+          <span style="user-select: none">
+          <!-- <el-dropdown v-else @command="handleCommand(item)" trigger="click" :style="{'float':item.bySelf ? 'right':'left'}">
+            <span class="el-dropdown-link"> -->
           <!-- 图片消息 -->
           <img
             :key="item.msg"
@@ -96,11 +98,16 @@
           <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div>
 
             </span>
-            <el-dropdown-menu slot="dropdown" >
-              <el-dropdown-item command="a" :disabled="!item.bySelf">撤回</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
-          
+          <!-- <el-dropdown-menu slot="dropdown" >
+            <el-dropdown-item command="a" :disabled="!item.bySelf">撤回</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown> -->
+
+            <a-menu slot="overlay">
+            <a-menu-item key="1" @click="handleCommand(item)">撤回2</a-menu-item>
+          </a-menu>
+        </a-dropdown>
+
           <!-- 聊天时间 -->
           <div
             v-if="item.status !== 'recall'"
