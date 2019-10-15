@@ -12,7 +12,7 @@
                 v-for="item in groupMembers"
                 :key="item.member"
                 :label="item.member||item.owner"
-                :disabled="item.member == username?true:false"
+                :disabled="item.member == username || item.owner == username?true:false"
                 class="checkbox"
                 />
             </el-checkbox-group>
