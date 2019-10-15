@@ -83,7 +83,7 @@
             </el-card>
           </div>
           <!-- 音频消息 -->
-          <div v-else-if="item.type==='audio'">
+          <div v-else-if="item.type==='audio'" :style="{'float':item.bySelf ? 'right':'left'}">
             <audio :src="item.msg" controls></audio>
           </div>
           <!-- 视频消息 -->
@@ -108,6 +108,7 @@
             :style="{'text-align':item.bySelf ? 'right':'left'}"
           >{{renderTime(item.time)}}</div>
         </div>
+
       </div>
       <div class="messagebox-footer">
         <div class="footer-icon">
@@ -156,7 +157,7 @@ import ChatEmoji from "../chatEmoji/index.vue";
 import emoji from "../../config/emoji";
 import UpLoadImage from "../upLoadImage/index.vue";
 import UpLoadFile from "../upLoadFile/index.vue";
- import RecordAudio from "../recorder/index.vue";
+import RecordAudio from "../recorder/index.vue";
 import "./index.less";
 import { mapActions, mapGetters } from "vuex";
 import EmediaModal from "../emediaModal/index";
@@ -631,6 +632,7 @@ export default{
   .el-icon-arrow-down {
     font-size: 12px;
   }
+
 }
 </style>
 
