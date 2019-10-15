@@ -41,7 +41,8 @@ export default{
 	},
 	computed: {
 		loginName(){
-			return this.$store.state.login.username;
+			const username = localStorage.getItem('userInfo')&&JSON.parse(localStorage.getItem('userInfo')).userId;
+			return username
 		},
 		groupAdmin(){
 			return this.$store.state.group.groupInfo.admin;

@@ -482,16 +482,20 @@ export default{
           lastMsg = '[image]'
         } else if(lastType === 'file'){
           lastMsg = currentMsgs[currentMsgs.length - 1].filename
-        }else{
+		} else if(lastType === 'audio'){
+			lastMsg='[audio]'
+		} else if (lastType === 'vidio'){
+			lastMsg='[vidio]'
+		} else {
           lastMsg = currentMsgs[currentMsgs.length - 1].msg
         }
-      }
-			const msgTime = currentMsgs.length ? this.renderTime(currentMsgs[currentMsgs.length - 1].time) : "";
-			return {
-				lastMsg,
-				msgTime
-			};
-		},
+	  }
+	  const msgTime = currentMsgs.length ? this.renderTime(currentMsgs[currentMsgs.length - 1].time) : "";
+		return {
+			lastMsg,
+			msgTime
+		};
+	},
 		scollBottom(){
 			setTimeout(() => {
 				const dom = this.$refs.msgContent;
