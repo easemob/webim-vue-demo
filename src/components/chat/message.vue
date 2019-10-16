@@ -397,6 +397,11 @@ export default{
 				chatId: this.$data.activedKey[this.type],
 				message: this.$data.message
 			}, 123);
+      
+			if(this.$data.message == "" || this.$data.message == "\n"){
+				this.$data.message = "";
+				return;
+			}
 			this.onSendText({
 				chatType: this.type,
 				chatId: this.$data.activedKey[this.type],

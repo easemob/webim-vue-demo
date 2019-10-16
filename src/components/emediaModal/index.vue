@@ -158,12 +158,12 @@ export default{
 						me.$data.calleeWaitVisible = false;
 						me.$data.voiceCallVisible = false;
 						me.$data.contact = "";
-						me.$refs.audio.isopen = false;
-						me.$refs.video.isopen = false;
+						me.$refs.audio.isopen = true;
+						me.$refs.video.isopen = true;
+						me.$refs.remoteVideo.muted = false;
 						me.$refs.video.style.color = "#2c3e50";
 						me.$refs.audio.style.color = "#2c3e50";
 						me.$refs.mute.style.color = "#2c3e50";
-						// me.channel.close()
 					},
 					onIceConnectionStateChange: function(iceState){
 						console.log("onIceConnectionStateChange");
