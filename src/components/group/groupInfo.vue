@@ -371,7 +371,7 @@ export default{
 }
 .memberBox{
   margin-top: 20px;
-  height: 100%;
+  height: calc(100% - 100px);
   overflow-y: scroll;
   position: relative;
 }

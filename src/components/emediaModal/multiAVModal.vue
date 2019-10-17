@@ -53,7 +53,7 @@
                 <el-col :span="3"><i class="el-icon-phone-outline toolBtn"></i></el-col>
                 <el-col :span="3"><i :class="rv_local.openAudio?'el-icon-microphone toolBtn':'el-icon-microphone active'" @click="controlLocalMic"></i></el-col>
                 <el-col :span="3"><i :class="rv_local.openVideo?'el-icon-video-camera toolBtn':'el-icon-video-camera active'" @click="controlLocalVideo"></i></el-col>
-                <el-col :span="3"><el-button class="hangup" type="danger" plain @click="closeModal">挂断</el-button></el-col>
+				<a-button  class="hangup" type="danger" plain @click="closeModal">挂断</a-button>
             </div>
         </div>
     </Draggable>

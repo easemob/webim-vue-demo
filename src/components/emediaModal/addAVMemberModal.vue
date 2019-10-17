@@ -1,26 +1,27 @@
 <template>
-    <el-dialog
-        title="选择成员"
-        :visible="addAVMemberModalVisible"
-        width="30%"
-        @update:visible="hide"
-        @closed="onClosed"
-        center>
+	<a-modal
+      title="选择成员"
+      :visible="addAVMemberModalVisible"
+      @ok="startConference"
+      @cancel="onClosed"
+    >
         <div>
             <el-checkbox-group v-model="checkList" class="checkboxGroup" :max="6">
-                <el-checkbox
-                v-for="item in groupMembers"
-                :key="item.member"
-                :label="item.member||item.owner"
-                :disabled="item.member == username || item.owner == username?true:false"
-                class="checkbox"
-                />
+				<div>
+					<el-checkbox
+						v-for="item in groupMembers"
+						:key="item.member"
+						:label="item.member||item.owner"
+						:disabled="item.member == username || item.owner == username?true:false"
+						class="checkbox"
+					/>
+				</div>
             </el-checkbox-group>
         </div>
         <span slot="footer" class="dialog-footer">
             <el-button type="primary" @click="startConference">开始</el-button>
         </span>
-    </el-dialog>
+    </a-modal>
 </template>
 
 <style>
@@ -80,6 +81,7 @@ export default{
 		},
 		onClosed(){
 			this.$data.checkList = [username];
+			this.hide();
 		},
 		startConference(){
 			const me = this;
