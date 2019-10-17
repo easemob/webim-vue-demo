@@ -113,58 +113,6 @@
       </a-layout-content>
     </a-layout>
   </a-layout>
-
-  <!-- <div class="contact">
-	<div class="header">
-	  <div class="mask" v-show="showSettingOptions" @click="showSettingOptions=false"></div>
-	  <span class="setting">
-		<van-icon name="setting-o" size="24" color="#fff" @click="optionsVisibleChange" />
-		<ul class="options" v-show="showSettingOptions">
-		  <li class="option" @click="recEmedia">音视频录制</li>
-		  <li class="option" @click="GetFirendBlack">好友黑名单</li>
-		  <li class="option" @click="toLogout">退出</li>
-		</ul>
-	  </span>
-	  <span class="add-style">
-		<van-icon name="add-o" size="24" color="#fff" @click="addModalChange" />
-		<div class="mask" v-show="showAddOptions" @click="showAddOptions =false"></div>
-		<ul class="options options2" v-show="showAddOptions">
-		  <li
-			class="option option2"
-			v-for="(item,index) in addList"
-			id="item.id"
-			@click="ulClick(item.id)"
-			:key="index"
-		  >
-			<van-icon v-bind:name="item.icon" size="18" color="#6d6d6d" />
-			&nbsp;{{item.name}}
-		  </li>
-		</ul>
-	  </span>
-	  <span class="username">{{userName}}</span>
-	</div>
-	<div class="content">
-	  <van-tabs v-model="activeKey" @click="contactTypeChange">
-		<van-tab title="好友" name="contact">
-		  <MessageBox type="contact" />
-		</van-tab>
-		<van-tab title="群组" name="group">
-		  <MessageBox type="group" />
-		</van-tab>
-		<van-tab title="聊天室" name="chatroom">
-		  <MessageBox type="chatroom" />
-		</van-tab>
-	  </van-tabs>
-	</div>
-	<AddFriend ref="addFriendMethods" />
-	
-	<GetFriendRequest />
-	<FirendBlack ref="firendModel" />
-	<AddGroupUser ref="addGroupModel" />
-	<CreateGroup ref="createGroupModel" />
-	<VidoeSetting ref="videoSetting"/>
-	<GroupRequest />
-  </div>-->
 </template>
 
 <script>
@@ -215,9 +163,6 @@ export default {
     };
   },
   computed: {
-    // username() {
-    //   return this.$store.state.login.username;
-    // }
     chatList() {
       return this.$store.state.chat.msgList;
     }
@@ -228,7 +173,6 @@ export default {
       this.onLogout();
     },
     onCollapse(collapsed, type) {
-      console.log(collapsed, type);
       if (type != "responsive") {
         this.$data.collapsed = true;
       } else {
@@ -245,7 +189,6 @@ export default {
       this.$data.collapsed = false;
     },
     select(i) {
-      console.log(i, "选中");
       this.$refs.messageList.select(i);
       if (this.broken) {
         this.$data.collapsed = true;

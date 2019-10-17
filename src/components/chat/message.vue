@@ -516,9 +516,6 @@ export default{
 			}, 0);
 		},
 		handleCommand(item){
-			console.log(item);
-			// item.status = 'recall'
-			// Vue.$store.commit("updateMessageStatus", item);
 			let name = "";
 			if(this.type === "contact"){
 				name = this.$data.activedKey[this.type].name;
@@ -591,7 +588,7 @@ export default{
   float: left;
 }
 .img-style {
-  max-width: 400px;
+  max-width: 350px;
 }
 .time-style {
   clear: both;

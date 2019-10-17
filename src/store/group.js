@@ -21,7 +21,6 @@ const Group = {
 			state.publicGroupList = publicGroup;
 		},
 		updateGroupNotifications(state, data) {
-			console.log("updateGroupNotifications", data)
 			state.groupNotifications = data;
 		},
 		getInfo(state, payload) {
@@ -34,7 +33,6 @@ const Group = {
 			state.groupInfo.members = members
 		},
 		updateGroupBlack(state, payload) {
-			console.log("updateGroupBlack", payload)
 			state.groupBlack = payload
 		},
 		updateAdminList(state, payload){
@@ -105,7 +103,6 @@ const Group = {
 		},
 		//创建群组
 		onCreateGroup: function (context, payload) {
-			console.log("onCreateGroup", payload)
 			const { groupname, desc, members, pub, approval } = payload
 			let options = {
 				data: {
@@ -124,7 +121,6 @@ const Group = {
 		},
 		//将好友加入群组
 		onInviteGroup: function (context, payload) {
-			console.log("onInviteGroup", payload)
 			const { select_id, select_name } = payload
 			let option = {
 				users: [select_name],
@@ -160,14 +156,12 @@ const Group = {
 		},
 		//修改群组详情
 		onUpdataGroupInfo: function (context, payload) {
-			console.log("onUpdataGroupInfo", payload)
 			const { select_id, updateName, updateDesc } = payload
 			let option = {
 				groupId: select_id,
 				groupName: updateName,                         // 群组名称
 				description: updateDesc,  // 群组简介
 				success: function (resp) {
-					console.log(resp);
 					Vue.$store.dispatch('onGetGroupUserList')
 					Vue.$store.dispatch('onGetGroupinfo', { select_id })
 					this.$forceUpdate();
@@ -207,7 +201,6 @@ const Group = {
 			var options = {
 				groupId: select_id,                 // 群组id
 				success: function (resp) {
-					console.log('所有管理员', resp)
 					context.commit('updateAdminList', resp.data)
 				},
 				error: function(e){}
@@ -216,7 +209,6 @@ const Group = {
 		},
 		//添加群组禁言
 		onAddMute: function (context, payload) {
-			console.log("onAddMute", payload)
 			const { select_id, select_name } = payload
 			let options = {
 				username: select_name,                      // 成员用户名
@@ -232,7 +224,6 @@ const Group = {
 		},
 		//移除禁言
 		onRemoveMute: function (context, payload) {
-			console.log("onRemoveMute", payload)
 			const { select_id, select_name } = payload
 			let options = {
 				groupId: select_id,                  // 群组ID
@@ -260,7 +251,6 @@ const Group = {
 		},
 		//添加群组黑名单
 		onAddGroupBlack: function (context, payload) {
-			console.log("onAddGroupBlack", payload)
 			const { select_id, select_name } = payload
 			let options = {
 				groupId: select_id,                     // 群组ID
@@ -291,7 +281,6 @@ const Group = {
 		},
 		//获取群组黑名单
 		onGetGroupBlack: function (context, payload) {
-			console.log("onGetGroupBlack", payload)
 			let select_id = payload.groupid
 			let option = {
 				groupId: select_id,
@@ -319,7 +308,6 @@ const Group = {
 		},
 		//退出群组
 		onQuitGroup: function (context, payload) {
-			console.log("onQuitGroup", payload)
 			let option = {
 				groupId: payload.select_id,
 				success: function () {
@@ -334,7 +322,6 @@ const Group = {
 		},
 		//解散群组
 		onDissolveGroup: function (context, payload) {
-			console.log("onDissolveGroup", payload)
 			let option = {
 				groupId: payload.select_id,
 				success: function () {

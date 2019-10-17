@@ -578,7 +578,7 @@ export default{
   float: left;
 }
 .img-style {
-  max-width: 400px;
+  max-width: 350px;
 }
 .time-style {
   clear: both;

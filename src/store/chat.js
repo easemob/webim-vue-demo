@@ -122,8 +122,7 @@ const Chat = {
 			const { id, mid, action, readUser } = message;
 			const { name, params } = Vue.$route;
 			Object.keys(state.msgList[name]).forEach((user) => {
-				console.log(user);
-				console.log(state.msgList[name][user]);
+				// console.log(state.msgList[name][user]);
                 
 				if(action == "oneUserReadMsgs"){
 					if(state.msgList[name][readUser]){

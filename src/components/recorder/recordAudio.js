@@ -30,7 +30,6 @@ const HZRecorder = function(stream, config){
 	const linearInterpolate = (before, after, atPoint) => {
 		return before + (after - before) * atPoint;
 	};
-	console.log("context.sampleRate", context.sampleRate);
 
 	var audioData = {
 		size: 0, // 录音文件长度
@@ -191,7 +190,6 @@ const HZRecorder = function(stream, config){
 	};
 };
 HZRecorder.setErrorInfoText = (errorMessage) => {
-	console.log(this);
 	HZRecorder.errorMessage = errorMessage;
 };
 
