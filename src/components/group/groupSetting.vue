@@ -41,8 +41,8 @@ export default{
 	},
 	computed: {
 		loginName(){
-			const username = localStorage.getItem('userInfo')&&JSON.parse(localStorage.getItem('userInfo')).userId;
-			return username
+			const username = localStorage.getItem("userInfo") && JSON.parse(localStorage.getItem("userInfo")).userId;
+			return username;
 		},
 		groupAdmin(){
 			return this.$store.state.group.groupInfo.admin;
@@ -63,11 +63,9 @@ export default{
 			this.$data.setInfo = !this.$data.setInfo;
 			if(this.loginName == this.groupAdmin){
 				this.$data.showAdminIcon = !this.$data.showAdminIcon;
-				console.log("111", this.$data.showAdminIcon);
 			}
 			else{
 				this.$data.showCloseIcon = !this.$data.showCloseIcon;
-				console.log("2222", this.$data.showCloseIcon);
 			}
 		},
 		changeBlackModel(){
@@ -126,11 +124,9 @@ export default{
 			this.$data.setInfo = false;
 			if(this.loginName == this.groupAdmin){
 				this.$data.showAdminIcon = false;
-				console.log("111", this.$data.showAdminIcon);
 			}
 			else{
 				this.$data.showCloseIcon = false;
-				console.log("2222", this.$data.showCloseIcon);
 			}
 		}
 	},

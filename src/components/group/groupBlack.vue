@@ -12,31 +12,30 @@
 </template>
 <script>
 import { mapActions } from "vuex";
-export default {
-  data() {
-    return {
-      showGroupBlackModel: false
-    };
-  },
-  computed: {
-    groupBlackList() {
-      return this.$store.state.group.groupBlack;
-    }
-  },
-  methods: {
-    ...mapActions(["onRemoveGroupBlack"]),
-    chengeBlackModel() {
-      this.$data.showGroupBlackModel = !this.$data.showGroupBlackModel;
-    },
-    select(key) {
-      console.log(key);
-      let removeGroupBlackName = key;
-      this.onRemoveGroupBlack({
-        select_id: this.$store.state.group.groupInfo.gid,
-        removeGroupName: removeGroupBlackName
-      });
-    }
-  }
+export default{
+	data(){
+		return {
+			showGroupBlackModel: false
+		};
+	},
+	computed: {
+		groupBlackList(){
+			return this.$store.state.group.groupBlack;
+		}
+	},
+	methods: {
+		...mapActions(["onRemoveGroupBlack"]),
+		chengeBlackModel(){
+			this.$data.showGroupBlackModel = !this.$data.showGroupBlackModel;
+		},
+		select(key){
+			let removeGroupBlackName = key;
+			this.onRemoveGroupBlack({
+				select_id: this.$store.state.group.groupInfo.gid,
+				removeGroupName: removeGroupBlackName
+			});
+		}
+	}
 };
 </script>
 <style scoped>

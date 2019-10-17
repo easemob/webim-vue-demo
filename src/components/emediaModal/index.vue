@@ -264,7 +264,6 @@ export default{
 				this.$refs.remoteVideo.muted = false;
 			}
 			else{
-				console.log("no-muted", muted);
 				this.$refs.mute.style.color = "#4eb1f4";
 				this.$refs.remoteVideo.muted = true;
 			}
@@ -282,7 +281,6 @@ export default{
 				this.$refs.video.style.color = this.$refs.video.isopen ? "#2c3e50" : "#4eb1f4";
 				this.$refs.video.isopen = !this.$refs.video.isopen;
 			}
-			console.log("controlType", controlType);
 			WebIM.call.controlStream(controlType, to);
 		},
 		showEmediaModal(){

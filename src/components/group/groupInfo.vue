@@ -160,7 +160,6 @@ export default{
 		]),
 
 		chengeInfoModel(){
-			console.log(this.groupinfoList, 111);
 			this.$data.showGroupInfoModel = !this.$data.showGroupInfoModel;
 			if(this.$data.showSettingModel){
 				this.chengeSetModel();
@@ -171,13 +170,9 @@ export default{
 			setTimeout(()=>{
 				this.getGroupAdmin({ select_id: params.id });
 				if(this.adminList.includes(this.username) || this.groupinfoList.admin == this.username){
-					console.log("有权限", this.adminList, this.groupinfoList.admin);
 					this.getMuted({ select_id: params.id });
 				}
 			}, 100);
-      
-			console.log("adminList", this.adminList);
-			console.log("muteList", this.muteList);
 		},
 		chengeSetModel(){
 			this.$refs.groupSettingModel.changeSettingModel();
@@ -190,7 +185,6 @@ export default{
 		// },
 
 		select(key){
-			console.log(key);
 			this.$data.select_name = key.member;
 		},
 		openSetAdmin(){

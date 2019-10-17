@@ -286,7 +286,7 @@ export default{
 				this.onGetCurrentChatObjMsg({ type: this.type, id: key.groupid });
 
 				setTimeout(() => {
-					Vue.$store.commit("updateMessageStatus", { action: "readMsgs" });
+					Vue.$store.commit("updateMessageStatus", { action: "oneUserReadMsgs", readUser: key.groupid });
 					this.$forceUpdate();
 				}, 100);
 
@@ -298,7 +298,7 @@ export default{
 				this.$router.push({ name: this.type, params: { id: key.name } });
 				this.onGetCurrentChatObjMsg({ type: this.type, id: key.name });
 				setTimeout(() => {
-					Vue.$store.commit("updateMessageStatus", { action: "readMsgs" });
+					Vue.$store.commit("updateMessageStatus", { action: "oneUserReadMsgs", readUser: key.name });
 					this.$forceUpdate();
 				}, 100);
 
@@ -316,7 +316,7 @@ export default{
 				WebIM.conn.joinChatRoom({
 					roomId: key.id, // 聊天室id
 					success: function(){
-						console.log("加入聊天室成功");
+						// console.log("加入聊天室成功");
 						if(!me.msgList){
 							me.getHistoryMessage({ name: key.id, isGroup: true });
 							setTimeout(() => {
@@ -331,7 +331,6 @@ export default{
 		loadMoreMsgs(){
 			const me = this;
 			const success = function(msgs){
-				console.log("成功的数据", msgs);
 				if(msgs.length === 0){
 					me.$data.loadText = "已无更多数据";
 				}
@@ -368,7 +367,7 @@ export default{
 			this.changeMenus();
 			switch(i){
 			case "1":
-				console.log("加入黑名单");
+				// console.log("加入黑名单");
 				this.onAddBlack({
 					userId: this.$data.activedKey[this.type]
 				});
@@ -392,12 +391,6 @@ export default{
 			});
 		},
 		onSendTextMsg(){
-			console.log({
-				chatType: this.type,
-				chatId: this.$data.activedKey[this.type],
-				message: this.$data.message
-			}, 123);
-      
 			if(this.$data.message == "" || this.$data.message == "\n"){
 				this.$data.message = "";
 				return;
@@ -460,7 +453,6 @@ export default{
 				});
 			}
 			else if(this.type == "group"){
-				console.log(this.$data.activedKey[this.type]);
 				this.getGroupMembers(this.$data.activedKey[this.type].groupid);
 				this.$refs.addAvMembertModal.show();
 			}

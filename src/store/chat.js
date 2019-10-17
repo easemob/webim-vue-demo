@@ -119,10 +119,22 @@ const Chat = {
 			});
 		},
 		updateMessageStatus(state, message){
-			const { id, mid, action } = message;
+			const { id, mid, action, readUser } = message;
 			const { name, params } = Vue.$route;
 			Object.keys(state.msgList[name]).forEach((user) => {
-				if(state.msgList[name][user].length){
+				console.log(user);
+				console.log(state.msgList[name][user]);
+                
+				if(action == "oneUserReadMsgs"){
+					if(state.msgList[name][readUser].length){
+						state.msgList[name][readUser].forEach((msg) => {
+							if(msg.status != "recall"){
+								msg.status = "read";
+							}
+						});
+					}
+				}
+				else if(state.msgList[name][user].length){
 					state.msgList[name][user].forEach((msg) => {
 						if(action === "readMsgs" && !msg.bySelf){
 							if(msg.status != "recall"){
@@ -153,7 +165,7 @@ const Chat = {
 			try{
 				WebIM.conn.getRoster({
 					success: function(roster){
-						console.log("roster", roster);
+						// console.log("roster", roster);
 						const userList = roster.filter(user => ["both", "to"].includes(user.subscription));
 						context.commit("updateUserList", {
 							userList,
@@ -164,7 +176,7 @@ const Chat = {
 				});
 			}
 			catch(e){
-				console.log("error222", e);
+				console.log("error", e);
 			}
 		},
 		onGetGroupUserList: function(context, payload){
@@ -345,7 +357,6 @@ const Chat = {
 			// console.log('newBold>>', WebIM.utils.parseDownloadResponse.call(WebIM.conn, bold));
 			// let newBold = WebIM.utils.parseDownloadResponse.call(WebIM.conn, bold)
 			// var file = WebIM.utils.getFileUrl(input);
-			console.log("file>>>", file);
 			msgObj.set({
 				apiUrl: WebIM.config.apiURL,
 				file: file,
@@ -382,9 +393,7 @@ const Chat = {
 			if(type === "group" || type === "chatroom"){
 				msgObj.setGroup("groupchat");
 			}
-			console.log("msgObj", msgObj);
 			WebIM.conn.send(msgObj.body);
-            
 		},
 
 
@@ -518,7 +527,7 @@ const Chat = {
 						}
 					}
 					catch(e){
-						console.log("错误", e);
+						console.log("error", e);
 					}
 				},
 				fail: function(){ }

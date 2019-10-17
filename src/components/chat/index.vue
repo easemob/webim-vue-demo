@@ -176,10 +176,10 @@ export default{
 			"onGetFirendBlack"
 		]),
 		handleOpen(key, keyPath){
-			console.log(key, keyPath);
+			// console.log(key, keyPath);
 		},
 		handleClose(key, keyPath){
-			console.log(key, keyPath);
+			// console.log(key, keyPath);
 		},
 		getKey(item){
 			let key = "";
@@ -316,7 +316,6 @@ export default{
 		loadMoreMsgs(){
 			const me = this;
 			const success = function(msgs){
-				console.log("成功的数据", msgs);
 				if(msgs.length === 0){
 					me.$data.loadText = "已无更多数据";
 				}
@@ -414,7 +413,6 @@ export default{
 				});
 			}
 			else if(this.type == "group"){
-				console.log(this.$data.activedKey[this.type]);
 				this.getGroupMembers(this.$data.activedKey[this.type].groupid);
 				this.$refs.addAvMembertModal.show();
 			}
@@ -464,28 +462,32 @@ export default{
 			else{
 				userId = item.id;
 			}
-      const currentMsgs = chatList[userId] || [];
-      let lastMsg = ''
-      let lastType = currentMsgs.length && currentMsgs[currentMsgs.length - 1].type
-      if (currentMsgs.length) {
-        if (lastType === 'img') {
-          lastMsg = '[image]'
-        } else if(lastType === 'file'){
-          lastMsg = currentMsgs[currentMsgs.length - 1].filename
-		} else if(lastType === 'audio'){
-			lastMsg='[audio]'
-		} else if (lastType === 'vidio'){
-			lastMsg='[vidio]'
-		} else {
-          lastMsg = currentMsgs[currentMsgs.length - 1].msg
-        }
+			const currentMsgs = chatList[userId] || [];
+			let lastMsg = "";
+			let lastType = currentMsgs.length && currentMsgs[currentMsgs.length - 1].type;
+			if(currentMsgs.length){
+				if(lastType === "img"){
+					lastMsg = "[image]";
+				}
+				else if(lastType === "file"){
+					lastMsg = currentMsgs[currentMsgs.length - 1].filename;
+				}
+				else if(lastType === "audio"){
+					lastMsg = "[audio]";
+				}
+				else if(lastType === "vidio"){
+					lastMsg = "[vidio]";
+				}
+				else{
+					lastMsg = currentMsgs[currentMsgs.length - 1].msg;
+				}
 	  }
 	  const msgTime = currentMsgs.length ? this.renderTime(currentMsgs[currentMsgs.length - 1].time) : "";
-		return {
-			lastMsg,
-			msgTime
-		};
-	},
+			return {
+				lastMsg,
+				msgTime
+			};
+		},
 		scollBottom(){
 			setTimeout(() => {
 				const dom = this.$refs.msgContent;
