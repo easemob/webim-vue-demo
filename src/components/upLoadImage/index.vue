@@ -26,11 +26,11 @@ export default {
         this.$refs.imgDom.value = null;
         return false;
       }
-      if (!Config.imgType[file.filetype.toLowerCase()]) {
-        this.$refs.imgDom.value = null;
-        this.$message.error("不支持此类型文件");
-        return;
-      }
+      // if (!Config.imgType[file.filetype.toLowerCase()]) {
+      //   this.$refs.imgDom.value = null;
+      //   this.$message.error("不支持此类型文件");
+      //   return;
+      // }
 
       let obj = {
         chatType: this.type,

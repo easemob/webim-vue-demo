@@ -1,3 +1,4 @@
+
 window.URL = window.URL || window.webkitURL;
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
@@ -209,26 +210,28 @@ HZRecorder.get = function(callback, config){
 					switch(error.code || error.name){
 					case "PERMISSION_DENIED":
 					case "PermissionDeniedError":
-						HZRecorder.throwError("用户拒绝提供信息。");
+						Message.error("用户拒绝提供信息。");
 						break;
 					case "NOT_SUPPORTED_ERROR":
 					case "NotSupportedError":
-						HZRecorder.throwError("浏览器不支持硬件设备。");
+						Message.error("浏览器不支持硬件设备。");
 						break;
 					case "MANDATORY_UNSATISFIED_ERROR":
 					case "MandatoryUnsatisfiedError":
-						HZRecorder.throwError("无法发现指定的硬件设备。");
+						Message.error("无法发现指定的硬件设备。");
 						break;
 					default:
-						HZRecorder.throwError("无法打开麦克风。异常信息:" + (error.code || error.name));
+						// Message.error("无法打开麦克风。异常信息:" + (error.code || error.name));
+						Message.error("当前浏览器不支持录音功能。(建议使用Chrome)");
 						break;
 					}
 				});
 		}
 		else{
-			HZRecorder.throwErr("当前浏览器不支持录音功能。");
+			Message.error("当前浏览器不支持录音功能。");
 		}
 	}
 };
 
+import { Message } from "element-ui";
 export default HZRecorder;
