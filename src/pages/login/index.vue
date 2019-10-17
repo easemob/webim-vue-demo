@@ -27,45 +27,45 @@
 <script>
 import "./index.less";
 import { mapState, mapActions } from "vuex";
-export default {
-  data() {
-    return {
-      username: "",
-      password: "",
-      nickname: ""
-    };
-  },
-  mounted: function() {
-    const path = this.isRegister ? "/register" : "/login";
+export default{
+	data(){
+		return {
+			username: "",
+			password: "",
+			nickname: ""
+		};
+	},
+	mounted: function(){
+		const path = this.isRegister ? "/register" : "/login";
     
-    if (path !== location.pathname) {
-      this.$router.push(path);
-    }
-  },
-  components: {},
-  computed: {
-    isRegister() {
-      return this.$store.state.login.isRegister;
-		},
-  },
-  methods: {
-    ...mapActions(["onLogin", "setRegisterFlag", "onRegister"]),
-    toLogin() {
-      this.onLogin({
-        username: this.username,
-        password: this.password
-      });
-    },
-    toRegister() {
-      this.onRegister({
-        username: this.username,
-        password: this.password,
-        nickname: this.nickname
-      });
-    },
-    changeType() {
-      this.setRegisterFlag(!this.isRegister);
+		if(path !== location.pathname){
+			this.$router.push(path);
 		}
-  }
+	},
+	components: {},
+	computed: {
+		isRegister(){
+			return this.$store.state.login.isRegister;
+		},
+	},
+	methods: {
+		...mapActions(["onLogin", "setRegisterFlag", "onRegister"]),
+		toLogin(){
+			this.onLogin({
+				username: this.username.toLowerCase(),
+				password: this.password
+			});
+		},
+		toRegister(){
+			this.onRegister({
+				username: this.username.toLowerCase(),
+				password: this.password,
+				nickname: this.nickname.toLowerCase(),
+			});
+		},
+		changeType(){
+			this.setRegisterFlag(!this.isRegister);
+		}
+	}
 };
 </script>
