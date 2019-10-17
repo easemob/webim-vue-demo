@@ -20,6 +20,8 @@
 				<a-button
 					type="primary"
 					class="holdBtn"
+					@touchstart="mouseStart"
+					@touchend="mouseEnd('audio')"
 					@mousedown.prevent="mouseStart"
 					@mouseup.prevent="mouseEnd('audio')"
 				>

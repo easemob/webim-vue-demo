@@ -7,10 +7,9 @@
     >
         <div>
             <el-checkbox-group v-model="checkList" class="checkboxGroup" :max="6">
-				<div>
+				<div style="border-bottom: 1px solid #f2f2f2; height: 30px" v-for="item in groupMembers"
+						:key="item.member">
 					<el-checkbox
-						v-for="item in groupMembers"
-						:key="item.member"
 						:label="item.member||item.owner"
 						:disabled="item.member == username || item.owner == username?true:false"
 						class="checkbox"

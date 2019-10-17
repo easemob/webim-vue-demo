@@ -127,7 +127,7 @@
           <UpLoadFile :type="this.type" :chatId="activedKey[type]" />
 		
 			<!-- 发送语音 -->
-		  <RecordAudio/>
+          <RecordAudio v-show="isHttps"/>
 
           <i class="el-icon-video-camera icon" @click="callVideo" v-show="isHttps"></i>
           <i
