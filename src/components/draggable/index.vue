@@ -1,7 +1,7 @@
 <template>
 	<div id="app1">
 		<div :id="id || 'drag'" class="drag">
-			<slot>empty</slot>
+			<slot id="child">empty</slot>
 		</div>
 	</div>
 </template>
@@ -21,6 +21,11 @@ export default{
 	methods: {
 		dragVisibleToggle(){
 			this.$data.showDrag = !this.$data.showDrag;
+			if(!this.$data.showDrag){
+				var parent = document.getElementById(this.id);
+				var child = document.getElementById("child");
+				parent.removeChild(child);
+			}
 		},
 	},
 	mounted(){

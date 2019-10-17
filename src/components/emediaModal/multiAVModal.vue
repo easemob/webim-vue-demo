@@ -1,5 +1,5 @@
 <template>
-    <Draggable v-show="multiAVModalVisible" id="drag3">
+    <Draggable v-if="multiAVModalVisible" id="drag3">
         <div class="multiAVModal" v-show="multiAVModalVisible">
             <span class="title">{{to.groupname}}</span>
             <!-- <div>时间</div> -->
@@ -173,6 +173,8 @@ export default{
 			};
 			WebIM.EMService.onStreamAdded = function(member, stream){
 				const located = stream.located();
+				console.log("来流了", stream.located());
+				console.log(member);
 				let index;
 				if(located){
 					let localVideo = me.$refs.rv_local;
@@ -228,6 +230,8 @@ export default{
 						}
 						rvCount++;
 						let video = me.$refs["rv_" + index];
+
+						console.log("别人的video标签", video, index);
 						const elem = {
 							nickName: nickName,
 							streamId: streamId,
@@ -239,6 +243,7 @@ export default{
 						me.$data.rvCount = rvCount;
 
 						emedia.mgr.onMediaChanaged(video, function(constaints){
+							
 							const elem = {
 								nickName: nickName,
 								streamId: streamId,
@@ -247,12 +252,13 @@ export default{
 							};
 							rv[index] = elem;
 							me.$data.rv = rv;
-
+							console.log("别人的video ++++", elem);
+							console.log(rv);
 							console.warn(streamId, "voff:", this.getAttribute("voff"));
 							console.warn(streamId, "aoff:", this.getAttribute("aoff"));
 						});
 						me.$forceUpdate();
-						// emedia.mgr.streamBindVideo(stream, video);
+						emedia.mgr.streamBindVideo(stream, video);
 						emedia.mgr.subscribe(member, stream, true, true, video);
 					}
 				}
@@ -265,6 +271,20 @@ export default{
 			WebIM.EMService.exitConference();
 			this.hideMultiAVModal();
 			this.setConfr("");
+			this.$data.rv_local = {
+				nickName: "",
+				streamId: "",
+				openAudio: false,
+				openVideo: false,
+				video: <div className="default"></div>
+			};
+			this.$data.rv = new Array(5).fill({
+				nickName: "",
+				streamId: "",
+				openVideo: false,
+				video: <div className="default"></div>
+			});
+			this.$data.rvCount = 0;
 			// this.props.resetConfr()
 		},
         
