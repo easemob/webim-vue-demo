@@ -59,9 +59,10 @@
 </template>
 <style scoped>
 	.recoder{
-		position: fixed;
+		/* position: fixed;
 		left: calc(50% - 100px);
-		top: calc(50% - 100px);
+		top: calc(50% - 100px); */
+		position: relative;
 		box-shadow: 0 0 32px rgba(0, 0, 0, 0.15);
 		width: 200px;
 		height: 200px;
