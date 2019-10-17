@@ -109,231 +109,232 @@
 import { mapActions } from "vuex";
 import GetGroupSetting from "./groupSetting.vue";
 import "./group.less";
-export default {
-  data() {
-    return {
-      select_id: "",
-      select_name: "",
-      //控制群组详情页
-      showGroupInfoModel: false,
-      //控制详情页图标
-      showInfoIcon: false,
-      //控制setAdmin图标
-      //showAdminIcon: false,
-      //控制setMute 图标
-      //showMuteIcon: false,
+export default{
+	data(){
+		return {
+			select_id: "",
+			select_name: "",
+			// 控制群组详情页
+			showGroupInfoModel: false,
+			// 控制详情页图标
+			showInfoIcon: false,
+			// 控制setAdmin图标
+			// showAdminIcon: false,
+			// 控制setMute 图标
+			// showMuteIcon: false,
 
-      setAdminIcon: "设为管理员",
-      removeAdminIcon: "移除管理员",
-      setMute: "禁言",
-      removeMute: "移除禁言",
-      setBlack: "加入群黑名单",
-      setRemove: "从本群移除"
-    };
-  },
-  computed: {
-    groupinfoList() {
-      return this.$store.state.group.groupInfo;
-    },
-    username() {
-      const username = localStorage.getItem('userInfo')&&JSON.parse(localStorage.getItem('userInfo')).userId
-      return username //this.$store.state.login.username;
-    },
-    adminList(){
-      return this.$store.state.group.adminList;
-    },
-    muteList(){
-      return this.$store.state.group.muteList;
-    }
-  },
-  methods: {
-    ...mapActions([
-      "onGetGroupinfo",
-      "onSetAdmin",
-      "onRemoveAdmin",
-      "getGroupAdmin",
-      "getMuted",
-      "onAddMute",
-      "onRemoveMute",
-      "onAddGroupBlack",
-      "onRemoveGroupUser"
-    ]),
+			setAdminIcon: "设为管理员",
+			removeAdminIcon: "移除管理员",
+			setMute: "禁言",
+			removeMute: "移除禁言",
+			setBlack: "加入群黑名单",
+			setRemove: "从本群移除"
+		};
+	},
+	computed: {
+		groupinfoList(){
+			return this.$store.state.group.groupInfo;
+		},
+		username(){
+			const username = localStorage.getItem("userInfo") && JSON.parse(localStorage.getItem("userInfo")).userId;
+			return username; // this.$store.state.login.username;
+		},
+		adminList(){
+			return this.$store.state.group.adminList;
+		},
+		muteList(){
+			return this.$store.state.group.muteList;
+		}
+	},
+	methods: {
+		...mapActions([
+			"onGetGroupinfo",
+			"onSetAdmin",
+			"onRemoveAdmin",
+			"getGroupAdmin",
+			"getMuted",
+			"onAddMute",
+			"onRemoveMute",
+			"onAddGroupBlack",
+			"onRemoveGroupUser"
+		]),
 
-    chengeInfoModel() {
-      console.log(this.groupinfoList,111)
-      this.$data.showGroupInfoModel = !this.$data.showGroupInfoModel;
-      if (this.$data.showSettingModel) {
-        this.chengeSetModel();
-      }
+		chengeInfoModel(){
+			console.log(this.groupinfoList, 111);
+			this.$data.showGroupInfoModel = !this.$data.showGroupInfoModel;
+			if(this.$data.showSettingModel){
+				this.chengeSetModel();
+			}
 
-      const { name, params } = this.$route;
+			const { name, params } = this.$route;
 
-      setTimeout(()=>{
-        this.getGroupAdmin({select_id: params.id})
-        if(this.adminList.includes(this.username)||this.groupinfoList.admin == this.username){
-          console.log('有权限', this.adminList, this.groupinfoList.admin)
-          this.getMuted({select_id: params.id})
-        }
-      }, 100)
+			setTimeout(()=>{
+				this.getGroupAdmin({ select_id: params.id });
+				if(this.adminList.includes(this.username) || this.groupinfoList.admin == this.username){
+					console.log("有权限", this.adminList, this.groupinfoList.admin);
+					this.getMuted({ select_id: params.id });
+				}
+			}, 100);
       
-      console.log('adminList', this.adminList)
-      console.log('muteList', this.muteList)
-    },
-    chengeSetModel() {
-      this.$refs.groupSettingModel.changeSettingModel();
-    },
-    // chengeAdminIcon() {
-    //   this.$data.showAdminIcon = !this.$data.showAdminIcon;
-    // },
-    // chengeMuteIcon() {
-    //   this.$data.showMuteIcon = !this.$data.showMuteIcon;
-    // },
+			console.log("adminList", this.adminList);
+			console.log("muteList", this.muteList);
+		},
+		chengeSetModel(){
+			this.$refs.groupSettingModel.changeSettingModel();
+		},
+		// chengeAdminIcon() {
+		//   this.$data.showAdminIcon = !this.$data.showAdminIcon;
+		// },
+		// chengeMuteIcon() {
+		//   this.$data.showMuteIcon = !this.$data.showMuteIcon;
+		// },
 
-    select(key) {
-      console.log(key);
-      this.$data.select_name = key.member;
-    },
-    openSetAdmin() {
-      const me = this
-      this.$confirm("确认操作: 设为管理员", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          this.onSetAdmin({
-            select_id: this.$store.state.group.groupInfo.gid,
-            select_name: this.$data.select_name,
-            success: function(){
-              me.getGroupAdmin({select_id: me.$store.state.group.groupInfo.gid})
-              me.$forceUpdate();
-            }
-          });
-          this.chengeAdminIcon();
-          this.$message({
-            type: "success",
-            message: "设置管理员成功"
-          });
-        })
-        .catch(() => {});
-    },
-    openRemoveAdmin() {
-      const me = this
-      this.$confirm("确认操作: 移除管理员", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          this.onRemoveAdmin({
-            select_id: this.$store.state.group.groupInfo.gid,
-            select_name: this.$data.select_name,
-            success: function(){
-              me.getGroupAdmin({select_id: me.$store.state.group.groupInfo.gid})
-              me.$forceUpdate();
-            }
-          });
-          this.chengeAdminIcon();
-          this.$message({
-            type: "success",
-            message: "移除管理员成功"
-          });
-        })
-        .catch(() => {});
-    },
-    openSetMute() {
-      const me = this
-      this.$confirm("确认操作: 禁言", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          this.onAddMute({
-            select_id: this.$store.state.group.groupInfo.gid,
-            select_name: this.$data.select_name,
-            success: function(){
-              me.getMuted({select_id: me.$store.state.group.groupInfo.gid})
-              me.$forceUpdate();
-            }
-          });
-          //this.chengeMuteIcon();
-          this.$message({
-            type: "success",
-            message: "禁言成功"
-          });
-        })
-        .catch(() => {});
-    },
-    openRemoveMute() {
-      const me = this
-      this.$confirm("确认操作: 移除禁言", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          this.onRemoveMute({
-            select_id: this.$store.state.group.groupInfo.gid,
-            select_name: this.$data.select_name,
-            success: function(){
-              me.getMuted({select_id: me.$store.state.group.groupInfo.gid})
-              me.$forceUpdate();
-            }
-          });
-          //this.chengeMuteIcon();
-          this.$message({
-            type: "success",
-            message: "移除禁言列表成功"
-          });
-        })
-        .catch(() => {});
-    },
-    openGroupBlack() {
-      this.$confirm("确认操作: 加入群黑名单", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          this.onAddGroupBlack({
-            select_id: this.$store.state.group.groupInfo.gid,
-            select_name: this.$data.select_name
-          });
-          this.$message({
-            type: "success",
-            message: "加入群黑名单成功"
-          });
-        })
-        .catch(() => {});
-    },
-    openRemoveGroupUser() {
-      this.$confirm("确认操作: 从本群移除", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          this.onRemoveGroupUser({
-            select_id: this.$store.state.group.groupInfo.gid,
-            select_name: this.$data.select_name
-          });
-          this.$message({
-            type: "success",
-            message: "移除成员成功"
-          });
-        })
-        .catch(() => {});
-    }
-  },
-  components: {
-    GetGroupSetting
-  }
+		select(key){
+			console.log(key);
+			this.$data.select_name = key.member;
+		},
+		openSetAdmin(){
+			const me = this;
+			this.$confirm("确认操作: 设为管理员", {
+				confirmButtonText: "确定",
+				cancelButtonText: "取消",
+				type: "warning"
+			})
+			.then(() => {
+				this.onSetAdmin({
+					select_id: this.$store.state.group.groupInfo.gid,
+					select_name: this.$data.select_name,
+					success: function(){
+						me.getGroupAdmin({ select_id: me.$store.state.group.groupInfo.gid });
+						me.$forceUpdate();
+					}
+				});
+				this.chengeAdminIcon();
+				this.$message({
+					type: "success",
+					message: "设置管理员成功"
+				});
+			})
+			["catch"](() => {});
+		},
+		openRemoveAdmin(){
+			const me = this;
+			this.$confirm("确认操作: 移除管理员", {
+				confirmButtonText: "确定",
+				cancelButtonText: "取消",
+				type: "warning"
+			})
+			.then(() => {
+				this.onRemoveAdmin({
+					select_id: this.$store.state.group.groupInfo.gid,
+					select_name: this.$data.select_name,
+					success: function(){
+						me.getGroupAdmin({ select_id: me.$store.state.group.groupInfo.gid });
+						me.$forceUpdate();
+					}
+				});
+				this.chengeAdminIcon();
+				this.$message({
+					type: "success",
+					message: "移除管理员成功"
+				});
+			})
+			["catch"](() => {});
+		},
+		openSetMute(){
+			const me = this;
+			this.$confirm("确认操作: 禁言", {
+				confirmButtonText: "确定",
+				cancelButtonText: "取消",
+				type: "warning"
+			})
+			.then(() => {
+				this.onAddMute({
+					select_id: this.$store.state.group.groupInfo.gid,
+					select_name: this.$data.select_name,
+					success: function(){
+						me.getMuted({ select_id: me.$store.state.group.groupInfo.gid });
+						me.$forceUpdate();
+					}
+				});
+				// this.chengeMuteIcon();
+				this.$message({
+					type: "success",
+					message: "禁言成功"
+				});
+			})
+			["catch"](() => {});
+		},
+		openRemoveMute(){
+			const me = this;
+			this.$confirm("确认操作: 移除禁言", {
+				confirmButtonText: "确定",
+				cancelButtonText: "取消",
+				type: "warning"
+			})
+			.then(() => {
+				this.onRemoveMute({
+					select_id: this.$store.state.group.groupInfo.gid,
+					select_name: this.$data.select_name,
+					success: function(){
+						me.getMuted({ select_id: me.$store.state.group.groupInfo.gid });
+						me.$forceUpdate();
+					}
+				});
+				// this.chengeMuteIcon();
+				this.$message({
+					type: "success",
+					message: "移除禁言列表成功"
+				});
+			})
+			["catch"](() => {});
+		},
+		openGroupBlack(){
+			this.$confirm("确认操作: 加入群黑名单", {
+				confirmButtonText: "确定",
+				cancelButtonText: "取消",
+				type: "warning"
+			})
+			.then(() => {
+				this.onAddGroupBlack({
+					select_id: this.$store.state.group.groupInfo.gid,
+					select_name: this.$data.select_name
+				});
+				this.$message({
+					type: "success",
+					message: "加入群黑名单成功"
+				});
+			})
+			["catch"](() => {});
+		},
+		openRemoveGroupUser(){
+			this.$confirm("确认操作: 从本群移除", {
+				confirmButtonText: "确定",
+				cancelButtonText: "取消",
+				type: "warning"
+			})
+			.then(() => {
+				this.onRemoveGroupUser({
+					select_id: this.$store.state.group.groupInfo.gid,
+					select_name: this.$data.select_name
+				});
+				this.$message({
+					type: "success",
+					message: "移除成员成功"
+				});
+			})
+			["catch"](() => {});
+		}
+	},
+	components: {
+		GetGroupSetting
+	}
 };
 </script>
 <style scoped>
 .info-modal {
   padding: 0 10px;
+  height: 100%;
   /* width: 350px !important; */
   /* cursor: pointer; */
 }
@@ -376,5 +377,8 @@ export default {
 }
 .memberBox{
   margin-top: 20px;
+  height: 100%;
+  overflow-y: scroll;
+  position: relative;
 }
 </style>
