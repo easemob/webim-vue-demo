@@ -126,7 +126,7 @@ const Chat = {
 				console.log(state.msgList[name][user]);
                 
 				if(action == "oneUserReadMsgs"){
-					if(state.msgList[name][readUser].length){
+					if(state.msgList[name][readUser]){
 						state.msgList[name][readUser].forEach((msg) => {
 							if(msg.status != "recall"){
 								msg.status = "read";
