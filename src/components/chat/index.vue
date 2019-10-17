@@ -96,6 +96,7 @@ export default{
 				read: "已读"
 			},
 			isCollapse: true,
+			unRead:''
 			// selectedKeys: [ this.getKey(this.activedKey[this.type]) ]
 		};
 	},
@@ -154,7 +155,7 @@ export default{
 	props: [
 		"type", // 聊天类型 contact, group, chatroom
 		"username", // 选中的聊天对象
-		"select"
+		"select",
 	],
 	methods: {
 		...mapActions([
@@ -224,7 +225,6 @@ export default{
 			return unReadNum;
 		},
 		select2(key, index){
-			console.log(key, index, "kkkk");
 			this.$data.selectedKeys = [index];
 			this.select(key);
 			this.$data.activedKey[this.type] = key;
