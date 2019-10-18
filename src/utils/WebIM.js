@@ -220,6 +220,13 @@ WebIM.conn.listen({
 				});
 			}
 			break;
+		case "invite": //收到邀请进群的通知
+			let groupInviteOptions = {
+				isShow: true,
+				...message
+			};
+			Vue.$store.commit("updateGroupInviteNotifications",groupInviteOptions);
+			break;
 		case "joinGroupNotifications": // 收到申请进群的通知
 			let groupOptions = {
 				isShow: true,
@@ -229,6 +236,13 @@ WebIM.conn.listen({
 			break;
 		case "memberJoinPublicGroupSuccess": // 进群成功
 			Vue.$store.dispatch("onGetGroupinfo", { select_id });
+			break;
+		case "removedFromGroup": //移除
+			Vue.$store.dispatch("onGetGroupUserList",)
+			Message({
+				type: "success",
+				message: "已被" + message.from + "移除群：" + message.gid
+			})
 			break;
 		case "leaveGroup":
 			Vue.$store.dispatch("onGetGroupinfo", { select_id });
@@ -250,7 +264,15 @@ WebIM.conn.listen({
 	}, // 本机网络掉线
 	onError: function(message){
 		console.log("onError", message);
-		if(message.type == "504"){
+		if(message.type == 28){
+			console.log("未登陆")
+		}else if(JSON.parse(message.data.data).error_description =="user not found"){
+			Message.error("用户名不存在！")
+		}else if(JSON.parse(message.data.data).error_description == "invalid password"){
+			Message.error("密码无效！")
+		}else if(JSON.parse(message.data.data).error_description == "user not activated"){
+			Message.error("用户已被封禁！")
+		}else if(message.type == "504"){
 			Message("消息撤回失败");
 		}
 		// 报错返回到登录页面

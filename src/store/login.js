@@ -5,15 +5,15 @@ const Login = {
 		username: ""
 	},
 	mutations: {
-		setUserName(state, username){
+		setUserName(state, username) {
 			state.username = username;
 		},
-		setRegisterFlag(state, flag){
+		setRegisterFlag(state, flag) {
 			state.isRegister = flag;
 		}
 	},
 	actions: {
-		onLogin: function(context, payload){
+		onLogin: function (context, payload) {
 			context.commit("setUserName", payload.username);
 			var options = {
 				apiUrl: WebIM.config.apiURL,
@@ -24,12 +24,12 @@ const Login = {
 			WebIM.conn.open(options);
 			localStorage.setItem("userInfo", JSON.stringify({ userId: payload.username, password: payload.password }));
 		},
-		onLogout: function(context){
+		onLogout: function (context) {
 			context.commit("setUserName", "");
 			localStorage.setItem("userInfo", "");
 			WebIM.conn.close();
 		},
-		onRegister: function(context, payload){
+		onRegister: function (context, payload) {
 			const _this = this;
 			// context.commit('setUserName', payload.username)
 			var options = {
@@ -45,19 +45,21 @@ const Login = {
 					});
 					context.commit("setRegisterFlag", false);
 				},
-				error: (data) =>{
-					let res = JSON.parse(data.data)
-					if (res.error === 'duplicate_unique_property_exists') {
-						Message({
-							type:'error',
-							message:'当前注册用户已存在'
-						})
+				error: (err) => {
+					if (JSON.parse(err.data).error == "duplicate_unique_property_exists") {
+						Message.error("用户已存在！")
+					} else if (JSON.parse(err.data).error == "illegal_argument") {
+						Message.error("用户名不合法！")
+					} else if (JSON.parse(err.data).error == "unauthorized") {
+						Message.error("注册失败，无权限！")
+					} else if (JSON.parse(err.data).error == "resource_limited") {
+						Message.error("您的App用户注册数量已达上限,请升级至企业版！")
 					}
 				}
 			};
 			WebIM.conn.registerUser(options);
 		},
-		setRegisterFlag: function(context, flag){
+		setRegisterFlag: function (context, flag) {
 			const path = flag ? "/register" : "/login";
 			Vue.$router.push(path);
 			context.commit("setRegisterFlag", flag);
