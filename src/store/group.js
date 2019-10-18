@@ -1,5 +1,5 @@
 import { ftruncate } from "fs";
-
+import { Message } from "element-ui";
 const Group = {
 	state: {
 		publicGroupList: [],
@@ -85,7 +85,8 @@ const Group = {
 						desc,
 						membersonly,
 						members
-					})
+					}),
+					payload.callback&& payload.callback()
 				},
 				error: function () { }
 			};
