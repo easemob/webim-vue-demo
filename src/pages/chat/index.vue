@@ -110,6 +110,7 @@
         <CreateGroup ref="createGroupModel" />
         <VidoeSetting ref="videoSetting" />
         <GroupRequest />
+        <GroupInvite />
       </a-layout-content>
     </a-layout>
   </a-layout>
@@ -126,6 +127,7 @@ import AddGroupUser from "../../components/group/addGroupUser.vue";
 import CreateGroup from "../../components/group/createGroup.vue";
 import VidoeSetting from "../../components/videoSetting/index";
 import GroupRequest from "../../components/group/groupRequest.vue";
+import GroupInvite from "../../components/group/groupInvite.vue";
 import "./index.less";
 import { mapState, mapActions } from "vuex";
 export default {
@@ -281,7 +283,8 @@ export default {
     AddGroupUser,
     CreateGroup,
     VidoeSetting,
-    GroupRequest
+    GroupRequest,
+    GroupInvite
   }
 };
 </script>
