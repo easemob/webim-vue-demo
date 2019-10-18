@@ -158,7 +158,8 @@ export default{
 			this.recoderVisible = true;
 		},
 		// 长按说话
-		mouseStart(){
+		mouseStart(e){
+			e.preventDefault();
 			this.$data.runAnimation = true;
 			this.onRandom();
 			this.clearTimer();
