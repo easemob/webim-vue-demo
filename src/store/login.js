@@ -44,6 +44,15 @@ const Login = {
 						message: "注册成功"
 					});
 					context.commit("setRegisterFlag", false);
+				},
+				error: (data) =>{
+					let res = JSON.parse(data.data)
+					if (res.error === 'duplicate_unique_property_exists') {
+						Message({
+							type:'error',
+							message:'当前注册用户已存在'
+						})
+					}
 				}
 			};
 			WebIM.conn.registerUser(options);
