@@ -44,6 +44,17 @@ const Login = {
 						message: "注册成功"
 					});
 					context.commit("setRegisterFlag", false);
+				},
+				error: (err) => {
+					if(JSON.parse(err.data).error == "duplicate_unique_property_exists"){
+						Message.error("用户已存在！")
+					}else if(JSON.parse(err.data).error == "illegal_argument"){
+						Message.error("用户名不合法！")
+					}else if(JSON.parse(err.data).error == "unauthorized"){
+						Message.error("注册失败，无权限！")
+					}else if(JSON.parse(err.data).error == "resource_limited"){
+						Message.error("您的App用户注册数量已达上限,请升级至企业版！")
+					}
 				}
 			};
 			WebIM.conn.registerUser(options);

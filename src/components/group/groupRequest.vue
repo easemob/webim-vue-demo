@@ -10,9 +10,10 @@
     title="申请入群"
       :visible="this.isShowGroupReques.isShow"
       :footer="null"
+			style="text-align:center"
     >
-    <p>{{this.$store.state.group.groupNotifications.from}}申请入群</p>
-    <div slot="footer" class="dialog-footer">
+    <p>{{this.$store.state.group.groupNotifications.from}}申请入群:{{this.$store.state.group.groupNotifications.gid}}</p>
+    <div class="btn">
       <el-button @click="RejectJoinGroup">拒绝</el-button>
       <el-button type="primary" @click="AgreeJoinGroup">同意</el-button>
     </div>
@@ -56,8 +57,11 @@ export default{
 };
 </script>
 <style scoped>
-.p {
-  text-align: center;
+p{
+	font-size: 18px;
+}
+.btn{
+	margin-top: 20px;
 }
 </style>>
     

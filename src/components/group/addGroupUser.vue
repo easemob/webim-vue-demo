@@ -75,9 +75,6 @@ export default{
 			"onJoinGroup",
 			"onGetGroupUserList"
 		]),
-		open(){
-			this.$message("申请加入群组成功，等待群管理员审批");
-		},
 		changeGroupModel(){
 			this.$data.showGroupModel = !this.$data.showGroupModel;
 			if(!this.$data.showGroupListModel){
