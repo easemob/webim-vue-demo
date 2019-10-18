@@ -129,12 +129,14 @@
 			<!-- 发送语音 -->
           <RecordAudio v-show="isHttps"/>
 
-          <i class="el-icon-video-camera icon" @click="callVideo" v-show="isHttps"></i>
+          <i class="el-icon-video-camera icon"
+            @click="callVideo"
+            v-show="isHttps&&type != 'chatroom'"></i>
           <i
             v-if="type === 'contact'"
             class="el-icon-microphone icon"
             @click="callVoice"
-            v-show="isHttps"
+            v-show="isHttps && type != 'chatroom'"
           ></i>
         </div>
         <div class="fotter-send">
