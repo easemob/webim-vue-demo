@@ -190,6 +190,7 @@ WebIM.conn.listen({
 		ack(message);
 	}, // 收到视频消息
 	onPresence: function (message) {
+		debugger
 		console.log("onPresence", message);
 		let select_id = Vue.$store.state.group.groupInfo.gid; // 群组相关操作，更新数据时需要
 		switch (message.type) {
@@ -222,11 +223,11 @@ WebIM.conn.listen({
 				break;
 
 			case "direct_joined": // 被拉进群--不需要同意
+				Vue.$store.dispatch("onGetGroupUserList")
 				Message({
 					type: "success",
 					message: `${message.from}邀请您加入群：${message.gid}`
 				})
-				Vue.$store.dispatch("onGetGroupUserList")
 				break;
 			case "invite": //收到邀请进群的通知
 				let groupInviteOptions = {
@@ -245,6 +246,13 @@ WebIM.conn.listen({
 			case "memberJoinPublicGroupSuccess": // 进群成功
 				Vue.$store.dispatch("onGetGroupinfo", { select_id });
 				break;
+			case "deleteGroupChat": // 解散群组
+				Vue.$store.dispatch("onGetGroupUserList")
+				Message({
+					type: "error",
+					message: `${message.from}将群：${message.gid} 已解散`
+				})
+				break
 			case "removedFromGroup": //移除
 				Vue.$store.dispatch("onGetGroupUserList")
 				Message({
