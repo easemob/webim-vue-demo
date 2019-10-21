@@ -6,7 +6,7 @@
 			<div class="logo">Web IM</div>
 			<van-cell-group>
 				<van-field v-model="username" equired placeholder="用户名"/>
-				<van-field v-model="password" type="password" placeholder="密码" required/>
+				<van-field v-model="password"  v-on:keyup.13="toLogin" type="password" placeholder="密码" required/>
 				<van-field v-model="nickname" placeholder="昵称" v-show="this.isRegister == true"/>
 			</van-cell-group>
 			<van-button type="default" @click="toRegister" v-if="this.isRegister == true">注册</van-button>

@@ -86,7 +86,7 @@ const Group = {
 						membersonly,
 						members
 					}),
-					payload.callback&& payload.callback()
+						payload.callback && payload.callback()
 				},
 				error: function () { }
 			};
@@ -191,20 +191,20 @@ const Group = {
 			WebIM.conn.agreeInviteIntoGroup(options)
 		},
 		//收到邀请进群通知，拒绝
-		onRejectInviteGroup: function(context,payload) {
+		onRejectInviteGroup: function (context, payload) {
 			const { inviteGroupId, username } = payload
 			var options = {
 				invitee: username,
 				groupId: inviteGroupId,
-				success: function(resp) {
+				success: function (resp) {
 					Message({
 						type: "success",
 						message: "已拒绝加入群组！"
 					})
 				},
-				error: function(e) {}
-		}
-		WebIM.conn.rejectInviteIntoGroup(options)
+				error: function (e) { }
+			}
+			WebIM.conn.rejectInviteIntoGroup(options)
 		},
 		//修改群组详情
 		onUpdataGroupInfo: function (context, payload) {
@@ -333,7 +333,7 @@ const Group = {
 		},
 		//获取群组黑名单
 		onGetGroupBlack: function (context, payload) {
-			let select_id = payload.groupid
+			let select_id = payload.groupid || payload.select_id
 			let option = {
 				groupId: select_id,
 				success: function (list) {

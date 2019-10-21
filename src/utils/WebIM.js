@@ -245,6 +245,10 @@ WebIM.conn.listen({
 				break;
 			case "memberJoinPublicGroupSuccess": // 进群成功
 				Vue.$store.dispatch("onGetGroupinfo", { select_id });
+				Message({
+					type: "success",
+					message: `${message.from}已加入群组`
+				})
 				break;
 			case "deleteGroupChat": // 解散群组
 				Vue.$store.dispatch("onGetGroupUserList")

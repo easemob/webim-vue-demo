@@ -93,7 +93,7 @@
             <video :src="item.msg" width="100%" controls></video>
           </div>
           <!-- 聊天消息 -->
-          <p v-else v-html="renderTxt(item.msg)" :class="{ 'byself': item.bySelf}" />
+          <p style="user-select: text" v-else v-html="renderTxt(item.msg)" :class="{ 'byself': item.bySelf}" />
 
           <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div>
 
