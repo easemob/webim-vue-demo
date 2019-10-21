@@ -4,7 +4,7 @@
         <!-- <div>{{type}}</div> -->
         <div>
             <a-icon type="left" class="user-goback" v-show="broken" @click="showUserList"/>
-          <span>{{`${activedKey[type].name } &nbsp;(${activedKey[type].groupid})`}}</span>
+          <span>{{`${activedKey[type].name } &nbsp;&nbsp; ${activedKey[type].groupid || ''}`}}</span>
           <a-icon v-if="type=='group'" type="ellipsis" class="user-ellipsis" @click="changeMenus"/>
           <a-dropdown v-else-if="type=='contact'">
             <a class="ant-dropdown-link user-ellipsis" href="#" @click="changeMenus">
