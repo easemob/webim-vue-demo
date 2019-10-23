@@ -364,6 +364,7 @@ const Group = {
 				groupId: payload.select_id,
 				success: function () {
 					Vue.$store.dispatch('onGetGroupUserList')
+					payload.callback()
 					this.$forceUpdate();
 				},
 				error: function () {
@@ -378,6 +379,7 @@ const Group = {
 				groupId: payload.select_id,
 				success: function () {
 					Vue.$store.dispatch('onGetGroupUserList')
+					payload.callback()
 					this.$forceUpdate();
 				}
 			};

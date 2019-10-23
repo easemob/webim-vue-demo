@@ -69,7 +69,7 @@ const FriendModule = {
 		// 删除好友
 		onDelteFirend: function(context, payload){
 			let deleteName = payload.userId.name;
-			WebIM.conn.removeRoster({
+			let option = {
 				to: deleteName,
 				success: function(){  // 删除成功
 					conn.unsubscribed({
@@ -79,7 +79,9 @@ const FriendModule = {
 				},
 				error: function(){    // 删除失败
 				}
-			});
+			}
+			payload.callback();
+			WebIM.conn.removeRoster(option);
 		}
 	},
 	getters: {

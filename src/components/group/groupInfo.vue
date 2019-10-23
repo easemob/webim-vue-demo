@@ -101,7 +101,7 @@
         </div>
       </div>
     </div>
-    <GetGroupSetting ref="groupSettingModel" />
+    <GetGroupSetting ref="groupSettingModel" @closeGroupSet="closeGroupSet"/>
   </el-drawer>
 </template>
 
@@ -158,6 +158,10 @@ export default{
 			"onAddGroupBlack",
 			"onRemoveGroupUser"
 		]),
+		closeGroupSet(){
+			this.chengeInfoModel()
+			this.$emit("closeGroupMessage");
+		},
 
 		chengeInfoModel(){
 			this.$data.showGroupInfoModel = !this.$data.showGroupInfoModel;

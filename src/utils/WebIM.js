@@ -190,7 +190,6 @@ WebIM.conn.listen({
 		ack(message);
 	}, // 收到视频消息
 	onPresence: function (message) {
-		debugger
 		console.log("onPresence", message);
 		let select_id = Vue.$store.state.group.groupInfo.gid; // 群组相关操作，更新数据时需要
 		switch (message.type) {
