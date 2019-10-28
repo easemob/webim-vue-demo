@@ -109,7 +109,9 @@
           </el-dropdown>-->
 
           <a-menu slot="overlay">
-            <a-menu-item key="1" @click="handleCommand(item)">撤回</a-menu-item>
+            <a-menu-item key="1" @click="handleCommand(item)">
+              <span style="text-align: center;display:block">撤回</span>
+            </a-menu-item>
           </a-menu>
         </a-dropdown>
 

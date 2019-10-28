@@ -135,7 +135,16 @@ const Group = {
 			const { select_id, select_name } = payload
 			let option = {
 				users: [select_name],
-				groupId: select_id
+				groupId: select_id,
+				success: function (res) {
+					Message.success("邀请成功，等待用户同意")
+				},
+				error: function (err) {
+					if (JSON.parse(err.data).error == "forbidden_op") {
+						Message.error("邀请失败，无权限！")
+					}
+
+				}
 			};
 			WebIM.conn.inviteToGroup(option);
 		},

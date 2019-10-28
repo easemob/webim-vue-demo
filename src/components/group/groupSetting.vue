@@ -94,11 +94,7 @@ export default {
           this.onInviteGroup({
             select_id: this.$store.state.group.groupInfo.gid,
             select_name: value
-          }),
-            this.$message({
-              type: "success",
-              message: "邀请成功，等待用户同意"
-            });
+          })
         })
         ["catch"](() => {});
     },

@@ -81,6 +81,7 @@ const FriendModule = {
 				}
 			}
 			payload.callback();
+			Vue.$router.push("/contact");
 			WebIM.conn.removeRoster(option);
 		}
 	},
