@@ -4,7 +4,7 @@
       placement="bottom"
       width="60"
       trigger="click"
-      :visible.sync="showGroupSetting"
+      v-model="showGroupSetting"
       @hide="changeSetModel"
     >
       <div class="setting" v-show="setInfo">
@@ -134,7 +134,6 @@ export default {
     },
     closeModa() {
       // 退出群组 or 解散群组 关闭弹窗
-      this.$data.showGroupSetting = false;
       this.$data.showGroupSetting = false;
       this.changeSetInfo();
       this.$emit("closeGroupSet");
