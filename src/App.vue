@@ -52,5 +52,9 @@ export default{
     color: #2c3e50;
     margin-top: 60px;
   }
+  .el-message-box{
+	  width: 50%;
+	  max-width: 400px;
+  }
 
 </style>

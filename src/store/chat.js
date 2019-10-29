@@ -377,8 +377,8 @@ const Chat = {
 						bySelf: true,
 						type: "audio",
 						filename: file.data.name,
-						file_length: file.data.size,
-						time: data.timestamp,
+						// file_length: file.data.size,
+						// time: data.timestamp,
 						mid: id,
 						status: "sending"
 					});

@@ -50,7 +50,7 @@
             </el-row>
             <div class="toolsBox">
                 <el-col :span="3"><i class="el-icon-circle-plus-outline toolBtn" @click="invite"></i></el-col>
-                <el-col :span="3"><i class="el-icon-phone-outline toolBtn"></i></el-col>
+                <!-- <el-col :span="3"><i class="el-icon-phone-outline toolBtn"></i></el-col> -->
                 <el-col :span="3"><i :class="rv_local.openAudio?'el-icon-microphone toolBtn':'el-icon-microphone active'" @click="controlLocalMic"></i></el-col>
                 <el-col :span="3"><i :class="rv_local.openVideo?'el-icon-video-camera toolBtn':'el-icon-video-camera active'" @click="controlLocalVideo"></i></el-col>
 				<a-button type="danger" plain @click="closeModal">挂断</a-button>
@@ -336,12 +336,12 @@ export default{
 </script>
 <style>
     .multiAVModal{
-        width: 600px;
+        width: 100%;
         height: 450px;
-        position: absolute;
+        position: relative;
         background: #fff;
-        left: 20%;
-        top: 20%;
+		right: 10px;
+        top: 0;
         padding: 16px;
         box-shadow: 0 0 10px #ADB9C1;
     }

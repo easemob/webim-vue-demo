@@ -206,20 +206,18 @@ export default{
 				this.time = "按住说话（" + this.num + "秒）";
 				// 获取语音二进制文件
 				let blob = this.recorder.getBlob();
-
 				// 发送语音功能
 				if(type === "audio"){
-					let input = document.getElementById("audioInput");
 					this.$data.audioSrc = WebIM.utils.parseDownloadResponse.call(WebIM.conn, blob);
 					const { name, params } = Vue.$route;
 
-					let file = new File(
-						[blob],
-						"msr-" + new Date().toISOString().replace(/:|\./g, "-") + ".webm",
-						{
-							type: "video/webm"
-						}
-					);
+					// let file = new File(
+					// 	[blob],
+					// 	"msr-" + new Date().toISOString().replace(/:|\./g, "-") + ".webm",
+					// 	{
+					// 		type: "video/webm"
+					// 	}
+					// );
 
 					let uri = {
 						url: WebIM.utils.parseDownloadResponse.call(WebIM.conn, blob),
@@ -227,8 +225,6 @@ export default{
 						filetype: "audio",
 						data: blob
 					};
-
-					// return;
 					this.sendRecorder({
 						type: name,
 						useId: params.id,
