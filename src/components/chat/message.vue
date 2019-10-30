@@ -139,6 +139,7 @@
           class="el-icon-video-camera icon"
           @click="callVideo"
           v-show="isHttps&&type != 'chatroom'"
+          :style="nowIsVideo?'pointer-events: none':'cursor: pointer'"
         ></i>
         <i
           v-if="type === 'contact'"
@@ -162,7 +163,7 @@
     </div>
     <GetGroupInfo ref="groupInfoModel" @closeGroupMessage="closeGroupMessage" />
 
-    <EmediaModal ref="emediaModal" />
+    <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState" />
     <MultiAVModal :to="activedKey[type]" />
     <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" />
   </div>
@@ -198,7 +199,8 @@ export default {
         sending: "发送中",
         sent: "已发送",
         read: "已读"
-      }
+      },
+      nowIsVideo: false
     };
   },
 
@@ -383,7 +385,8 @@ export default {
             userId: this.$data.activedKey[this.type]
           });
           this.$data.activedKey.contact = "";
-          this.$router.push({ // 核心语句
+          this.$router.push({
+            // 核心语句
             path: "/contact" // 跳转的路径
           });
           break;
@@ -536,11 +539,16 @@ export default {
       }
       this.recallMessage({ to: name, message: item });
     },
-    closeGroupMessage() { //退出群组或解散群组时关闭聊天框
+    closeGroupMessage() {
+      //退出群组或解散群组时关闭聊天框
       this.$data.activedKey["group"] = "";
     },
-    closeContactMessage() { //删除好友时关闭当前聊天框
+    closeContactMessage() {
+      //删除好友时关闭当前聊天框
       this.$data.activedKey["contact"] = "";
+    },
+    changeIsVideoState(v) {
+      v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
     }
   },
   components: {

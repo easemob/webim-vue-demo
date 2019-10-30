@@ -41,6 +41,18 @@ export default{
 			}
 		};
 	},
+	watch: {
+    'emediaModalVisible': {
+      deep: true,
+      handler: function(newV, oldV) {
+		if (newV) {
+			this.$emit("changeIsVideoState",true); 
+		}else{
+			this.$emit("changeIsVideoState",false); 
+		}
+      }
+    }
+  },
 	methods: {
 		...mapActions([
 			"showMultiAVModal",
