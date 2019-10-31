@@ -101,17 +101,15 @@
               :class="{ 'byself': item.bySelf}"
             />
 
-            <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div>
+            <!-- <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div> -->
           </span>
           <!-- <el-dropdown-menu slot="dropdown" >
             <el-dropdown-item command="a" :disabled="!item.bySelf">撤回</el-dropdown-item>
           </el-dropdown-menu>
           </el-dropdown>-->
 
-          <a-menu slot="overlay">
-            <a-menu-item key="1" @click="handleCommand(item)">
-              <span style="text-align: center;display:block">撤回</span>
-            </a-menu-item>
+          <a-menu slot="overlay" style="width: 150px">
+              <a-menu-item  key="1" @click="handleCommand(item)">撤回</a-menu-item>
           </a-menu>
         </a-dropdown>
 
@@ -120,7 +118,7 @@
           v-if="item.status !== 'recall'"
           class="time-style"
           :style="{'text-align':item.bySelf ? 'right':'left'}"
-        >{{renderTime(item.time)}}</div>
+        >{{renderTime(item.time)}} {{item.bySelf?status[item.status]:''}}</div>
       </div>
     </div>
     <div class="messagebox-footer">

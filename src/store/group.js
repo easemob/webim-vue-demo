@@ -333,7 +333,7 @@ const Group = {
 				username: removeGroupName,                             // 需要移除的用户名
 				success: function (resp) {
 					console.log("移除成功Response: ", resp)
-					Vue.$store.dispatch('onGetGroupBlack', { groupid })
+					Vue.$store.dispatch("onGetGroupBlack", { select_id })
 					this.$forceUpdate();
 				},
 				error: function (e) { }

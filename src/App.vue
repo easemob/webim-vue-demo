@@ -10,13 +10,6 @@ import { mapState, mapActions } from "vuex";
     
 export default{
 	name: "App",
-
-	// methods: {
-	//   ...mapActions([
-	//     "onGetContactUserList",
-	//   ])
-	// },
-
 	beforeMount(){
 		const userInfo = localStorage.getItem("userInfo") && JSON.parse(localStorage.getItem("userInfo"));
 		if(userInfo){
@@ -32,9 +25,6 @@ export default{
 				}
 			};
 			WebIM.conn.open(options);
-			// setTimeout(()=>{
-			//   this.onGetContactUserList()
-			// },100)
 		}
 	}
 };

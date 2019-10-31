@@ -50,6 +50,7 @@ const Chat = {
 			state.userList[type] = userList;
 		},
 		updateMsgList(state, payload){
+			debugger
 			const { chatType, chatId, msg, bySelf, type, id } = payload;
 			const { params } = Vue.$route;
 			let status = "unread";
@@ -93,7 +94,7 @@ const Chat = {
 				state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], "mid");
 			}
 			else{
-				state.currentMsgs = Object.assign({}, state.msgList[chatType][params.id]);
+				state.currentMsgs = Object.assign({}, state.msgList[chatType][params.id || chatId]); // 这里params.id在路由跳转的时候会undefind，取chatId兼容
 			}
 			state.msgList = Object.assign({}, state.msgList);
 		},
