@@ -248,12 +248,13 @@ export default {
       this.$refs.videoSetting.show();
     },
     getUnread(type) {
+      debugger
       const chatList = this.chatList[type];
       let obj = {
         contact: false,
         group: false
       };
-      if (chatList) {
+      if (JSON.stringify(chatList) != "{}") {
         for (const item in chatList) {
           chatList[item].map((v, k) => {
             if (v.status === "unread") {
