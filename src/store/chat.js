@@ -50,7 +50,6 @@ const Chat = {
 			state.userList[type] = userList;
 		},
 		updateMsgList(state, payload){
-			debugger
 			const { chatType, chatId, msg, bySelf, type, id } = payload;
 			const { params } = Vue.$route;
 			let status = "unread";

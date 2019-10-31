@@ -141,7 +141,7 @@ const Group = {
 				},
 				error: function (err) {
 					if (JSON.parse(err.data).error == "forbidden_op") {
-						Message.error("邀请失败，无权限！")
+						Message.error(JSON.parse(err.data).error_description)
 					}
 
 				}

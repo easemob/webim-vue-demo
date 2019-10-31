@@ -144,6 +144,7 @@
           class="el-icon-microphone icon"
           @click="callVoice"
           v-show="isHttps && type != 'chatroom'"
+          :style="nowIsVideo?'pointer-events: none':'cursor: pointer'"
         ></i>
       </div>
       <div class="fotter-send">
