@@ -248,7 +248,6 @@ export default {
       this.$refs.videoSetting.show();
     },
     getUnread(type) {
-      debugger
       const chatList = this.chatList[type];
       let obj = {
         contact: false,

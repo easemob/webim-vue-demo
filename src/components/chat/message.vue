@@ -108,7 +108,7 @@
           </el-dropdown-menu>
           </el-dropdown>-->
 
-          <a-menu slot="overlay" style="width: 150px">
+          <a-menu slot="overlay" >
               <a-menu-item  key="1" @click="handleCommand(item)">撤回</a-menu-item>
           </a-menu>
         </a-dropdown>

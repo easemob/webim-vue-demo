@@ -285,11 +285,11 @@ WebIM.conn.listen({
 		console.log("onError", message);
 		if (message.type == 28) {
 			console.log("未登陆")
-		} else if (JSON.parse(message.data.data).error_description == "user not found") {
+		} else if (JSON.parse(_.get(message,'data.data.error_description')) == "user not found") {
 			Message.error("用户名不存在！")
-		} else if (JSON.parse(message.data.data).error_description == "invalid password") {
+		} else if (JSON.parse(_.get(message,'data.data.error_description')) == "invalid password") {
 			Message.error("密码无效！")
-		} else if (JSON.parse(message.data.data).error_description == "user not activated") {
+		} else if (JSON.parse(_.get(message,'data.data.error_description')) == "user not activated") {
 			Message.error("用户已被封禁！")
 		} else if (message.type == "504") {
 			Message("消息撤回失败");
