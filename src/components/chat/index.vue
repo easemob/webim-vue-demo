@@ -7,54 +7,18 @@
         :key="getKey(item)"
         @click="select2(item, getKey(item))"
       >
-        <!-- <template slot="title"> -->
         <span class="custom-title">{{item.name}}</span>
         <div class="icon-style" v-if="getUnreadNum(item) != 0">
           <span class="unreadNum">{{getUnreadNum(item)}}</span>
         </div>
         <span class="time-style" style="float:right">{{getLastMsg(item).msgTime}}</span>
         <div>{{getLastMsg(item).lastMsg}}</div>
-        <!-- </template> -->
       </a-menu-item>
     </a-menu>
   </div>
-
-  <!-- <div class="chat-message"> -->
-  <!-- 联系人列表 -->
-
-  <!-- <div class="userlist">
-      <van-list>
-        <van-cell
-          v-for="item in userList[type]"
-          :key="item.name"
-          :value="getLastMsg(item).lastMsg"
-          @click="select(item)"
-          :class="{ 'active': activedKey[type] && activedKey[type].name ===  item.name }"
-        >
-          <template slot="title">
-            <span class="custom-title">{{item.name}}</span>
-            <div class="icon-style" v-if="getUnreadNum(item) != 0">
-              <span class="unreadNum">{{getUnreadNum(item)}}</span>
-            </div>
-            <span class="time-style" style="float:right">{{getLastMsg(item).msgTime}}</span>
-          </template>
-        </van-cell>
-      </van-list>
-  </div>-->
-  <!-- 消息列表 -->
-
-  <!-- <EmediaModal ref="emediaModal" />
-    <MultiAVModal :to="activedKey[type]" />
-    <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" />
-    <EmediaModal ref="emediaModal" />
-  <GetGroupInfo ref="groupInfoModel" />-->
 </template>
 
 <script>
-// import ChatEmoji from "../chatEmoji/index.vue";
-// import emoji from "../../config/emoji";
-// import UpLoadImage from "../upLoadImage/index.vue";
-// import UpLoadFile from "../upLoadFile/index.vue";
 import "./index.less";
 import { mapActions, mapGetters } from "vuex";
 import EmediaModal from "../emediaModal/index";
@@ -218,90 +182,6 @@ export default {
       this.$data.selectedKeys = [index];
       this.select(key);
       this.$data.activedKey[this.type] = key;
-
-      //   const me = this;
-      //   me.$data.loadText = "加载更多";
-
-      //   if (this.type === "group") {
-      //     this.$router.push({
-      //       name: this.type,
-      //       params: {
-      //         id: key.groupid
-      //       }
-      //     });
-      //     this.onGetCurrentChatObjMsg({
-      //       type: this.type,
-      //       id: key.groupid
-      //     });
-
-      //     setTimeout(() => {
-      //       Vue.$store.commit("updateMessageStatus", {
-      //         action: "readMsgs"
-      //       });
-      //       this.$forceUpdate();
-      //     }, 100);
-
-      //     if (!this.msgList) {
-      //       this.getHistoryMessage({
-      //         name: key.groupid,
-      //         isGroup: true
-      //       });
-      //     }
-      //   } else if (this.type === "contact") {
-      //     this.$router.push({
-      //       name: this.type,
-      //       params: {
-      //         id: key.name
-      //       }
-      //     });
-      //     this.onGetCurrentChatObjMsg({
-      //       type: this.type,
-      //       id: key.name
-      // });
-      //     setTimeout(() => {
-      //       Vue.$store.commit("updateMessageStatus", {
-      //         action: "readMsgs"
-      //       });
-      //       this.$forceUpdate();
-      //     }, 100);
-
-      //     if (!this.msgList) {
-      //       this.getHistoryMessage({
-      //         name: key.name,
-      //         isGroup: false
-      //       });
-      //     }
-      //   } else if (this.type === "chatroom") {
-      //     const me = this;
-      //     //me.roomId = key.id
-
-      //     this.$router.push({
-      //       name: this.type,
-      //       params: {
-      //         id: key.id
-      //       }
-      //     });
-      //     this.onGetCurrentChatObjMsg({
-      //       type: this.type,
-      //       id: key.id
-      //     });
-
-      //     WebIM.conn.joinChatRoom({
-      //       roomId: key.id, // 聊天室id
-      //       success: function () {
-      //         console.log("加入聊天室成功");
-      //         if (!me.msgList) {
-      //           me.getHistoryMessage({
-      //             name: key.id,
-      //             isGroup: true
-      //           });
-      //           setTimeout(() => {
-      //             me.$forceUpdate();
-      //           }, 100);
-      //         }
-      //       }
-      //     });
-      //   }
     },
     loadMoreMsgs() {
       const me = this;
@@ -475,8 +355,6 @@ export default {
       }, 0);
     },
     handleCommand(item) {
-      // item.status = 'recall'
-      // Vue.$store.commit("updateMessageStatus", item);
       let name = "";
       if (this.type === "contact") {
         name = this.$data.activedKey[this.type].name;
@@ -491,15 +369,6 @@ export default {
       });
     }
   }
-  // components: {
-  //   EmediaModal,
-  //   AddAVMemberModal,
-  //   ChatEmoji,
-  //   UpLoadImage,
-  //   UpLoadFile,
-  //   MultiAVModal,
-  //   GetGroupInfo
-  // }
 };
 </script>
 

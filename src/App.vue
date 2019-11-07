@@ -19,10 +19,7 @@ export default{
 				apiUrl: WebIM.config.apiURL,
 				user: userName,
 				pwd: password,
-				appKey: WebIM.config.appkey,
-				error: function (e) { 
-					alert('当前浏览器不支持，请使用 Google Chrome')
-				}
+				appKey: WebIM.config.appkey
 			};
 			WebIM.conn.open(options);
 		}

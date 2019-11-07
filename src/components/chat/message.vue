@@ -20,21 +20,6 @@
           </a-menu>
         </a-dropdown>
       </div>
-
-      <!-- <div v-show="showFirendMenus" class="messagebox-menus">
-          <ul class="menus">
-            <li
-              v-for="item in firendMenus"
-              :key="item.id"
-              id="item.id"
-              class="name-menus"
-              @click="menuClick(item.id)"
-            >
-              <van-icon :name="item.icon" size="18" class="icon-menus" />
-              <span>{{item.name}}</span>
-            </li>
-          </ul>
-      </div>-->
     </div>
 
     <div class="messagebox-content" ref="msgContent">

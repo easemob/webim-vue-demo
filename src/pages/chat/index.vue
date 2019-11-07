@@ -68,14 +68,6 @@
           <span class="navMenu-text">聊天室</span>
         </a-menu-item>
       </a-menu>
-
-      <!-- <el-tabs type="border-card" v-model="activeKey" @click="contactTypeChange">
-      <el-tab-pane label="好友">-->
-      <!-- <MessageBox type="contact" /> -->
-      <!-- </el-tab-pane>
-		<el-tab-pane label="群组"><MessageBox type="contact" /></el-tab-pane>
-		<el-tab-pane label="聊天室"><MessageBox type="chatroom" /></el-tab-pane>
-      </el-tabs>-->
     </a-layout-header>
 
     <a-layout>
