@@ -64,7 +64,7 @@ WebIM.conn.listen({
 			from: message.from,
 			mid: message.id
 		});
-		ack(message);
+		type === 'chat' && ack(message);
 		if (WebIM && WebIM.call && message && message.ext && message.ext.msg_extension) {
 			var msgExtension = message.ext.msg_extension && JSON.parse(message.ext.msg_extension);
 			var options = {
@@ -78,7 +78,8 @@ WebIM.conn.listen({
 	}, // 收到文本消息
 	onEmojiMessage: function (message) {
 		console.log("onEmojiMessage", message);
-		ack(message);
+		const { type } = message;
+		type === 'chat' && ack(message);
 	}, // 收到表情消息
 	onPictureMessage: function (message) {
 		// console.log('onPictureMessage', message)
@@ -97,7 +98,7 @@ WebIM.conn.listen({
 			type: "img",
 			from: message.from
 		});
-		ack(message);
+		type === 'chat' && ack(message);
 	}, // 收到图片消息
 	onCmdMessage: function (message) {
 		console.log("onCmdMessage", message);
@@ -128,11 +129,11 @@ WebIM.conn.listen({
 			}
 		};
 		WebIM.utils.download.call(WebIM.conn, options);
-		ack(message);
+		message.type === 'chat' && 	ack(message);
 	}, // 收到音频消息
 	onLocationMessage: function (message) {
 		console.log("onLocationMessage", message);
-		ack(message);
+		message.type === 'chat' && 	ack(message);
 	}, // 收到位置消息
 	onFileMessage: function (message) {
 		const { from, to, type } = message;
@@ -153,7 +154,7 @@ WebIM.conn.listen({
 			from: message.from
 		});
 		// console.log('onFileMessage', message)
-		ack(message);
+		type === 'chat' && 	ack(message);
 	}, // 收到文件消息
 	onVideoMessage: function (message) {
 		console.log("onVideoMessage", message);
@@ -187,7 +188,7 @@ WebIM.conn.listen({
 			}
 		};
 		WebIM.utils.download.call(WebIM.conn, options);
-		ack(message);
+		type === 'chat' && 	ack(message);
 	}, // 收到视频消息
 	onPresence: function (message) {
 		console.log("onPresence", message);
@@ -285,11 +286,11 @@ WebIM.conn.listen({
 		console.log("onError", message);
 		if (message.type == 28) {
 			console.log("未登陆")
-		} else if (JSON.parse(_.get(message,'data.data.error_description')) == "user not found") {
+		} else if (JSON.parse(_.get(message, 'data.data.error_description')) == "user not found") {
 			Message.error("用户名不存在！")
-		} else if (JSON.parse(_.get(message,'data.data.error_description')) == "invalid password") {
+		} else if (JSON.parse(_.get(message, 'data.data.error_description')) == "invalid password") {
 			Message.error("密码无效！")
-		} else if (JSON.parse(_.get(message,'data.data.error_description')) == "user not activated") {
+		} else if (JSON.parse(_.get(message, 'data.data.error_description')) == "user not activated") {
 			Message.error("用户已被封禁！")
 		} else if (message.type == "504") {
 			Message("消息撤回失败");
