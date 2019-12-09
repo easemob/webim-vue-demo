@@ -243,8 +243,11 @@ WebIM.conn.listen({
 				};
 				Vue.$store.commit("updateGroupNotifications", groupOptions);
 				break;
-			case "memberJoinPublicGroupSuccess": // 进群成功
+			case "memberJoinPublicGroupSuccess": // 成员加入聊天室成功回调
 				Vue.$store.dispatch("onGetGroupinfo", { select_id });
+				break;
+			case "joinPublicGroupSuccess":  //申请加入群组成功回调
+				Vue.$store.dispatch("onGetGroupUserList");
 				break;
 			case "deleteGroupChat": // 解散群组
 				Vue.$store.dispatch("onGetGroupUserList")

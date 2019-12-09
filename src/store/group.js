@@ -97,11 +97,22 @@ const Group = {
 			let options = {
 				groupId: payload.select_groupid,                              // 群组ID
 				success: function (resp) {
+					debugger
 					console.log("Response: ", resp);
-					Message({
-						type: "success",
-						message: "申请加入群组成功，等待群管理员审批"
-					});
+					if(Vue.$store.state.group.groupInfo.membersonly != true){
+						Message({
+							type: "success",
+							message: "已成功加入群组：" + Vue.$store.state.group.groupInfo.gid
+						});
+					}else{
+						Message({
+							type: "success",
+							message: "已申请加入群组：" + Vue.$store.state.group.groupInfo.gid + "，等待管理员同意" 
+						});
+					}
+					
+					
+				
 				},
 				error: function (e) {
 					if (e.type == 17) {
