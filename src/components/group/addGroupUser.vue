@@ -72,9 +72,7 @@ export default {
       "onGetGroupUserList",
       "onGetPublicGroup",
       "onGetGroupinfo",
-      "onJoinGroup",
-      "onGetGroupUserList",
-      "open"
+      "onJoinGroup"
     ]),
     changeGroupModel() {
       this.$data.showGroupModel = !this.$data.showGroupModel;
@@ -109,8 +107,7 @@ export default {
       this.onJoinGroup({
         select_groupid: this.$data.select_groupid
       });
-      this.open();
-      this.onGetGroupUserList();
+      this.changeGroupModel();
     },
     select(key) {
       this.$data.select_groupid = key.groupid;
