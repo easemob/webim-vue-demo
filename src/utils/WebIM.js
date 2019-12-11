@@ -48,7 +48,6 @@ WebIM.conn.listen({
 		Vue.$router.push({ path: "/login" });
 	}, // 连接关闭回调
 	onTextMessage: function (message) {
-		// console.log('onTextMessage', message)
 		const { from, to, type } = message;
 		const chatId = type !== "chat" ? to : from;
 		const typeMap = {
@@ -82,7 +81,6 @@ WebIM.conn.listen({
 		type === 'chat' && ack(message);
 	}, // 收到表情消息
 	onPictureMessage: function (message) {
-		// console.log('onPictureMessage', message)
 		const { from, to, type } = message;
 		const chatId = type !== "chat" ? to : from;
 		const typeMap = {
@@ -153,7 +151,6 @@ WebIM.conn.listen({
 			file_length: message.file_length,
 			from: message.from
 		});
-		// console.log('onFileMessage', message)
 		type === 'chat' && 	ack(message);
 	}, // 收到文件消息
 	onVideoMessage: function (message) {

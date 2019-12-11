@@ -22,7 +22,6 @@ const Group = {
 			state.publicGroupList = publicGroup;
 		},
 		updateGroupInviteNotifications(state, data) {
-			console.log("updateGroupInviteNotifications", data)
 			state.groupInviteNotifications = data
 		},
 		updateGroupNotifications(state, data) {
@@ -97,8 +96,6 @@ const Group = {
 			let options = {
 				groupId: payload.select_groupid,                              // 群组ID
 				success: function (resp) {
-					debugger
-					console.log("Response: ", resp);
 					if(Vue.$store.state.group.groupInfo.membersonly != true){
 						Message({
 							type: "success",
@@ -135,7 +132,6 @@ const Group = {
 				},
 				success: function (resp) {
 					Vue.$store.dispatch('onGetGroupUserList')
-					console.log("success", resp)
 				},
 				error: function () { }
 			};
