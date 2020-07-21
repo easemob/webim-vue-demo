@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "ant-design-vue": "^1.3.17",
-    "easemob-emedia": "^2.1.1",
-    "easemob-webrtc": "^3.1.5",
+    "easemob-emedia": "^2.1.3",
+    "easemob-webrtc": "^3.2.0",
     "element-ui": "^2.12.0",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
