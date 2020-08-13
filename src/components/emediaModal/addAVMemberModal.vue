@@ -99,7 +99,7 @@ export default{
 					}
 				}
 				for(let jid of jids){
-					WebIM.call.inviteConference(confrId, password, jid, gid);
+					WebIM.call.inviteConference(confrId, '', jid, gid);
 				}
 
 				return this.hide();

@@ -235,7 +235,7 @@ export default{
 								cancelButtonText: "拒绝",
 								type: "info"
 							}).then(() => {
-								me.showMultiAVModal();
+								me.showMultiAVModal(confr);
 								setTimeout(() => {
 									const tkt = confr.ticket;
 									WebIM.EMService.joinConferenceWithTicket(confr.confrId, tkt, "user ext field").then(function(){
