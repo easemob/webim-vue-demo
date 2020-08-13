@@ -107,7 +107,7 @@ export default{
 	top: 10%;
 	margin: auto;
 	border-radius: 2px;
-	background: #f3f3f3;
+	/* background: #f3f3f3; */
 	z-index: 999;
 }
 </style>
