@@ -65,14 +65,14 @@ WebIM.conn.listen({
 		});
 		type === 'chat' && ack(message);
 		if (WebIM && WebIM.call && message && message.ext && message.ext.msg_extension) {
-			var msgExtension = message.ext.msg_extension && JSON.parse(message.ext.msg_extension);
+			var msgExtension = typeof (message.ext.msg_extension) == 'string' ? JSON.parse(message.ext.msg_extension) : message.ext.msg_extension
 			var options = {
 				confrId: message.ext.conferenceId,
-				password: message.ext.password || "",
+				password: message.ext.password || '',
 				gid: msgExtension.group_id,
 				inviter: msgExtension.inviter
-			};
-			WebIM.call.listener.onInvite(message.from, options);
+			}
+			WebIM.call.listener.onInvite(from, options)
 		}
 	}, // 收到文本消息
 	onEmojiMessage: function (message) {
