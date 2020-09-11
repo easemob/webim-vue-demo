@@ -103,6 +103,9 @@
         <VidoeSetting ref="videoSetting" />
         <GroupRequest />
         <GroupInvite />
+
+        <EmediaModal ref="emediaModal"/>
+        <MultiAVModal :to="activedType[activeKey]" />
       </a-layout-content>
     </a-layout>
   </a-layout>
@@ -120,11 +123,20 @@ import CreateGroup from "../../components/group/createGroup.vue";
 import VidoeSetting from "../../components/videoSetting/index";
 import GroupRequest from "../../components/group/groupRequest.vue";
 import GroupInvite from "../../components/group/groupInvite.vue";
+
+import EmediaModal from "../../components/emediaModal/index";
+import MultiAVModal from "../../components/emediaModal/multiAVModal";
+
 import "./index.less";
 import { mapState, mapActions } from "vuex";
 export default {
   data() {
     return {
+      activedType: {
+        contact: "",
+        group: "",
+        chatroom: ""
+      },
       groupRead: false,
       contactRead: false,
       showSettingOptions: false,
@@ -276,7 +288,9 @@ export default {
     CreateGroup,
     VidoeSetting,
     GroupRequest,
-    GroupInvite
+    GroupInvite,
+    EmediaModal,
+    MultiAVModal
   }
 };
 </script>

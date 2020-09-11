@@ -148,7 +148,7 @@
     <GetGroupInfo ref="groupInfoModel" @closeGroupMessage="closeGroupMessage" />
 
     <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState" />
-    <MultiAVModal :to="activedKey[type]" />
+    <!-- <MultiAVModal :to="activedKey[type]" /> -->
     <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" />
   </div>
 </template>
@@ -165,7 +165,7 @@ import EmediaModal from "../emediaModal/index";
 import moment from "moment";
 import _ from "lodash";
 import AddAVMemberModal from "../emediaModal/addAVMemberModal";
-import MultiAVModal from "../emediaModal/multiAVModal";
+// import MultiAVModal from "../emediaModal/multiAVModal";
 import GetGroupInfo from "../group/groupInfo.vue";
 
 export default {
@@ -541,7 +541,7 @@ export default {
     ChatEmoji,
     UpLoadImage,
     UpLoadFile,
-    MultiAVModal,
+    // MultiAVModal,
     GetGroupInfo,
     RecordAudio
   }
