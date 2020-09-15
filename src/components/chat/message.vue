@@ -148,7 +148,7 @@
     <GetGroupInfo ref="groupInfoModel" @closeGroupMessage="closeGroupMessage" />
     <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" />
 
-    <!-- 以移动到全局 -->
+    <!-- fix 移动到全局 -->
     <!-- <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState" /> -->
     <!-- <MultiAVModal :to="activedKey[type]" /> -->
   </div>
