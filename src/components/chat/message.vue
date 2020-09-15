@@ -146,10 +146,11 @@
       </div>
     </div>
     <GetGroupInfo ref="groupInfoModel" @closeGroupMessage="closeGroupMessage" />
-
-    <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState" />
-    <!-- <MultiAVModal :to="activedKey[type]" /> -->
     <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" />
+
+    <!-- 以移动到全局 -->
+    <!-- <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState" /> -->
+    <!-- <MultiAVModal :to="activedKey[type]" /> -->
   </div>
 </template>
 
@@ -161,11 +162,12 @@ import UpLoadFile from "../upLoadFile/index.vue";
 import RecordAudio from "../recorder/index.vue";
 import "./index.less";
 import { mapActions, mapGetters } from "vuex";
-import EmediaModal from "../emediaModal/index";
+
 import moment from "moment";
 import _ from "lodash";
 import AddAVMemberModal from "../emediaModal/addAVMemberModal";
 // import MultiAVModal from "../emediaModal/multiAVModal";
+// import EmediaModal from "../emediaModal/index";
 import GetGroupInfo from "../group/groupInfo.vue";
 
 export default {
@@ -438,10 +440,8 @@ export default {
 
     callVideo() {
       if (this.type == "contact") {
-        this.$refs.emediaModal.showEmediaModal();
-        this.$refs.emediaModal.showCallerWait(
-          this.$data.activedKey[this.type].name
-        );
+        const val = this.$data.activedKey[this.type].name
+        this.$emit('EmediaModalFun',val)
         const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
         const recMerge = (videoSetting && videoSetting.recMerge) || false;
         const rec = (videoSetting && videoSetting.rec) || false;
@@ -457,10 +457,8 @@ export default {
       }
     },
     callVoice() {
-      this.$refs.emediaModal.showEmediaModal();
-      this.$refs.emediaModal.showCallerWait(
-        this.$data.activedKey[this.type].name
-      );
+      const val = this.$data.activedKey[this.type].name
+      this.$emit('EmediaModalFun',val)
       const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
       const recMerge = (videoSetting && videoSetting.recMerge) || false;
       const rec = (videoSetting && videoSetting.rec) || false;
@@ -531,19 +529,19 @@ export default {
       //删除好友时关闭当前聊天框
       this.$data.activedKey["contact"] = "";
     },
-    changeIsVideoState(v) {
-      v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
-    }
+    // changeIsVideoState(v) {
+    //   v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
+    // }
   },
   components: {
-    EmediaModal,
     AddAVMemberModal,
     ChatEmoji,
     UpLoadImage,
     UpLoadFile,
-    // MultiAVModal,
     GetGroupInfo,
-    RecordAudio
+    RecordAudio,
+    // MultiAVModal,
+    // EmediaModal,
   }
 };
 </script>

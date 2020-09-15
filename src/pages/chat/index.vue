@@ -93,6 +93,7 @@
           :hideUserList="hideUserList"
           :showUserList="showUserList"
           ref="messageList"
+          @EmediaModalFun="EmediaModalFun"
         />
 
         <AddFriend ref="addFriendMethods" />
@@ -104,7 +105,7 @@
         <GroupRequest />
         <GroupInvite />
 
-        <EmediaModal ref="emediaModal"/>
+        <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState"/>
         <MultiAVModal :to="activedType[activeKey]" />
       </a-layout-content>
     </a-layout>
@@ -143,6 +144,7 @@ export default {
       activeKey: "contact",
       selectedItem: "",
       showAddOptions: false,
+      nowIsVideo:false,
       addList: [
         {
           name: "添加好友",
@@ -187,6 +189,14 @@ export default {
     },
     onBreakpoint(broken) {
       this.$data.broken = broken;
+    },
+     changeIsVideoState(v) {
+      v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
+    },
+
+    EmediaModalFun(v){
+      this.$refs.emediaModal.showEmediaModal();
+      this.$refs.emediaModal.showCallerWait(v);
     },
     hideUserList() {
       this.$data.collapsed = true;
