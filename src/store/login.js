@@ -49,6 +49,9 @@ const Login = {
 					if (JSON.parse(err.data).error == "duplicate_unique_property_exists") {
 						Message.error("用户已存在！")
 					} else if (JSON.parse(err.data).error == "illegal_argument") {
+						if (JSON.parse(err.data).error_description === 'USERNAME_TOO_LONG') {
+                            return message.error('用户名超过64个字节！')
+                        }
 						Message.error("用户名不合法！")
 					} else if (JSON.parse(err.data).error == "unauthorized") {
 						Message.error("注册失败，无权限！")
