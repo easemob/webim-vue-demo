@@ -176,9 +176,10 @@ export default {
     }
   },
   methods: {
-    ...mapActions(["onLogout", "onGetFirendBlack"]),
+    ...mapActions(["onLogout", "onGetFirendBlack", "initChatState"]),
     toLogout() {
       this.onLogout();
+      this.initChatState();
     },
     onCollapse(collapsed, type) {
       if (type != "responsive") {

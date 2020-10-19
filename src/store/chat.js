@@ -157,6 +157,21 @@ const Chat = {
 				ary.push({ name: key });
 			});
 			state.userList.contactUserList = _.pullAllBy(state.userList.contactUserList, ary, "name");
+		},
+		initChatState(state){
+			state.userList = {
+				contactUserList: [],
+				groupUserList: [],
+				chatroomUserList: []
+			}
+
+			state.msgList = {
+				contact: {},
+				group: {},
+				chatroom: {},
+			}
+
+			state.currentMsgs = []
 		}
 	},
 	actions: {
@@ -557,6 +572,9 @@ const Chat = {
 				},
 			};
 			WebIM.conn.recallMessage(option);
+		},
+		initChatState: function(context, payload){
+			context.commit("initChatState")
 		}
 	},
 	getters: {
