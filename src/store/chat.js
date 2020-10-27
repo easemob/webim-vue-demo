@@ -281,6 +281,7 @@ const Chat = {
 				apiUrl: WebIM.config.apiURL,
 				file: file,
 				to: chatId[jid[chatType]],
+				chatType:chatType,
 				roomType: roomType,
 				onFileUploadError: function(error){
 					console.log("图片上传失败", error);
@@ -325,6 +326,7 @@ const Chat = {
 					file_length: file.data.size
 				},
 				to: chatId[jid[chatType]],
+				chatType:chatType,
 				roomType: roomType,
 				onFileUploadError: function(error){
 					console.log("文件上传失败", error);
