@@ -48,6 +48,8 @@ WebIM.conn.listen({
 		Vue.$router.push({ path: "/login" });
 	}, // 连接关闭回调
 	onTextMessage: function (message) {
+
+        console.log('onTextMessage', onTextMessage);
 		const { from, to, type } = message;
 		const chatId = type !== "chat" ? to : from;
 		const typeMap = {

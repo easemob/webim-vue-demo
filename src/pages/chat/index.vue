@@ -107,6 +107,7 @@
 
         <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState"/>
         <MultiAVModal :to="activedType[activeKey]" />
+        <SingleCallUseEmedia ref="call" />
       </a-layout-content>
     </a-layout>
   </a-layout>
@@ -127,6 +128,7 @@ import GroupInvite from "../../components/group/groupInvite.vue";
 
 import EmediaModal from "../../components/emediaModal/index";
 import MultiAVModal from "../../components/emediaModal/multiAVModal";
+import SingleCallUseEmedia from "../../components/emediaModal/singleCallUseEmedia"; // 多人实现 1v1 通话
 
 import "./index.less";
 import { mapState, mapActions } from "vuex";
@@ -196,8 +198,13 @@ export default {
     },
 
     EmediaModalFun(v){
-      this.$refs.emediaModal.showEmediaModal();
-      this.$refs.emediaModal.showCallerWait(v);
+    //   this.$refs.emediaModal.showEmediaModal();
+    //   this.$refs.emediaModal.showCallerWait(v);
+
+    //   this.$refs.call.showEmediaModal();
+    //   this.$refs.call.showCallerWait(v);
+
+        this.$refs.call.invite(v);
     },
     hideUserList() {
       this.$data.collapsed = true;
@@ -301,7 +308,8 @@ export default {
     GroupRequest,
     GroupInvite,
     EmediaModal,
-    MultiAVModal
+    MultiAVModal,
+    SingleCallUseEmedia
   }
 };
 </script>

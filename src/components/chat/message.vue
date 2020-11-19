@@ -439,18 +439,19 @@ export default {
     },
 
     callVideo() {
+
       if (this.type == "contact") {
         const val = this.$data.activedKey[this.type].name
         this.$emit('EmediaModalFun',val)
-        const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
-        const recMerge = (videoSetting && videoSetting.recMerge) || false;
-        const rec = (videoSetting && videoSetting.rec) || false;
-        this.onCallVideo({
-          chatType: this.type,
-          to: this.$data.activedKey[this.type].name,
-          rec,
-          recMerge
-        });
+        // const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
+        // const recMerge = (videoSetting && videoSetting.recMerge) || false;
+        // const rec = (videoSetting && videoSetting.rec) || false;
+        // this.onCallVideo({
+        //   chatType: this.type,
+        //   to: this.$data.activedKey[this.type].name,
+        //   rec,
+        //   recMerge
+        // });
       } else if (this.type == "group") {
         this.getGroupMembers(this.$data.activedKey[this.type].groupid);
         this.$refs.addAvMembertModal.show();
