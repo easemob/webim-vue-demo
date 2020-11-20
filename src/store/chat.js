@@ -32,7 +32,9 @@ const Chat = {
 			group: {},
 			chatroom: {},
 		},
-		currentMsgs: []
+        currentMsgs: [],
+        
+        noticeCallMsg: {}
 	},
 	mutations: {
 		updateUserList(state, payload){
@@ -172,7 +174,13 @@ const Chat = {
 			}
 
 			state.currentMsgs = []
-		}
+        },
+        
+        // 传递数据给 call 组件，是否收到通话邀请
+        noticeCall(state, payload) {
+            console.log('store not', payload);
+            state.noticeCallMsg = payload;
+        }
 	},
 	actions: {
 		onGetContactUserList: function(context, payload){

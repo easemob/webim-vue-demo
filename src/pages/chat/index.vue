@@ -175,7 +175,15 @@ export default {
   computed: {
     chatList() {
       return this.$store.state.chat.msgList;
+    },
+    noticeCallMsg () { // 监听call组件收到IM 消息
+        return this.$store.state.chat.noticeCallMsg
     }
+  },
+  watch:{
+    noticeCallMsg (msg) { // 监听call组件收到IM 消息
+        this.$refs.call.receivedMsg(msg)
+    }   
   },
   methods: {
     ...mapActions(["onLogout", "onGetFirendBlack", "initChatState"]),
@@ -197,14 +205,14 @@ export default {
       v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
     },
 
-    EmediaModalFun(v){
+    EmediaModalFun(to,callType){
     //   this.$refs.emediaModal.showEmediaModal();
     //   this.$refs.emediaModal.showCallerWait(v);
 
     //   this.$refs.call.showEmediaModal();
     //   this.$refs.call.showCallerWait(v);
 
-        this.$refs.call.invite(v);
+        this.$refs.call.invite(to,callType);
     },
     hideUserList() {
       this.$data.collapsed = true;

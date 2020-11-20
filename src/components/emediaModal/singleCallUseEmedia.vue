@@ -1,20 +1,49 @@
 <template>
-    <Draggable v-show="emediaModalVisible" id='drag2'>
-        <div v-bind:class="{rtcVoiceContent: streamType=='语音', rtcVideoContent: streamType=='视频'}" >
-            <div v-if="callerWaitVisible" class="mask">正在等待{{contact}}接受邀请</div>
-            <div v-if="calleeWaitVisible" class="mask">{{contact}}请求{{streamType}}通话</div>
-            <div v-if="voiceCallVisible" class="voiceCall">正在与{{contact}}通话</div>
-            <video v-show="streamType == '视频'" ref='localVideo' v-bind:class="{localVideo: toggle, remoteVideo: !toggle}" autoPlay muted playsInline/>
-            <video v-show="streamType == '视频'" ref='remoteVideo' v-bind:class="{localVideo: !toggle, remoteVideo: toggle}"  autoPlay playsInline/>
-            <i v-show="showMute" class="el-icon-turn-off-microphone font microphone" isopen="true" ref='audio' @click="controlStream('audioControl')"></i>
-            <i v-show="showAccept" class="el-icon-phone font accept" isopen="true" @click="accept"></i>
-            <!-- <i v-show="showMute && streamType=='视频'" class="el-icon-video-camera font camera" ref='video' isopen="true" @click="controlStream('videoControl')"></i> -->
-            <a-icon v-show="showMute && streamType=='视频'" class="font camera" ref='video' isopen="true" type="video-camera" @click="controlStream('videoControl')"/>
-            <!-- <i v-show="showMute" class="el-icon-headset font mute" ref="mute" @click="mute"></i> -->
-            <a-icon v-show="showMute" class="font mute" type="sound" ref="mute" @click="mute"/>
-            <i class="el-icon-switch-button close" @click="close"></i>
-            <i v-show="showMute && streamType=='视频'" class="el-icon-refresh font toggle" @click="toggleClick"></i>
+    <Draggable v-if="visible" id='drag2'>
+        <div class="call-wrapper PC">
+            <div class="title">{{title}}</div>
+            <video ref='localVideo' class='main' autoPlay muted playsInline/>
+            <video ref='remoteVideo' class="small" autoPlay playsInline />
+
+            <!-- <div class="mask">正在等待{{contact}}接受邀请</div>
+            <div class="mask">{{contact}}请求{{streamType}}通话</div>
+            <div class="voiceCall">正在与{{contact}}通话</div>
+
+             -->
+
+                <!-- v-bind:class="{localVideo: !toggle, remoteVideo: toggle}"   -->
+            <div class="media-action-wrapper">
+                <i 
+                    class="el-icon-turn-off-microphone font"
+                    :class="{close: mic_close}" 
+                    @click="controlAudio()"></i>
+                <i class="el-icon-video-camera font camera" 
+                    :class="{close: camera_close}" 
+                    @click="controlVideo()"></i>
+
+                <a-icon 
+                    class="font mute" 
+                    :class="{close: sound_close}"
+                    type="sound" 
+                    @click="controlSound"/>
+            </div>
+
+            <i class="el-icon-phone font accept" @click="accept"></i>
+            <i class="el-icon-switch-button close" @click="hangup"></i>
+
         </div>
+
+        <!--  -->
+        <!-- <i v-show="showMute" class="el-icon-headset font mute" ref="mute" @click="mute"></i> -->
+
+        <!-- 
+        
+        <a-icon v-show="showMute && streamType=='视频'" class="font camera" ref='video' isopen="true" type="video-camera" @click="controlStream('videoControl')"/>
+        <a-icon v-show="showMute" class="font mute" type="sound" ref="mute" @click="mute"/>
+        <i v-show="showMute && streamType=='视频'" class="el-icon-refresh font toggle" @click="toggleClick"></i> -->
+
+        <!-- <div v-bind:class="{rtcVoiceContent: streamType=='语音', rtcVideoContent: streamType=='视频'}" >
+        </div> -->
     </Draggable>
 </template>
 
@@ -25,7 +54,7 @@ import WebIM from "../../utils/WebIM";
 export default{
 	data(){
 		return {
-			emediaModalVisible: false,
+			visible: false,
 			showAccept: false,
 			showMute: false,
 			callerWaitVisible: false,
@@ -43,25 +72,27 @@ export default{
             //开始实现
             confr_info: null,
             join_info: null,
-            pushedStream: null
+            pushedStream: null,
+            callType: 'video',
+
+            title: '正在邀请谁',
+            mic_close: false,
+            camera_close: false,
+            sound_close: false
 		};
-	},
-	watch: {
-    'emediaModalVisible': {
-      deep: true,
-      handler: function(newV, oldV) {
-		if (newV) {
-			this.$emit("changeIsVideoState",true); 
-		}else{
-			this.$emit("changeIsVideoState",false); 
-		}
-      }
-    }
-  },
+    },
+    
 	methods: {
 		
 
         // 开始实现 
+        // 整个程序收到消息 判断是否请求通话
+        receivedMsg(msg) {
+            console.log('call com onMsg', msg);
+            // judge msg 类型 busy | invite
+
+
+        },
         // 随机生成密码
         get_uuid_psw (){ 
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -71,26 +102,73 @@ export default{
             })
         },
         // 邀请他人
-        invite(to) {
-            console.log('to', to); // 创建会议并加入并推流、保存会议信息和自己的信息
+        invite(to, callType) {
+            this.$data.callType = callType;
+            this.$data.visible = true;
+
 
             let _this = this;
             (async ()=> {
-
                 try {
-                    const confr_info = await _this._create()
-                    _this.$data.confr_info = confr_info;
+                    await this.ready_call();
+                    
+                    this.emedia.streamBindVideo(this.$data.pushedStream, this.$refs.localVideo);
 
-                    const join_info = await _this.join();
-                    _this.$data.join_info = join_info;
-
-                    const pushedStream = await _this.publish()
-                    _this.$data.pushedStream = pushedStream;
-
+                    await this.send_invite_msg(to)
                 } catch (error) {
-                    console.error('invite err', error);
+
+                    _this.hangup();
+
+                    console.error('invite error', error);
+                    _this.$message.error('发起呼叫失败，请重新发起');
+
                 }
+
             })()
+        },
+
+        async ready_call() {
+            const confr_info = await this._create()
+            this.$data.confr_info = confr_info;
+
+            const join_info = await this.join();
+            this.$data.join_info = join_info;
+
+            const pushedStream = await this.publish()
+            this.$data.pushedStream = pushedStream;
+
+        },
+        // 发起呼叫
+        send_invite_msg(to) {
+
+            let id = WebIM.conn.getUniqueId();    
+            let msg = new WebIM.message('txt', id);  
+
+            let { confr_info } = this.$data;
+
+
+            return new Promise((resolve,reject) => {
+                if(!confr_info) reject('not have confr_info');
+
+                let { confrId, password} = confr_info;
+
+                let set_options = {
+                    msg: 'invite call',
+                    to,                          
+                    chatType: 'singleChat',
+                    ext: { confrId, password },
+                    success: function (id, serverMsgId) {
+                        resolve('send invite success')  
+                    },                              
+                    fail: function(e){
+                        reject("Send invite error");  
+                    }   
+                }
+            })
+
+
+            msg.set(set_options);
+            WebIM.conn.send(msg.body);
         },
         // 创建会议
         _create() {
@@ -104,6 +182,14 @@ export default{
             return this.emedia.createConference(create_options);
 
         },
+
+        _destroy() {
+            let confr_info = this.$data.confr_info;
+
+            if(confr_info && confr_info.id) {
+                this.emedia.destroyConference(confr_info.id)
+            }
+        }, 
         join() {
             if(!this.$data.confr_info) {
                 throw Error('not have confr_info')
@@ -115,6 +201,8 @@ export default{
         },
 
         publish() {
+            let constraints = this.$data.callType == 'voice' ? {audio: true, video:false} : {audio: true, video:true}
+
             return this.emedia.publish({audio: true, video:true});
 
         },
@@ -125,9 +213,31 @@ export default{
 
         },
 
+        // 控制视频流
+        controlAudio() {
+            this.$data.mic_close = !this.$data.mic_close
+        },
+        controlVideo() {
+            this.$data.camera_close = !this.$data.camera_close
+        },
+        controlSound() {
+            this.$data.sound_close = !this.$data.sound_close
+        },
+        // 重置
+        reset() {
+
+            this._destroy();
+
+            this.$data.callType = 'video';
+            this.$data.confr_info = null;
+            this.$data.join_info = null;
+            this.$data.pushedStream = null;
+
+        },
         // 挂断
         hangup() {
-            
+            this.$data.visible = false;
+            this.reset()
         }
 	},
 	components: {
@@ -148,10 +258,67 @@ export default{
 		// }
 		// var video = this.$refs.localVideo;
 		// video.addEventListener("loadedmetadata", this.loadedmetadataLocalHandler);
-	},
+    },
+    
+    
 };
 </script>
 <style scoped>
+.call-wrapper {
+    background: #dadada;
+}
+.PC {
+    width: 500px;
+    height: 400px;
+}
+.phone {
+    width: 100%;
+    height: 100%;
+}
+.title {
+    text-align: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+
+    font-size: 16px;
+}
+
+video.main {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+video.small {
+    position: absolute;
+    width: 25%;
+    height: 20%;
+    top: 10%;
+    right: 5%;
+}
+
+.media-action-wrapper {
+    position: absolute;
+    left: 0;
+    bottom: 15px;
+    height: 30px;
+    padding-left:20px ;
+}
+
+.media-action-wrapper i {
+    position: static;
+    margin-right:10px ;
+    cursor: pointer;
+    color: #2c3e50;
+}
+
+.media-action-wrapper i.close {
+    color: #4eb1f4;
+} 
+
 .rtcVoiceContent{
     min-width: 350px;
     min-height: 90px;

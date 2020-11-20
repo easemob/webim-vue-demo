@@ -442,7 +442,7 @@ export default {
 
       if (this.type == "contact") {
         const val = this.$data.activedKey[this.type].name
-        this.$emit('EmediaModalFun',val)
+        this.$emit('EmediaModalFun',val, 'video')
         // const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
         // const recMerge = (videoSetting && videoSetting.recMerge) || false;
         // const rec = (videoSetting && videoSetting.rec) || false;
@@ -459,16 +459,16 @@ export default {
     },
     callVoice() {
       const val = this.$data.activedKey[this.type].name
-      this.$emit('EmediaModalFun',val)
-      const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
-      const recMerge = (videoSetting && videoSetting.recMerge) || false;
-      const rec = (videoSetting && videoSetting.rec) || false;
-      this.onCallVoice({
-        chatType: this.type,
-        to: this.$data.activedKey[this.type].name,
-        rec,
-        recMerge
-      });
+      this.$emit('EmediaModalFun',val, 'voice')
+    //   const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
+    //   const recMerge = (videoSetting && videoSetting.recMerge) || false;
+    //   const rec = (videoSetting && videoSetting.rec) || false;
+    //   this.onCallVoice({
+    //     chatType: this.type,
+    //     to: this.$data.activedKey[this.type].name,
+    //     rec,
+    //     recMerge
+    //   });
     },
     readablizeBytes(value) {
       let s = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
