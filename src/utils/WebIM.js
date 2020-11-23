@@ -287,7 +287,7 @@ WebIM.conn.listen({
 		if (message.type == 0) {
 			Message.error('请输入账号密码')
 		} else if (message.type == 28) {
-			Message.error("未登陆")
+			console.log("未登陆")
 		} else if (JSON.parse(message.data.data).error_description == "user not found") {
 			Message.error("用户名不存在！")
 		} else if (JSON.parse(message.data.data).error_description == "invalid password") {
