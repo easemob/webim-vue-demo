@@ -204,7 +204,7 @@ HZRecorder.get = function(callback, config){
 				{ audio: true } // 只启用音频
 				, function(stream){
 					let rec = new HZRecorder(stream, config);
-					callback(rec);
+					callback(rec,stream);
 				}
 				, function(error){
 					switch(error.code || error.name){

@@ -27,11 +27,12 @@
 <script>
 import "./index.less";
 import { mapState, mapActions } from "vuex";
+const userInfo = localStorage.getItem("userInfo") && JSON.parse(localStorage.getItem("userInfo"));
 export default{
 	data(){
 		return {
-			username: "",
-			password: "",
+			username: userInfo.userId || "",
+			password: userInfo.password || "",
 			nickname: ""
 		};
 	},

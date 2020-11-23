@@ -284,19 +284,19 @@ WebIM.conn.listen({
 	}, // 本机网络掉线
 	onError: function (message) {
 		console.log('onError', message)
-		// if (message.type == 0) {
-		// 	console.log('请输入账号密码')
-		// } else if (message.type == 28) {
-		// 	console.log("未登陆")
-		// } else if (JSON.parse(message.data.data).error_description == "user not found") {
-		// 	Message.error("用户名不存在！")
-		// } else if (JSON.parse(message.data.data).error_description == "invalid password") {
-		// 	console.log('密码无效！')
-		// } else if (JSON.parse(message.data.data).error_description == "user not activated") {
-		// 	Message.error("用户已被封禁！")
-		// } else if (message.type == "504") {
-		// 	Message("消息撤回失败");
-		// }
+		if (message.type == 0) {
+			Message.error('请输入账号密码')
+		} else if (message.type == 28) {
+			Message.error("未登陆")
+		} else if (JSON.parse(message.data.data).error_description == "user not found") {
+			Message.error("用户名不存在！")
+		} else if (JSON.parse(message.data.data).error_description == "invalid password") {
+			Message.error('密码无效！')
+		} else if (JSON.parse(message.data.data).error_description == "user not activated") {
+			Message.error("用户已被封禁！")
+		} else if (message.type == "504") {
+			Message.error("消息撤回失败");
+		}
 		// 报错返回到登录页面
 		// Vue.$router.push({ path: '/login' });
 	}, // 失败回调

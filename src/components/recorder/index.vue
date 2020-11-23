@@ -119,6 +119,7 @@ export default{
 			},
 			num: 60, // 按住说话时间
 			recorder: null,
+			mediaStream:null,
 			interval: "",
 			audioFileList: [], // 上传语音列表
 			startTime: "", // 语音开始时间
@@ -165,9 +166,9 @@ export default{
 			this.clearTimer();
 			this.startTime = new Date().getTime();
       
-			recording.get(rec => {
+			recording.get((rec,val) => {
 				// 当首次按下时，要获取浏览器的麦克风权限，所以这时要做一个判断处理
-				if(rec){
+				if(rec && val){
 					// 首次按下，只调用一次
 					if(this.flag){
 						this.mouseEnd();
@@ -175,8 +176,11 @@ export default{
 					}
 					else{
 						this.recorder = rec;
+						this.mediaStream = val
 						this.interval = setInterval(() => {
 							if(this.num <= 0){
+								const tracks = this.mediaStream.getAudioTracks()
+								tracks[0].stop()
 								this.recorder.stop();
 								this.num = 60;
 								this.clearTimer();
@@ -199,7 +203,9 @@ export default{
 			this.hide();
 			this.clearTimer();
 			this.endTime = new Date().getTime();
-			if(this.recorder){
+			if(this.recorder && this.mediaStream){
+				const tracks = this.mediaStream.getAudioTracks()
+				tracks[0].stop()
 				this.recorder.stop();
 				// 重置说话时间
 				this.num = 60;
