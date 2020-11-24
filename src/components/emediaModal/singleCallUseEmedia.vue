@@ -199,15 +199,6 @@ export default{
             // {key: "invitee_ysai", val: "{"status":"calling"}", op: ""}
             let _this = this;
             
-            // confr_attrs.map(item => { // 振铃
-
-            //     if(
-            //         item.key == 'invitee_'+_this.$data.user 
-            //         && item.op != 'DEL'
-            //     ) {
-            //         _this.show_calling()
-            //     }
-            // });
             // 收集被邀请人并且未响应的 信息
             let callees = confr_attrs.filter(item => item.key != 'invitee_'+_this.$data.user);
 
@@ -515,7 +506,7 @@ export default{
             this.$data.remote = null;
             this.$data.visible = false;
             this.$data.joined = false;
-            // this.$data.call_role = null;
+            this.$data.call_role = null;
             this.$data.call_status = undefined
         },
 
