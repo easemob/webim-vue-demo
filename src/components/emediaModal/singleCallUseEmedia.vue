@@ -1,6 +1,25 @@
 <template>
     <Draggable v-if="visible" id='drag2'>
-        <div class="call-wrapper PC">
+        <div 
+            class="call-wrapper"
+            :class="{PC: os == 'PC', 'shrink': shrink_wrapper == true}"
+            :style="wrapper_style"
+        >
+            <div 
+                class="shrink-wrapper"
+                @click="shrink_wrapper=true"
+                v-show="os != 'PC' && shrink_wrapper == false"
+            >
+                <i class="el-icon-bottom-left"></i>
+                <i class="el-icon-top-right"></i>
+
+            </div>
+
+            <div 
+                class="shrink-place" 
+                @click="shrink_wrapper=false"
+                v-if="os != 'PC' && shrink_wrapper == true"
+            ></div>
             <div class="title">{{title}}</div>
             <video ref='localVideo' class='main' autoPlay muted playsInline/>
             <video ref='remoteVideo' class="small" autoPlay playsInline />
@@ -55,6 +74,7 @@ import "./index.less";
 import Draggable from "../draggable";
 import WebIM from "../../utils/WebIM";
 import message from '../../../../test-samples/uni-app/components/uni-popup/message';
+import { error } from '../../../../test-samples/uni-app/common/graceChecker';
 
 let call_log = '' // 上穿日志
 function call_report_log() {
@@ -81,6 +101,7 @@ export default{
             join_info: null,
             pushedStream: null,
             callType: 'video',
+            make_call_type: 'single', // 1v1 | 多人
 
             joined: false, // 是否在会议中， 在会议中则返回 忙碌
             remote: null, // 需要订阅的流（发起方的流 -- 暂时先不订阅）
@@ -88,7 +109,7 @@ export default{
 
 
             pending_invite_cattr_timeout: true, // 默认等待 邀请的会议属性 超时，收到会议属性后，置为false，达到5s 后，还是true hangup
-
+            callees: [], // 被邀请人员信息
 
             // 与 UI紧关联
             call_status: undefined, // 通话的状态 "joined": 加入会议, "calling": 振铃, "talking": 通话中 
@@ -96,6 +117,12 @@ export default{
             mic_close: false,
             camera_close: false,
             sound_close: false,
+            wrapper_style: {
+                width: 'auto',
+                height: 'auto',
+            },
+            shrink_wrapper: false,// 移动端是否收起
+            os: ''
 		};
     },
     
@@ -107,13 +134,46 @@ export default{
             console.log('streamAdd', stream);
 
             if(!stream.located()) {
-                this.$data.remote = { member, stream };
+                this.$data.remote = { member, stream }; // 都保存
+                // 主叫 立即订阅
+                if(this.call_role != 'callee') {
+                    this.sub_remote();
+                    this.$data.call_status = 'talking'
+                }
+                // 被叫 当推流成功后订阅 等待。。。
 
                 // this.emedia.subscribe(member, stream, true, true, this.$refs.remoteVideo)
             }
+
         },
         onMemberJoined(member) {
             console.log('memberAdd', member);
+        },
+        onMemberExited(member) {
+            console.log('memberExited', member);
+
+            // if(this.$data.call_role == 'caller') {
+
+            // }
+
+            let { callees } = this.$data;
+            console.log('callees', callees);
+
+            let _cacheMembers;
+
+            if(
+                emedia.useCurrentXService 
+                && emedia.useCurrentXService.current
+                && emedia.useCurrentXService.current._cacheMembers
+            ) {
+                _cacheMembers = emedia.useCurrentXService.current._cacheMembers
+            }
+
+            if( callees > 0 ) return;
+            console.log('_cacheMembers', _cacheMembers);
+            if(Object.keys(_cacheMembers).length > 0) return; // _cacheMembers 不包含自己的信息
+
+            this.hangup()
         },
         onConferenceExit(reason, failed) {
             let reasons = {
@@ -139,15 +199,50 @@ export default{
             // {key: "invitee_ysai", val: "{"status":"calling"}", op: ""}
             let _this = this;
             
-            confr_attrs.map(item => {
+            // confr_attrs.map(item => { // 振铃
 
-                if(
-                    item.key == 'invitee_'+_this.$data.user 
-                    && item.op != 'DEL'
-                ) {
-                    _this.show_calling()
+            //     if(
+            //         item.key == 'invitee_'+_this.$data.user 
+            //         && item.op != 'DEL'
+            //     ) {
+            //         _this.show_calling()
+            //     }
+            // });
+            // 收集被邀请人并且未响应的 信息
+            let callees = confr_attrs.filter(item => item.key != 'invitee_'+_this.$data.user);
+
+            callees.map(item => {
+
+                if(item.key.indexOf('invitee_') > -1) { // 获取邀请人信息
+
+                    let index = _this.$data.callees.indexOf(item.key); // 数组中是否有
+
+                    if(item.op == "DEL") {
+                        if(index > -1) _this.$data.callees.splice(index, 1)
+                    } else { // 有人发起了邀请
+                        if(index == -1) _this.$data.callees.push(item.key)
+                    }
                 }
-            });
+            })
+
+            console.log('this.$data.call_role',  this.$data.call_role);
+            if(this.$data.call_role != 'callee') return; // 以下为被叫逻辑
+            // 过滤是自己收到通话邀请属性 invitee_{this.$data.user}
+
+            let c_attrs = confr_attrs.filter(item => item.key == 'invitee_'+_this.$data.user);
+            console.log('c_attrs',  c_attrs);
+            if(c_attrs[0]) {
+                let item = c_attrs[0];
+                if(item.op != 'DEL') this.show_calling(); // 振铃
+                if(item.op == 'DEL') { // 自己删除的或者 别人删除的
+                    
+                    if(this.$data.call_status == 'talking' ){ // 说明自己已发流，不做处理
+
+                    } else {// 超时或者别人已发流，退出会议
+                        this.hangup()
+                    }
+                } 
+            }
         },
 
 
@@ -167,12 +262,15 @@ export default{
                     await _this.ready_call();
                     
                     _this.$data.joined = true;
-                    _this.$data.call_role = 'caller';
+                    // _this.$data.call_role = 'caller';
                     
-                    _this.emedia.streamBindVideo(_this.$data.pushedStream, _this.$refs.localVideo);
 
                     const send_result = await this.send_invite_msg(to);
                     console.log('send_result', send_result);
+
+                    setTimeout(() => {
+                        if(_this.$data.call_status != 'talking') _this.hangup()
+                    }, 30000)
 
                     let { confrId } = _this.$data.confr_info; // 设置一条占位会议属性
                     _this.emedia.setConferenceAttrs({ key: 'confrId', val: confrId })
@@ -198,8 +296,8 @@ export default{
             const join_info = await this.join();
             this.$data.join_info = join_info;
 
-            const pushedStream = await this.publish()
-            this.$data.pushedStream = pushedStream;
+            await this.publish()
+            
 
         },
         // 发起呼叫
@@ -266,9 +364,9 @@ export default{
             
             (async () => {
                 try {
+                    _this.$data.call_role = 'callee';
                     const join_info = await _this.join();
                     _this.$data.join_info = join_info;
-                    _this.$data.call_role = 'callee';
 
 
                     setTimeout(() => {
@@ -287,6 +385,7 @@ export default{
                     // },1000)
                 } catch (error) {
                     console.error('called join error', error);
+                    this.reset();
                 }
 
             })()
@@ -334,39 +433,62 @@ export default{
             let constraints = this.$data.callType == 'voice' ? 
                                 {audio: true, video:false} : {audio: true, video:true}
 
-            return this.emedia.publish(constraints);
+
+            let _this = this;
+            return new Promise((resolve, reject) => {
+                _this.emedia.publish(constraints).then(pushedStream => {
+                    _this.$data.pushedStream = pushedStream;
+                    _this.emedia.streamBindVideo(_this.$data.pushedStream, _this.$refs.localVideo);
+
+                    resolve('publish success')
+                })
+                .catch(error => reject(error));
+            });
 
         },
         
-        
         // 接听
         accept() {
+            // this.$data.callType = 'voice' // 默认以语音推流
+            this.$data.callType = 'video' // 默认以语音推流
             let _this = this;
-            _this.$data.callType = 'voice' // 默认以语音推流
             (async ()=> {
                 try {
                     await _this.publish()
-                    _this.$data.call_status = 'talking'
+                    _this.$data.call_status = 'talking';
+                    _this.emedia.deleteConferenceAttrs({ key:'invitee_'+_this.$data.user });
+                    _this.sub_remote()
                 } catch (error) {
                     _this.$message.error('接听失败，请重新接听');
                 }
             })()
         }, 
+        // 订阅对方流
+        sub_remote() {
+            let { remote } = this.$data;
+
+            if( remote.member && remote.stream) {
+                this.emedia.subscribe(remote.member, remote.stream, true, true, this.$refs.remoteVideo)
+            }
+        },
         // 挂断
         hangup() { // 多种情况会触发 挂断
             
-
+            // 被叫删除会议属性
             let call_role = this.$data.call_role;
+            if(call_role == 'caller') this.emedia.deleteConferenceAttrs({ key:'invitee_'+this.$data.user });
 
-            if(call_role) {
 
-                if(call_role == 'caller') { //主叫 结束会议
-                    this._destroy()
-                } else {
-                    this.exit()
-                }
-            }
+            // if(call_role) {
 
+            //     if(call_role == 'caller') { //主叫 结束会议
+            //         this._destroy()
+            //     } else {
+            //         this.exit()
+            //     }
+            // }
+            
+            this.exit()
             this.reset()
 
         },
@@ -393,16 +515,43 @@ export default{
             this.$data.remote = null;
             this.$data.visible = false;
             this.$data.joined = false;
+            // this.$data.call_role = null;
+            this.$data.call_status = undefined
         },
 
 
         // 控制视频流
         controlAudio() {
-            this.$data.mic_close = !this.$data.mic_close
+
+            let { pushedStream } = this.$data;
+
+            if(!pushedStream) return;
+
+            let funName = this.$data.mic_close ? 'resumeAudio' : 'pauseAudio'
+
+            let _this = this;
+            this.emedia[funName](pushedStream)
+            .then(() => {
+                _this.$data.mic_close = !_this.$data.mic_close;
+            })
+            
         },
+
         controlVideo() {
-            this.$data.camera_close = !this.$data.camera_close
+
+            let { pushedStream } = this.$data;
+
+            if(!pushedStream) return;
+
+            let funName = this.$data.camera_close ? 'resumeVideo' : 'pauseVideo'
+
+            let _this = this;
+            this.emedia[funName](pushedStream)
+            .then(() => {
+                _this.$data.camera_close = !_this.$data.camera_close;
+            })
         },
+
         controlSound() {
             this.$data.sound_close = !this.$data.sound_close
         },
@@ -416,10 +565,38 @@ export default{
             })
         },
 
-	},
+    },
+    watch: {
+        shrink_wrapper: function(val) {
+            if(this.os == 'PC') return;
+            if(val) {
+                this.$data.wrapper_style = {
+                    width: window.innerWidth*0.2 + 'px',
+                    height: window.innerHeight*0.2 + 'px'
+                }
+            } else {
+                this.$data.wrapper_style = {
+                    width: window.innerWidth + 'px',
+                    height: window.innerHeight + 'px'
+                }
+            }
+        },
+
+        // visible: function(val) {
+            
+        // }
+    },
 	components: {
 		Draggable
-	},
+    },
+    
+    updated() {
+            if(this.os == 'PC') return;
+            if(!this.visible) return;
+
+            document.querySelector('#drag2').style.top = 0;
+            document.querySelector('#drag2').style.left = 0;
+    },
 	mounted(){
         console.log('WebIm', WebIM);
 
@@ -431,6 +608,7 @@ export default{
 
         // 初始化会议监听
         this.emedia.onMemberJoined = this.onMemberJoined; // 有人加入
+        this.emedia.onMemberExited = this.onMemberExited; // 有人加入
         this.emedia.onStreamAdded = this.onStreamAdded; // 有流加入
         this.emedia.onConferenceExit = this.onConferenceExit; // 退出会议
         this.emedia.onConfrAttrsUpdated = this.onConfrAttrsUpdated; // 会议属性变更
@@ -440,7 +618,37 @@ export default{
 		// 	// this.channel = new RTCChannel(this.refs.rtcWrapper, this.props.collapsed)
 		// }
 		// var video = this.$refs.localVideo;
-		// video.addEventListener("loadedmetadata", this.loadedmetadataLocalHandler);
+        // video.addEventListener("loadedmetadata", this.loadedmetadataLocalHandler);
+        
+        // 检测设备 是否 PC
+
+
+            // 检测设备操作系统
+            let UA = navigator.userAgent;
+
+            if(UA.indexOf('Android') > -1 ) {
+                this.$data.os = 'Android';
+            }else if(
+                UA.indexOf('iPhone') > -1 || 
+                UA.indexOf('iPad') > -1 || 
+                UA.indexOf('iPod') > -1
+            ) { // iPad、iPod 都使用 iPhone 下载连接
+                this.$data.os = 'iPhone';
+            } else this.$data.os = 'PC';
+
+            if(this.$data.os == 'PC') {
+                this.$data.wrapper_style = {
+                    width:'500px',
+                    height: '400px'
+                }
+            } else {
+
+                this.$data.wrapper_style = {
+                    width: window.innerWidth + 'px',
+                    height: window.innerHeight + 'px'
+                }
+
+            }
     },
     
     
@@ -449,15 +657,21 @@ export default{
 <style scoped>
 .call-wrapper {
     background: #dadada;
+    transition: 0.5s;
+}
+
+.shrink.call-wrapper {
+    position: absolute;
+    top: 200px;
+    left: 0;
+
+    transition: 0.5s;
 }
 .PC {
-    width: 500px;
-    height: 400px;
+    /* width: 500px;
+    height: 400px; */
 }
-.phone {
-    width: 100%;
-    height: 100%;
-}
+
 .title {
     text-align: center;
     position: absolute;
@@ -474,10 +688,34 @@ video.main {
     height: 100%;
     top: 0;
     left: 0;
+
 }
-video.small {
+
+.shrink video.main {
+    z-index: 5;
+    background:#dadada;
+}
+.shrink-place {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 6;
+
+    width: 100%;
+    height: 100%;
+    background: transparent;
+}
+.PC video.small {
     position: absolute;
     width: 25%;
+    height: 20%;
+    top: 10%;
+    right: 5%;
+}
+
+video.small {
+    position: absolute;
+    width: 35%;
     height: 20%;
     top: 10%;
     right: 5%;
@@ -491,6 +729,9 @@ video.small {
     padding-left:20px ;
 }
 
+.call-wrapper i {
+    cursor: pointer;
+}
 .media-action-wrapper i {
     position: static;
     margin-right:10px ;
@@ -502,6 +743,35 @@ video.small {
     color: #4eb1f4;
 } 
 
+.shrink-wrapper {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+
+    width: 32px;
+    height: 32px;
+    z-index: 2;
+}
+
+.shrink-wrapper i {
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+}
+.shrink-wrapper i:first-child {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.shrink-wrapper i:last-child {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+
+
+/* old */
 .rtcVoiceContent{
     min-width: 350px;
     min-height: 90px;
