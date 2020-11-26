@@ -117,7 +117,7 @@ export default{
 
             pending_invite_cattr_timeout: true, // 默认等待 邀请的会议属性 超时，收到会议属性后，置为false，达到5s 后，还是true hangup
             waiting_invitees: [], // 被邀请人员 还在等待响应的
-            waiting_invitees_pubed: [], // 被邀请人员 还在等待响应的, 已经发流的
+            // waiting_invitees_pubed: [], // 被邀请人员 还在等待响应的, 已经发流的
             invitee_attr_timers: {}, //会议属性等待开启定时
 
             // 与 UI紧关联
@@ -169,8 +169,8 @@ export default{
                     if(index > -1) { // 去除 等待邀请人员 -- 停止超时器
                         this.$data.waiting_invitees.splice(index, 1);
                         clearTimeout(this.$data.invitee_attr_timers[uid]);
-                        this.$data.waiting_invitees_pubed.push(uid)
-                        // this.check_mems()
+                        // this.$data.waiting_invitees_pubed.push(uid)
+                        this.check_mems()
                     } 
                 }
             }
@@ -250,8 +250,8 @@ export default{
     
                             let index = _this.$data.waiting_invitees.indexOf(uid); 
                             if(index > -1) {// 超时删除邀请人员 会议属性 --- 所有人都能删
-                                _this.$message.warning(uid+': 对方忙')
-                                _this.emedia.deleteConferenceAttrs({ key:'invitee_'+ uid });
+                                // _this.$message.warning(uid+': 对方忙')
+                                _this.emedia.deleteConferenceAttrs({ key:'invitee_'+ uid, val: JSON.stringify({ status:'timeout' }) });
                             }
                         }, 30000)
                     }
@@ -268,12 +268,23 @@ export default{
                         _this.hangup()
                     }
                 } else { // 邀请的信息已处理或超时后的被删掉 会议属性
+
+                    if(item.val) {
+                        let val = JSON.parse(item.val);
+                        let msg = {
+                            'refuse': '对方已拒绝',
+                            'timeout': '对方忙'
+                        }
+
+                        if(msg[val.status]) _this.$message.error(msg[val.status]);
+                    }
                     let index = _this.$data.waiting_invitees.indexOf(uid); 
                     if(index > -1) { // 去除 等待邀请人员 -- 停止超时器
-                    console.log('waiting_invitees_pubed', JSON.stringify(_this.$data.waiting_invitees_pubed));
+                    // console.log('waiting_invitees_pubed', JSON.stringify(_this.$data.waiting_invitees_pubed));
                         // if(_this.$data.waiting_invitees_pubed.indexOf(uid) == -1){ //没有发流，则为拒绝
                         //     _this.$message.error(uid+': 对方以拒绝')
                         // }
+
                         _this.$data.waiting_invitees.splice(index, 1);// 删除占位符
                         clearTimeout(_this.$data.invitee_attr_timers[uid]);
                         this.check_mems()
@@ -543,9 +554,12 @@ export default{
                 try {
                     await _this.publish()
                     _this.$data.call_status = 'talking';
-                    // setTimeout(() => {
-                    //     },0)
-                    _this.emedia.deleteConferenceAttrs({ key:'invitee_'+_this.$data.user });
+                    
+                    _this.emedia.deleteConferenceAttrs({ 
+                        key:'invitee_'+_this.$data.user,
+                        val: JSON.stringify({ status:'accept' }) 
+                    });
+
                     _this.sub_remotes()
                 } catch (error) {
                     console.error('accept error', error);
@@ -566,8 +580,13 @@ export default{
         },
         // 拒绝
         refuse() {
-            this.emedia.deleteConferenceAttrs({ key:'invitee_'+this.$data.user });
-            this.hangup()
+            this.emedia.deleteConferenceAttrs({ 
+                key:'invitee_'+this.$data.user,
+                val: JSON.stringify({ status: 'refuse'}),
+                success: this.hangup 
+            });
+
+            // this.hangup()
         },
         // 挂断
         hangup() { // 多种情况会触发 挂断
@@ -598,6 +617,7 @@ export default{
             this.$data.joined = false;
             this.$data.call_role = null;
             this.$data.call_status = undefined;
+            this.$data.waiting_invitees = [];
 
             for (const key in this.$data.invitee_attr_timers) {
                 let timer = this.$data.invitee_attr_timers[key];
