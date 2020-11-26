@@ -178,7 +178,7 @@ const Chat = {
         
         // 传递数据给 call 组件，是否收到通话邀请
         noticeCall(state, payload) {
-            console.log('store not', payload);
+            console.log('store noticeCall msg', payload);
             state.noticeCallMsg = payload;
         }
 	},

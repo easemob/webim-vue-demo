@@ -151,10 +151,6 @@ export default{
                     this.sub_remotes();
                     this.$data.call_status = 'talking'
                 }
-                // 被叫 当推流成功后订阅 等待。。。
-
-                // this.emedia.subscribe(member, stream, true, true, this.$refs.remoteVideo)
-
                 
                 let { name } = member;
                 let _arrs = name.split('_');
@@ -162,14 +158,17 @@ export default{
                 let uid = _arrs[_arrs.length-1];
 
                 if(uid == this.$data.user) { // 收到相同用户发流
-                    this.$message.warning('已在其他设备处理');
-                    this.hangup()
+                    this.$message({
+                        message: '已在其他设备处理',
+                        type: 'warning',
+                        duration:1500,
+                        onClose: this.hangup
+                    });
                 } else {
                     let index = this.$data.waiting_invitees.indexOf(uid); 
                     if(index > -1) { // 去除 等待邀请人员 -- 停止超时器
                         this.$data.waiting_invitees.splice(index, 1);
                         clearTimeout(this.$data.invitee_attr_timers[uid]);
-                        // this.$data.waiting_invitees_pubed.push(uid)
                         this.check_mems()
                     } 
                 }
@@ -204,8 +203,12 @@ export default{
 
             console.log('onConferenceExit', reason);
             if(reason == 12 || reason == 10) {
-                this.$message.warning('已在其他设备处理');
-                this.reset()
+                this.$message({
+                    message: '已在其他设备处理',
+                    duration:1500,
+                    type: 'warning',
+                    onClose: this.reset
+                });
             }
         },
         onConfrAttrsUpdated(confr_attrs){ 
@@ -250,7 +253,6 @@ export default{
     
                             let index = _this.$data.waiting_invitees.indexOf(uid); 
                             if(index > -1) {// 超时删除邀请人员 会议属性 --- 所有人都能删
-                                // _this.$message.warning(uid+': 对方忙')
                                 _this.emedia.deleteConferenceAttrs({ key:'invitee_'+ uid, val: JSON.stringify({ status:'timeout' }) });
                             }
                         }, 30000)
@@ -264,8 +266,13 @@ export default{
                 if(uid == _this.$data.user) { // 多端登录
                 
                     if(_this.$data.call_status != 'talking') {// 自己如果 talking, 则忽略(自己删除的会议属性)
-                        _this.$message.warning('已在其他设备处理');
-                        _this.hangup()
+                        _this.$message({
+                            message: '已在其他设备处理',
+                            duration:1500,
+                            type: 'warning',
+                            onClose: _this.hangup
+                        });
+
                     }
                 } else { // 邀请的信息已处理或超时后的被删掉 会议属性
 
@@ -273,17 +280,15 @@ export default{
                         let val = JSON.parse(item.val);
                         let msg = {
                             'refuse': '对方已拒绝',
-                            'timeout': '对方忙'
+                            'timeout': '对方忙',
+                            'busy': '对方正在通话中'
                         }
 
                         if(msg[val.status]) _this.$message.error(msg[val.status]);
                     }
+
                     let index = _this.$data.waiting_invitees.indexOf(uid); 
                     if(index > -1) { // 去除 等待邀请人员 -- 停止超时器
-                    // console.log('waiting_invitees_pubed', JSON.stringify(_this.$data.waiting_invitees_pubed));
-                        // if(_this.$data.waiting_invitees_pubed.indexOf(uid) == -1){ //没有发流，则为拒绝
-                        //     _this.$message.error(uid+': 对方以拒绝')
-                        // }
 
                         _this.$data.waiting_invitees.splice(index, 1);// 删除占位符
                         clearTimeout(_this.$data.invitee_attr_timers[uid]);
@@ -292,46 +297,6 @@ export default{
                 }
             })
 
-
-
-
-
-            // old
-            // return;
-            // // 收集被邀请人并且未响应的 信息
-            // let callees = confr_attrs.filter(item => item.key != 'invitee_'+_this.$data.user);
-
-            // callees.map(item => {
-
-            //     if(item.key.indexOf('invitee_') > -1) { // 获取邀请人信息
-
-            //         let index = _this.$data.waiting_invitees.indexOf(item.key); // 数组中是否有
-
-            //         if(item.op == "DEL") {
-            //             if(index > -1) _this.$data.waiting_invitees.splice(index, 1)
-            //         } else { // 有人发起了邀请
-            //             if(index == -1) _this.$data.waiting_invitees.push(item.key)
-            //         }
-            //     }
-            // })
-
-            // console.log('this.$data.call_role',  this.$data.call_role);
-            // if(this.$data.call_role != 'callee') return; // 以下为被叫逻辑
-
-            // let c_attrs = confr_attrs.filter(item => item.key == 'invitee_'+_this.$data.user);
-            // console.log('c_attrs',  c_attrs);
-            // if(c_attrs[0]) {
-            //     let item = c_attrs[0];
-            //     if(item.op != 'DEL') this.show_calling(); // 振铃
-            //     if(item.op == 'DEL') { // 自己删除的或者 别人删除的
-                    
-            //         if(this.$data.call_status == 'talking' ){ // 说明自己已发流，不做处理
-
-            //         } else {// 超时或者别人已发流，退出会议
-            //             this.hangup()
-            //         }
-            //     } 
-            // }
         },
 
         // 检测会议中的人数
@@ -379,10 +344,6 @@ export default{
 
                     const send_result = await this.send_invite_msg(to);
                     console.log('send_result', send_result);
-
-                    // setTimeout(() => {
-                    //     if(_this.$data.call_status != 'talking') _this.hangup()
-                    // }, 30000)
 
                     let { confrId } = _this.$data.confr_info; // 设置一条占位会议属性
                     _this.emedia.setConferenceAttrs({ key: 'confrId', val: confrId })
@@ -453,6 +414,17 @@ export default{
             console.log('call com onMsg', msg);
             if(msg.from == this.$data.user) return; //自己的另一端发送的
 
+            if(msg.data == 'call busy') { // 收到忙碌消息
+                console.log('this.data.in', this.$data.waiting_invitees);
+                let index = this.$data.waiting_invitees.indexOf(msg.from);
+                if(index > -1) {
+                    this.emedia.deleteConferenceAttrs({ 
+                        key:'invitee_'+msg.from,
+                        val: JSON.stringify({ status:'busy' }) 
+                    });
+                }
+                return
+            }
             // judge msg 类型 busy | invite
             if(!msg.ext) {
                 console.log('not have msg.ext');
@@ -467,7 +439,29 @@ export default{
 
             if(this.$data.joined) {
                 console.warn('has jioned meeting');
+
                 // send busy msg
+                let id = WebIM.conn.getUniqueId();    
+                let busy_msg = new WebIM.message('txt', id);   
+
+                let set_options = {
+                    msg: 'call busy',
+                    to: msg.from,                          
+                    chatType: 'singleChat',
+                    // ext: { confrId, password },
+                    success: function (id, serverMsgId) {
+                        // resolve({id, serverMsgId}) 
+                        console.log('send busy msg success'); 
+                    },                              
+                    fail: function(e){
+                        console.error("Send busy msg error", e);  
+                    }   
+                }
+                console.log('set options', set_options);
+
+                busy_msg.set(set_options);
+                WebIM.conn.send(busy_msg.body);
+
                 return
             }
 
@@ -481,6 +475,7 @@ export default{
                     _this.$data.call_role = 'callee';
                     const join_info = await _this.join();
                     _this.$data.join_info = join_info;
+                    _this.$data.joined = true;
 
 
                     setTimeout(() => {
