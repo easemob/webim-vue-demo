@@ -211,7 +211,6 @@ const Chat = {
 		},
 		onGetChatroomUserList: function(context, payload){
 			var option = {
-				apiUrl: "https://a1.easemob.com",
 				pagenum: 1,                                 // 页数
 				pagesize: 20,                               // 每页个数
 				success: function(list){
@@ -278,7 +277,6 @@ const Chat = {
 			};
 			const msgObj = new WebIM.message("img", id);
 			msgObj.set({
-				apiUrl: WebIM.config.apiURL,
 				file: file,
 				to: chatId[jid[chatType]],
 				chatType:chatType,
@@ -320,7 +318,6 @@ const Chat = {
 			};
 			const msgObj = new WebIM.message("file", id);
 			msgObj.set({
-				apiUrl: WebIM.config.apiURL,
 				file: file,
 				ext: {
 					file_length: file.data.size
@@ -374,7 +371,6 @@ const Chat = {
 			// let newBold = WebIM.utils.parseDownloadResponse.call(WebIM.conn, bold)
 			// var file = WebIM.utils.getFileUrl(input);
 			msgObj.set({
-				apiUrl: WebIM.config.apiURL,
 				file: file,
 				to: useId,
 				type: "audio",

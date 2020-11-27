@@ -11,38 +11,9 @@
 //     protocol: "https"
 // }
 
-function getUrl(){
-    var apiUrl = (window.location.protocol === "https:" ? "https:" : "http:") + "//a1.easemob.com"
-    var xmppUrl = "//im-api-v2.easemob.com/ws"
-    if(window.location.href.indexOf("www.test.com") !== -1 ){
-        apiUrl = (window.location.protocol === "https:" ? "https:" : "http:") + "//a1.easemob.com"
-        xmppUrl = (window.location.protocol === "https:" ? "https:" : "http:") + "//im-api-v2.easemob.com/ws"
-    }
-    else if(window.location.href.indexOf("172.17.1.95") !== -1){
-        apiUrl = (window.location.protocol === "https:" ? "https:" : "http:") + "//a1.easemob.com"
-        xmppUrl = (window.location.protocol === "https:" ? "https:" : "http:") + "//im-api-v2.easemob.com/ws"
-    }
-    else if(window.location.href.indexOf("localhost") !== -1){
-        apiUrl = (window.location.protocol === "https:" ? "https:" : "http:") + "//a1.easemob.com"
-        xmppUrl = (window.location.protocol === "https:" ? "https:" : "http:") + "//im-api-v2.easemob.com/ws"
-    }
-    return {
-        apiUrl: apiUrl,
-        xmppUrl: xmppUrl
-    }
-}
 
 
 var config = {
-    /*
-     * XMPP server
-     */
-    xmppURL: getUrl().xmppUrl,
-    /*
-     * Backend REST API URL
-     */
-    apiURL: getUrl().apiUrl,
-  
     /*
      * Application AppKey
      */
@@ -57,7 +28,7 @@ var config = {
      * @parameter {Boolean} true or false
      */
     https: true,
-    isHttpDNS: false,
+    isHttpDNS: true,
     /*
      * isMultiLoginSessions
      * true: A visitor can sign in to multiple webpages and receive messages at all the webpages.
@@ -70,8 +41,6 @@ var config = {
      */
     isWindowSDK: false,
     /**
-     * isSandBox=true:  xmppURL: 'im-api.sandbox.easemob.com',  apiURL: '//a1.sdb.easemob.com',
-     * isSandBox=false: xmppURL: 'im-api.easemob.com',          apiURL: '//a1.easemob.com',
      * @parameter {Boolean} true or false
      */
     isSandBox: false,

@@ -16,7 +16,6 @@ export default{
 			const userName = userInfo.userId;
 			const password = userInfo.password;
 			var options = {
-				apiUrl: WebIM.config.apiURL,
 				user: userName,
 				pwd: password,
 				appKey: WebIM.config.appkey

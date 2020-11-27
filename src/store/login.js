@@ -16,7 +16,6 @@ const Login = {
 		onLogin: function (context, payload) {
 			context.commit("setUserName", payload.username);
 			var options = {
-				apiUrl: WebIM.config.apiURL,
 				user: payload.username,
 				pwd: payload.password,
 				appKey: WebIM.config.appkey
@@ -33,7 +32,6 @@ const Login = {
 			const _this = this;
 			// context.commit('setUserName', payload.username)
 			var options = {
-				apiUrl: WebIM.config.apiURL,
 				username: payload.username,
 				password: payload.password,
 				nickname: payload.nickname,

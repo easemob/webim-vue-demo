@@ -22,8 +22,6 @@ WebIM.conn = new WebIM.connection({
 	isHttpDNS: WebIM.config.isHttpDNS,
 	isMultiLoginSessions: WebIM.config.isMultiLoginSessions,
 	https: WebIM.config.https,
-	url: WebIM.config.xmppURL,
-	apiUrl: WebIM.config.apiURL,
 	isAutoLogin: true,
 	heartBeatWait: WebIM.config.heartBeatWait,
 	autoReconnectNumMax: WebIM.config.autoReconnectNumMax,
@@ -31,9 +29,6 @@ WebIM.conn = new WebIM.connection({
 	isStropheLog: WebIM.config.isStropheLog,
 	delivery: WebIM.config.delivery
 });
-if (!WebIM.conn.apiUrl) {
-	WebIM.conn.apiUrl = WebIM.config.apiURL;
-}
 
 // 注册监听回调
 WebIM.conn.listen({
