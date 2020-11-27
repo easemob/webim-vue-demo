@@ -341,13 +341,13 @@ export default{
                     _this.$data.joined = true;
                     // _this.$data.call_role = 'caller';
                     
+                    let { confrId } = _this.$data.confr_info; // 设置一条占位会议属性
+                    _this.emedia.setConferenceAttrs({ key: 'confrId', val: confrId })
+                    _this.emedia.setConferenceAttrs({ key: 'invitee_' + to, val: JSON.stringify({ status:'calling' }) })
 
                     const send_result = await this.send_invite_msg(to);
                     console.log('send_result', send_result);
 
-                    let { confrId } = _this.$data.confr_info; // 设置一条占位会议属性
-                    _this.emedia.setConferenceAttrs({ key: 'confrId', val: confrId })
-                    _this.emedia.setConferenceAttrs({ key: 'invitee_' + to, val: JSON.stringify({ status:'calling' }) })
                     
                 } catch (error) {
 
