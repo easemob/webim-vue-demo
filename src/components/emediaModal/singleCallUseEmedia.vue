@@ -5,6 +5,7 @@
             :class="{PC: os == 'PC', 'shrink': shrink_wrapper == true}"
             :style="wrapper_style"
         >
+            <!-- 移动端 UI start -->
             <div 
                 class="shrink-wrapper"
                 @click="shrink_wrapper=true"
@@ -20,22 +21,13 @@
                 @click="shrink_wrapper=false"
                 v-if="os != 'PC' && shrink_wrapper == true"
             ></div>
-            <div class="title">{{title}}</div>
+            <!-- 移动端 UI end -->
+
+            <div v-if="make_call_type=='single'" class="title">{{title}}</div>
 
             <video ref='localVideo' class='main' autoPlay muted playsInline/>
             <video ref='remoteVideo' class="small" autoPlay playsInline />
-            <!-- <div class="callees-placeholder-wrapper">
-                <div v-for="(item, index) in callees" :key="index" class="callee-placeholder">
-                    {{item+'...'}}
-                </div>
-            </div> -->
-            <!-- <div class="mask">正在等待{{contact}}接受邀请</div>
-            <div class="mask">{{contact}}请求{{streamType}}通话</div>
-            <div class="voiceCall">正在与{{contact}}通话</div>
 
-             -->
-
-                <!-- v-bind:class="{localVideo: !toggle, remoteVideo: toggle}"   -->
             <div class="media-action-wrapper" v-if="pushedStream">
                 <i 
                     class="el-icon-turn-off-microphone font"
@@ -53,25 +45,17 @@
             </div>
 
             <i 
-                v-if="call_status == 'calling'"
+                v-if="call_status == 'calling' && call_role != 'caller' "
                 class="el-icon-phone font accept"
                 @click="accept"></i>
-            <i v-if="call_status == 'calling'" class="el-icon-switch-button close" @click="refuse"></i>
+            <i 
+                v-if="call_status == 'calling' && call_role != 'caller' " 
+                class="el-icon-switch-button close" 
+                @click="refuse"></i>
             <i v-else class="el-icon-switch-button close" @click="hangup"></i>
 
         </div>
 
-        <!--  -->
-        <!-- <i v-show="showMute" class="el-icon-headset font mute" ref="mute" @click="mute"></i> -->
-
-        <!-- 
-        
-        <a-icon v-show="showMute && streamType=='视频'" class="font camera" ref='video' isopen="true" type="video-camera" @click="controlStream('videoControl')"/>
-        <a-icon v-show="showMute" class="font mute" type="sound" ref="mute" @click="mute"/>
-        <i v-show="showMute && streamType=='视频'" class="el-icon-refresh font toggle" @click="toggleClick"></i> -->
-
-        <!-- <div v-bind:class="{rtcVoiceContent: streamType=='语音', rtcVideoContent: streamType=='视频'}" >
-        </div> -->
     </Draggable>
 </template>
 
@@ -91,17 +75,7 @@ export default{
 	data(){
 		return {
             visible: false,
-            user: '',
-			// showAccept: false,
-			// showMute: false,
-			// contact: "",
-			// streamType: "视频",
-			// toggle: true,
-			// serverStyle: {
-			// 	width: "360px",
-			// 	height: "360px"
-            // },
-            
+            user: WebIM.conn.user,
 
             //开始实现
             confr_info: null,
@@ -113,16 +87,15 @@ export default{
             joined: false, // 是否在会议中， 在会议中则返回 忙碌
             remotes: [], // 需要订阅的流（发起方的流 -- 暂时先不订阅）
             call_role: null, // caller: 主叫，callee: 被叫
+            from: undefined,
 
-
-            pending_invite_cattr_timeout: true, // 默认等待 邀请的会议属性 超时，收到会议属性后，置为false，达到5s 后，还是true hangup
+            wait_invite_cattr_timeout: true, // 默认等待 邀请的会议属性 超时，收到会议属性后，置为false，达到5s 后，还是true hangup
             waiting_invitees: [], // 被邀请人员 还在等待响应的
-            // waiting_invitees_pubed: [], // 被邀请人员 还在等待响应的, 已经发流的
             invitee_attr_timers: {}, //会议属性等待开启定时
 
             // 与 UI紧关联
             call_status: undefined, // 通话的状态 "joined": 加入会议, "calling": 振铃, "talking": 通话中 
-            title: '正在邀请谁',
+            title: '',
             mic_close: false,
             camera_close: false,
             sound_close: false,
@@ -149,7 +122,11 @@ export default{
                 // 主叫 立即订阅
                 if(this.call_role != 'callee') {
                     this.sub_remotes();
-                    this.$data.call_status = 'talking'
+                    this.$data.call_status = 'talking';
+                    this.$data.title = '正在通话中';
+
+                    let { name } = this.$data.remotes[0].member;
+                    this.$data.title = '正在与'+name+'进行通话中'
                 }
                 
                 let { name } = member;
@@ -158,6 +135,7 @@ export default{
                 let uid = _arrs[_arrs.length-1];
 
                 if(uid == this.$data.user) { // 收到相同用户发流
+                    console.log('hangup onStreamAdded uid == this.$data.user');
                     this.$message({
                         message: '已在其他设备处理',
                         type: 'warning',
@@ -166,8 +144,8 @@ export default{
                     });
                 } else {
                     let index = this.$data.waiting_invitees.indexOf(uid); 
-                    if(index > -1) { // 去除 等待邀请人员 -- 停止超时器
-                        this.$data.waiting_invitees.splice(index, 1);
+                    if(index > -1) { 
+                        this.$data.waiting_invitees.splice(index, 1);// 删除占位符
                         clearTimeout(this.$data.invitee_attr_timers[uid]);
                         this.check_mems()
                     } 
@@ -180,10 +158,6 @@ export default{
         },
         onMemberExited(member) {
             console.log('memberExited', member);
-
-            // if(this.$data.call_role == 'caller') {
-
-            // }
 
             this.check_mems()
         },
@@ -213,10 +187,6 @@ export default{
         },
         onConfrAttrsUpdated(confr_attrs){ 
             console.log('onConfrAttrsUpdated', JSON.stringify(confr_attrs));
-            // 会议属性变更
-            // if(this.$data.make_call_type == 'single') {
-
-            // }
 
             // 区分是否是自己的 uid,以此判断 是主叫还是被叫
             let invitee_attrs = confr_attrs
@@ -247,7 +217,9 @@ export default{
                         _this.show_calling();
                     } else {
 
-                        _this.$data.waiting_invitees.push(uid)
+                        _this.$data.waiting_invitees.push(uid);
+
+                        // 设置被邀请方 超时定时器
                         _this.$data.invitee_attr_timers[uid] = setTimeout(() => {
                             console.log('invitee timeout', uid);
     
@@ -256,6 +228,7 @@ export default{
                                 _this.emedia.deleteConferenceAttrs({ key:'invitee_'+ uid, val: JSON.stringify({ status:'timeout' }) });
                             }
                         }, 30000)
+
                     }
                 }
             });
@@ -266,13 +239,9 @@ export default{
                 if(uid == _this.$data.user) { // 多端登录
                 
                     if(_this.$data.call_status != 'talking') {// 自己如果 talking, 则忽略(自己删除的会议属性)
-                        _this.$message({
-                            message: '已在其他设备处理',
-                            duration:1500,
-                            type: 'warning',
-                            onClose: _this.hangup
-                        });
+                        console.log('hangup del_invitee_attrs != talking');
 
+                        _this.hangup()
                     }
                 } else { // 邀请的信息已处理或超时后的被删掉 会议属性
 
@@ -320,6 +289,7 @@ export default{
             console.log('_cacheMembers', _cacheMembers);
             if(Object.keys(_cacheMembers).length > 0) return; // _cacheMembers 不包含自己的信息
 
+            if(this.$data.make_call_type == 'single' && this.$data.call_status == 'talking') this.$message.error('对方已挂断')
             this.hangup()
         },
 
@@ -329,6 +299,11 @@ export default{
           
         // 邀请他人
         invite(to, callType) {
+            if(this.$data.visible) {
+                this.$message.warning('您正在通话中，请结束通话，再发起新的通话')
+                console.warn('you had meeting, not allowed make call');
+                return
+            }
             this.$data.callType = callType;
             this.$data.visible = true;
 
@@ -338,8 +313,7 @@ export default{
                 try {
                     await _this.ready_call();
                     
-                    _this.$data.joined = true;
-                    // _this.$data.call_role = 'caller';
+                    _this.$data.title = '正在等待对方接收邀请...';
                     
                     let { confrId } = _this.$data.confr_info; // 设置一条占位会议属性
                     _this.emedia.setConferenceAttrs({ key: 'confrId', val: confrId })
@@ -350,6 +324,7 @@ export default{
 
                     
                 } catch (error) {
+                    console.log('hangup 发起呼叫失败，请重新发起');
 
                     _this.hangup();
 
@@ -379,7 +354,7 @@ export default{
             let id = WebIM.conn.getUniqueId();    
             let msg = new WebIM.message('txt', id);  
 
-            let { confr_info } = this.$data;
+            let { confr_info, callType } = this.$data;
 
 
             return new Promise((resolve,reject) => {
@@ -391,8 +366,7 @@ export default{
                     msg: 'invite call',
                     to,                          
                     chatType: 'singleChat',
-                    ext: { confrId, password },
-                    // ext: { confrId, password },
+                    ext: { confrId, password, callType },
                     success: function (id, serverMsgId) {
                         resolve({id, serverMsgId})  
                     },                              
@@ -415,7 +389,6 @@ export default{
             if(msg.from == this.$data.user) return; //自己的另一端发送的
 
             if(msg.data == 'call busy') { // 收到忙碌消息
-                console.log('this.data.in', this.$data.waiting_invitees);
                 let index = this.$data.waiting_invitees.indexOf(msg.from);
                 if(index > -1) {
                     this.emedia.deleteConferenceAttrs({ 
@@ -425,7 +398,36 @@ export default{
                 }
                 return
             }
-            // judge msg 类型 busy | invite
+
+
+            // 收到 邀请通话 消息
+
+            if(this.$data.join_info) { // 正在会议中
+                console.warn('has jioned meeting');
+
+                // send busy msg
+                let id = WebIM.conn.getUniqueId();    
+                let busy_msg = new WebIM.message('txt', id);   
+
+                let set_options = {
+                    msg: 'call busy',
+                    to: msg.from,                          
+                    chatType: 'singleChat',
+                    success: function (id, serverMsgId) {
+                        console.log('send busy msg success'); 
+                    },                              
+                    fail: function(e){
+                        console.error("Send busy msg error", e);  
+                    }   
+                }
+
+                busy_msg.set(set_options);
+                WebIM.conn.send(busy_msg.body);
+
+                return
+            }
+
+
             if(!msg.ext) {
                 console.log('not have msg.ext');
                 return
@@ -437,67 +439,51 @@ export default{
                 return
             }
 
-            if(this.$data.joined) {
-                console.warn('has jioned meeting');
+            this.invited_join(msg)
 
-                // send busy msg
-                let id = WebIM.conn.getUniqueId();    
-                let busy_msg = new WebIM.message('txt', id);   
-
-                let set_options = {
-                    msg: 'call busy',
-                    to: msg.from,                          
-                    chatType: 'singleChat',
-                    // ext: { confrId, password },
-                    success: function (id, serverMsgId) {
-                        // resolve({id, serverMsgId}) 
-                        console.log('send busy msg success'); 
-                    },                              
-                    fail: function(e){
-                        console.error("Send busy msg error", e);  
-                    }   
-                }
-                console.log('set options', set_options);
-
-                busy_msg.set(set_options);
-                WebIM.conn.send(busy_msg.body);
-
-                return
-            }
-
-
-            // 加入会议
-            this.$data.confr_info = { confrId, password };
-            let _this = this;
-            
-            (async () => {
-                try {
-                    _this.$data.call_role = 'callee';
-                    const join_info = await _this.join();
-                    _this.$data.join_info = join_info;
-                    _this.$data.joined = true;
-
-
-                    setTimeout(() => {
-                        // 5s 后还没收到 邀请自己的会议属性 退出会议
-                        if(_this.$data.pending_invite_cattr_timeout) {
-                            _this.hangup()
-                        }
-                    }, 5000)
-                } catch (error) {
-                    console.error('called join error', error);
-                    this.reset();
-                }
-
-            })()
-                
         },
 
-        // // 等待会议属性
+        // 收到邀请，加入会议
+        async invited_join(msg) {
+
+            this.$data.confr_info = { confrId: msg.ext.confrId, password: msg.ext.password };
+            this.$data.callType = msg.ext.callType;
+
+            try {
+                this.$data.call_role = 'callee';
+                this.$data.from = msg.from;
+
+                const join_info = await this.join();
+                this.$data.join_info = join_info;
+
+
+                this.$data.wait_invite_cattr_timer = setTimeout(() => {
+                    // 5s 后还没收到 邀请自己的会议属性 退出会议
+                    if(this.$data.wait_invite_cattr_timeout) {
+                        console.log('hangup 5s 后还没收到 邀请自己的会议属性 退出会议');
+                        this.hangup()
+                    }
+                }, 5000)
+            } catch (error) {
+                console.error('called join error', error);
+                this.reset();
+            }
+
+        },
+
+        // 振铃
         show_calling() {
-                this.$data.visible = true;
-                this.$data.pending_invite_cattr_timeout = false;
-                this.$data.call_status = 'calling';
+            this.$data.visible = true;
+            this.$data.wait_invite_cattr_timeout = false; clearTimeout(this.$data.wait_invite_cattr_timer);
+            this.$data.call_status = 'calling';
+
+            if(this.$data.make_call_type == 'single') {
+                if(
+                    this.$data.call_role == 'callee' &&
+                    this.$data.from
+                ) this.$data.title = this.$data.from+'请求与您进行通话'
+                
+            }
         },
         // 创建会议
         _create() {
@@ -542,14 +528,13 @@ export default{
         
         // 接听
         accept() {
-            // this.$data.callType = 'voice' // 默认以语音推流
-            this.$data.callType = 'video' // 默认以语音推流
+            
             let _this = this;
             (async ()=> {
                 try {
                     await _this.publish()
                     _this.$data.call_status = 'talking';
-                    
+
                     _this.emedia.deleteConferenceAttrs({ 
                         key:'invitee_'+_this.$data.user,
                         val: JSON.stringify({ status:'accept' }) 
@@ -560,6 +545,9 @@ export default{
                     console.error('accept error', error);
                     _this.$message.error('接听失败，请重新接听');
                 }
+
+                let { name } = _this.$data.remotes[0].member;
+                _this.$data.title = '正在与'+name+'进行通话中'
             })()
         }, 
         // 订阅对方流
@@ -578,17 +566,17 @@ export default{
             this.emedia.deleteConferenceAttrs({ 
                 key:'invitee_'+this.$data.user,
                 val: JSON.stringify({ status: 'refuse'}),
-                success: this.hangup 
+                success: this.hangup,
+                error: this.hangup
             });
-
-            // this.hangup()
+            console.log('hangup 拒绝');
+            this.$data.visible = false
         },
         // 挂断
         hangup() { // 多种情况会触发 挂断
             
             this.emedia.exitConference();
-            this.reset();
-
+            this.reset()
         },
 
         _destroy() {
@@ -603,16 +591,6 @@ export default{
         // 重置
         reset() {
 
-            this.$data.callType = 'video';
-            this.$data.confr_info = null;
-            this.$data.join_info = null;
-            this.$data.pushedStream = null;
-            this.$data.remotes = [];
-            this.$data.visible = false;
-            this.$data.joined = false;
-            this.$data.call_role = null;
-            this.$data.call_status = undefined;
-            this.$data.waiting_invitees = [];
 
             for (const key in this.$data.invitee_attr_timers) {
                 let timer = this.$data.invitee_attr_timers[key];
@@ -620,8 +598,13 @@ export default{
                 clearTimeout(timer)
             }
 
+            Object.assign(this.$data, 
+                            this.$options.data(), 
+                            { os:this.$data.os, wrapper_style: this.$data.wrapper_style}
+                        ) // os、wrapper_style 不重置
             emedia.mgr.catrrs=[]; // 无法更新 SDK，临时改一下
 
+            if(process.env.NODE_ENV == 'development') console.clear();
         },
 
 
@@ -687,9 +670,11 @@ export default{
             }
         },
 
-        // visible: function(val) {
-            
-        // }
+        callType: function(val) {
+            if( this.$data.callType == 'voice') this.$data.camera_close = true;
+
+        }
+        
     },
 	components: {
 		Draggable
@@ -705,7 +690,6 @@ export default{
 	mounted(){
         console.log('WebIm', WebIM);
 
-        this.$data.user = WebIM.conn.user;
         this.emedia = WebIM.EMService; // 多人会议 SDK --- 不包含 1v1
         emedia.config({ // 取全局 window.emedia
             restPrefix: 'https://a1.easemob.com'
