@@ -63,8 +63,6 @@
 import "./index.less";
 import Draggable from "../draggable";
 import WebIM from "../../utils/WebIM";
-import message from '../../../../test-samples/uni-app/components/uni-popup/message';
-import { error } from '../../../../test-samples/uni-app/common/graceChecker';
 
 let call_log = '' // 上穿日志
 function call_report_log() {
