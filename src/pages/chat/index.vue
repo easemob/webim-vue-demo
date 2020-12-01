@@ -107,7 +107,7 @@
 
         <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState"/>
         <MultiAVModal :to="activedType[activeKey]" />
-        <Call ref="call" />
+        <Call ref="call" :groupname="activedType[activeKey]"/>
       </a-layout-content>
     </a-layout>
   </a-layout>
@@ -205,14 +205,10 @@ export default {
       v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
     },
 
-    EmediaModalFun(to,callType){
-    //   this.$refs.emediaModal.showEmediaModal();
-    //   this.$refs.emediaModal.showCallerWait(v);
-
-    //   this.$refs.call.showEmediaModal();
-    //   this.$refs.call.showCallerWait(v);
-
-        this.$refs.call.invite(to,callType);
+    EmediaModalFun(make_call_type, tos, callType){ // 单聊 | 群聊 都走这里
+        console.log('activedType[activeKey]', this.$data.activedType);
+        console.log('activedType[activeKey]', this.$data.activeKey);
+        this.$refs.call.invite(make_call_type, tos, callType);
     },
     hideUserList() {
       this.$data.collapsed = true;

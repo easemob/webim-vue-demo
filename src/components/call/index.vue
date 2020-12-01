@@ -1,32 +1,26 @@
 <template>
     <Draggable v-if="visible" id='drag2'>
         <div 
-            class="call-wrapper"
-            :class="{PC: os == 'PC', 'shrink': shrink_wrapper == true}"
-            :style="wrapper_style"
+            class="call-wrapper PC"
         >
-            <!-- 移动端 UI start -->
-            <div 
-                class="shrink-wrapper"
-                @click="shrink_wrapper=true"
-                v-show="os != 'PC' && shrink_wrapper == false"
+
+            <div v-if="groupname" class="title">{{groupname}}</div>
+            <div v-else class="title">{{title}}</div>
+            <div
+                class="video-wrapper"
+                v-if="make_call_type == 'single'"
             >
-                <i class="el-icon-bottom-left"></i>
-                <i class="el-icon-top-right"></i>
 
+                <video ref='localVideo' class='main' autoPlay muted playsInline/>
+                <video ref='remoteVideo' class="small" autoPlay playsInline />
             </div>
+            <div
+                class="video-wrapper"
+                v-else
+            >
 
-            <div 
-                class="shrink-place" 
-                @click="shrink_wrapper=false"
-                v-if="os != 'PC' && shrink_wrapper == true"
-            ></div>
-            <!-- 移动端 UI end -->
-
-            <div v-if="make_call_type=='single'" class="title">{{title}}</div>
-
-            <video ref='localVideo' class='main' autoPlay muted playsInline/>
-            <video ref='remoteVideo' class="small" autoPlay playsInline />
+                <video ref='localVideo' class='main' autoPlay muted playsInline/>
+            </div>
 
             <div class="media-action-wrapper" v-if="pushedStream">
                 <i 
@@ -80,7 +74,7 @@ export default{
             join_info: null,
             pushedStream: null,
             callType: 'video',
-            make_call_type: 'single', // 1v1 | 多人
+            make_call_type: null, // 1v1 | 多人
 
             joined: false, // 是否在会议中， 在会议中则返回 忙碌
             remotes: [], // 需要订阅的流（发起方的流 -- 暂时先不订阅）
@@ -101,11 +95,10 @@ export default{
                 width: 'auto',
                 height: 'auto',
             },
-            shrink_wrapper: false,// 移动端是否收起
-            os: '',
 		};
     },
     
+    props: ['groupname'],
 	methods: {
 		
 
@@ -296,12 +289,14 @@ export default{
 
           
         // 邀请他人
-        invite(to, callType) {
+        invite(make_call_type, tos, callType) {
             if(this.$data.visible) {
                 this.$message.warning('您正在通话中，请结束通话，再发起新的通话')
                 console.warn('you had meeting, not allowed make call');
                 return
             }
+
+            this.$data.make_call_type = make_call_type;
             this.$data.callType = callType;
             this.$data.visible = true;
 
@@ -314,10 +309,13 @@ export default{
                     _this.$data.title = '正在等待对方接收邀请...';
                     
                     let { confrId } = _this.$data.confr_info; // 设置一条占位会议属性
-                    _this.emedia.setConferenceAttrs({ key: 'confrId', val: confrId })
-                    _this.emedia.setConferenceAttrs({ key: 'invitee_' + to, val: JSON.stringify({ status:'calling' }) })
+                    _this.emedia.setConferenceAttrs({ key: 'confrId', val: confrId });
 
-                    const send_result = await this.send_invite_msg(to);
+                    tos.map(item => {
+                        _this.emedia.setConferenceAttrs({ key: 'invitee_' + item, val: JSON.stringify({ status:'calling' }) })
+                    })
+
+                    const send_result = await this.send_invite_msg(tos);
                     console.log('send_result', send_result);
 
                     
@@ -347,37 +345,39 @@ export default{
 
         },
         // 发起呼叫
-        send_invite_msg(to) {
-
-            let id = WebIM.conn.getUniqueId();    
-            let msg = new WebIM.message('txt', id);  
+        send_invite_msg(tos) {
 
             let { confr_info, callType } = this.$data;
+            if(!confr_info) {
+                console.error('not have confr_info');
+                return
+            }
 
+            let { confrId, password} = confr_info;
 
-            return new Promise((resolve,reject) => {
-                if(!confr_info) reject('not have confr_info');
+            tos.map(item => {
 
-                let { confrId, password} = confr_info;
-
+                let id = WebIM.conn.getUniqueId();    
+                let msg = new WebIM.message('txt', id);
+                
                 let set_options = {
-                    msg: 'invite call',
-                    to,                          
-                    chatType: 'singleChat',
-                    ext: { confrId, password, callType },
-                    success: function (id, serverMsgId) {
-                        resolve({id, serverMsgId})  
-                    },                              
-                    fail: function(e){
-                        reject("Send invite error");  
-                    }   
-                }
-
+                        msg: 'invite call',
+                        to: item,                          
+                        chatType: 'singleChat',
+                        ext: { confrId, password, callType },
+                        success: function (id, serverMsgId) {
+                            console.log('send invite success',{id, serverMsgId});  
+                        },                              
+                        fail: function(e){
+                            console.error("Send invite error");  
+                        }   
+                    }
+    
                 msg.set(set_options);
                 WebIM.conn.send(msg.body);
+                
             })
-            
-            
+
         },
 
         
@@ -471,6 +471,8 @@ export default{
 
         // 振铃
         show_calling() {
+            if(this.$data.call_status == 'calling') return; //已经收到了 邀请
+
             this.$data.visible = true;
             this.$data.wait_invite_cattr_timeout = false; clearTimeout(this.$data.wait_invite_cattr_timer);
             this.$data.call_status = 'calling';
@@ -481,6 +483,8 @@ export default{
                     this.$data.from
                 ) this.$data.title = this.$data.from+'请求与您进行通话'
                 
+            } else {
+                this.$data.title = this.$data.from+'请求您加入会议'
             }
         },
         // 创建会议
@@ -602,7 +606,7 @@ export default{
                         ) // os、wrapper_style 不重置
             emedia.mgr.catrrs=[]; // 无法更新 SDK，临时改一下
 
-            if(process.env.NODE_ENV == 'development') console.clear();
+            // if(process.env.NODE_ENV == 'development') console.clear();
         },
 
 
@@ -653,21 +657,6 @@ export default{
 
     },
     watch: {
-        shrink_wrapper: function(val) {
-            if(this.os == 'PC') return;
-            if(val) {
-                this.$data.wrapper_style = {
-                    width: window.innerWidth*0.2 + 'px',
-                    height: window.innerHeight*0.2 + 'px'
-                }
-            } else {
-                this.$data.wrapper_style = {
-                    width: window.innerWidth + 'px',
-                    height: window.innerHeight + 'px'
-                }
-            }
-        },
-
         callType: function(val) {
             if( this.$data.callType == 'voice') this.$data.camera_close = true;
 
@@ -678,13 +667,6 @@ export default{
 		Draggable
     },
     
-    updated() {
-            if(this.os == 'PC') return;
-            if(!this.visible) return;
-
-            document.querySelector('#drag2').style.top = 0;
-            document.querySelector('#drag2').style.left = 0;
-    },
 	mounted(){
         console.log('WebIm', WebIM);
 
@@ -700,12 +682,6 @@ export default{
         this.emedia.onConferenceExit = this.onConferenceExit; // 退出会议
         this.emedia.onConfrAttrsUpdated = this.onConfrAttrsUpdated; // 会议属性变更
 
-		// if(WebIM.config.isWebRTC && WebIM.WebRTC){
-		// 	this.initWebRTC();
-		// 	// this.channel = new RTCChannel(this.refs.rtcWrapper, this.props.collapsed)
-		// }
-		// var video = this.$refs.localVideo;
-        // video.addEventListener("loadedmetadata", this.loadedmetadataLocalHandler);
         
         // 页面刷新 退出会议
         let _this = this;
@@ -713,36 +689,6 @@ export default{
             console.log('onbeforeunload');
             _this.hangup()
         }
-
-        // 检测设备 是否 PC
-
-
-            // 检测设备操作系统
-            let UA = navigator.userAgent;
-
-            if(UA.indexOf('Android') > -1 ) {
-                this.$data.os = 'Android';
-            }else if(
-                UA.indexOf('iPhone') > -1 || 
-                UA.indexOf('iPad') > -1 || 
-                UA.indexOf('iPod') > -1
-            ) { // iPad、iPod 都使用 iPhone 下载连接
-                this.$data.os = 'iPhone';
-            } else this.$data.os = 'PC';
-
-            if(this.$data.os == 'PC') {
-                this.$data.wrapper_style = {
-                    width:'500px',
-                    height: '400px'
-                }
-            } else {
-
-                this.$data.wrapper_style = {
-                    width: window.innerWidth + 'px',
-                    height: window.innerHeight + 'px'
-                }
-
-            }
 
 
     },
@@ -764,8 +710,8 @@ export default{
     transition: 0.5s;
 }
 .PC {
-    /* width: 500px;
-    height: 400px; */
+    width: 500px;
+    height: 400px;
 }
 
 .title {
@@ -777,7 +723,10 @@ export default{
 
     font-size: 16px;
 }
-
+.video-wrapper {
+    width: 100%;
+    height: 100%;
+}
 video.main {
     position: absolute;
     width: 100%;

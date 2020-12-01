@@ -146,7 +146,7 @@
       </div>
     </div>
     <GetGroupInfo ref="groupInfoModel" @closeGroupMessage="closeGroupMessage" />
-    <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" />
+    <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" @start="start_multi"/>
 
     <!-- fix 移动到全局 -->
     <!-- <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState" /> -->
@@ -440,35 +440,23 @@ export default {
 
     callVideo() {
 
-      if (this.type == "contact") {
+      if(this.type == "contact") {
         const val = this.$data.activedKey[this.type].name
-        this.$emit('EmediaModalFun',val, 'video')
-        // const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
-        // const recMerge = (videoSetting && videoSetting.recMerge) || false;
-        // const rec = (videoSetting && videoSetting.rec) || false;
-        // this.onCallVideo({
-        //   chatType: this.type,
-        //   to: this.$data.activedKey[this.type].name,
-        //   rec,
-        //   recMerge
-        // });
+        this.$emit('EmediaModalFun','single', [val], 'video');
+
       } else if (this.type == "group") {
         this.getGroupMembers(this.$data.activedKey[this.type].groupid);
+        let _this = this;
         this.$refs.addAvMembertModal.show();
+
       }
     },
     callVoice() {
       const val = this.$data.activedKey[this.type].name
-      this.$emit('EmediaModalFun',val, 'voice')
-    //   const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
-    //   const recMerge = (videoSetting && videoSetting.recMerge) || false;
-    //   const rec = (videoSetting && videoSetting.rec) || false;
-    //   this.onCallVoice({
-    //     chatType: this.type,
-    //     to: this.$data.activedKey[this.type].name,
-    //     rec,
-    //     recMerge
-    //   });
+      this.$emit('EmediaModalFun','single', [val], 'voice');
+    },
+    start_multi(tos) { // 点击开始后的 开启多人会议
+        this.$emit('EmediaModalFun','multi', tos, 'video')
     },
     readablizeBytes(value) {
       let s = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
