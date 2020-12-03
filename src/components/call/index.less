@@ -1,0 +1,118 @@
+.call-wrapper {
+    background: #dadada;
+    transition: 0.5s;
+
+    width: 500px;
+    height: 400px;
+
+    i {
+        cursor: pointer;
+    }
+
+    .title {
+        text-align: center;
+        
+        width: 100%;
+        height: 43px;
+        font-size: 16px;
+    
+    }
+
+    .videos-wrapper {
+        width: 100%;
+        height: calc(100% - 100px);
+        position: relative;
+
+        video {
+            position: absolute;
+            top: 0;
+            left: 0;
+        
+            width: 100%;
+            height: 100%;
+            background: #fff;
+        }
+        .name {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1;
+            color: #fff;
+            line-height: 20px;
+        }
+    }
+
+    /* 单人布局 */
+    .single .item-wrapper {
+        position: absolute;
+        width: 20%;
+        height: 20%;
+        top: 10%;
+        right: 5%;
+    }
+
+    /* 多人布局 */
+    .multi {
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+        flex-wrap: wrap-reverse;
+    }
+
+    .multi > .item-wrapper {
+        background: #dadada;
+        position: relative;
+    }
+
+    .layout-1 {
+        width: 98%;
+        height: 98%;
+    }
+
+    .layout-2 {
+        width: 47%;
+        height: 47%;
+        margin: 1%;
+    }
+
+    .layout-3 {
+        width: 32%;
+        height: 30%;
+        margin: 1%;
+    }
+
+
+
+    /* 底部 */
+    .media-action-wrapper {
+        position: absolute;
+        left: 0;
+        bottom: 15px;
+        height: 30px;
+        padding-left:20px ;
+
+        i {
+            position: static;
+            margin-right:10px ;
+            cursor: pointer;
+            color: #2c3e50;
+        }
+
+        i.close {
+            color: #4eb1f4;
+        }
+    }
+
+}
+
+
+
+
+
+
+
+
+

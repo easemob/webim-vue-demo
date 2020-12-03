@@ -5,7 +5,7 @@ import Chat from "./chat";
 import FriendModule from "./friendModule";
 import Group from "./group";
 import Emedia from "./emedia";
-
+Vue.config.devtools = true
 Vue.use(Vuex);
 
 const store = new Vuex.Store({

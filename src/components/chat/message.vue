@@ -445,6 +445,7 @@ export default {
         this.$emit('EmediaModalFun','single', [val], 'video');
 
       } else if (this.type == "group") {
+          console.log('this.$data.activedKey[this.type]', this.$data.activedKey[this.type]);
         this.getGroupMembers(this.$data.activedKey[this.type].groupid);
         let _this = this;
         this.$refs.addAvMembertModal.show();

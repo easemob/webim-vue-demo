@@ -6,20 +6,48 @@
 
             <div v-if="groupname" class="title">{{groupname}}</div>
             <div v-else class="title">{{title}}</div>
+
+            <!-- 单端通话 -->
             <div
-                class="video-wrapper"
+                class="videos-wrapper single"
                 v-if="make_call_type == 'single'"
             >
 
-                <video ref='localVideo' class='main' autoPlay muted playsInline/>
-                <video ref='remoteVideo' class="small" autoPlay playsInline />
+                <video ref='localVideo' autoPlay muted playsInline/>
+                <div 
+                    class="item-wrapper"
+                    v-for="(value, key, index) in members"
+                    :key='index'
+                >
+                    <div class="name">{{key}}</div>
+                    <!-- <video ref='remoteVideo' autoPlay playsInline /> -->
+                </div>
             </div>
+
+            <!-- 多人页面 -->
             <div
-                class="video-wrapper"
+                class="videos-wrapper multi"
                 v-else
             >
 
-                <video ref='localVideo' class='main' autoPlay muted playsInline/>
+                <div 
+                    class="item-wrapper"
+                    :class="computed_layout()"
+                >
+                    <div class="name">{{user}}</div>
+                    <video ref='localVideo' autoPlay muted playsInline/>
+                </div>
+                <div 
+                    class="item-wrapper"
+                    :class="computed_layout()" 
+                    v-for="(value, key, index) in members"
+                    :key='index'
+                    :id='key'
+                >
+                    <div class="name">{{ key }}</div>
+                </div>
+                <!-- <video  autoPlay muted playsInline/>
+                <video  autoPlay muted playsInline/> -->
             </div>
 
             <div class="media-action-wrapper" v-if="pushedStream">
@@ -75,6 +103,7 @@ export default{
             pushedStream: null,
             callType: 'video',
             make_call_type: null, // 1v1 | 多人
+            // make_call_type: 'multi', // 1v1 | 多人
 
             joined: false, // 是否在会议中， 在会议中则返回 忙碌
             remotes: [], // 需要订阅的流（发起方的流 -- 暂时先不订阅）
@@ -83,6 +112,21 @@ export default{
 
             wait_invite_cattr_timeout: true, // 默认等待 邀请的会议属性 超时，收到会议属性后，置为false，达到5s 后，还是true hangup
             waiting_invitees: [], // 被邀请人员 还在等待响应的
+            members: {
+                // 'qx.su.1': { status: 'waiting'},
+                // 'qx.su.2': { status: 'waiting'},
+                // 'qx.su.3': { status: 'waiting'},
+                // 'qx.su.4': { status: 'waiting'},
+            }, // 会议中成员 包括订阅成功的，和正在邀请的
+            // member: {
+            //     'qx.su': {
+            //         status: 'waiting'
+            //     },
+            //     'qx.su.2': {
+            //         status: 'subed', // 订阅成功. 超时的或着挂断的 会被删除
+            //         el: '<video><video/>'// 已经订阅成功的 video 标签，但是只能使用 原生js appendChild
+            //     }
+            // }
             invitee_attr_timers: {}, //会议属性等待开启定时
 
             // 与 UI紧关联
@@ -109,15 +153,18 @@ export default{
             if(!stream.located()) {
                 this.$data.remotes.push({ member, stream }); // 都保存
 
-
                 // 主叫 立即订阅
-                if(this.call_role != 'callee') {
+                if(this.call_role != 'callee' || this.call_status == 'talking') {
                     this.sub_remotes();
-                    this.$data.call_status = 'talking';
-                    this.$data.title = '正在通话中';
 
-                    let { name } = this.$data.remotes[0].member;
-                    this.$data.title = '正在与'+name+'进行通话中'
+                    if(this.make_call_type == 'single') { // 单人模式，修改 title
+
+                        this.$data.call_status = 'talking';
+                        let { name } = this.$data.remotes[0].member;
+                        this.$data.title = '正在与'+name+'进行通话中'
+                    }
+                } else {
+                    this.$set(this.$data.members, [member.name], { status: 'callee'})
                 }
                 
                 let { name } = member;
@@ -134,6 +181,7 @@ export default{
                         onClose: this.hangup
                     });
                 } else {
+                    // 订阅流
                     let index = this.$data.waiting_invitees.indexOf(uid); 
                     if(index > -1) { 
                         this.$data.waiting_invitees.splice(index, 1);// 删除占位符
@@ -149,7 +197,7 @@ export default{
         },
         onMemberExited(member) {
             console.log('memberExited', member);
-
+            this.$delete(this.$data.members, [member.name])
             this.check_mems()
         },
         onConferenceExit(reason, failed) {
@@ -209,6 +257,8 @@ export default{
                     } else {
 
                         _this.$data.waiting_invitees.push(uid);
+                        
+                        _this.$set(_this.$data.members, [uid],{ status: 'waiting'})
 
                         // 设置被邀请方 超时定时器
                         _this.$data.invitee_attr_timers[uid] = setTimeout(() => {
@@ -244,7 +294,11 @@ export default{
                             'busy': '对方正在通话中'
                         }
 
-                        if(msg[val.status]) _this.$message.error(msg[val.status]);
+                        if(msg[val.status]) {
+                            _this.$message.error(msg[val.status]);
+
+                            _this.$delete(_this.$data.members, [uid])
+                        }
                     }
 
                     let index = _this.$data.waiting_invitees.indexOf(uid); 
@@ -281,6 +335,7 @@ export default{
             if(Object.keys(_cacheMembers).length > 0) return; // _cacheMembers 不包含自己的信息
 
             if(this.$data.make_call_type == 'single' && this.$data.call_status == 'talking') this.$message.error('对方已挂断')
+            console.log('hangup only myself in meeting');
             this.hangup()
         },
 
@@ -347,7 +402,7 @@ export default{
         // 发起呼叫
         send_invite_msg(tos) {
 
-            let { confr_info, callType } = this.$data;
+            let { confr_info, callType, make_call_type } = this.$data;
             if(!confr_info) {
                 console.error('not have confr_info');
                 return
@@ -364,7 +419,7 @@ export default{
                         msg: 'invite call',
                         to: item,                          
                         chatType: 'singleChat',
-                        ext: { confrId, password, callType },
+                        ext: { confrId, password, callType, make_call_type },
                         success: function (id, serverMsgId) {
                             console.log('send invite success',{id, serverMsgId});  
                         },                              
@@ -446,6 +501,7 @@ export default{
 
             this.$data.confr_info = { confrId: msg.ext.confrId, password: msg.ext.password };
             this.$data.callType = msg.ext.callType;
+            this.$data.make_call_type = msg.ext.make_call_type;
 
             try {
                 this.$data.call_role = 'callee';
@@ -548,20 +604,43 @@ export default{
                     _this.$message.error('接听失败，请重新接听');
                 }
 
-                let { name } = _this.$data.remotes[0].member;
-                _this.$data.title = '正在与'+name+'进行通话中'
+                // let { name } = _this.$data.remotes[0].member;
+                // _this.$data.title = '正在与'+name+'进行通话中'
             })()
         }, 
         // 订阅对方流
         sub_remotes() {
             let { remotes } = this.$data;
 
-            if(this.$data.make_call_type == 'single') {
-                let remote = remotes[0];
-                if( remote.member && remote.stream) {
-                    this.emedia.subscribe(remote.member, remote.stream, true, true, this.$refs.remoteVideo)
+            // if(this.$data.make_call_type == 'single') {
+            //     let remote = remotes[0];
+            //     if( remote.member && remote.stream) {
+            //         this.emedia.subscribe(remote.member, remote.stream, true, true, this.$refs.remoteVideo)
+            //     }
+            // } else {
+
+            // }
+
+            // 订阅，插入 DOM
+            remotes.map(item => {
+                let s = item.stream, m = item.member;
+                if( s && m ) {
+                    if(s.type != 1){ // 不是桌面流
+                       let el = document.createElement('video');
+                       el.autoplay = true;
+                       el.playsInline = true;
+
+                        this.emedia.subscribe(m, s, true, true, el)
+
+                        let p_node = document.querySelector(`.videos-wrapper .item-wrapper[id="${m.name}"]`);
+                        console.log('sub_remote p_node', p_node);
+                        p_node.appendChild(el)
+                    }
                 }
-            }
+            })
+            // 订阅完删除
+
+            this.$data.remotes = [];
         },
         // 拒绝
         refuse() {
@@ -655,6 +734,18 @@ export default{
             })
         },
 
+        // 计算布局
+        computed_layout() {
+            let mems = this.$data.members;
+            let mems_len = Object.keys(mems).length;
+            if(mems_len > 3){
+                return "layout-3"
+            } else if(mems_len > 0) {
+                return "layout-2"
+            } else {
+                return "layout-1"
+            }
+        }
     },
     watch: {
         callType: function(val) {
@@ -696,162 +787,4 @@ export default{
     
 };
 </script>
-<style scoped>
-.call-wrapper {
-    background: #dadada;
-    transition: 0.5s;
-}
 
-.shrink.call-wrapper {
-    position: absolute;
-    top: 200px;
-    left: 0;
-
-    transition: 0.5s;
-}
-.PC {
-    width: 500px;
-    height: 400px;
-}
-
-.title {
-    text-align: center;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-
-    font-size: 16px;
-}
-.video-wrapper {
-    width: 100%;
-    height: 100%;
-}
-video.main {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-
-}
-
-.shrink video.main {
-    z-index: 5;
-    background:#dadada;
-}
-.shrink-place {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 6;
-
-    width: 100%;
-    height: 100%;
-    background: transparent;
-}
-.PC video.small {
-    position: absolute;
-    width: 25%;
-    height: 20%;
-    top: 10%;
-    right: 5%;
-}
-
-video.small {
-    position: absolute;
-    width: 35%;
-    height: 20%;
-    top: 10%;
-    right: 5%;
-}
-
-.callees-placeholder-wrapper{
-    position: absolute;
-    width: 25%;
-    height: 20%;
-    top: 10%;
-    right: 5%;
-}
-
-.media-action-wrapper {
-    position: absolute;
-    left: 0;
-    bottom: 15px;
-    height: 30px;
-    padding-left:20px ;
-}
-
-.call-wrapper i {
-    cursor: pointer;
-}
-.media-action-wrapper i {
-    position: static;
-    margin-right:10px ;
-    cursor: pointer;
-    color: #2c3e50;
-}
-
-.media-action-wrapper i.close {
-    color: #4eb1f4;
-} 
-
-.shrink-wrapper {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-
-    width: 32px;
-    height: 32px;
-    z-index: 2;
-}
-
-.shrink-wrapper i {
-    color: #fff;
-    font-size: 16px;
-    font-weight: bold;
-}
-.shrink-wrapper i:first-child {
-    position: absolute;
-    top: 0;
-    right: 0;
-}
-.shrink-wrapper i:last-child {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-}
-
-
-
-/* old */
-.rtcVoiceContent{
-    min-width: 350px;
-    min-height: 90px;
-    border-radius: 5px;
-}
-.rtcVideoContent{
-    min-width: 350px;
-    min-height: 350px;
-    margin: auto;
-}
-.mask{
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    cursor: default;
-    left: 0;
-    background: #ccc;
-    z-index: 3;
-    border-radius: 5px;
-}
-.voiceCall{
-    height: 150px;
-    background: #e2e2e2;
-    z-index: 3;
-    border-radius: 5px;
-    border-radius: 5px;
-    line-height: 50px;
-    color: rgba(0,0,0,0.65);
-}
-</style>
