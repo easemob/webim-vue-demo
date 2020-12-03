@@ -206,8 +206,7 @@ export default {
     },
 
     EmediaModalFun(make_call_type, tos, callType){ // 单聊 | 群聊 都走这里
-        console.log('activedType[activeKey]', this.$data.activedType);
-        console.log('activedType[activeKey]', this.$data.activeKey);
+    
         this.$refs.call.invite(make_call_type, tos, callType);
     },
     hideUserList() {

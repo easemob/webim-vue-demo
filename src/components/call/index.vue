@@ -45,6 +45,7 @@
                     :id='key'
                 >
                     <div class="name">{{ key }}</div>
+                    <div class="status">{{ value.status }}</div>
                 </div>
                 <!-- <video  autoPlay muted playsInline/>
                 <video  autoPlay muted playsInline/> -->
@@ -135,10 +136,7 @@ export default{
             mic_close: false,
             camera_close: false,
             sound_close: false,
-            wrapper_style: {
-                width: 'auto',
-                height: 'auto',
-            },
+            
 		};
     },
     
@@ -151,22 +149,7 @@ export default{
             console.log('streamAdd', stream);
 
             if(!stream.located()) {
-                this.$data.remotes.push({ member, stream }); // 都保存
 
-                // 主叫 立即订阅
-                if(this.call_role != 'callee' || this.call_status == 'talking') {
-                    this.sub_remotes();
-
-                    if(this.make_call_type == 'single') { // 单人模式，修改 title
-
-                        this.$data.call_status = 'talking';
-                        let { name } = this.$data.remotes[0].member;
-                        this.$data.title = '正在与'+name+'进行通话中'
-                    }
-                } else {
-                    this.$set(this.$data.members, [member.name], { status: 'callee'})
-                }
-                
                 let { name } = member;
                 let _arrs = name.split('_');
 
@@ -181,14 +164,43 @@ export default{
                         onClose: this.hangup
                     });
                 } else {
+                    this.update_members(uid, 'pubed', { stream ,member })
+
+                    if(this.$data.pushedStream) { // 已经发流，立即订阅
+                        this.sub_remotes()
+                    } else { // 保存流的信息
+                    }
+
                     // 订阅流
-                    let index = this.$data.waiting_invitees.indexOf(uid); 
-                    if(index > -1) { 
-                        this.$data.waiting_invitees.splice(index, 1);// 删除占位符
-                        clearTimeout(this.$data.invitee_attr_timers[uid]);
-                        this.check_mems()
-                    } 
+
+                    // let index = this.$data.waiting_invitees.indexOf(uid); 
+                    // if(index > -1) { 
+                    //     this.$data.waiting_invitees.splice(index, 1);// 删除占位符
+                    //     clearTimeout(this.$data.invitee_attr_timers[uid]);
+                    //     this.check_mems()
+                    // } 
                 }
+
+                // this.$data.remotes.push({ member, stream }); // 都保存
+
+                
+
+                // 主叫 立即订阅
+
+                // if(this.call_role != 'callee' || this.call_status == 'talking') {
+                //     this.sub_remotes();
+
+                //     if(this.make_call_type == 'single') { // 单人模式，修改 title
+
+                //         this.$data.call_status = 'talking';
+                //         let { name } = this.$data.remotes[0].member;
+                //         this.$data.title = '正在与'+name+'进行通话中'
+                //     }
+                // } else {
+                //     this.$set(this.$data.members, [member.name], { status: 'callee'})
+                // }
+                
+                
             }
 
         },
@@ -197,7 +209,7 @@ export default{
         },
         onMemberExited(member) {
             console.log('memberExited', member);
-            this.$delete(this.$data.members, [member.name])
+            // this.$delete(this.$data.members, [member.name])
             this.check_mems()
         },
         onConferenceExit(reason, failed) {
@@ -256,18 +268,16 @@ export default{
                         _this.show_calling();
                     } else {
 
-                        _this.$data.waiting_invitees.push(uid);
-                        
-                        _this.$set(_this.$data.members, [uid],{ status: 'waiting'})
+                        // _this.$data.waiting_invitees.push(uid);
+                        _this.update_members(uid)
 
                         // 设置被邀请方 超时定时器
                         _this.$data.invitee_attr_timers[uid] = setTimeout(() => {
-                            console.log('invitee timeout', uid);
+                            console.log('member invitee timeout', uid);
     
-                            let index = _this.$data.waiting_invitees.indexOf(uid); 
-                            if(index > -1) {// 超时删除邀请人员 会议属性 --- 所有人都能删
-                                _this.emedia.deleteConferenceAttrs({ key:'invitee_'+ uid, val: JSON.stringify({ status:'timeout' }) });
-                            }
+                            let member = _this.$data.members; 
+                            if(member) _this.emedia.deleteConferenceAttrs({ key:'invitee_'+ uid });// 超时删除邀请人员 会议属性 --- 所有人都能删
+                            
                         }, 30000)
 
                     }
@@ -277,6 +287,7 @@ export default{
             // 收到删除invitee 会议属性
             del_invitee_attrs.map(item => {
                 let uid = item.key.split('_')[1];
+
                 if(uid == _this.$data.user) { // 多端登录
                 
                     if(_this.$data.call_status != 'talking') {// 自己如果 talking, 则忽略(自己删除的会议属性)
@@ -286,28 +297,42 @@ export default{
                     }
                 } else { // 邀请的信息已处理或超时后的被删掉 会议属性
 
-                    if(item.val) {
-                        let val = JSON.parse(item.val);
-                        let msg = {
-                            'refuse': '对方已拒绝',
-                            'timeout': '对方忙',
-                            'busy': '对方正在通话中'
-                        }
+                    // if(item.val) {
+                    //     let val = JSON.parse(item.val);
+                    //     let msg = {
+                    //         'refuse': '对方已拒绝',
+                    //         'timeout': '对方忙',
+                    //         'busy': '对方正在通话中'
+                    //     }
 
-                        if(msg[val.status]) {
-                            _this.$message.error(msg[val.status]);
+                    //     if(msg[val.status]) {
+                    //         _this.$message.error(msg[val.status]);
+                    //         let ms = _this.$data.members;
+                    //         ms[uid] = Object.assign(ms[uid], { status: val.status});
 
-                            _this.$delete(_this.$data.members, [uid])
-                        }
+                    //         _this.$data.members = ms;
+                    //         // _this.$delete(_this.$data.members, [uid])
+                    //     }
+                    // }
+
+                    // let index = _this.$data.waiting_invitees.indexOf(uid); 
+                    // if(index > -1) { // 去除 等待邀请人员 -- 停止超时器
+
+                    //     _this.$data.waiting_invitees.splice(index, 1);// 删除占位符
+                        
+                    //     _this.check_mems()
+                    // } 
+
+
+                    // new logic
+                    clearTimeout(_this.$data.invitee_attr_timers[uid]); // 清除定时器
+
+                    let member = _this.$data.members[uid];
+                    if(member && member.status != 'subed') { // 没有发流 -- 删除占位符
+                        console.log('delete member because member refuse or timeout');
+                        _this.del_member(uid)
                     }
 
-                    let index = _this.$data.waiting_invitees.indexOf(uid); 
-                    if(index > -1) { // 去除 等待邀请人员 -- 停止超时器
-
-                        _this.$data.waiting_invitees.splice(index, 1);// 删除占位符
-                        clearTimeout(_this.$data.invitee_attr_timers[uid]);
-                        this.check_mems()
-                    } 
                 }
             })
 
@@ -339,8 +364,45 @@ export default{
             this.hangup()
         },
 
+        // 更新 members, 较为核心的方法
 
+        // add_member(key) { // 给 members 添加属性(qx.su), 并设置 status: waiting
+        //     this.$set(this.$data.members, key, { status: 'waiting'})
+        // },
+        update_members(key, status, val) {
+            console.log(`update_members key=${key}, status=${status}, val=${val}`);
+            /*
+            * key: 与会成员
+            * status: 变为了哪种状态， pubed | subed
+            *   pubed: 已经发流，还未订阅，应该有 stream
+            *   subed: 已经订阅 应该有 el(订阅流后的 video)
+            *  val: 有可能是{stream, member} | 订阅steam后的 video 标签
+            */ 
+           let member = this.$data.members[key];
 
+        //    if(!member) return;
+           if(!member) member = { status: 'waiting' };// 可能 是振铃状态
+
+            // if(status == 'waiting') member = 
+           if(status == 'pubed') {
+               member = {
+                   status: 'pubed',
+                    ...val
+               }
+           }
+           if(status == 'subed') {
+               member = {
+                   status: 'subed',
+                    el: val
+               }
+           }
+
+        //    this.$data.members[key] = member;
+            this.$set(this.$data.members, key, member)
+        },
+        del_member(key) { // 删除 members 属性[key]
+            this.$delete(this.$data.members, key)
+        },
 
           
         // 邀请他人
@@ -610,37 +672,35 @@ export default{
         }, 
         // 订阅对方流
         sub_remotes() {
-            let { remotes } = this.$data;
+            
 
-            // if(this.$data.make_call_type == 'single') {
-            //     let remote = remotes[0];
-            //     if( remote.member && remote.stream) {
-            //         this.emedia.subscribe(remote.member, remote.stream, true, true, this.$refs.remoteVideo)
-            //     }
-            // } else {
+            let { members } = this.$data;
+            let _uids = Object.keys(members);
 
-            // }
+            for (let key = 0; key < _uids.length; key++) {
+                let item = members[key];
+                if( !item.stream || !item.member) continue;
 
-            // 订阅，插入 DOM
-            remotes.map(item => {
                 let s = item.stream, m = item.member;
-                if( s && m ) {
-                    if(s.type != 1){ // 不是桌面流
-                       let el = document.createElement('video');
-                       el.autoplay = true;
-                       el.playsInline = true;
 
-                        this.emedia.subscribe(m, s, true, true, el)
+                let v_wrapper = document.querySelector(`.videos-wrapper .item-wrapper[id="${m.name}"]`);
+                
+                console.log('sub_remote v_wrapper', v_wrapper);
+                if( !v_wrapper ) continue;
 
-                        let p_node = document.querySelector(`.videos-wrapper .item-wrapper[id="${m.name}"]`);
-                        console.log('sub_remote p_node', p_node);
-                        p_node.appendChild(el)
-                    }
-                }
-            })
-            // 订阅完删除
+                // 订阅并 append
+                let el = document.createElement('video');
+                    el.autoplay = true, el.playsInline = true;
 
-            this.$data.remotes = [];
+                this.emedia.subscribe(m, s, true, true, el)
+
+                v_wrapper.appendChild(el);
+
+                this.update_members(key, 'subed', el)
+                
+            }
+            
+            
         },
         // 拒绝
         refuse() {
