@@ -10,7 +10,7 @@
             <!-- 单端通话 -->
             <div
                 class="videos-wrapper single"
-                v-if="make_call_type == 'single'"
+                v-if="callType == 0"
             >
 
                 <video ref='localVideo' autoPlay muted playsInline/>
@@ -28,6 +28,8 @@
             <div
                 class="videos-wrapper multi"
                 v-else
+                v-show="pushedStream"
+
             >
 
                 <div 
@@ -65,14 +67,20 @@
                     :class="{close: sound_close}"
                     type="sound" 
                     @click="controlSound"/>
+
+                <i 
+                    class="el-icon-circle-plus-outline font"
+                    @click="add_member_list_show"
+                ></i>
+                    <!-- v-if="callType == 1" -->
             </div>
 
             <i 
-                v-if="call_status == 'calling' && call_role != 'caller' "
+                v-if="!pushedStream && call_role != 'caller' "
                 class="el-icon-phone font accept"
                 @click="accept"></i>
             <i 
-                v-if="call_status == 'calling' && call_role != 'caller' " 
+                v-if="!pushedStream && call_role != 'caller' " 
                 class="el-icon-switch-button close" 
                 @click="refuse"></i>
             <i v-else class="el-icon-switch-button close" @click="hangup"></i>
@@ -102,10 +110,8 @@ export default{
             confr_info: null,
             join_info: null,
             pushedStream: null,
-            callType: 'video',
-            make_call_type: null, // 1v1 | 多人
-            // make_call_type: 'multi', // 1v1 | 多人
-
+            callType: null, // 1v1 | 多人
+            
             joined: false, // 是否在会议中， 在会议中则返回 忙碌
             remotes: [], // 需要订阅的流（发起方的流 -- 暂时先不订阅）
             call_role: null, // caller: 主叫，callee: 被叫
@@ -164,11 +170,10 @@ export default{
                         onClose: this.hangup
                     });
                 } else {
-                    this.update_members(uid, 'pubed', { stream ,member })
+                    this.update_members(uid, 'pubed', { stream ,member })// 保存流的信息
 
                     if(this.$data.pushedStream) { // 已经发流，立即订阅
                         this.sub_remotes()
-                    } else { // 保存流的信息
                     }
 
                     // 订阅流
@@ -209,7 +214,7 @@ export default{
         },
         onMemberExited(member) {
             console.log('memberExited', member);
-            // this.$delete(this.$data.members, [member.name])
+            this.del_member(member.name)
             this.check_mems()
         },
         onConferenceExit(reason, failed) {
@@ -331,6 +336,7 @@ export default{
                     if(member && member.status != 'subed') { // 没有发流 -- 删除占位符
                         console.log('delete member because member refuse or timeout');
                         _this.del_member(uid)
+                        _this.check_mems()
                     }
 
                 }
@@ -340,7 +346,11 @@ export default{
 
         // 检测会议中的人数
         check_mems() {
-            let { waiting_invitees } = this.$data;
+            let { members } = this.$data;
+
+            console.log('members', members);
+
+            if( Object.keys(members).length > 0 ) return;
 
             let _cacheMembers;
 
@@ -352,14 +362,11 @@ export default{
                 _cacheMembers = emedia.useCurrentXService.current._cacheMembers
             }
 
-            console.log('waiting_invitees', waiting_invitees);
-
-            if( waiting_invitees > 0 ) return;
 
             console.log('_cacheMembers', _cacheMembers);
             if(Object.keys(_cacheMembers).length > 0) return; // _cacheMembers 不包含自己的信息
 
-            if(this.$data.make_call_type == 'single' && this.$data.call_status == 'talking') this.$message.error('对方已挂断')
+            if(this.$data.callType == 0 && this.$data.call_status == 'talking') this.$message.error('对方已挂断')
             console.log('hangup only myself in meeting');
             this.hangup()
         },
@@ -405,15 +412,14 @@ export default{
         },
 
           
-        // 邀请他人
-        invite(make_call_type, tos, callType) {
+        // 邀请他人 暴露在外面
+        invite(tos, callType) {
             if(this.$data.visible) {
                 this.$message.warning('您正在通话中，请结束通话，再发起新的通话')
                 console.warn('you had meeting, not allowed make call');
                 return
             }
 
-            this.$data.make_call_type = make_call_type;
             this.$data.callType = callType;
             this.$data.visible = true;
 
@@ -464,24 +470,23 @@ export default{
         // 发起呼叫
         send_invite_msg(tos) {
 
-            let { confr_info, callType, make_call_type } = this.$data;
+            let { confr_info, callType } = this.$data;
             if(!confr_info) {
                 console.error('not have confr_info');
                 return
             }
 
-            let { confrId, password} = confr_info;
-
+            let { confrId, password: confrPwd } = confr_info;
             tos.map(item => {
 
                 let id = WebIM.conn.getUniqueId();    
                 let msg = new WebIM.message('txt', id);
                 
                 let set_options = {
-                        msg: 'invite call',
+                        msg: '邀请您进行通话',
                         to: item,                          
                         chatType: 'singleChat',
-                        ext: { confrId, password, callType, make_call_type },
+                        ext: { confrId, confrPwd, callType },
                         success: function (id, serverMsgId) {
                             console.log('send invite success',{id, serverMsgId});  
                         },                              
@@ -503,19 +508,39 @@ export default{
             console.log('call com onMsg', msg);
             if(msg.from == this.$data.user) return; //自己的另一端发送的
 
-            if(msg.data == 'call busy') { // 收到忙碌消息
-                let index = this.$data.waiting_invitees.indexOf(msg.from);
-                if(index > -1) {
-                    this.emedia.deleteConferenceAttrs({ 
-                        key:'invitee_'+msg.from,
-                        val: JSON.stringify({ status:'busy' }) 
-                    });
-                }
+
+            if(!msg.ext) {
+                console.log('not have msg.ext');
                 return
+            }
+
+            if(msg.ext.result == 'busy') { // 收到忙碌消息
+                // let index = this.$data.waiting_invitees.indexOf(msg.from);
+                // if(index > -1) {
+                //     this.emedia.deleteConferenceAttrs({ 
+                //         key:'invitee_'+msg.from,
+                //         val: JSON.stringify({ status:'busy' }) 
+                //     });
+                // }
+                if(
+                    this.$data.confr_info
+                    && msg.ext.confrId == this.$data.confr_info.confrId
+                ) {
+
+                    this.emedia.deleteConferenceAttrs({ key:'invitee_'+msg.from });
+                    return
+                }
             }
 
 
             // 收到 邀请通话 消息
+
+            //  邀请消息
+            let { confrId, confrPwd } = msg.ext;
+            if(!confrId || !confrPwd ) {
+                console.log('not have ext.confrId or password');
+                return
+            }
 
             if(this.$data.join_info) { // 正在会议中
                 console.warn('has jioned meeting');
@@ -525,7 +550,8 @@ export default{
                 let busy_msg = new WebIM.message('txt', id);   
 
                 let set_options = {
-                    msg: 'call busy',
+                    msg: '当前正在通话中',
+                    ext: { confrId, result: 'busy' },
                     to: msg.from,                          
                     chatType: 'singleChat',
                     success: function (id, serverMsgId) {
@@ -543,17 +569,6 @@ export default{
             }
 
 
-            if(!msg.ext) {
-                console.log('not have msg.ext');
-                return
-            }
-
-            let { confrId, password } = msg.ext;
-            if(!confrId || !password ) {
-                console.log('not have ext.confrId or password');
-                return
-            }
-
             this.invited_join(msg)
 
         },
@@ -561,9 +576,8 @@ export default{
         // 收到邀请，加入会议
         async invited_join(msg) {
 
-            this.$data.confr_info = { confrId: msg.ext.confrId, password: msg.ext.password };
+            this.$data.confr_info = { confrId: msg.ext.confrId, password: msg.ext.confrPwd };
             this.$data.callType = msg.ext.callType;
-            this.$data.make_call_type = msg.ext.make_call_type;
 
             try {
                 this.$data.call_role = 'callee';
@@ -595,7 +609,7 @@ export default{
             this.$data.wait_invite_cattr_timeout = false; clearTimeout(this.$data.wait_invite_cattr_timer);
             this.$data.call_status = 'calling';
 
-            if(this.$data.make_call_type == 'single') {
+            if(this.$data.callType == 0) {
                 if(
                     this.$data.call_role == 'callee' &&
                     this.$data.from
@@ -629,8 +643,9 @@ export default{
         },
 
         publish() {
-            let constraints = this.$data.callType == 'voice' ? 
-                                {audio: true, video:false} : {audio: true, video:true}
+            let constraints = {audio: true, video:true}; // 默认都是视频
+            // let constraints = this.$data.callType == 'voice' ? 
+            //                     {audio: true, video:false} : {audio: true, video:true}
 
 
             let _this = this;
@@ -677,8 +692,10 @@ export default{
             let { members } = this.$data;
             let _uids = Object.keys(members);
 
-            for (let key = 0; key < _uids.length; key++) {
-                let item = members[key];
+            for (let index = 0; index < _uids.length; index++) {
+                let key = _uids[index],
+                item = members[key];
+
                 if( !item.stream || !item.member) continue;
 
                 let s = item.stream, m = item.member;
@@ -805,13 +822,18 @@ export default{
             } else {
                 return "layout-1"
             }
+        },
+
+        //
+        add_member_list_show() {
+            console.log('this.$refs', this.$refs);
         }
     },
     watch: {
-        callType: function(val) {
-            if( this.$data.callType == 'voice') this.$data.camera_close = true;
+        // callType: function(val) {
+        //     if( this.$data.callType == 'voice') this.$data.camera_close = true;
 
-        }
+        // }
         
     },
 	components: {

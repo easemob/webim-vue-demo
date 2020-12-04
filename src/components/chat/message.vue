@@ -442,10 +442,9 @@ export default {
 
       if(this.type == "contact") {
         const val = this.$data.activedKey[this.type].name
-        this.$emit('EmediaModalFun','single', [val], 'video');
+        this.$emit('EmediaModalFun', [val], 0);
 
       } else if (this.type == "group") {
-          console.log('this.$data.activedKey[this.type]', this.$data.activedKey[this.type]);
         this.getGroupMembers(this.$data.activedKey[this.type].groupid);
         let _this = this;
         this.$refs.addAvMembertModal.show();
@@ -454,10 +453,10 @@ export default {
     },
     callVoice() {
       const val = this.$data.activedKey[this.type].name
-      this.$emit('EmediaModalFun','single', [val], 'voice');
+      this.$emit('EmediaModalFun', [val], 0);
     },
     start_multi(tos) { // 点击开始后的 开启多人会议
-        this.$emit('EmediaModalFun','multi', tos, 'video')
+        this.$emit('EmediaModalFun', tos, 1)
     },
     readablizeBytes(value) {
       let s = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
