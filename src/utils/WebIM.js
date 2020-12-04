@@ -19,7 +19,6 @@ WebIM = window.WebIM = websdk;
 WebIM.config = config;
 WebIM.conn = new WebIM.connection({
 	appKey: WebIM.config.appkey,
-	isHttpDNS: WebIM.config.isHttpDNS,
 	isMultiLoginSessions: WebIM.config.isMultiLoginSessions,
 	https: WebIM.config.https,
 	isAutoLogin: true,
@@ -27,7 +26,15 @@ WebIM.conn = new WebIM.connection({
 	autoReconnectNumMax: WebIM.config.autoReconnectNumMax,
 	autoReconnectInterval: WebIM.config.autoReconnectInterval,
 	isStropheLog: WebIM.config.isStropheLog,
-	delivery: WebIM.config.delivery
+	delivery: WebIM.config.delivery,
+
+	//公有云 isHttpDNS 默认配置为true
+	isHttpDNS: WebIM.config.isHttpDNS,
+
+	// 私有云设置，详细文档：http://docs-im.easemob.com/im/web/other/privatedeploy
+	// isHttpDNS: false,
+	// url: 'xxx', // 设置为私有云的websocket server url
+	// apiUrl: 'xxx' // 设置为私有云的rest server url
 });
 
 // 注册监听回调
