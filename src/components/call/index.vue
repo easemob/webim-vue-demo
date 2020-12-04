@@ -48,6 +48,8 @@
                 >
                     <div class="name">{{ key }}</div>
                     <div class="status">{{ value.status }}</div>
+                    <!-- 订阅过的 直接使用 el -->
+                    {{ value.el ? value.el : ''}}
                 </div>
                 <!-- <video  autoPlay muted playsInline/>
                 <video  autoPlay muted playsInline/> -->
@@ -70,7 +72,7 @@
 
                 <i 
                     class="el-icon-circle-plus-outline font"
-                    @click="add_member_list_show"
+                    @click="() => this.$emit('show_add_member_modal')"
                 ></i>
                     <!-- v-if="callType == 1" -->
             </div>
@@ -152,9 +154,9 @@ export default{
 
         // 开始实现 
         onStreamAdded(member,stream) {
-            console.log('streamAdd', stream);
-
+            
             if(!stream.located()) {
+                console.log('[Call Component]  streamAdd', stream);
 
                 let { name } = member;
                 let _arrs = name.split('_');
@@ -162,7 +164,7 @@ export default{
                 let uid = _arrs[_arrs.length-1];
 
                 if(uid == this.$data.user) { // 收到相同用户发流
-                    console.log('hangup onStreamAdded uid == this.$data.user');
+                    console.log('[Call Component]  hangup onStreamAdded uid == this.$data.user');
                     this.$message({
                         message: '已在其他设备处理',
                         type: 'warning',
@@ -176,44 +178,17 @@ export default{
                         this.sub_remotes()
                     }
 
-                    // 订阅流
-
-                    // let index = this.$data.waiting_invitees.indexOf(uid); 
-                    // if(index > -1) { 
-                    //     this.$data.waiting_invitees.splice(index, 1);// 删除占位符
-                    //     clearTimeout(this.$data.invitee_attr_timers[uid]);
-                    //     this.check_mems()
-                    // } 
                 }
 
-                // this.$data.remotes.push({ member, stream }); // 都保存
-
-                
-
-                // 主叫 立即订阅
-
-                // if(this.call_role != 'callee' || this.call_status == 'talking') {
-                //     this.sub_remotes();
-
-                //     if(this.make_call_type == 'single') { // 单人模式，修改 title
-
-                //         this.$data.call_status = 'talking';
-                //         let { name } = this.$data.remotes[0].member;
-                //         this.$data.title = '正在与'+name+'进行通话中'
-                //     }
-                // } else {
-                //     this.$set(this.$data.members, [member.name], { status: 'callee'})
-                // }
-                
                 
             }
 
         },
         onMemberJoined(member) {
-            console.log('memberAdd', member);
+            console.log('[Call Component]  memberAdd', member);
         },
         onMemberExited(member) {
-            console.log('memberExited', member);
+            console.log('[Call Component]  memberExited', member);
             this.del_member(member.name)
             this.check_mems()
         },
@@ -231,7 +206,7 @@ export default{
                 12: "被踢出了会议"
             }
 
-            console.log('onConferenceExit', reason);
+            console.log('[Call Component]  onConferenceExit', reason);
             if(reason == 12 || reason == 10) {
                 this.$message({
                     message: '已在其他设备处理',
@@ -242,7 +217,7 @@ export default{
             }
         },
         onConfrAttrsUpdated(confr_attrs){ 
-            console.log('onConfrAttrsUpdated', JSON.stringify(confr_attrs));
+            console.log('[Call Component]  onConfrAttrsUpdated', JSON.stringify(confr_attrs));
 
             // 区分是否是自己的 uid,以此判断 是主叫还是被叫
             let invitee_attrs = confr_attrs
@@ -252,8 +227,8 @@ export default{
                                 .filter(item => (item.key.indexOf('invitee_') > -1 && item.op == "DEL"));
 
 
-            if (invitee_attrs.length > 0) console.log('invitee_attrs', JSON.stringify(invitee_attrs));
-            if (del_invitee_attrs.length > 0) console.log('del_invitee_attrs', JSON.stringify(del_invitee_attrs));
+            if (invitee_attrs.length > 0) console.log('[Call Component]  invitee_attrs', JSON.stringify(invitee_attrs));
+            if (del_invitee_attrs.length > 0) console.log('[Call Component]  del_invitee_attrs', JSON.stringify(del_invitee_attrs));
 
 
 
@@ -278,7 +253,7 @@ export default{
 
                         // 设置被邀请方 超时定时器
                         _this.$data.invitee_attr_timers[uid] = setTimeout(() => {
-                            console.log('member invitee timeout', uid);
+                            console.log('[Call Component]  member invitee timeout', uid);
     
                             let member = _this.$data.members; 
                             if(member) _this.emedia.deleteConferenceAttrs({ key:'invitee_'+ uid });// 超时删除邀请人员 会议属性 --- 所有人都能删
@@ -296,45 +271,19 @@ export default{
                 if(uid == _this.$data.user) { // 多端登录
                 
                     if(_this.$data.call_status != 'talking') {// 自己如果 talking, 则忽略(自己删除的会议属性)
-                        console.log('hangup del_invitee_attrs != talking');
+                        console.log('[Call Component]  hangup del_invitee_attrs != talking');
 
                         _this.hangup()
                     }
                 } else { // 邀请的信息已处理或超时后的被删掉 会议属性
 
-                    // if(item.val) {
-                    //     let val = JSON.parse(item.val);
-                    //     let msg = {
-                    //         'refuse': '对方已拒绝',
-                    //         'timeout': '对方忙',
-                    //         'busy': '对方正在通话中'
-                    //     }
-
-                    //     if(msg[val.status]) {
-                    //         _this.$message.error(msg[val.status]);
-                    //         let ms = _this.$data.members;
-                    //         ms[uid] = Object.assign(ms[uid], { status: val.status});
-
-                    //         _this.$data.members = ms;
-                    //         // _this.$delete(_this.$data.members, [uid])
-                    //     }
-                    // }
-
-                    // let index = _this.$data.waiting_invitees.indexOf(uid); 
-                    // if(index > -1) { // 去除 等待邀请人员 -- 停止超时器
-
-                    //     _this.$data.waiting_invitees.splice(index, 1);// 删除占位符
-                        
-                    //     _this.check_mems()
-                    // } 
-
-
-                    // new logic
                     clearTimeout(_this.$data.invitee_attr_timers[uid]); // 清除定时器
 
                     let member = _this.$data.members[uid];
-                    if(member && member.status != 'subed') { // 没有发流 -- 删除占位符
-                        console.log('delete member because member refuse or timeout');
+                    console.log('[Call Component]  del_invitee_attrs map member='+uid, JSON.stringify(member));
+
+                    if(member && member.status == 'calling') { // 没有发流或者没被订阅 -- 删除占位符
+                        console.log('[Call Component]  delete member because member refuse or timeout');
                         _this.del_member(uid)
                         _this.check_mems()
                     }
@@ -348,7 +297,7 @@ export default{
         check_mems() {
             let { members } = this.$data;
 
-            console.log('members', members);
+            console.log('[Call Component]  members', members);
 
             if( Object.keys(members).length > 0 ) return;
 
@@ -363,11 +312,11 @@ export default{
             }
 
 
-            console.log('_cacheMembers', _cacheMembers);
+            console.log('[Call Component]  _cacheMembers', _cacheMembers);
             if(Object.keys(_cacheMembers).length > 0) return; // _cacheMembers 不包含自己的信息
 
             if(this.$data.callType == 0 && this.$data.call_status == 'talking') this.$message.error('对方已挂断')
-            console.log('hangup only myself in meeting');
+            console.log('[Call Component]  hangup only myself in meeting');
             this.hangup()
         },
 
@@ -414,7 +363,7 @@ export default{
           
         // 邀请他人 暴露在外面
         invite(tos, callType) {
-            if(this.$data.visible) {
+            if(this.$data.visible && this.$data.callType == 0) { // 1v1 不可再发起通话
                 this.$message.warning('您正在通话中，请结束通话，再发起新的通话')
                 console.warn('you had meeting, not allowed make call');
                 return
@@ -427,23 +376,14 @@ export default{
             let _this = this;
             (async ()=> {
                 try {
-                    await _this.ready_call();
+                    if(!_this.$data.pushedStream) await _this.ready_call();
                     
                     _this.$data.title = '正在等待对方接收邀请...';
                     
-                    let { confrId } = _this.$data.confr_info; // 设置一条占位会议属性
-                    _this.emedia.setConferenceAttrs({ key: 'confrId', val: confrId });
-
-                    tos.map(item => {
-                        _this.emedia.setConferenceAttrs({ key: 'invitee_' + item, val: JSON.stringify({ status:'calling' }) })
-                    })
-
-                    const send_result = await this.send_invite_msg(tos);
-                    console.log('send_result', send_result);
-
+                    this.send_invite_msg(tos);
                     
                 } catch (error) {
-                    console.log('hangup 发起呼叫失败，请重新发起');
+                    console.log('[Call Component]  hangup 发起呼叫失败，请重新发起');
 
                     _this.hangup();
 
@@ -465,9 +405,11 @@ export default{
 
             await this.publish()
             
+            let { confrId } = this.$data.confr_info; // 设置一条占位会议属性
+            this.emedia.setConferenceAttrs({ key: 'confrId', val: confrId });
 
         },
-        // 发起呼叫
+        // 发送邀请消息 
         send_invite_msg(tos) {
 
             let { confr_info, callType } = this.$data;
@@ -479,24 +421,29 @@ export default{
             let { confrId, password: confrPwd } = confr_info;
             tos.map(item => {
 
-                let id = WebIM.conn.getUniqueId();    
-                let msg = new WebIM.message('txt', id);
-                
-                let set_options = {
-                        msg: '邀请您进行通话',
-                        to: item,                          
-                        chatType: 'singleChat',
-                        ext: { confrId, confrPwd, callType },
-                        success: function (id, serverMsgId) {
-                            console.log('send invite success',{id, serverMsgId});  
-                        },                              
-                        fail: function(e){
-                            console.error("Send invite error");  
-                        }   
-                    }
-    
-                msg.set(set_options);
-                WebIM.conn.send(msg.body);
+                if(!this.$data.members[item]) { // 已经在会议中的不再邀请
+
+                    this.emedia.setConferenceAttrs({ key: 'invitee_' + item, val: JSON.stringify({ status:'calling' }) })
+
+                    let id = WebIM.conn.getUniqueId();    
+                    let msg = new WebIM.message('txt', id);
+                    
+                    let set_options = {
+                            msg: '邀请您进行通话',
+                            to: item,                          
+                            chatType: 'singleChat',
+                            ext: { confrId, confrPwd, callType },
+                            success: function (id, serverMsgId) {
+                                console.log('[Call Component]  send invite success',{id, serverMsgId});  
+                            },                              
+                            fail: function(e){
+                                console.error("Send invite error");  
+                            }   
+                        }
+        
+                    msg.set(set_options);
+                    WebIM.conn.send(msg.body);
+                }
                 
             })
 
@@ -505,12 +452,12 @@ export default{
         
         // 整个程序收到消息 判断是否请求通话
         receivedMsg(msg) {
-            console.log('call com onMsg', msg);
+            console.log('[Call Component]  call com onMsg', msg);
             if(msg.from == this.$data.user) return; //自己的另一端发送的
 
 
             if(!msg.ext) {
-                console.log('not have msg.ext');
+                console.log('[Call Component]  not have msg.ext');
                 return
             }
 
@@ -538,7 +485,7 @@ export default{
             //  邀请消息
             let { confrId, confrPwd } = msg.ext;
             if(!confrId || !confrPwd ) {
-                console.log('not have ext.confrId or password');
+                console.log('[Call Component]  not have ext.confrId or password');
                 return
             }
 
@@ -555,7 +502,7 @@ export default{
                     to: msg.from,                          
                     chatType: 'singleChat',
                     success: function (id, serverMsgId) {
-                        console.log('send busy msg success'); 
+                        console.log('[Call Component]  send busy msg success'); 
                     },                              
                     fail: function(e){
                         console.error("Send busy msg error", e);  
@@ -590,7 +537,7 @@ export default{
                 this.$data.wait_invite_cattr_timer = setTimeout(() => {
                     // 5s 后还没收到 邀请自己的会议属性 退出会议
                     if(this.$data.wait_invite_cattr_timeout) {
-                        console.log('hangup 5s 后还没收到 邀请自己的会议属性 退出会议');
+                        console.log('[Call Component]  hangup 5s 后还没收到 邀请自己的会议属性 退出会议');
                         this.hangup()
                     }
                 }, 5000)
@@ -702,7 +649,7 @@ export default{
 
                 let v_wrapper = document.querySelector(`.videos-wrapper .item-wrapper[id="${m.name}"]`);
                 
-                console.log('sub_remote v_wrapper', v_wrapper);
+                console.log('[Call Component]  sub_remote v_wrapper', v_wrapper);
                 if( !v_wrapper ) continue;
 
                 // 订阅并 append
@@ -727,7 +674,7 @@ export default{
                 success: this.hangup,
                 error: this.hangup
             });
-            console.log('hangup 拒绝');
+            console.log('[Call Component]  hangup 拒绝');
             this.$data.visible = false
         },
         // 挂断
@@ -824,10 +771,6 @@ export default{
             }
         },
 
-        //
-        add_member_list_show() {
-            console.log('this.$refs', this.$refs);
-        }
     },
     watch: {
         // callType: function(val) {
@@ -841,7 +784,7 @@ export default{
     },
     
 	mounted(){
-        console.log('WebIm', WebIM);
+        console.log('[Call Component]  WebIm', WebIM);
 
         this.emedia = WebIM.EMService; // 多人会议 SDK --- 不包含 1v1
         emedia.config({ // 取全局 window.emedia
@@ -859,7 +802,7 @@ export default{
         // 页面刷新 退出会议
         let _this = this;
         window.onbeforeunload = () => {
-            console.log('onbeforeunload');
+            console.log('[Call Component]  onbeforeunload');
             _this.hangup()
         }
 

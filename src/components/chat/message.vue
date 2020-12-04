@@ -146,9 +146,9 @@
       </div>
     </div>
     <GetGroupInfo ref="groupInfoModel" @closeGroupMessage="closeGroupMessage" />
-    <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" @start="start_multi"/>
 
     <!-- fix 移动到全局 -->
+    <!-- <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" @start="start_multi"/> -->
     <!-- <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState" /> -->
     <!-- <MultiAVModal :to="activedKey[type]" /> -->
   </div>
@@ -165,7 +165,6 @@ import { mapActions, mapGetters } from "vuex";
 
 import moment from "moment";
 import _ from "lodash";
-import AddAVMemberModal from "../emediaModal/addAVMemberModal";
 // import MultiAVModal from "../emediaModal/multiAVModal";
 // import EmediaModal from "../emediaModal/index";
 import GetGroupInfo from "../group/groupInfo.vue";
@@ -447,7 +446,7 @@ export default {
       } else if (this.type == "group") {
         this.getGroupMembers(this.$data.activedKey[this.type].groupid);
         let _this = this;
-        this.$refs.addAvMembertModal.show();
+        this.$emit('show_add_member_modal')
 
       }
     },
@@ -455,9 +454,7 @@ export default {
       const val = this.$data.activedKey[this.type].name
       this.$emit('EmediaModalFun', [val], 0);
     },
-    start_multi(tos) { // 点击开始后的 开启多人会议
-        this.$emit('EmediaModalFun', tos, 1)
-    },
+    
     readablizeBytes(value) {
       let s = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
       let e = Math.floor(Math.log(value) / Math.log(1024));
@@ -523,12 +520,12 @@ export default {
     // }
   },
   components: {
-    AddAVMemberModal,
-    ChatEmoji,
+      ChatEmoji,
     UpLoadImage,
     UpLoadFile,
     GetGroupInfo,
     RecordAudio,
+    // AddAVMemberModal,
     // MultiAVModal,
     // EmediaModal,
   }

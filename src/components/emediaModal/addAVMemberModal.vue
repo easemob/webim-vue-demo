@@ -84,7 +84,8 @@ export default{
 		},
 		startConference(){
             let invitees = this.$data.checkList.filter(item => item != this.$data.username)
-            this.$emit('start', invitees);
+            this.$emit('EmediaModalFun', invitees, 1) // 点击开始后的 开启多人会议
+            
             this.hide();
             // this.action_callback(this.$data.checkList);
 			// this.$emit('EmediaModalFun','multi', this.$data.checkList, 'video');
