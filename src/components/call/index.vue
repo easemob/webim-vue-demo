@@ -18,9 +18,9 @@
                     class="item-wrapper locals"
                     v-for="(value, key, index) in members"
                     :key='index'
+                    :id='key'
                 >
                     <div class="name">{{key}}</div>
-                    <!-- <video ref='remoteVideo' autoPlay playsInline /> -->
                 </div>
             </div>
 
@@ -73,8 +73,8 @@
                 <i 
                     class="el-icon-circle-plus-outline font"
                     @click="() => this.$emit('show_add_member_modal')"
+                    v-if="callType == 1"
                 ></i>
-                    <!-- v-if="callType == 1" -->
             </div>
 
             <i 
@@ -85,7 +85,7 @@
                 v-if="!pushedStream && call_role != 'caller' " 
                 class="el-icon-switch-button close" 
                 @click="refuse"></i>
-            <i v-else class="el-icon-switch-button close" @click="hangup"></i>
+            <i v-else class="el-icon-switch-button close" @click="hangupHandler"></i>
 
         </div>
 
@@ -127,15 +127,7 @@ export default{
                 // 'qx.su.3': { status: 'waiting'},
                 // 'qx.su.4': { status: 'waiting'},
             }, // 会议中成员 包括订阅成功的，和正在邀请的
-            // member: {
-            //     'qx.su': {
-            //         status: 'waiting'
-            //     },
-            //     'qx.su.2': {
-            //         status: 'subed', // 订阅成功. 超时的或着挂断的 会被删除
-            //         el: '<video><video/>'// 已经订阅成功的 video 标签，但是只能使用 原生js appendChild
-            //     }
-            // }
+            
             invitee_attr_timers: {}, //会议属性等待开启定时
 
             // 与 UI紧关联
@@ -144,7 +136,7 @@ export default{
             mic_close: false,
             camera_close: false,
             sound_close: false,
-            
+            is_hangup: undefined
 		};
     },
     
@@ -191,10 +183,16 @@ export default{
             console.log('[Call Component]  memberAdd', member);
         },
         onMemberExited(member, reason) {
+            if(this.$data.is_hangup) return;
             console.log('[Call Component]  memberExited', member, reason);
             if(reason != 10){ // 10: 其他端发流，不处理
 
-                this.del_member(member.name)
+                if(this.$data.callType == 0) {
+                    let item = this.$data.members[member.name];
+                    if(item && item.status != 'waiting') this.$message.error('对方已挂断')
+                }
+
+                this.del_member(member.name);
                 this.check_mems()
             }
         },
@@ -290,6 +288,7 @@ export default{
 
                     if(member && member.status == 'waiting') { // 没有发流或者没被订阅 -- 删除占位符
                         console.log('[Call Component]  delete member because member refuse or timeout');
+                        if(_this.$data.callType == 0) _this.$message.error('对方已拒绝')
                         _this.del_member(uid)
                         _this.check_mems()
                     }
@@ -307,21 +306,21 @@ export default{
 
             if( Object.keys(members).length > 0 ) return;
 
-            let _cacheMembers;
+            // let _cacheMembers;
 
-            if(
-                emedia.useCurrentXService 
-                && emedia.useCurrentXService.current
-                && emedia.useCurrentXService.current._cacheMembers
-            ) {
-                _cacheMembers = emedia.useCurrentXService.current._cacheMembers
-            }
+            // if(
+            //     emedia.useCurrentXService 
+            //     && emedia.useCurrentXService.current
+            //     && emedia.useCurrentXService.current._cacheMembers
+            // ) {
+            //     _cacheMembers = emedia.useCurrentXService.current._cacheMembers
+            // }
 
 
-            console.log('[Call Component]  _cacheMembers', _cacheMembers);
-            if(Object.keys(_cacheMembers).length > 0) return; // _cacheMembers 不包含自己的信息
+            // console.log('[Call Component]  _cacheMembers', _cacheMembers);
+            // if(Object.keys(_cacheMembers).length > 0) return; // _cacheMembers 不包含自己的信息
 
-            if(this.$data.callType == 0 && this.$data.call_status == 'talking') this.$message.error('对方已挂断')
+
             console.log('[Call Component]  hangup only myself in meeting');
             this.hangup()
         },
@@ -701,9 +700,9 @@ export default{
         },
         // 拒绝
         refuse() {
+            this.$data.is_hangup = true;
             this.emedia.deleteConferenceAttrs({ 
                 key:'invitee_'+this.$data.user,
-                val: JSON.stringify({ status: 'refuse'}),
                 success: this.hangup,
                 error: this.hangup
             });
@@ -711,10 +710,13 @@ export default{
             this.$data.visible = false
         },
         // 挂断
+        hangupHandler() { // 手动操作 挂断按钮
+            this.$data.is_hangup = true;
+            this.hangup()
+        },
         hangup() { // 多种情况会触发 挂断
-            
             this.emedia.exitConference();
-            this.reset()
+            this.reset();
         },
 
         _destroy() {
@@ -729,7 +731,7 @@ export default{
         // 重置
         reset() {
 
-
+            // 清除定时器
             for (const key in this.$data.invitee_attr_timers) {
                 let timer = this.$data.invitee_attr_timers[key];
 
@@ -830,6 +832,7 @@ export default{
         this.emedia.onMemberJoined = this.onMemberJoined; // 有人加入
         this.emedia.onMemberExited = this.onMemberExited; // 有人加入
         this.emedia.onStreamAdded = this.onStreamAdded; // 有流加入
+        this.emedia.onStreamRemoved = this.onStreamRemoved; // 有流退出
         this.emedia.onConferenceExit = this.onConferenceExit; // 退出会议
         this.emedia.onConfrAttrsUpdated = this.onConfrAttrsUpdated; // 会议属性变更
 
