@@ -184,13 +184,19 @@ export default{
             }
 
         },
+        onStreamRemoved(member, stream) {
+
+        },
         onMemberJoined(member) {
             console.log('[Call Component]  memberAdd', member);
         },
-        onMemberExited(member) {
-            console.log('[Call Component]  memberExited', member);
-            this.del_member(member.name)
-            this.check_mems()
+        onMemberExited(member, reason) {
+            console.log('[Call Component]  memberExited', member, reason);
+            if(reason != 10){ // 10: 其他端发流，不处理
+
+                this.del_member(member.name)
+                this.check_mems()
+            }
         },
         onConferenceExit(reason, failed) {
             let reasons = {
@@ -646,8 +652,7 @@ export default{
                     _this.$data.call_status = 'talking';
 
                     _this.emedia.deleteConferenceAttrs({ 
-                        key:'invitee_'+_this.$data.user,
-                        val: JSON.stringify({ status:'accept' }) 
+                        key:'invitee_'+_this.$data.user
                     });
 
                     _this.sub_remotes()
@@ -730,6 +735,8 @@ export default{
 
                 clearTimeout(timer)
             }
+
+            clearTimeout(this.$data.wait_invite_cattr_timer);
 
             Object.assign(this.$data, 
                             this.$options.data(), 
