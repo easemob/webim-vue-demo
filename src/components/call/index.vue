@@ -15,7 +15,7 @@
 
                 <video ref='localVideo' autoPlay muted playsInline/>
                 <div 
-                    class="item-wrapper"
+                    class="item-wrapper locals"
                     v-for="(value, key, index) in members"
                     :key='index'
                 >
@@ -40,7 +40,7 @@
                     <video ref='localVideo' autoPlay muted playsInline/>
                 </div>
                 <div 
-                    class="item-wrapper"
+                    class="item-wrapper locals"
                     :class="computed_layout()" 
                     v-for="(value, key, index) in members"
                     :key='index'
@@ -49,7 +49,7 @@
                     <div class="name">{{ key }}</div>
                     <div class="status">{{ value.status }}</div>
                     <!-- 订阅过的 直接使用 el -->
-                    {{ value.el ? value.el : ''}}
+                    <!-- {{ value.el ? value.el : ''}} -->
                 </div>
                 <!-- <video  autoPlay muted playsInline/>
                 <video  autoPlay muted playsInline/> -->
@@ -282,7 +282,7 @@ export default{
                     let member = _this.$data.members[uid];
                     console.log('[Call Component]  del_invitee_attrs map member='+uid, JSON.stringify(member));
 
-                    if(member && member.status == 'calling') { // 没有发流或者没被订阅 -- 删除占位符
+                    if(member && member.status == 'waiting') { // 没有发流或者没被订阅 -- 删除占位符
                         console.log('[Call Component]  delete member because member refuse or timeout');
                         _this.del_member(uid)
                         _this.check_mems()
@@ -357,9 +357,37 @@ export default{
             this.$set(this.$data.members, key, member)
         },
         del_member(key) { // 删除 members 属性[key]
-            this.$delete(this.$data.members, key)
-        },
+            this.$delete(this.$data.members, key);
 
+            this.$nextTick(() => {
+                this.clear_v_el();
+                this.add_v_el()
+                
+            })
+            
+        },
+        // 清空 video
+        clear_v_el() {
+            let v_els = document.querySelectorAll('.videos-wrapper .locals video');
+            console.log('clear_v_el', v_els);
+
+            for(var i = v_els.length - 1; i >= 0; i--) { 
+                let v_el = v_els[i];
+                v_el.parentNode.removeChild(v_el);
+            }
+        },
+        // 重新注入 video
+        add_v_el() {
+            let { members } = this.$data;
+
+            for (const key in members) {
+                let item = members[key];
+
+                let v_wrapper = document.querySelector(`.videos-wrapper .locals[id="${key}"]`);
+                console.log(`add_v_el v_wrapper = ${v_wrapper}, item.el = ${item.el}, key=${key}`);
+                if(v_wrapper && item.el) v_wrapper.appendChild(item.el) 
+            }
+        },
           
         // 邀请他人 暴露在外面
         invite(tos, callType) {
