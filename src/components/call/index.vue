@@ -11,6 +11,7 @@
             <div
                 class="videos-wrapper single"
                 v-if="callType == 0"
+                v-show="pushedStream"
             >
 
                 <video ref='localVideo' autoPlay muted playsInline/>
@@ -48,11 +49,9 @@
                 >
                     <div class="name">{{ key }}</div>
                     <div class="status">{{ value.status }}</div>
-                    <!-- 订阅过的 直接使用 el -->
-                    <!-- {{ value.el ? value.el : ''}} -->
+                    
                 </div>
-                <!-- <video  autoPlay muted playsInline/>
-                <video  autoPlay muted playsInline/> -->
+                
             </div>
 
             <div class="media-action-wrapper" v-if="pushedStream">
@@ -261,7 +260,7 @@ export default{
     
                             let member = _this.$data.members; 
                             if(member) _this.emedia.deleteConferenceAttrs({ key:'invitee_'+ uid });// 超时删除邀请人员 会议属性 --- 所有人都能删
-                            
+                            if(_this.callType == 0) _this.update_members(uid, 'timeout') // 1v1
                         }, 30000)
 
                     }
@@ -286,12 +285,18 @@ export default{
                     let member = _this.$data.members[uid];
                     console.log('[Call Component]  del_invitee_attrs map member='+uid, JSON.stringify(member));
 
-                    if(member && member.status == 'waiting') { // 没有发流或者没被订阅 -- 删除占位符
-                        console.log('[Call Component]  delete member because member refuse or timeout');
-                        if(_this.$data.callType == 0) _this.$message.error('对方已拒绝')
-                        _this.del_member(uid)
-                        _this.check_mems()
+                    if(member ) { // 没有发流或者没被订阅 -- 删除占位符
+                        if(member.status == 'waiting' || member.status == 'timeout') {
+                            console.log('[Call Component]  delete member because member refuse or timeout');
+
+                            if(_this.$data.callType == 0) {
+                                _this.$message.error(member.status == 'waiting'?'对方已拒绝': '对方忙')
+                            }
+                            _this.del_member(uid)
+                            _this.check_mems()
+                        }
                     }
+
 
                 }
             })
@@ -355,6 +360,11 @@ export default{
                member = {
                    status: 'subed',
                     el: val
+               }
+           }
+           if(status == 'timeout') {
+               member = {
+                   status: 'timeout'
                }
            }
 
