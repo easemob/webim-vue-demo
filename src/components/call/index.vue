@@ -285,7 +285,7 @@ export default{
                     let member = _this.$data.members[uid];
                     console.log('[Call Component]  del_invitee_attrs map member='+uid, JSON.stringify(member));
 
-                    if(member ) { // 没有发流或者没被订阅 -- 删除占位符
+                    if(member) { // 没有发流或者没被订阅 -- 删除占位符
                         if(member.status == 'waiting' || member.status == 'timeout') {
                             console.log('[Call Component]  delete member because member refuse or timeout');
 
@@ -310,21 +310,6 @@ export default{
             console.log('[Call Component]  members', members);
 
             if( Object.keys(members).length > 0 ) return;
-
-            // let _cacheMembers;
-
-            // if(
-            //     emedia.useCurrentXService 
-            //     && emedia.useCurrentXService.current
-            //     && emedia.useCurrentXService.current._cacheMembers
-            // ) {
-            //     _cacheMembers = emedia.useCurrentXService.current._cacheMembers
-            // }
-
-
-            // console.log('[Call Component]  _cacheMembers', _cacheMembers);
-            // if(Object.keys(_cacheMembers).length > 0) return; // _cacheMembers 不包含自己的信息
-
 
             console.log('[Call Component]  hangup only myself in meeting');
             this.hangup()
@@ -752,9 +737,8 @@ export default{
 
             Object.assign(this.$data, 
                             this.$options.data(), 
-                            { os:this.$data.os, wrapper_style: this.$data.wrapper_style}
-                        ) // os、wrapper_style 不重置
-            emedia.mgr.catrrs=[]; // 无法更新 SDK，临时改一下
+                            { os:this.$data.os }
+                        ) // os 不重置
 
             // if(process.env.NODE_ENV == 'development') console.clear();
         },
@@ -833,7 +817,7 @@ export default{
 	mounted(){
         console.log('[Call Component]  WebIm', WebIM);
 
-        this.emedia = WebIM.EMService; // 多人会议 SDK --- 不包含 1v1
+        this.emedia = WebIM.WebRTC.emedia.mgr; // 多人会议 SDK --- 不包含 1v1
         emedia.config({ // 取全局 window.emedia
             restPrefix: 'https://a1.easemob.com'
         })
