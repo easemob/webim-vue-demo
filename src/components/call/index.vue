@@ -22,6 +22,11 @@
                     :id='key'
                 >
                     <div class="name">{{key}}</div>
+                    <div class="waiting-icon" v-if="value.status == 'waiting'">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
                 </div>
             </div>
 
@@ -30,7 +35,6 @@
                 class="videos-wrapper multi"
                 v-else
                 v-show="pushedStream"
-
             >
 
                 <div 
@@ -173,6 +177,13 @@ export default{
                         this.sub_remotes()
                     }
 
+                    // 修改 title 1v1
+                    if(
+                        this.$data.callType == 0
+                        && this.$data.call_role != 'callee'
+                    ) {
+                        this.$data.title = '正在与'+(name || '对方')+'进行通话中'
+                    }
                 }
 
                 
@@ -408,15 +419,13 @@ export default{
             let _this = this;
             (async ()=> {
                 try {
-                    if(!_this.$data.pushedStream) await _this.ready_call();
-                    
                     _this.$data.title = '正在等待对方接收邀请...';
+
+                    if(!_this.$data.pushedStream) await _this.ready_call(); // 再邀请时，不再重新推流
                     
                     this.send_invite_msg(tos);
                     
                 } catch (error) {
-                    console.log('[Call Component]  hangup 发起呼叫失败，请重新发起');
-
                     _this.hangup();
 
                     console.error('invite error', error);
@@ -653,8 +662,8 @@ export default{
                     _this.$message.error('接听失败，请重新接听');
                 }
 
-                // let { name } = _this.$data.remotes[0].member;
-                // _this.$data.title = '正在与'+name+'进行通话中'
+                let name = Object.keys(_this.$data.members)[0];
+                _this.$data.title = '正在与'+(name || '对方')+'进行通话中'
             })()
         }, 
         // 订阅对方流
