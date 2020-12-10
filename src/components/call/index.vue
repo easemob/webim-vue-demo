@@ -48,7 +48,11 @@
                     :id='key'
                 >
                     <div class="name">{{ key }}</div>
-                    <div class="status">{{ value.status }}</div>
+                    <div class="waiting-icon" v-if="value.status == 'waiting'">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
                     
                 </div>
                 
@@ -490,13 +494,7 @@ export default{
             }
 
             if(msg.ext.result == 'busy') { // 收到忙碌消息
-                // let index = this.$data.waiting_invitees.indexOf(msg.from);
-                // if(index > -1) {
-                //     this.emedia.deleteConferenceAttrs({ 
-                //         key:'invitee_'+msg.from,
-                //         val: JSON.stringify({ status:'busy' }) 
-                //     });
-                // }
+            
                 if(
                     this.$data.confr_info
                     && msg.ext.confrId == this.$data.confr_info.confrId

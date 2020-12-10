@@ -38,8 +38,53 @@
             left: 0;
             width: 100%;
             z-index: 1;
-            color: #fff;
+            color: #000;
             line-height: 20px;
+        }
+        .waiting-icon {
+
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            transform: translate(-50%, -50%);
+
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            
+            span {
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+                border-radius: 12px;
+                // margin-right: 10px;
+                background: #dadada;
+            }
+
+            span:first-child {
+                animation: first 1.5s infinite;
+            }
+            span:nth-child(2) {
+                animation: first 1.5s infinite .5s;
+            }
+            span:nth-child(3) {
+                animation: first 1.5s infinite 1s;
+            }
+        }
+
+        // loading 动画
+        @keyframes first {
+              0% {
+                transform: scale(1) translateX(0);
+              }
+              25% {
+                transform: scale(1.7) translateX(0);
+              }
+              
+              100% {
+                transform: scale(1) translateX(0);
+              }
         }
         .status {
             position: absolute;
@@ -73,8 +118,9 @@
     }
 
     .multi > .item-wrapper {
-        background: #dadada;
+        background: #fff;
         position: relative;
+        box-shadow:2px 2px 3px #aaaaaa;
     }
 
     .layout-1 {
