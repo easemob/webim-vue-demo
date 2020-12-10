@@ -4,8 +4,7 @@
             class="call-wrapper PC"
         >
 
-            <div v-if="groupname" class="title">{{groupname}}</div>
-            <div v-else class="title">{{title}}</div>
+            <div class="title">{{title + ' ' + duration}}</div>
 
             <!-- 单端通话 -->
             <div
@@ -104,7 +103,7 @@ import "./index.less";
 import Draggable from "../draggable";
 import WebIM from "../../utils/WebIM";
 
-let call_log = '' // 上穿日志
+let call_log = '' // 上传日志
 function call_report_log() {
 
 }
@@ -122,12 +121,11 @@ export default{
             callType: null, // 1v1 | 多人
             
             joined: false, // 是否在会议中， 在会议中则返回 忙碌
-            remotes: [], // 需要订阅的流（发起方的流 -- 暂时先不订阅）
+            is_hangup: undefined,
             call_role: null, // caller: 主叫，callee: 被叫
             from: undefined,
 
             wait_invite_cattr_timeout: true, // 默认等待 邀请的会议属性 超时，收到会议属性后，置为false，达到5s 后，还是true hangup
-            waiting_invitees: [], // 被邀请人员 还在等待响应的
             members: {
                 // 'qx.su.1': { status: 'waiting'},
                 // 'qx.su.2': { status: 'waiting'},
@@ -138,16 +136,19 @@ export default{
             invitee_attr_timers: {}, //会议属性等待开启定时
 
             // 与 UI紧关联
-            call_status: undefined, // 通话的状态 "joined": 加入会议, "calling": 振铃, "talking": 通话中 
+            call_status: undefined, // 通话的状态 "calling": 振铃, "talking": 通话中 
+
             title: '',
+            duration: '',
+            duration_num: 0,
+            duration_timer: null,
+
             mic_close: false,
             camera_close: false,
             sound_close: false,
-            is_hangup: undefined
 		};
     },
     
-    props: ['groupname'],
 	methods: {
 		
 
@@ -174,7 +175,8 @@ export default{
                     this.update_members(uid, 'pubed', { stream ,member })// 保存流的信息
 
                     if(this.$data.pushedStream) { // 已经发流，立即订阅
-                        this.sub_remotes()
+                        this.sub_remotes();
+                        if(!this.duration_timer) this._start_duration();
                     }
 
                     // 修改 title 1v1
@@ -197,7 +199,7 @@ export default{
             console.log('[Call Component]  memberAdd', member);
         },
         onMemberExited(member, reason) {
-            if(this.$data.is_hangup) return;
+            if(this.$data.is_hangup) return; // 已经挂断不再执行 onMemberExited
             console.log('[Call Component]  memberExited', member, reason);
             if(reason != 10){ // 10: 其他端发流，不处理
 
@@ -266,7 +268,6 @@ export default{
                         _this.show_calling();
                     } else {
 
-                        // _this.$data.waiting_invitees.push(uid);
                         _this.update_members(uid)
 
                         // 设置被邀请方 超时定时器
@@ -419,7 +420,9 @@ export default{
             let _this = this;
             (async ()=> {
                 try {
-                    _this.$data.title = '正在等待对方接收邀请...';
+                    if(_this.$data.callType == 0){
+                        _this.$data.title = '正在等待对方接收邀请...';
+                    }
 
                     if(!_this.$data.pushedStream) await _this.ready_call(); // 再邀请时，不再重新推流
                     
@@ -656,20 +659,27 @@ export default{
                         key:'invitee_'+_this.$data.user
                     });
 
-                    _this.sub_remotes()
+                    _this.sub_remotes();
+                    _this._start_duration();
+
                 } catch (error) {
                     console.error('accept error', error);
                     _this.$message.error('接听失败，请重新接听');
+                    _this.hangup()
                 }
 
-                let name = Object.keys(_this.$data.members)[0];
-                _this.$data.title = '正在与'+(name || '对方')+'进行通话中'
+                if(_this.$data.callType == 0){
+                    let name = Object.keys(_this.$data.members)[0];
+                    _this.$data.title = '正在与'+(name || '对方')+'进行通话中'
+                } else {
+                    _this.$data.title = ''
+                }
+
             })()
         }, 
         // 订阅对方流
         sub_remotes() {
             
-
             let { members } = this.$data;
             let _uids = Object.keys(members);
 
@@ -734,6 +744,7 @@ export default{
         reset() {
 
             // 清除定时器
+            this._stop_duration()
             for (const key in this.$data.invitee_attr_timers) {
                 let timer = this.$data.invitee_attr_timers[key];
 
@@ -787,6 +798,36 @@ export default{
             this.$data.sound_close = !this.$data.sound_close
         },
 
+        // 开始会议时长计时
+        _start_duration() {
+            this.$data.duration_timer = setInterval(this._update_duration, 1000)
+        },
+        _update_duration() {
+            let { duration_num } = this.$data;
+
+            function get_second(second){
+                return second<10 ? ('0'+second) : second
+            }
+            function get_minute(minute){
+                return minute<10 ? ('0'+minute) : minute
+            }
+
+            let time_str = ''
+            if(duration_num < 60){
+                time_str = '00:' + get_second(duration_num)
+            }else if(duration_num >= 60){
+                let minute = get_minute(parseInt(duration_num/60));
+                let surplus_second = get_second(duration_num%60)
+                time_str = minute +':'+ surplus_second
+            }
+            this.$data.duration = time_str;
+            this.$data.duration_num = duration_num+1;
+
+        },
+        // 停止计时
+        _stop_duration() {
+            clearInterval(this.duration_timer)
+        },
         // 随机生成密码
         get_uuid_psw (){ 
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -808,6 +849,8 @@ export default{
                 return "layout-1"
             }
         },
+
+        
 
     },
     watch: {

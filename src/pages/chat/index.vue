@@ -108,7 +108,7 @@
 
         <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState"/>
         <MultiAVModal :to="activedType[activeKey]" />
-        <Call ref="call" :groupname="activedType[activeKey]" @show_add_member_modal="show_add_member_modal"/>
+        <Call ref="call" @show_add_member_modal="show_add_member_modal"/>
 
         <AddAVMemberModal ref="addAvMembertModal" @EmediaModalFun="EmediaModalFun"/>
 
