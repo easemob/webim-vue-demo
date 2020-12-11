@@ -235,6 +235,8 @@ export default{
                     onClose: this.reset
                 });
             }
+
+            if( reason == 11) this.reset();
         },
         onConfrAttrsUpdated(confr_attrs){ 
             console.log('[Call Component]  onConfrAttrsUpdated', JSON.stringify(confr_attrs));
@@ -302,11 +304,20 @@ export default{
                     console.log('[Call Component]  del_invitee_attrs map member='+uid, JSON.stringify(member));
 
                     if(member) { // 没有发流或者没被订阅 -- 删除占位符
-                        if(member.status == 'waiting' || member.status == 'timeout') {
+                        if(
+                            member.status == 'waiting' 
+                            || member.status == 'timeout'
+                            || member.status == 'busy'
+                        ) {
                             console.log('[Call Component]  delete member because member refuse or timeout');
 
                             if(_this.$data.callType == 0) {
-                                _this.$message.error(member.status == 'waiting'?'对方已拒绝': '对方忙')
+                                let err = {
+                                    'busy': '对方忙线中',
+                                    'waiting': '对方已拒绝'
+                                }
+
+                                _this.$message.error(err[member.status] ? err[member.status] : '对方忙')
                             }
                             _this.del_member(uid)
                             _this.check_mems()
@@ -366,6 +377,11 @@ export default{
            if(status == 'timeout') {
                member = {
                    status: 'timeout'
+               }
+           }
+           if(status == 'busy') {
+               member = {
+                   status: 'busy'
                }
            }
 
@@ -511,7 +527,7 @@ export default{
                     this.$data.confr_info
                     && msg.ext.confrId == this.$data.confr_info.confrId
                 ) {
-
+                    this.update_members(msg.from, 'busy')
                     this.emedia.deleteConferenceAttrs({ key:'invitee_'+msg.from });
                     return
                 }
@@ -850,16 +866,8 @@ export default{
             }
         },
 
-        
-
     },
-    watch: {
-        // callType: function(val) {
-        //     if( this.$data.callType == 'voice') this.$data.camera_close = true;
-
-        // }
-        
-    },
+    
 	components: {
 		Draggable
     },
@@ -868,13 +876,11 @@ export default{
         console.log('[Call Component]  WebIm', WebIM);
 
         this.emedia = WebIM.WebRTC.emedia.mgr; // 多人会议 SDK --- 不包含 1v1
-        emedia.config({ // 取全局 window.emedia
-            restPrefix: 'https://a1.easemob.com'
-        })
+        
 
         // 初始化会议监听
         this.emedia.onMemberJoined = this.onMemberJoined; // 有人加入
-        this.emedia.onMemberExited = this.onMemberExited; // 有人加入
+        this.emedia.onMemberExited = this.onMemberExited; // 有人退出
         this.emedia.onStreamAdded = this.onStreamAdded; // 有流加入
         this.emedia.onStreamRemoved = this.onStreamRemoved; // 有流退出
         this.emedia.onConferenceExit = this.onConferenceExit; // 退出会议
