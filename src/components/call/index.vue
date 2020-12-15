@@ -306,7 +306,9 @@ export default{
                     }
                 } else { // 邀请的信息已处理或超时后的被删掉 会议属性
                     console.log('[Call Component]  invitee_attr_timer', _this.$data.invitee_attr_timers[uid]);
+
                     clearTimeout(_this.$data.invitee_attr_timers[uid]); // 清除定时器
+                    _this.$delete(_this.$data.invitee_attr_timers, uid);
 
                     let member = _this.$data.members[uid];
                     console.log('[Call Component]  del_invitee_attrs map member='+uid, JSON.stringify(member));
@@ -431,6 +433,7 @@ export default{
           
         // 邀请他人 暴露在外面
         invite(tos, callType) {
+            
             if(this.$data.visible && this.$data.callType != 2) { // 1v1 不可再发起通话
                 this.$message.warning('您正在通话中，请结束通话，再发起新的通话')
                 console.warn('you had meeting, not allowed make call');
@@ -439,7 +442,7 @@ export default{
 
             this.$data.callType = callType;
             this.$data.visible = true;
-
+            if(callType != 2) this.$data.call_role = 'caller'; //1v1 加主叫角色
 
             let _this = this;
             (async ()=> {
@@ -751,7 +754,14 @@ export default{
             this.hangup()
         },
         hangup() { // 多种情况会触发 挂断
-            this.emedia.exitConference();
+            if(
+                this.$data.callType !=2 
+                && this.$data.call_role == 'caller'
+            ) {
+                this.emedia.destroyConference(this.$data.confr_info.id); // 销毁会议
+            } else {
+                this.emedia.exitConference();
+            }
             this.reset();
         },
 
