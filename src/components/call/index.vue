@@ -139,7 +139,7 @@ export default{
                 // 'qx.su.4': { status: 'waiting'},
             }, // 会议中成员 包括订阅成功的，和正在邀请的
             
-            invitee_attr_timers: {}, //会议属性等待开启定时
+            // invitee_attr_timers: {}, //会议属性等待开启定时
 
             // 与 UI紧关联
             call_status: undefined, // 通话的状态 "calling": 振铃, "talking": 通话中 
@@ -279,7 +279,7 @@ export default{
                         _this.update_members(uid)
 
                         // 设置被邀请方 超时定时器
-                        _this.$data.invitee_attr_timers[uid] = setTimeout(() => {
+                        _this.$data[`invitee_attr_timer_${uid}`] = setTimeout(() => {
                             
                             let member = _this.$data.members[uid]; 
                             console.log('[Call Component]  member invitee timeout', JSON.stringify(member));
@@ -305,10 +305,10 @@ export default{
                         _this.hangup()
                     }
                 } else { // 邀请的信息已处理或超时后的被删掉 会议属性
-                    console.log('[Call Component]  invitee_attr_timer', _this.$data.invitee_attr_timers[uid]);
+                    console.log('[Call Component]  invitee_attr_timer', _this.$data[`invitee_attr_timer_${uid}`]);
 
-                    clearTimeout(_this.$data.invitee_attr_timers[uid]); // 清除定时器
-                    _this.$delete(_this.$data.invitee_attr_timers, uid);
+                    clearTimeout(_this.$data[`invitee_attr_timer_${uid}`]); // 清除定时器
+                    // _this.$delete(_this.$data.invitee_attr_timers, uid);
 
                     let member = _this.$data.members[uid];
                     console.log('[Call Component]  del_invitee_attrs map member='+uid, JSON.stringify(member));
@@ -787,10 +787,9 @@ export default{
 
             // 清除定时器
             this._stop_duration()
-            for (const key in this.$data.invitee_attr_timers) {
-                let timer = this.$data.invitee_attr_timers[key];
-
-                clearTimeout(timer)
+            for (const key in this.$data) {
+                if(key.indexOf('invitee_attr_timer') > -1) clearTimeout(this.$data[key])
+                
             }
 
             clearTimeout(this.$data.wait_invite_cattr_timer);
