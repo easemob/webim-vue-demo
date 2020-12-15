@@ -9,13 +9,19 @@
             <!-- 单端通话 -->
             <div
                 class="videos-wrapper single"
-                v-if="callType == 0"
+                v-if="callType != 2"
                 v-show="pushedStream"
             >
 
-                <video ref='localVideo' autoPlay muted playsInline/>
                 <div 
-                    class="item-wrapper locals"
+                    class="item-wrapper"
+                >
+                    <div class="name">{{user+'(我)'}}</div>
+                    <video ref='localVideo' autoPlay muted playsInline/>
+                </div>
+
+                <div 
+                    class="item-wrapper remote"
                     v-for="(value, key, index) in members"
                     :key='index'
                     :id='key'
@@ -40,11 +46,11 @@
                     class="item-wrapper"
                     :class="computed_layout()"
                 >
-                    <div class="name">{{user}}</div>
+                    <div class="name">{{user+'(我)'}}</div>
                     <video ref='localVideo' autoPlay muted playsInline/>
                 </div>
                 <div 
-                    class="item-wrapper locals"
+                    class="item-wrapper local"
                     :class="computed_layout()" 
                     v-for="(value, key, index) in members"
                     :key='index'
@@ -79,7 +85,7 @@
                 <i 
                     class="el-icon-circle-plus-outline font"
                     @click="() => this.$emit('show_add_member_modal')"
-                    v-if="callType == 1"
+                    v-if="callType == 2"
                 ></i>
             </div>
 
@@ -118,7 +124,7 @@ export default{
             confr_info: null,
             join_info: null,
             pushedStream: null,
-            callType: null, // 1v1 | 多人
+            callType: null, // 0: 1v1音频 | 1: 1v1视频 | 2: 多人
             
             joined: false, // 是否在会议中， 在会议中则返回 忙碌
             is_hangup: undefined,
@@ -181,7 +187,7 @@ export default{
 
                     // 修改 title 1v1
                     if(
-                        this.$data.callType == 0
+                        this.$data.callType != 2
                         && this.$data.call_role != 'callee'
                     ) {
                         this.$data.title = '正在与'+(name || '对方')+'进行通话中'
@@ -203,7 +209,7 @@ export default{
             console.log('[Call Component]  memberExited', member, reason);
             if(reason != 10){ // 10: 其他端发流，不处理
 
-                if(this.$data.callType == 0) {
+                if(this.$data.callType != 2) {
                     let item = this.$data.members[member.name];
                     if(item && item.status != 'waiting') this.$message.error('对方已挂断')
                 }
@@ -274,11 +280,13 @@ export default{
 
                         // 设置被邀请方 超时定时器
                         _this.$data.invitee_attr_timers[uid] = setTimeout(() => {
-                            console.log('[Call Component]  member invitee timeout', uid);
-    
-                            let member = _this.$data.members; 
-                            if(member) _this.emedia.deleteConferenceAttrs({ key:'invitee_'+ uid });// 超时删除邀请人员 会议属性 --- 所有人都能删
-                            if(_this.callType == 0) _this.update_members(uid, 'timeout') // 1v1
+                            
+                            let member = _this.$data.members[uid]; 
+                            console.log('[Call Component]  member invitee timeout', JSON.stringify(member));
+                            if(member && member.status == 'waiting') {
+                                _this.emedia.deleteConferenceAttrs({ key:'invitee_'+ uid });// 超时删除邀请人员 会议属性 --- 所有人都能删
+                                if(_this.$data.callType != 2) _this.update_members(uid, 'timeout') // 1v1
+                            }
                         }, 30000)
 
                     }
@@ -297,7 +305,7 @@ export default{
                         _this.hangup()
                     }
                 } else { // 邀请的信息已处理或超时后的被删掉 会议属性
-
+                    console.log('[Call Component]  invitee_attr_timer', _this.$data.invitee_attr_timers[uid]);
                     clearTimeout(_this.$data.invitee_attr_timers[uid]); // 清除定时器
 
                     let member = _this.$data.members[uid];
@@ -311,7 +319,7 @@ export default{
                         ) {
                             console.log('[Call Component]  delete member because member refuse or timeout');
 
-                            if(_this.$data.callType == 0) {
+                            if(_this.$data.callType != 2) {
                                 let err = {
                                     'busy': '对方忙线中',
                                     'waiting': '对方已拒绝'
@@ -423,7 +431,7 @@ export default{
           
         // 邀请他人 暴露在外面
         invite(tos, callType) {
-            if(this.$data.visible && this.$data.callType == 0) { // 1v1 不可再发起通话
+            if(this.$data.visible && this.$data.callType != 2) { // 1v1 不可再发起通话
                 this.$message.warning('您正在通话中，请结束通话，再发起新的通话')
                 console.warn('you had meeting, not allowed make call');
                 return
@@ -436,7 +444,7 @@ export default{
             let _this = this;
             (async ()=> {
                 try {
-                    if(_this.$data.callType == 0){
+                    if(_this.$data.callType != 2){
                         _this.$data.title = '正在等待对方接收邀请...';
                     }
 
@@ -499,8 +507,8 @@ export default{
                             fail: function(e){
                                 console.error("Send invite error");  
                             }   
-                        }
-        
+                    }
+                    console.log('[Call Component]  send invite set_options', JSON.stringify(set_options));
                     msg.set(set_options);
                     WebIM.conn.send(msg.body);
                 }
@@ -610,7 +618,7 @@ export default{
             this.$data.wait_invite_cattr_timeout = false; clearTimeout(this.$data.wait_invite_cattr_timer);
             this.$data.call_status = 'calling';
 
-            if(this.$data.callType == 0) {
+            if(this.$data.callType != 2) {
                 if(
                     this.$data.call_role == 'callee' &&
                     this.$data.from
@@ -644,9 +652,9 @@ export default{
         },
 
         publish() {
-            let constraints = {audio: true, video:true}; // 默认都是视频
-            // let constraints = this.$data.callType == 'voice' ? 
-            //                     {audio: true, video:false} : {audio: true, video:true}
+            // let constraints = {audio: true, video:true}; // 默认都是视频
+            let constraints = this.$data.callType == 1 ? 
+                                {audio: true, video: true} : {audio: true, video:false}
 
 
             let _this = this;
@@ -684,7 +692,7 @@ export default{
                     _this.hangup()
                 }
 
-                if(_this.$data.callType == 0){
+                if(_this.$data.callType != 2){
                     let name = Object.keys(_this.$data.members)[0];
                     _this.$data.title = '正在与'+(name || '对方')+'进行通话中'
                 } else {

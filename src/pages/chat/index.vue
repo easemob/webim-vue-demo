@@ -211,7 +211,7 @@ export default {
     },
 
     EmediaModalFun(tos, callType){ // 单聊 | 群聊 都走这里
-        // callType: 0 1v1, 1 多人
+        // callType: 0 1v1音频, 1 1v1视频, 2 多人
         this.$refs.call.invite(tos, callType);
     },
     show_add_member_modal() {

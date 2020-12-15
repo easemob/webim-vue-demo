@@ -84,71 +84,9 @@ export default{
 		},
 		startConference(){
             let invitees = this.$data.checkList.filter(item => item != this.$data.username)
-            this.$emit('EmediaModalFun', invitees, 1) // 点击开始后的 开启多人会议
+            this.$emit('EmediaModalFun', invitees, 2) // 点击开始后的 开启多人会议
             
             this.hide();
-            // this.action_callback(this.$data.checkList);
-			// this.$emit('EmediaModalFun','multi', this.$data.checkList, 'video');
-                
-				// for(let jid of jids){
-				// 	WebIM.call.inviteConference(confrId, password, jid, gid);
-				// }
-			// const me = this;
-			// let pwd = Math.random().toString(36).substr(2);
-			// if(me.multiAVModalVisible){
-			// 	// 发送邀请
-			// 	const appkey = WebIM.config.appkey;
-			// 	const spHost = WebIM.config.Host;
-			// 	const { confrId, password } = me.confr;
-			// 	const gid = me.to.groupid;
-			// 	let jids = [];
-
-			// 	for(let elem of me.$data.checkList){
-			// 		if(elem != me.$data.username){
-			// 			jids.push(appkey + "_" + elem + "@" + spHost);
-			// 		}
-			// 	}
-			// 	for(let jid of jids){
-			// 		WebIM.call.inviteConference(confrId, '', jid, gid);
-			// 	}
-
-			// 	return this.hide();
-			// }
-			// this.showMultiAVModal();
-			
-			// pwd = "";
-			// const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
-			// const recMerge = videoSetting && videoSetting.recMerge || false;
-			// const rec = (videoSetting && videoSetting.rec) || false;
-			// emedia.mgr.createConference(emedia.mgr.ConfrType.COMMUNICATION_MIX, pwd, rec, recMerge).then(function(confr){
-			// 	console.log("%c会议的信息", "color: red", confr); // 可以在这里拿到会议id confrId 来查服务端录制
-			// 	me.setConfr({ confr });
-			// 	const tkt = confr.ticket;
-			// 	WebIM.EMService.joined(confr.confrId) || WebIM.EMService.joinConferenceWithTicket(confr.confrId, tkt, "user ext field").then(function(){
-			// 		WebIM.EMService.publish({ audio: true, video: true }, "user ext field")["catch"](function(e){
-			// 			console.error(e);
-			// 		});
-			// 	})["catch"](function(e){
-			// 		console.error(e);
-			// 	});
-
-			// 	// 发送邀请
-			// 	const appkey = WebIM.config.appkey;
-			// 	const spHost = WebIM.config.Host;
-			// 	const { confrId, password } = confr;
-			// 	const gid = me.to.groupid;
-			// 	let jids = [];
-
-			// 	for(let elem of me.$data.checkList){
-			// 		if(elem != me.$data.username){
-			// 			jids.push(appkey + "_" + elem + "@" + spHost);
-			// 		}
-			// 	}
-			// 	for(let jid of jids){
-			// 		WebIM.call.inviteConference(confrId, password, jid, gid);
-			// 	}
-			// });
-			// return this.hide();
 		}
 	},
 };

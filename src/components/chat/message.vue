@@ -441,7 +441,7 @@ export default {
 
       if(this.type == "contact") {
         const val = this.$data.activedKey[this.type].name
-        this.$emit('EmediaModalFun', [val], 0);
+        this.$emit('EmediaModalFun', [val], 1);
 
       } else if (this.type == "group") {
         this.getGroupMembers(this.$data.activedKey[this.type].groupid);
