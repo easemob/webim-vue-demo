@@ -76,11 +76,11 @@
                     :class="{close: camera_close}" 
                     @click="controlVideo()"></i>
 
-                <a-icon 
+                <!-- <a-icon 
                     class="font mute" 
                     :class="{close: sound_close}"
                     type="sound" 
-                    @click="controlSound"/>
+                    @click="controlSound"/> -->
 
                 <i 
                     class="el-icon-circle-plus-outline font"
@@ -433,15 +433,21 @@ export default{
           
         // 邀请他人 暴露在外面
         invite(tos, callType) {
-            
-            if(this.$data.visible && this.$data.callType != 2) { // 1v1 不可再发起通话
-                this.$message.warning('您正在通话中，请结束通话，再发起新的通话')
-                console.warn('you had meeting, not allowed make call');
-                return
+            if(this.$data.visible) {
+                if(this.$data.callType != 2) { // 1v1 通话直接返回
+                    this.$message.warning('您正在通话中，请结束通话，再发起新的通话')
+                    return
+                }
+                if(callType != 2) {  // 多人通话时，发起的不是多人通话 直接返回
+                    this.$message.warning('您正在通话中，请结束通话，再发起新的通话')
+                    return
+                }
             }
-
+            
             this.$data.callType = callType;
             this.$data.visible = true;
+            if(this.$data.callType != 1) this.$data.camera_close = true;
+
             if(callType != 2) this.$data.call_role = 'caller'; //1v1 加主叫角色
 
             let _this = this;
@@ -618,6 +624,8 @@ export default{
             if(this.$data.call_status == 'calling') return; //已经收到了 邀请
 
             this.$data.visible = true;
+            if(this.$data.callType != 1) this.$data.camera_close = true;
+
             this.$data.wait_invite_cattr_timeout = false; clearTimeout(this.$data.wait_invite_cattr_timer);
             this.$data.call_status = 'calling';
 
@@ -828,9 +836,6 @@ export default{
             })
         },
 
-        controlSound() {
-            this.$data.sound_close = !this.$data.sound_close
-        },
 
         // 开始会议时长计时
         _start_duration() {
