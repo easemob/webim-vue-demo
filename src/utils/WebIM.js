@@ -1,7 +1,9 @@
 import config from "./WebIMConfig";
 import websdk from "easemob-websdk";
 import emedia from "easemob-emedia";
-import webrtc from "easemob-webrtc";
+// import webrtc from "easemob-webrtc";
+import webrtc from "./EMedia_x1v1_3.4.1";
+
 import { Message } from "element-ui";
 function ack(message) {
 	var bodyId = message.id; // 需要发送已读回执的消息id
@@ -345,6 +347,7 @@ WebIM.conn.listen({
 	} // 如果用户在A群组被禁言，在A群发消息会走这个回调并且消息不会传递给群其它成员
 });
 
-WebIM.WebRTC = webrtc;
-WebIM.EMedia = emedia;
+WebIM.WebRTC = window.webrtc; // 本项目引入 UMD 文件有问题，暂时这样引入
+WebIM.EMedia = window.emedia ;
+
 export default WebIM;
