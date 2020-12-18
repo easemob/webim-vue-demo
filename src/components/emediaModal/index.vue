@@ -223,10 +223,12 @@ export default{
 					},
 					onInvite: function(from, rtcOption){
 						const { confrId, password, gid } = rtcOption;
-						const { appkey, xmppURL } = WebIM.config;
-						// const { avModal, multiAV } = me.props
-						let host = xmppURL.split(".");
-						host = "@" + host[1] + "." + host[2];
+                        
+                        const { appkey } = WebIM.config
+                   
+                        let host = WebIM.conn.url && WebIM.conn.url.split('.')
+                        if(host.length && host.length > 2) host = '@' + host[1] + '.' + host[2];
+                        
 						from = from.replace(appkey + "_", "");
 						from = from.replace(host, "");
 						let callback = (confr) => {
