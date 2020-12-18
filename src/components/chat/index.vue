@@ -263,6 +263,7 @@ export default {
     },
 
     callVideo() {
+
       if (this.type == "contact") {
         this.$refs.emediaModal.showEmediaModal();
         this.$refs.emediaModal.showCallerWait(

@@ -94,6 +94,7 @@
           :showUserList="showUserList"
           ref="messageList"
           @EmediaModalFun="EmediaModalFun"
+          @show_add_member_modal="show_add_member_modal"
         />
 
         <AddFriend ref="addFriendMethods" />
@@ -107,6 +108,10 @@
 
         <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState"/>
         <MultiAVModal :to="activedType[activeKey]" />
+        <Call ref="call" @show_add_member_modal="show_add_member_modal"/>
+
+        <AddAVMemberModal ref="addAvMembertModal" @EmediaModalFun="EmediaModalFun"/>
+
       </a-layout-content>
     </a-layout>
   </a-layout>
@@ -127,6 +132,8 @@ import GroupInvite from "../../components/group/groupInvite.vue";
 
 import EmediaModal from "../../components/emediaModal/index";
 import MultiAVModal from "../../components/emediaModal/multiAVModal";
+import Call from "../../components/call/index"; // 多人实现 1v1 通话
+import AddAVMemberModal from "../../components/emediaModal/addAVMemberModal";
 
 import "./index.less";
 import { mapState, mapActions } from "vuex";
@@ -173,7 +180,15 @@ export default {
   computed: {
     chatList() {
       return this.$store.state.chat.msgList;
+    },
+    noticeCallMsg () { // 监听call组件收到IM 消息
+        return this.$store.state.chat.noticeCallMsg
     }
+  },
+  watch:{
+    noticeCallMsg (msg) { // 监听call组件收到IM 消息
+        this.$refs.call.receivedMsg(msg)
+    }   
   },
   methods: {
     ...mapActions(["onLogout", "onGetFirendBlack", "initChatState"]),
@@ -195,9 +210,12 @@ export default {
       v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
     },
 
-    EmediaModalFun(v){
-      this.$refs.emediaModal.showEmediaModal();
-      this.$refs.emediaModal.showCallerWait(v);
+    EmediaModalFun(tos, callType){ // 单聊 | 群聊 都走这里
+        // callType: 0 1v1音频, 1 1v1视频, 2 多人
+        this.$refs.call.invite(tos, callType);
+    },
+    show_add_member_modal() {
+        this.$refs.addAvMembertModal.show()
     },
     hideUserList() {
       this.$data.collapsed = true;
@@ -301,7 +319,9 @@ export default {
     GroupRequest,
     GroupInvite,
     EmediaModal,
-    MultiAVModal
+    MultiAVModal,
+    Call,
+    AddAVMemberModal
   }
 };
 </script>

@@ -64,7 +64,10 @@ WebIM.conn.listen({
 			bySelf: false,
 			from: message.from,
 			mid: message.id
-		});
+        });
+        
+        Vue.$store.commit('noticeCall', message)// 通知给通话组件，是否别人邀请通话
+
 		type === 'chat' && ack(message);
 		if (WebIM && WebIM.call && message && message.ext && message.ext.msg_extension) {
 			var msgExtension = typeof (message.ext.msg_extension) == 'string' ? JSON.parse(message.ext.msg_extension) : message.ext.msg_extension

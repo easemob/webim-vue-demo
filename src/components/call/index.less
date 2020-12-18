@@ -1,0 +1,168 @@
+.call-wrapper {
+    background: #dadada;
+    transition: 0.5s;
+
+    width: 500px;
+    height: 400px;
+
+    i {
+        cursor: pointer;
+    }
+
+    .title {
+        text-align: center;
+        
+        width: 100%;
+        height: 43px;
+        font-size: 16px;
+    
+    }
+
+    .videos-wrapper {
+        width: 100%;
+        height: calc(100% - 100px);
+        position: relative;
+
+        video {
+            position: absolute;
+            top: 0;
+            left: 0;
+        
+            width: 100%;
+            height: 100%;
+            // background: #fff;
+        }
+        .name {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1;
+            color: #000;
+            line-height: 20px;
+        }
+        .waiting-icon {
+
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            transform: translate(-50%, -50%);
+
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            
+            span {
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+                border-radius: 12px;
+                background: #dadada;
+            }
+
+            span:first-child {
+                animation: loading 1.5s infinite;
+            }
+            span:nth-child(2) {
+                animation: loading 1.5s infinite .5s;
+            }
+            span:nth-child(3) {
+                animation: loading 1.5s infinite 1s;
+            }
+        }
+        
+
+        // loading 动画
+        @keyframes loading {
+              0% {
+                transform: scale(1) translateX(0);
+              }
+              25% {
+                transform: scale(1.7) translateX(0);
+              }
+              
+              100% {
+                transform: scale(1) translateX(0);
+              }
+        }
+        
+    }
+
+    /* 单人布局 */
+    .single .remote {
+        position: absolute;
+        width: 20%;
+        height: 20%;
+        top: 10%;
+        right: 5%;
+        background: #fff;
+    }
+    .single .waiting-icon {
+        width: 100%;
+    }
+    /* 多人布局 */
+    .multi {
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+        flex-wrap: wrap-reverse;
+    }
+
+    .multi > .item-wrapper {
+        background: #fff;
+        position: relative;
+        box-shadow:2px 2px 3px #aaaaaa;
+    }
+
+    .layout-1 {
+        width: 98%;
+        height: 98%;
+    }
+
+    .layout-2 {
+        width: 47%;
+        height: 47%;
+        margin: 1%;
+    }
+
+    .layout-3 {
+        width: 32%;
+        height: 30%;
+        margin: 1%;
+    }
+
+
+
+    /* 底部 */
+    .media-action-wrapper {
+        position: absolute;
+        left: 0;
+        bottom: 15px;
+        height: 30px;
+        padding-left:20px ;
+
+        i {
+            position: static;
+            margin-right:10px ;
+            cursor: pointer;
+            color: #2c3e50;
+        }
+
+        i.close {
+            color: #4eb1f4;
+        }
+    }
+
+}
+
+
+
+
+
+
+
+
+

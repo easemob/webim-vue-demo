@@ -146,9 +146,9 @@
       </div>
     </div>
     <GetGroupInfo ref="groupInfoModel" @closeGroupMessage="closeGroupMessage" />
-    <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" />
 
     <!-- fix 移动到全局 -->
+    <!-- <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" @start="start_multi"/> -->
     <!-- <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState" /> -->
     <!-- <MultiAVModal :to="activedKey[type]" /> -->
   </div>
@@ -165,7 +165,6 @@ import { mapActions, mapGetters } from "vuex";
 
 import moment from "moment";
 import _ from "lodash";
-import AddAVMemberModal from "../emediaModal/addAVMemberModal";
 // import MultiAVModal from "../emediaModal/multiAVModal";
 // import EmediaModal from "../emediaModal/index";
 import GetGroupInfo from "../group/groupInfo.vue";
@@ -439,36 +438,23 @@ export default {
     },
 
     callVideo() {
-      if (this.type == "contact") {
+
+      if(this.type == "contact") {
         const val = this.$data.activedKey[this.type].name
-        this.$emit('EmediaModalFun',val)
-        const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
-        const recMerge = (videoSetting && videoSetting.recMerge) || false;
-        const rec = (videoSetting && videoSetting.rec) || false;
-        this.onCallVideo({
-          chatType: this.type,
-          to: this.$data.activedKey[this.type].name,
-          rec,
-          recMerge
-        });
+        this.$emit('EmediaModalFun', [val], 1);
+
       } else if (this.type == "group") {
         this.getGroupMembers(this.$data.activedKey[this.type].groupid);
-        this.$refs.addAvMembertModal.show();
+        let _this = this;
+        this.$emit('show_add_member_modal')
+
       }
     },
     callVoice() {
       const val = this.$data.activedKey[this.type].name
-      this.$emit('EmediaModalFun',val)
-      const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
-      const recMerge = (videoSetting && videoSetting.recMerge) || false;
-      const rec = (videoSetting && videoSetting.rec) || false;
-      this.onCallVoice({
-        chatType: this.type,
-        to: this.$data.activedKey[this.type].name,
-        rec,
-        recMerge
-      });
+      this.$emit('EmediaModalFun', [val], 0);
     },
+    
     readablizeBytes(value) {
       let s = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
       let e = Math.floor(Math.log(value) / Math.log(1024));
@@ -534,12 +520,12 @@ export default {
     // }
   },
   components: {
-    AddAVMemberModal,
-    ChatEmoji,
+      ChatEmoji,
     UpLoadImage,
     UpLoadFile,
     GetGroupInfo,
     RecordAudio,
+    // AddAVMemberModal,
     // MultiAVModal,
     // EmediaModal,
   }
