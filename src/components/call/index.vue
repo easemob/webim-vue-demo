@@ -358,7 +358,7 @@ export default{
         //     this.$set(this.$data.members, key, { status: 'waiting'})
         // },
         update_members(key, status, val) {
-            console.log(`update_members key=${key}, status=${status}, val=${val}`);
+            console.log(`[Call Component]  update_members key=${key}, status=${status}, val=${val}`);
             /*
             * key: 与会成员
             * status: 变为了哪种状态， pubed | subed
@@ -410,8 +410,8 @@ export default{
         },
         // 清空 video
         clear_v_el() {
-            let v_els = document.querySelectorAll('.videos-wrapper .locals video');
-            console.log('clear_v_el', v_els);
+            let v_els = document.querySelectorAll('.videos-wrapper .local video');
+            console.log('[Call Component]  clear_v_el', v_els);
 
             for(var i = v_els.length - 1; i >= 0; i--) { 
                 let v_el = v_els[i];
@@ -422,11 +422,12 @@ export default{
         add_v_el() {
             let { members } = this.$data;
 
+            console.log('[Call Component]  add_v_el members', JSON.stringify(members));
             for (const key in members) {
                 let item = members[key];
-
-                let v_wrapper = document.querySelector(`.videos-wrapper .locals[id="${key}"]`);
-                console.log(`add_v_el v_wrapper = ${v_wrapper}, item.el = ${item.el}, key=${key}`);
+                console.log('[Call Component]  add_v_el members key', key);
+                let v_wrapper = document.querySelector(`.videos-wrapper .local[id="${key}"]`);
+                console.log(`[Call Component]  add_v_el v_wrapper = ${v_wrapper}, item.el = ${item.el}, key=${key}`);
                 if(v_wrapper && item.el) v_wrapper.appendChild(item.el) 
             }
         },
