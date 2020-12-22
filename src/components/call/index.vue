@@ -358,6 +358,7 @@ export default{
         //     this.$set(this.$data.members, key, { status: 'waiting'})
         // },
         update_members(key, status, val) {
+            
             console.log(`[Call Component]  update_members key=${key}, status=${status}, val=${val}`);
             /*
             * key: 与会成员
