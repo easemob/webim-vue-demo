@@ -3,17 +3,17 @@ import WebIM from "../utils/WebIM";
 // import WebIM from "../utils/WebIM";
 
 // TODO 处理页面刷新无法获取到音频url
-const res = function(response){
+const res = function (response) {
 	let objectUrl = WebIM.utils.parseDownloadResponse.call(WebIM.conn, response);
 	return objectUrl;  //  'blob:http://localhost:8080/536070e2-b3a0-444a-b1cc-f0723cf95588'
 };
 
-function test(url, func){
+function test(url, func) {
 	let options = {
 		url: url,
 		headers: { Accept: "audio/mp3" },
 		onFileDownloadComplete: func,
-		onFileDownloadError: function(){
+		onFileDownloadError: function () {
 			console.log("音频下载失败");
 		}
 	};
@@ -32,12 +32,12 @@ const Chat = {
 			group: {},
 			chatroom: {},
 		},
-        currentMsgs: [],
-        
-        noticeCallMsg: {}
+		currentMsgs: [],
+
+		noticeCallMsg: {}
 	},
 	mutations: {
-		updateUserList(state, payload){
+		updateUserList(state, payload) {
 			const { userList, type } = payload;
 			// 如果是添加黑名单，则从当前用户列表中删掉此人
 			// if(payload.black && payload.black.type === "addBlack"){
@@ -51,22 +51,32 @@ const Chat = {
 			// }
 			state.userList[type] = userList;
 		},
-		updateMsgList(state, payload){
+		updateMsgList(state, payload) {
 			const { chatType, chatId, msg, bySelf, type, id } = payload;
+			// payload的消息为漫游历史消息的话，进入判断筛选出已存在msgList当中的消息，此类消息不再添加进msgList。
+			if (payload.isHistory) {
+				//拿到该key已经存在的消息。
+				let nowKeyMsg = state.msgList[chatType][chatId];
+				//开始筛选，如果payload.mid 不等于item.id则说明msgList中没有存储。
+				let newHistoryMsg = nowKeyMsg && nowKeyMsg.filter(item => {
+					return item.mid != payload.mid;
+				})
+				state.msgList[chatType][chatId] = newHistoryMsg;
+			}
 			const { params } = Vue.$route;
 			let status = "unread";
-			if(payload.chatType == "contact"){
-				if(params.id == payload.from){
+			if (payload.chatType == "contact") {
+				if (params.id == payload.from) {
 					status = "read";
 				}
 			}
-			else if(payload.chatType == "group"){
-				if(params.id == payload.chatId){
+			else if (payload.chatType == "group") {
+				if (params.id == payload.chatId) {
 					status = "read";
 				}
 			}
 
-			if(!state.msgList[chatType][chatId]){
+			if (!state.msgList[chatType][chatId]) {
 				state.msgList[chatType][chatId] = [{
 					msg,
 					bySelf,
@@ -76,7 +86,7 @@ const Chat = {
 					...payload
 				}];
 			}
-			else{
+			else {
 				state.msgList[chatType][chatId].push({
 					msg,
 					bySelf,
@@ -91,18 +101,18 @@ const Chat = {
 				// state.msgList[chatType][chatId] = _unique(state.msgList[chatType][chatId])
 			}
 
-			if(chatType === "chatroom" && !bySelf){ // 聊天室消息去重处理
+			if (chatType === "chatroom" && !bySelf) { // 聊天室消息去重处理
 				state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], "mid");
 			}
-			else{
+			else {
 				state.currentMsgs = Object.assign({}, state.msgList[chatType][params.id || chatId]); // 这里params.id在路由跳转的时候会undefind，取chatId兼容
 			}
 			state.msgList = Object.assign({}, state.msgList);
 		},
-		updateCurrentMsgList(state, messages){
+		updateCurrentMsgList(state, messages) {
 			state.currentMsgs = messages;
 		},
-		updateMessageMid(state, message){
+		updateMessageMid(state, message) {
 			const { id, mid } = message;
 			const { name, params } = Vue.$route;
 			// state.currentMsgs.forEach((item) => {
@@ -111,40 +121,40 @@ const Chat = {
 			//     }
 			// })
 			Object.keys(state.msgList[name]).forEach((user) => {
-				if(state.msgList[name][user].length){
+				if (state.msgList[name][user].length) {
 					state.msgList[name][user].forEach((msg) => {
-						if(msg.mid == id){
+						if (msg.mid == id) {
 							msg.mid = mid;
 						}
 					});
 				}
 			});
 		},
-		updateMessageStatus(state, message){
+		updateMessageStatus(state, message) {
 			const { id, mid, action, readUser } = message;
 			const { name, params } = Vue.$route;
 			Object.keys(state.msgList[name]).forEach((user) => {
 				// console.log(state.msgList[name][user]);
-                
-				if(action == "oneUserReadMsgs"){
-					if(state.msgList[name][readUser]){
+
+				if (action == "oneUserReadMsgs") {
+					if (state.msgList[name][readUser]) {
 						state.msgList[name][readUser].forEach((msg) => {
-							if(msg.status != "recall"){
+							if (msg.status != "recall") {
 								msg.status = "read";
 							}
 						});
 					}
 				}
-				else if(state.msgList[name][user].length){
+				else if (state.msgList[name][user].length) {
 					state.msgList[name][user].forEach((msg) => {
-						if(action === "readMsgs" && !msg.bySelf){
-							if(msg.status != "recall"){
+						if (action === "readMsgs" && !msg.bySelf) {
+							if (msg.status != "recall") {
 								msg.status = "read";
 							}
 						}
-						else if(msg.mid == id || msg.mid == mid){
+						else if (msg.mid == id || msg.mid == mid) {
 							msg.status = message.status;
-							if(message.msg){
+							if (message.msg) {
 								msg.msg = message.msg;
 							}
 						}
@@ -153,14 +163,14 @@ const Chat = {
 			});
 		},
 		// 黑名单筛选用户列表
-		changeUserList(state, payload){
+		changeUserList(state, payload) {
 			let ary = [];
-			_.forIn(payload, function(value, key){
+			_.forIn(payload, function (value, key) {
 				ary.push({ name: key });
 			});
 			state.userList.contactUserList = _.pullAllBy(state.userList.contactUserList, ary, "name");
 		},
-		initChatState(state){
+		initChatState(state) {
 			state.userList = {
 				contactUserList: [],
 				groupUserList: [],
@@ -174,19 +184,19 @@ const Chat = {
 			}
 
 			state.currentMsgs = []
-        },
-        
-        // 传递数据给 call 组件，是否收到通话邀请
-        noticeCall(state, payload) {
-            console.log('store noticeCall msg', payload);
-            state.noticeCallMsg = payload;
-        }
+		},
+
+		// 传递数据给 call 组件，是否收到通话邀请
+		noticeCall(state, payload) {
+			console.log('store noticeCall msg', payload);
+			state.noticeCallMsg = payload;
+		}
 	},
 	actions: {
-		onGetContactUserList: function(context, payload){
-			try{
+		onGetContactUserList: function (context, payload) {
+			try {
 				WebIM.conn.getRoster({
-					success: function(roster){
+					success: function (roster) {
 						// console.log("roster", roster);
 						const userList = roster.filter(user => ["both", "to"].includes(user.subscription));
 						context.commit("updateUserList", {
@@ -197,13 +207,13 @@ const Chat = {
 					}
 				});
 			}
-			catch(e){
+			catch (e) {
 				console.log("error", e);
 			}
 		},
-		onGetGroupUserList: function(context, payload){
+		onGetGroupUserList: function (context, payload) {
 			var options = {
-				success: function(resp){
+				success: function (resp) {
 					let userList = resp.data;
 					userList.forEach((user, index) => {
 						userList[index].name = user.groupname;
@@ -213,32 +223,32 @@ const Chat = {
 						type: "groupUserList"
 					});
 				},
-				error: function(e){ },
+				error: function (e) { },
 			};
 			WebIM.conn.getGroup(options);
 		},
-		onGetChatroomUserList: function(context, payload){
+		onGetChatroomUserList: function (context, payload) {
 			var option = {
 				pagenum: 1,                                 // 页数
 				pagesize: 20,                               // 每页个数
-				success: function(list){
+				success: function (list) {
 					context.commit("updateUserList", {
 						userList: list.data,
 						type: "chatroomUserList"
 					});
 				},
-				error: function(){
+				error: function () {
 					console.log("List chat room error");
 				}
 			};
 			WebIM.conn.getChatRooms(option);
 		},
 		// 获取当前聊天对象的记录 @payload： {key, type}
-		onGetCurrentChatObjMsg: function(context, payload){
+		onGetCurrentChatObjMsg: function (context, payload) {
 			const { id, type } = payload;
 			context.commit("updateCurrentMsgList", context.state.msgList[type][id]);
 		},
-		onSendText: function(context, payload){
+		onSendText: function (context, payload) {
 			const { chatType, chatId, message } = payload;
 			const id = WebIM.conn.getUniqueId();
 			const time = +new Date();
@@ -255,7 +265,7 @@ const Chat = {
 				to: chatId[jid[chatType]],
 				chatType: type,
 				roomType: chatroom,
-				success: function(){
+				success: function () {
 					context.commit("updateMsgList", {
 						chatType,
 						chatId: chatId[jid[chatType]],
@@ -266,16 +276,16 @@ const Chat = {
 						status: "sending"
 					});
 				},
-				fail: function(e){
+				fail: function (e) {
 					console.log("Send private text error", e);
 				}
 			});
-			if(chatType === "group" || chatType === "chatroom"){
+			if (chatType === "group" || chatType === "chatroom") {
 				msgObj.setGroup("groupchat");
 			}
 			WebIM.conn.send(msgObj.body);
 		},
-		sendImgMessage: function(context, payload){
+		sendImgMessage: function (context, payload) {
 			const { chatType, chatId, roomType, file, callback } = payload;
 			const id = WebIM.conn.getUniqueId();
 			const jid = {
@@ -287,13 +297,13 @@ const Chat = {
 			msgObj.set({
 				file: file,
 				to: chatId[jid[chatType]],
-				chatType:chatType,
+				chatType: chatType,
 				roomType: roomType,
-				onFileUploadError: function(error){
+				onFileUploadError: function (error) {
 					console.log("图片上传失败", error);
 					callback();
 				},
-				onFileUploadComplete: function(data){
+				onFileUploadComplete: function (data) {
 					let url = data.uri + "/" + data.entities[0].uuid;
 					context.commit("updateMsgList", {
 						msg: url,
@@ -307,16 +317,16 @@ const Chat = {
 					});
 					callback();
 				},
-				success: function(){
+				success: function () {
 					console.log("图片发送成功");
 				}
 			});
-			if(chatType === "group" || chatType === "chatroom"){
+			if (chatType === "group" || chatType === "chatroom") {
 				msgObj.setGroup("groupchat");
 			}
 			WebIM.conn.send(msgObj.body);
 		},
-		sendFileMessage: function(context, payload){
+		sendFileMessage: function (context, payload) {
 			const { chatType, chatId, roomType, file, callback } = payload;
 			const id = WebIM.conn.getUniqueId();
 			const jid = {
@@ -331,13 +341,13 @@ const Chat = {
 					file_length: file.data.size
 				},
 				to: chatId[jid[chatType]],
-				chatType:chatType,
+				chatType: chatType,
 				roomType: roomType,
-				onFileUploadError: function(error){
+				onFileUploadError: function (error) {
 					console.log("文件上传失败", error);
 					callback();
 				},
-				onFileUploadComplete: function(data){
+				onFileUploadComplete: function (data) {
 					let url = data.uri + "/" + data.entities[0].uuid;
 					context.commit("updateMsgList", {
 						msg: url,
@@ -353,27 +363,27 @@ const Chat = {
 					});
 					callback();
 				},
-				success: function(){
+				success: function () {
 					console.log("文件发送成功");
 				}
 			});
-			if(chatType === "group" || chatType === "chatroom"){
+			if (chatType === "group" || chatType === "chatroom") {
 				msgObj.setGroup("groupchat");
 			}
 			WebIM.conn.send(msgObj.body);
 		},
-		sendRecorder: function(context, payload){
+		sendRecorder: function (context, payload) {
 			const { useId, type, file } = payload;
 			const id = WebIM.conn.getUniqueId();
 			const msgObj = new WebIM.message("audio", id);
 			let isRoom = type == "chatroom" || type == "groupchat";
-            
+
 			const jid = {
 				contact: "name",
 				group: "groupid",
 				chatroom: "id"
 			};
-            
+
 			// console.log('bold>>>', bold);
 			// console.log('newBold>>', WebIM.utils.parseDownloadResponse.call(WebIM.conn, bold));
 			// let newBold = WebIM.utils.parseDownloadResponse.call(WebIM.conn, bold)
@@ -384,12 +394,12 @@ const Chat = {
 				type: "audio",
 				roomType: isRoom,
 
-				onFileUploadError: function(error){
+				onFileUploadError: function (error) {
 					console.log("语音上传失败", error);
 				},
-				onFileUploadComplete: function(data){
+				onFileUploadComplete: function (data) {
 					console.log("上传成功", data);
-                    
+
 					let url = data.uri + "/" + data.entities[0].uuid;
 					context.commit("updateMsgList", {
 						msg: url,
@@ -404,13 +414,13 @@ const Chat = {
 						status: "sending"
 					});
 				},
-				success: function(data){
+				success: function (data) {
 					console.log("语音发送成功", data);
 				},
 				flashUpload: WebIM.flashUpload
 			});
-            
-			if(type === "group" || type === "chatroom"){
+
+			if (type === "group" || type === "chatroom") {
 				msgObj.setGroup("groupchat");
 			}
 			WebIM.conn.send(msgObj.body);
@@ -418,11 +428,11 @@ const Chat = {
 
 
 
-		onCallVideo: function(context, payload){
+		onCallVideo: function (context, payload) {
 			const { chatType, to } = payload;
 			const type = chatType === "contact" ? "singleChat" : "groupChat";
 			const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-			if(chatType === "contact"){
+			if (chatType === "contact") {
 				// this.setState({
 				//     showWebRTC: true
 				// })
@@ -430,32 +440,32 @@ const Chat = {
 				WebIM.call.makeVideoCall(to, null, payload.rec, payload.recMerge);
 			}
 		},
-		onCallVoice: function(context, payload){
+		onCallVoice: function (context, payload) {
 			const { chatType, to } = payload;
 			const type = chatType === "contact" ? "singleChat" : "groupChat";
 			const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-			if(chatType === "contact"){
+			if (chatType === "contact") {
 				WebIM.call.caller = userInfo.userId;
 				WebIM.call.makeVoiceCall(to, null, payload.rec, payload.recMerge);
 			}
 		},
 
-		getHistoryMessage: function(context, payload){
+		getHistoryMessage: function (context, payload) {
 			const options = {
 				queue: payload.name,
 				isGroup: payload.isGroup,
 				count: 10, // 每次获取消息条数
-				success: function(msgs){
-					try{
+				success: function (msgs) {
+					try {
 						payload.success && payload.success(msgs);
-						if(msgs.length){
+						if (msgs.length) {
 							const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 							const userId = userInfo && userInfo.userId;
 							msgs.forEach((item) => {
 								let time = Number(item.time);
 								let msg = {};
 								const bySelf = item.from == userId;
-								if(!item.filename){
+								if (!item.filename) {
 									msg = {
 										chatType: payload.isGroup ? "group" : "contact",
 										chatId: bySelf ? item.to : item.from,
@@ -465,14 +475,14 @@ const Chat = {
 										mid: item.id,
 										status: "read"
 									};
-									if(payload.isGroup){
+									if (payload.isGroup) {
 										msg.chatId = item.to;
 									}
-									else{
+									else {
 										msg.chatId = bySelf ? item.to : item.from;
 									}
 								}
-								else if(!item.ext.file_length && item.filename !== "audio" && item.filename.substring(item.filename.length - 3) !== "mp4"){ // 为图片的情况
+								else if (!item.ext.file_length && item.filename !== "audio" && item.filename.substring(item.filename.length - 3) !== "mp4") { // 为图片的情况
 									msg = {
 										msg: item.url,
 										chatType: payload.isGroup ? "group" : "contact",
@@ -483,14 +493,14 @@ const Chat = {
 										mid: item.id,
 										status: "read"
 									};
-									if(payload.isGroup){
+									if (payload.isGroup) {
 										msg.chatId = item.to;
 									}
-									else{
+									else {
 										msg.chatId = bySelf ? item.to : item.from;
 									}
 								}
-								else if(item.filename === "audio"){
+								else if (item.filename === "audio") {
 									msg = {
 										msg: item.url,
 										chatType: payload.isGroup ? "group" : "contact",
@@ -498,14 +508,14 @@ const Chat = {
 										bySelf: bySelf,
 										type: "audio"
 									};
-									if(payload.isGroup){
+									if (payload.isGroup) {
 										msg.chatId = item.to;
 									}
-									else{
+									else {
 										msg.chatId = bySelf ? item.to : item.from;
 									}
 								}
-								else if(item.filename.substring(item.filename.length - 3) === "mp4"){
+								else if (item.filename.substring(item.filename.length - 3) === "mp4") {
 									msg = {
 										msg: item.url,
 										chatType: payload.isGroup ? "group" : "contact",
@@ -513,14 +523,14 @@ const Chat = {
 										bySelf: bySelf,
 										type: "video"
 									};
-									if(payload.isGroup){
+									if (payload.isGroup) {
 										msg.chatId = item.to;
 									}
-									else{
+									else {
 										msg.chatId = bySelf ? item.to : item.from;
 									}
 								}
-								else{
+								else {
 									msg = {
 										msg: item.url,
 										chatType: payload.isGroup ? "group" : "contact",
@@ -533,10 +543,10 @@ const Chat = {
 										mid: item.id,
 										status: "read"
 									};
-									if(payload.isGroup){
+									if (payload.isGroup) {
 										msg.chatId = item.to;
 									}
-									else{
+									else {
 										msg.chatId = bySelf ? item.to : item.from;
 									}
 								}
@@ -546,16 +556,16 @@ const Chat = {
 							context.commit("updateMessageStatus", { action: "readMsgs" });
 						}
 					}
-					catch(e){
+					catch (e) {
 						console.log("error", e);
 					}
 				},
-				fail: function(){ }
+				fail: function () { }
 			};
 			WebIM.conn.fetchHistoryMessages(options);
 		},
 
-		recallMessage: function(context, payload){
+		recallMessage: function (context, payload) {
 			const { chatType, mid } = payload.message;
 			const to = payload.to;
 			const me = this;
@@ -568,35 +578,35 @@ const Chat = {
 				mid,
 				to,
 				type: chatTypeObj[chatType],
-				success: function(){
+				success: function () {
 					payload.message.status = "recall";
 					payload.message.msg = "消息已撤回";
 					Vue.$store.commit("updateMessageStatus", payload.message);
 				},
-				fail: function(){
+				fail: function () {
 					// me.$message('消息撤回失败');
 				},
 			};
 			WebIM.conn.recallMessage(option);
 		},
-		initChatState: function(context, payload){
+		initChatState: function (context, payload) {
 			context.commit("initChatState")
 		}
 	},
 	getters: {
-		onGetContactUserList(state){
+		onGetContactUserList(state) {
 			return state.userList.contactUserList;
 		},
-		onGetGroupUserList(state){
+		onGetGroupUserList(state) {
 			return state.userList.groupUserList;
 		},
-		onGetChatroomUserList(state){
+		onGetChatroomUserList(state) {
 			return state.userList.chatroomUserList;
 		},
-		onGetCurrentChatObjMsg(state){
+		onGetCurrentChatObjMsg(state) {
 			return state.currentMsgs;
 		},
-		fetchHistoryMessages(state){
+		fetchHistoryMessages(state) {
 			return state.currentMsgs;
 		}
 	}
