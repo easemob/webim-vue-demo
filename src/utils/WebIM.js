@@ -325,7 +325,7 @@ WebIM.conn.listen({
 	}, // 收到消息送达客户端回执
 
 	onReadMessage: function (message) {
-		console.log("onReadMessage", message);
+		// console.log("onReadMessage", message);
 		message.status = "read";
 		Vue.$store.commit("updateMessageStatus", message);
 	}, // 收到消息已读回执
