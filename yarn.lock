@@ -2677,10 +2677,10 @@ easemob-webrtc@^3.2.2:
   resolved "https://registry.yarnpkg.com/easemob-webrtc/-/easemob-webrtc-3.2.2.tgz#03e46093cb0ce4168bddf23e61069ed6bfe221af"
   integrity sha512-uScTb2kLKH3pST/eDpjuSFGL+EYpEnogWaRw7Tsyl7b+kEQQZ2xtleIoIunCCZqSCattPBnZ1evDY+7J/wiYfw==
 
-easemob-websdk@^3.4.2:
-  version "3.4.2"
-  resolved "https://registry.yarnpkg.com/easemob-websdk/-/easemob-websdk-3.4.2.tgz#425c0107daa650e01e87911cee50d1e3583bbadb"
-  integrity sha512-751+97U6HEUZTfYykmsgL2RJhTU0UacaS2PcPjNXaARXcbTB4hjTEQvkDVXmc4gFGMVruz/pfzs9H7+z78mAVw==
+easemob-websdk@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/easemob-websdk/-/easemob-websdk-3.3.0.tgz#a34d1533f245bc17c5e2f115e1fbcc4b85760198"
+  integrity sha512-iTvz+kj5KE4U95ciqJlFovTfp7mFmXRK7vsaTCnVRC3qr973Nn0CuxCFSwM1TMfw5T9l5VygOSktRpA96amwRg==
 
 ee-first@1.1.1:
   version "1.1.1"
