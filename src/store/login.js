@@ -27,6 +27,10 @@ const Login = {
 		onLogout: function (context) {
 			context.commit("setUserName", "");
 			localStorage.setItem("userInfo", "");
+			//该步骤为退出之后将store进行初始化，防止再次登录依然能获取到上个账号的store内容。
+			let InitStore = window.JSON.parse(window.localStorage.getItem('InitStore'));
+			let nowStore = Vue.$store.state
+			Object.assign(nowStore,InitStore);
 			WebIM.conn.close();
 		},
 		onRegister: function (context, payload) {

@@ -1,3 +1,5 @@
+import { MenuItemGroup } from "element-ui";
+import { clean } from "semver";
 import WebIM from "../utils/WebIM";
 
 // import WebIM from "../utils/WebIM";
@@ -50,7 +52,19 @@ const Chat = {
 			state.userList[type] = userList;
 		},
 		updateMsgList(state, payload){
-			const { chatType, chatId, msg, bySelf, type, id } = payload;
+			const { chatType, chatId, msg, bySelf, type, mid } = payload;
+			// payload的消息为漫游历史消息的话，进入判断筛选出已存在msgList当中的消息，此类消息不再添加进msgList。
+			if (payload.isHistory) {
+				//拿到该key已经存在的消息。
+				let nowKeyMsg = state.msgList[chatType][chatId];
+				if (nowKeyMsg) {
+					//开始筛选，如果payload.mid 不等于item.id则说明msgList中没有存储。
+					let newHistoryMsg =  nowKeyMsg.filter(item=>{
+						return item.mid != payload.mid;
+					})
+					state.msgList[chatType][chatId] = newHistoryMsg;
+				} 
+			}
 			const { params } = Vue.$route;
 			let status = "unread";
 			if(payload.chatType == "contact"){
@@ -65,21 +79,24 @@ const Chat = {
 			}
 
 			if(!state.msgList[chatType][chatId]){
+				console.log('>>>>>>>AAA',state.msgList[chatType][chatId]);
+
 				state.msgList[chatType][chatId] = [{
 					msg,
 					bySelf,
 					type: type || "",
-					mid: id,
+					mid: mid,
 					status: status,
 					...payload
 				}];
 			}
 			else{
+				
 				state.msgList[chatType][chatId].push({
 					msg,
 					bySelf,
 					type: type || "",
-					mid: id,
+					mid: mid,
 					status,
 					...payload
 				});
@@ -103,11 +120,6 @@ const Chat = {
 		updateMessageMid(state, message){
 			const { id, mid } = message;
 			const { name, params } = Vue.$route;
-			// state.currentMsgs.forEach((item) => {
-			//     if(item.mid == id){
-			//         item.mid = mid
-			//     }
-			// })
 			Object.keys(state.msgList[name]).forEach((user) => {
 				if(state.msgList[name][user].length){
 					state.msgList[name][user].forEach((msg) => {
@@ -214,6 +226,8 @@ const Chat = {
 		// 获取当前聊天对象的记录 @payload： {key, type}
 		onGetCurrentChatObjMsg: function(context, payload){
 			const { id, type } = payload;
+			//从msgList中取已经存入store中的消息,并添加进CurrentMsgList
+
 			context.commit("updateCurrentMsgList", context.state.msgList[type][id]);
 		},
 		onSendText: function(context, payload){
@@ -233,7 +247,7 @@ const Chat = {
 				to: chatId[jid[chatType]],
 				chatType: type,
 				roomType: chatroom,
-				success: function(){
+				success: function(id){
 					context.commit("updateMsgList", {
 						chatType,
 						chatId: chatId[jid[chatType]],

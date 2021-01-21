@@ -327,7 +327,7 @@ WebIM.conn.listen({
 	onReadMessage: function (message) {
 		console.log("onReadMessage", message);
 		message.status = "read";
-		Vue.$store.commit("updateMessageStatus", message);
+		// Vue.$store.commit("updateMessageStatus", message);
 	}, // 收到消息已读回执
 
 	onCreateGroup: function (message) {

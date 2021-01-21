@@ -9,9 +9,6 @@ import store from './store';
 
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
-
-
-
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
@@ -28,6 +25,11 @@ Router.prototype.push = function push(location) {
 
 Vue.use(ElementUI).use(vant)
 Vue.config.productionTip = false
+
+//拿到初次进入的store初始值
+let _setIniteStore = store.state //为了获取到store的初始值以便后期用作退出初始化store；
+window.localStorage.setItem('InitStore',window.JSON.stringify(_setIniteStore));
+console.log('>>>>>>>_setIniteStore',_setIniteStore);
 
 /* eslint-disable no-new */
 window.Vue = new Vue({
