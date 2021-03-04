@@ -4,6 +4,7 @@ import emedia from "easemob-emedia";
 // import webrtc from "easemob-webrtc";
 import webrtc from "./EMedia_x1v1_3.4.1";
 
+import AgoraRTC from "agora-rtc-sdk-ng"
 import { Message } from "element-ui";
 function ack(message) {
 	var bodyId = message.id; // 需要发送已读回执的消息id
@@ -14,6 +15,13 @@ function ack(message) {
 	});
 	WebIM.conn.send(msg.body);
 }
+const rtc = {
+    // 用来放置本地客户端。
+    client: null,
+    // 用来放置本地音视频频轨道对象。
+    localAudioTrack: null,
+    localVideoTrack: null,
+};
 
 // 初始化IM SDK
 var WebIM = {};
@@ -35,9 +43,21 @@ WebIM.conn = new WebIM.connection({
 
 	// 私有云设置，详细文档：http://docs-im.easemob.com/im/web/other/privatedeploy
 	// isHttpDNS: false,
-	// url: 'xxx', // 设置为私有云的websocket server url
-	// apiUrl: 'xxx' // 设置为私有云的rest server url
+	// url: 'https://im-api-v2.easecdn.com/ws', // 设置为私有云的websocket server url
+	// apiUrl: 'https://a1.easecdn.com', // 设置为私有云的rest server url
 });
+
+//通话状态
+const CALLSTATUS = {
+    idle: 0,
+    inviting: 1,
+    alerting: 2,
+    confirmRing: 3, // caller
+    receivedConfirmRing: 4, // callee
+    answerCall: 5,
+    receivedAnswerCall: 6,
+    confirmCallee: 7
+}
 
 // 注册监听回调
 WebIM.conn.listen({
@@ -52,6 +72,7 @@ WebIM.conn.listen({
 		Vue.$router.push({ path: "/login" });
 	}, // 连接关闭回调
 	onTextMessage: function (message) {
+		console.log('onTextMessage',message);
 		const { from, to, type } = message;
 		const chatId = type !== "chat" ? to : from;
 		const typeMap = {
@@ -71,16 +92,39 @@ WebIM.conn.listen({
         Vue.$store.commit('noticeCall', message)// 通知给通话组件，是否别人邀请通话
 
 		type === 'chat' && ack(message);
-		if (WebIM && WebIM.call && message && message.ext && message.ext.msg_extension) {
-			var msgExtension = typeof (message.ext.msg_extension) == 'string' ? JSON.parse(message.ext.msg_extension) : message.ext.msg_extension
-			var options = {
-				confrId: message.ext.conferenceId,
-				password: message.ext.password || '',
-				gid: msgExtension.group_id,
-				inviter: msgExtension.inviter
+		if (message.ext && message.ext.action === 'invite') {
+			console.log('收到邀请消息',message)
+			const { callerDevId,callId } = message.ext
+			let callVideo = Vue.$store.getters.getAgora;
+			message.calleeIMName = message.to
+			message.callerIMName = message.from
+			if (message.from == WebIM.conn.context.jid.name) {
+				return // 自己在另一端发出的邀请
 			}
-			WebIM.call.listener.onInvite(from, options)
+			if (callVideo.callStatus > CALLSTATUS.idle) { // 正忙
+				if (message.ext.callId == callVideo.callId) { // 多人会议中邀请别人
+					Vue.$store.dispatch('sendAlerting',{to:from, calleeDevId:callerDevId, callId})// 回复alerting消息
+					Vue.$store.dispatch('setCallStatus',CALLSTATUS.alerting)// 更改为alerting状态
+				}else{
+					return Vue.$store.dispatch('answerCall',{result:'busy',callId: message.ext.callId, callerDevId:message.ext.callerDevId, to:from})
+				}
+			}
+			Vue.$store.dispatch('updateConfr',message)
+			Vue.$store.dispatch('sendAlerting',{to:from, calleeDevId:callerDevId, callId})// 回复alerting消息
+			Vue.$store.dispatch('setCallStatus',CALLSTATUS.alerting)// 更改为alerting状态
+
+
 		}
+		// if (WebIM && WebIM.call && message && message.ext && message.ext.msg_extension) {
+		// 	var msgExtension = typeof (message.ext.msg_extension) == 'string' ? JSON.parse(message.ext.msg_extension) : message.ext.msg_extension
+		// 	var options = {
+		// 		confrId: message.ext.conferenceId,
+		// 		password: message.ext.password || '',
+		// 		gid: msgExtension.group_id,
+		// 		inviter: msgExtension.inviter
+		// 	}
+		// 	WebIM.call.listener.onInvite(from, options)
+		// }
 	}, // 收到文本消息
 	onEmojiMessage: function (message) {
 		console.log("onEmojiMessage", message);
@@ -105,9 +149,117 @@ WebIM.conn.listen({
 		});
 		type === 'chat' && ack(message);
 	}, // 收到图片消息
-	onCmdMessage: function (message) {
-		console.log("onCmdMessage", message);
-	}, // 收到命令消息
+	onCmdMessage: function(msg) {
+		console.log('onCmdMessage', msg)
+        if (msg.action === "rtcCall") {
+			console.log('tes11');
+            if (msg.from === WebIM.conn.context.jid.name) {
+				console.log('进来了');
+                return // 多端情况， 另一端自己发的消息
+            }
+            let msgInfo = msg.ext
+            let deviceId = '';
+
+            let callerDevId = ''
+			let callId = '';
+			console.log('Vue>>>',Vue.$store.getters.getAgora);
+			let callVideo = Vue.$store.getters.getAgora;
+            switch(msgInfo.action){
+                case "alert":
+                    deviceId = msgInfo.calleeDevId
+                    callerDevId = msgInfo.callerDevId
+                    callId = msgInfo.callId
+
+                    console.log('收到回复的alert', msg)
+					Vue.$store.dispatch('confirmRing',{
+						msg, deviceId, callerDevId, callId,
+					})
+                    break;
+                case "confirmRing":
+                    console.log('收到confirmRing', msg)
+                    if (msgInfo.calleeDevId != WebIM.conn.context.jid.clientResource) {
+                        console.log('不是自己设备的confirmRing', msg)
+                        return // 多端情况另一端的消息
+                    }
+                    if (!msgInfo.status && callVideo.callStatus < CALLSTATUS.receivedConfirmRing) {
+                        console.warn('邀请已失效')
+						Vue.$store.dispatch('hangup')
+						Vue.$store.dispatch('setCallStatus',CALLSTATUS.idle)
+                        return
+                    }
+                    deviceId = msgInfo.calleeDevId
+					Vue.$store.dispatch('setCallStatus',CALLSTATUS.receivedConfirmRing)
+                    console.log('清除定时器2')
+                    rtc.timer && clearTimeout(rtc.timer)
+                    break;
+                case "answerCall":
+                    console.log('收到回复的answerCall', msg)
+					console.log('清除定时器1')
+                    rtc.timer && clearTimeout(rtc.timer)
+                    deviceId = msgInfo.calleeDevId
+                    if (msgInfo.callerDevId != WebIM.conn.context.jid.clientResource) {
+                        console.log('不是自己设备的answerCall', msg)
+                        return // 多端情况另一端的消息
+                    }
+					Vue.$store.dispatch('confirmCallee',{to:msg.from, calleeDevId:deviceId, result:msgInfo.result})
+                    if (msgInfo.result !== 'accept') {
+                        if (msgInfo.result === 'busy') {
+							Message({
+								type: "error",
+								message: '对方正忙'
+							});
+                        }else if(msgInfo.result === 'refuse'){
+							Message({
+								type: "error",
+								message: '对方已拒绝'
+							});
+                        }
+                        
+                        if (callVideo.confr.type !== 2) { // 单人情况挂断，多人不挂断
+							Vue.$store.dispatch('hangup')
+							Vue.$store.dispatch('setCallStatus',CALLSTATUS.idle)
+                        }
+                    }
+                    break;
+                case "confirmCallee":
+                    console.log('收到confirmCallee', msg)
+                    if ( msgInfo.calleeDevId != WebIM.conn.context.jid.clientResource) {
+                        if (msg.to == WebIM.conn.context.jid.name) {
+							Vue.$store.dispatch('hangup')
+							Vue.$store.dispatch('setCallStatus',CALLSTATUS.idle)
+                            return Message({
+								type: "error",
+								message: '已在其他设备处理'
+							});
+                        }
+                        return
+                    }
+                    
+                    if (msg.ext.result != 'accept' && callVideo.callStatus != 7) {
+                        // 不在通话中收到 busy refuse时挂断
+						Vue.$store.dispatch('hangup')
+						Vue.$store.dispatch('setCallStatus',CALLSTATUS.idle)
+						return
+                    }
+					Vue.$store.dispatch('setCallStatus',CALLSTATUS.confirmCallee)
+                    break; 
+                case "cancelCall":
+                    console.log('收到cancelCall', msg)
+                    if (msg.from == WebIM.conn.context.jid.name) {
+                        return // 多端情况另一端的消息
+                    }
+                    if (msg.from == callVideo.confr.callerIMName) {
+						Vue.$store.dispatch('hangup')
+						Vue.$store.dispatch('setCallStatus',CALLSTATUS.idle)
+                    }
+                    break;
+                default:
+                    console.log('unexpected action')
+                    break;
+            }
+        }
+    },
+	// 收到命令消息
 	onAudioMessage: function (message) {
 		const typeMap = {
 			chat: "contact",
@@ -349,5 +501,7 @@ WebIM.conn.listen({
 
 WebIM.WebRTC = window.webrtc; // 本项目引入 UMD 文件有问题，暂时这样引入
 WebIM.EMedia = window.emedia ;
+WebIM.AgoraRTC = AgoraRTC;
+WebIM.rtc = rtc;
 
 export default WebIM;

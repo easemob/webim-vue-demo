@@ -67,7 +67,9 @@ export default{
 			"showMultiAVModal",
 			"hideMultiAVModal",
 			"setConfr",
-			"setAVMemeberModalVisible"
+			"setAVMemeberModalVisible",
+			"setInvitedMembers",
+			"updateConfr"
 		]),
 		show(){
 			this.$data.checkList = [username];
@@ -84,10 +86,67 @@ export default{
 		},
 		startConference(){
             let invitees = this.$data.checkList.filter(item => item != this.$data.username)
-            this.$emit('EmediaModalFun', invitees, 2) // 点击开始后的 开启多人会议
-            
+			console.log('invitees>>>',invitees);
+			this.handleSubmit(invitees)
             this.hide();
-		}
+		},
+
+		handleSubmit(selected) {
+			const { confr, joinedMembers } = this.$store.state.agora;
+			const gid = this.$route.params.id
+			if (selected.length + joinedMembers.length < 1) {
+				this.$message.error("没邀请任何人员");
+				return;
+			}
+
+			const callId = confr.callId || WebIM.conn.getUniqueId().toString();
+			const channelName = confr.channel || Math.uuid(8);
+			console.log('channelName发送>>',channelName);
+			const confrObj = {
+				channelName: channelName,
+				type: 2,
+				callerDevId: WebIM.conn.context.jid.clientResource,
+				callId: callId,
+			};
+			this.updateConfr({
+				ext: confrObj,
+				to: gid,
+			});
+
+			selected.forEach((item) => {
+				this.sendInviteMsg(item, confrObj, gid);
+			});
+
+			this.setInvitedMembers(selected);
+
+			setTimeout(() => {
+				this.setInvitedMembers([]);
+			}, 60000);
+    	},
+
+    	sendInviteMsg(to, confr, gid) {
+			let id = WebIM.conn.getUniqueId();
+			let msg = new WebIM.message("txt", id);
+			console.log('this.$store.state.confr>>',this.$store.state.agora.confr);
+			const {channel} = this.$store.state.agora.confr;
+			let set_options = {
+				msg: "邀请您进行视频通话",
+				to: to,
+				chatType: "singleChat",
+				ext: {
+				action: "invite",
+				channelName: channel,
+				type: 2, //0为1v1音频，1为1v1视频，2为多人通话
+				callerDevId: confr.callerDevId, // 主叫方设备Id
+				callId: confr.callId, // 随机uuid，每次呼叫都不同，代表一次呼叫
+				ts: Date.now(),
+				msgType: "rtcCallWithAgora",
+				ext: { groupId: gid },
+				},
+			};
+			msg.set(set_options);
+			WebIM.conn.send(msg.body);
+    	},
 	},
 };
 </script>

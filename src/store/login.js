@@ -18,7 +18,8 @@ const Login = {
 			var options = {
 				user: payload.username,
 				pwd: payload.password,
-				appKey: WebIM.config.appkey
+				appKey: WebIM.config.appkey,
+				apiUrl: 'https://a1.easecdn.com'
 			};
 			WebIM.conn.open(options);
 			localStorage.setItem("userInfo", JSON.stringify({ userId: payload.username, password: payload.password }));

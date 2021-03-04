@@ -5,6 +5,7 @@ import Chat from "./chat";
 import FriendModule from "./friendModule";
 import Group from "./group";
 import Emedia from "./emedia";
+import Agora from "./agora"
 
 Vue.use(Vuex);
 
@@ -14,7 +15,8 @@ const store = new Vuex.Store({
 		chat: Chat,
 		friendModule: FriendModule,
 		group: Group,
-		emedia: Emedia
+		emedia: Emedia,
+		agora:Agora
 	}
 });
 
