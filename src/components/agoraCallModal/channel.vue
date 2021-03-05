@@ -110,9 +110,6 @@ export default {
     }
     this.intervalID && clearInterval(this.intervalID);
   },
-  destroyed() {
-    console.log("销毁");
-  },
 
   methods: {
     ...mapActions([
