@@ -14,16 +14,7 @@
       </el-row>
       <p class="video-duration">{{ time }}</p>
       <div class="action-wrap">
-        <div class="tools">
-          <!-- <img
-            src="../../../static/img/invite_member@2x.png"
-            alt=""
-            @click="addMember"
-          />
-          <p>添加成员</p> -->
-        </div>
-
-        <div class="tools">
+        <div class="tools_p">
           <img
             v-if="aoff"
             src="../../../static/img/microphone-mute@2x.png"
@@ -38,7 +29,7 @@
           />
           <p>语音</p>
         </div>
-        <div class="tools">
+        <div class="tools_p">
           <img
             src="../../../static/img/hangupCall@2x.png"
             alt=""
@@ -46,7 +37,7 @@
           />
           <p>挂断</p>
         </div>
-        <div class="tools">
+        <div class="tools_p">
           <img
             v-if="voff"
             src="../../../static/img/camera-close@2x.png"
