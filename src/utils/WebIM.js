@@ -162,7 +162,6 @@ WebIM.conn.listen({
 
             let callerDevId = ''
 			let callId = '';
-			console.log('Vue>>>',Vue.$store.getters.getAgora);
 			let callVideo = Vue.$store.getters.getAgora;
             switch(msgInfo.action){
                 case "alert":

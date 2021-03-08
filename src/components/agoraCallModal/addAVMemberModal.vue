@@ -14,6 +14,14 @@
       </el-row>
       <p class="video-duration">{{ time }}</p>
       <div class="action-wrap">
+         <!-- <div class="tools_p">
+          <img
+            src="../../../static/img/invite_member@2x.png"
+            alt=""
+            @click="addMember"
+          />
+          <p>添加成员</p>
+        </div> -->
         <div class="tools_p">
           <img
             v-if="aoff"
