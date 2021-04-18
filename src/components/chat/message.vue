@@ -1,14 +1,37 @@
 <template>
-  <div class="messagebox" v-show="activedKey[type]!= ''">
+  <div class="messagebox" v-show="activedKey[type] != ''">
     <div class="messagebox-header">
       <!-- <div>{{type}}</div> -->
       <div>
-        <a-icon type="left" class="user-goback" v-show="broken" @click="showUserList" />
-        <span v-if="activedKey[type].friendDetail">{{`${activedKey[type].friendDetail.nickname} &nbsp;&nbsp;`}}</span>
-        <span v-else>{{`${activedKey[type].name } &nbsp;&nbsp; ${activedKey[type].groupid || ''}`}}</span>
-        <a-icon v-if="type=='group'" type="ellipsis" class="user-ellipsis" @click="changeMenus" />
-        <a-dropdown v-else-if="type=='contact'">
-          <a class="ant-dropdown-link user-ellipsis" href="#" @click="changeMenus">
+        <a-icon
+          type="left"
+          class="user-goback"
+          v-show="broken"
+          @click="showUserList"
+        />
+        <!-- {{activedKey[type].name}} -->
+
+        <span v-if="activedKey[type].friendDetail">{{
+          activedKey[type].friendDetail.nickname
+            ? activedKey[type].friendDetail.nickname
+            : activedKey[type].name
+        }}</span>
+        <span v-else>{{
+          `${activedKey[type].name} &nbsp;&nbsp; ${activedKey[type].groupid ||
+            ""}`
+        }}</span>
+        <a-icon
+          v-if="type == 'group'"
+          type="ellipsis"
+          class="user-ellipsis"
+          @click="changeMenus"
+        />
+        <a-dropdown v-else-if="type == 'contact'">
+          <a
+            class="ant-dropdown-link user-ellipsis"
+            href="#"
+            @click="changeMenus"
+          >
             <a-icon type="ellipsis" />
           </a>
           <a-menu slot="overlay">
@@ -24,22 +47,26 @@
     </div>
 
     <div class="messagebox-content" ref="msgContent">
-      <div class="moreMsgs" @click="loadMoreMsgs">{{loadText}}</div>
+      <div class="moreMsgs" @click="loadMoreMsgs">{{ loadText }}</div>
       <div
-        v-for="(item,i) in msgList"
+        v-for="(item, i) in msgList"
         :key="i"
         class="message-group"
-        :style="{'float':item.bySelf ? 'right':'left'}"
+        :style="{ float: item.bySelf ? 'right' : 'left' }"
       >
-        <h4 style="text-align: left;margin:0">{{item.from}}</h4>
+        <h4 style="text-align: left;margin:0">{{ item.from }}</h4>
         <!-- 撤回消息 -->
-        <div v-if="item.status == 'recall'" class="recallMsg">{{item.msg}}</div>
-        <div v-if="item.status == 'recall'" class="recallMsg">{{renderTime(item.time)}}</div>
+        <div v-if="item.status == 'recall'" class="recallMsg">
+          {{ item.msg }}
+        </div>
+        <div v-if="item.status == 'recall'" class="recallMsg">
+          {{ renderTime(item.time) }}
+        </div>
         <!-- 撤回消息 end -->
         <a-dropdown
           v-else
           :trigger="['contextmenu']"
-          :style="{'float':item.bySelf ? 'right':'left'}"
+          :style="{ float: item.bySelf ? 'right' : 'left' }"
           :disabled="!item.bySelf"
         >
           <span style="user-select: none">
@@ -48,35 +75,38 @@
             <!-- 图片消息 -->
             <img
               :key="item.msg"
-              :src="item.msg?item.msg:''"
+              :src="item.msg ? item.msg : ''"
               v-if="item.type === 'img'"
               class="img-style"
             />
             <!-- 文件card -->
             <div
-              v-else-if="item.type==='file'"
+              v-else-if="item.type === 'file'"
               class="file-style"
-              :style="{'float':item.bySelf ? 'right':'left'}"
+              :style="{ float: item.bySelf ? 'right' : 'left' }"
             >
               <el-card :body-style="{ padding: '0px' }">
                 <div style="padding: 14px;">
                   <h2>文件</h2>
                   <span>
-                    <h3>{{item.filename}}</h3>
+                    <h3>{{ item.filename }}</h3>
                   </span>
                   <div class="bottom clearfix">
-                    <span>{{readablizeBytes(item.file_length)}}</span>
+                    <span>{{ readablizeBytes(item.file_length) }}</span>
                     <a :href="item.msg" :download="item.filename">点击下载</a>
                   </div>
                 </div>
               </el-card>
             </div>
             <!-- 音频消息 -->
-            <div v-else-if="item.type==='audio'" :style="{'float':item.bySelf ? 'right':'left'}">
+            <div
+              v-else-if="item.type === 'audio'"
+              :style="{ float: item.bySelf ? 'right' : 'left' }"
+            >
               <audio :src="item.msg" controls></audio>
             </div>
             <!-- 视频消息 -->
-            <div v-else-if="item.type==='video'">
+            <div v-else-if="item.type === 'video'">
               <video :src="item.msg" width="100%" controls></video>
             </div>
             <!-- 聊天消息 -->
@@ -84,7 +114,7 @@
               style="user-select: text"
               v-else
               v-html="renderTxt(item.msg)"
-              :class="{ 'byself': item.bySelf}"
+              :class="{ byself: item.bySelf }"
             />
 
             <!-- <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div> -->
@@ -94,8 +124,8 @@
           </el-dropdown-menu>
           </el-dropdown>-->
 
-          <a-menu slot="overlay" >
-              <a-menu-item  key="1" @click="handleCommand(item)">撤回</a-menu-item>
+          <a-menu slot="overlay">
+            <a-menu-item key="1" @click="handleCommand(item)">撤回</a-menu-item>
           </a-menu>
         </a-dropdown>
 
@@ -103,8 +133,11 @@
         <div
           v-if="item.status !== 'recall'"
           class="time-style"
-          :style="{'text-align':item.bySelf ? 'right':'left'}"
-        >{{renderTime(item.time)}} {{item.bySelf?status[item.status]:''}}</div>
+          :style="{ 'text-align': item.bySelf ? 'right' : 'left' }"
+        >
+          {{ renderTime(item.time) }}
+          {{ item.bySelf ? status[item.status] : "" }}
+        </div>
       </div>
     </div>
     <div class="messagebox-footer">
@@ -122,15 +155,15 @@
         <i
           class="el-icon-video-camera icon"
           @click="callVideo"
-          v-show="isHttps&&type != 'chatroom'"
-          :style="nowIsVideo?'pointer-events: none':'cursor: pointer'"
+          v-show="isHttps && type != 'chatroom'"
+          :style="nowIsVideo ? 'pointer-events: none' : 'cursor: pointer'"
         ></i>
         <i
           v-if="type === 'contact'"
           class="el-icon-microphone icon"
           @click="callVoice"
           v-show="isHttps && type != 'chatroom'"
-          :style="nowIsVideo?'pointer-events: none':'cursor: pointer'"
+          :style="nowIsVideo ? 'pointer-events: none' : 'cursor: pointer'"
         ></i>
       </div>
       <div class="fotter-send">
@@ -439,23 +472,20 @@ export default {
     },
 
     callVideo() {
-
-      if(this.type == "contact") {
-        const val = this.$data.activedKey[this.type].name
-        this.$emit('EmediaModalFun', [val], 1);
-
+      if (this.type == "contact") {
+        const val = this.$data.activedKey[this.type].name;
+        this.$emit("EmediaModalFun", [val], 1);
       } else if (this.type == "group") {
         this.getGroupMembers(this.$data.activedKey[this.type].groupid);
         let _this = this;
-        this.$emit('show_add_member_modal')
-
+        this.$emit("show_add_member_modal");
       }
     },
     callVoice() {
-      const val = this.$data.activedKey[this.type].name
-      this.$emit('EmediaModalFun', [val], 0);
+      const val = this.$data.activedKey[this.type].name;
+      this.$emit("EmediaModalFun", [val], 0);
     },
-    
+
     readablizeBytes(value) {
       let s = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
       let e = Math.floor(Math.log(value) / Math.log(1024));
@@ -515,17 +545,17 @@ export default {
     closeContactMessage() {
       //删除好友时关闭当前聊天框
       this.$data.activedKey["contact"] = "";
-    },
+    }
     // changeIsVideoState(v) {
     //   v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
     // }
   },
   components: {
-      ChatEmoji,
+    ChatEmoji,
     UpLoadImage,
     UpLoadFile,
     GetGroupInfo,
-    RecordAudio,
+    RecordAudio
     // AddAVMemberModal,
     // MultiAVModal,
     // EmediaModal,
@@ -533,7 +563,7 @@ export default {
 };
 </script>
 
-<style scoped lang='less'>
+<style scoped lang="less">
 .byself {
   float: right;
 }
@@ -630,4 +660,3 @@ export default {
   }
 }
 </style>
-
