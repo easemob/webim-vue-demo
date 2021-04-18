@@ -6,10 +6,11 @@
     <a-layout-header class="layout-header">
       <div class="header">
         <span class="setting">
+          <img class="head_portrait" :src="userDetail.avatarurl|| head_portraitImg" alt="">
+          <span class="username">{{userDetail.nickname||userName}}</span>
           <a-dropdown>
             <span class="ant-dropdown-link" href="#">
               <a-icon type="setting" />
-              <span class="username">{{userName}}</span>
             </span>
             <a-menu slot="overlay">
               <a-menu-item @click="recEmedia">
@@ -24,7 +25,7 @@
             </a-menu>
           </a-dropdown>
         </span>
-
+        
         <span class="setting">
           <a-dropdown>
             <span class="ant-dropdown-link" href="#">
@@ -81,6 +82,7 @@
         @collapse="onCollapse"
         @breakpoint="onBreakpoint"
       >
+      
         <MessageBox :type="activeKey" :select="select" ref="messageBox" />
         <!-- <MessageBox v-if="activeKey == 'chatroom'"  type="chatroom" />
         <MessageBox v-if="activeKey == 'group'" type="group" />-->
@@ -178,6 +180,7 @@ export default {
       userName:
         localStorage.getItem("userInfo") &&
         JSON.parse(localStorage.getItem("userInfo")).userId,
+      head_portraitImg: require('../../assets/headPortrait.jpeg'),
       collapsed: false,
       broken: false,
       current: ["contact"],
@@ -186,6 +189,10 @@ export default {
     };
   },
   computed: {
+   
+    userDetail(){
+      return this.$store.state.login.userDetail
+    },
     chatList() {
       return this.$store.state.chat.msgList;
     },

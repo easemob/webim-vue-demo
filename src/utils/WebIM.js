@@ -64,6 +64,7 @@ WebIM.conn.listen({
 	onOpened: function (message) { // 连接成功回调
 		// 登录或注册成功后 跳转到好友页面
 		const username = Vue.$store.state.login.username || localStorage.getItem("userInfo") && JSON.parse(localStorage.getItem("userInfo")).userId;
+		Vue.$store.dispatch('getLoginUserInfo',{userId:username})
 		const path = location.pathname.indexOf("login") !== -1 || location.pathname.indexOf("register") !== -1 ? "/contact" : location.pathname;
 		const redirectUrl = `${path}?username=${username}`;
 		Vue.$router.push({ path: redirectUrl });

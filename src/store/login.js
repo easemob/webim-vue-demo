@@ -2,7 +2,8 @@ import { Message } from "element-ui";
 const Login = {
 	state: {
 		isRegister: false,
-		username: ""
+		username: "",
+		userDetail:{}
 	},
 	mutations: {
 		setUserName(state, username) {
@@ -10,6 +11,9 @@ const Login = {
 		},
 		setRegisterFlag(state, flag) {
 			state.isRegister = flag;
+		},
+		setUserDetaild(state,user_detail){
+			state.userDetail = user_detail
 		}
 	},
 	actions: {
@@ -60,6 +64,15 @@ const Login = {
 				}
 			};
 			WebIM.conn.registerUser(options);
+		},
+		getLoginUserInfo:(context,payload)=>{
+			const { userId } = payload
+			WebIM.conn.fetchUserInfoById(userId).then((res) => {
+				console.log(res.data[userId])
+				let user_detail = res.data[userId];
+				res.data[userId] && context.commit('setUserDetaild',user_detail)
+			})
+
 		},
 		setRegisterFlag: function (context, flag) {
 			const path = flag ? "/register" : "/login";
