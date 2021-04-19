@@ -74,7 +74,7 @@ WebIM.conn.listen({
 	}, // 连接关闭回调
 	onTextMessage: function (message) {
 		console.log('onTextMessage',message);
-		const { from, to, type } = message;
+		const { from, to, type,time } = message;
 		const chatId = type !== "chat" ? to : from;
 		const typeMap = {
 			chat: "contact",
@@ -87,7 +87,8 @@ WebIM.conn.listen({
 			msg: message.data,
 			bySelf: false,
 			from: message.from,
-			mid: message.id
+			mid: message.id,
+			time:time
         });
         
         Vue.$store.commit('noticeCall', message)// 通知给通话组件，是否别人邀请通话
@@ -133,7 +134,7 @@ WebIM.conn.listen({
 		type === 'chat' && ack(message);
 	}, // 收到表情消息
 	onPictureMessage: function (message) {
-		const { from, to, type } = message;
+		const { from, to, type,time } = message;
 		const chatId = type !== "chat" ? to : from;
 		const typeMap = {
 			chat: "contact",
@@ -146,7 +147,8 @@ WebIM.conn.listen({
 			msg: message.url,
 			bySelf: false,
 			type: "img",
-			from: message.from
+			from: message.from,
+			time:time
 		});
 		type === 'chat' && ack(message);
 	}, // 收到图片消息
@@ -278,7 +280,8 @@ WebIM.conn.listen({
 					msg: objectUrl,
 					bySelf: false,
 					type: "audio",
-					from: message.from
+					from: message.from,
+					time:message.time
 				});
 			},
 			onFileDownloadError: function () {
@@ -293,7 +296,7 @@ WebIM.conn.listen({
 		message.type === 'chat' && 	ack(message);
 	}, // 收到位置消息
 	onFileMessage: function (message) {
-		const { from, to, type } = message;
+		const { from, to, type,time } = message;
 		const chatId = type !== "chat" ? to : from;
 		const typeMap = {
 			chat: "contact",
@@ -308,13 +311,14 @@ WebIM.conn.listen({
 			type: "file",
 			filename: message.filename,
 			file_length: message.file_length,
-			from: message.from
+			from: message.from,
+			time:time
 		});
 		type === 'chat' && 	ack(message);
 	}, // 收到文件消息
 	onVideoMessage: function (message) {
 		console.log("onVideoMessage", message);
-		const { from, to, type } = message;
+		const { from, to, type,time } = message;
 		const chatId = type !== "chat" ? to : from;
 		const typeMap = {
 			chat: "contact",
@@ -336,7 +340,8 @@ WebIM.conn.listen({
 					type: "video",
 					filename: message.filename,
 					file_length: message.file_length,
-					from: message.from
+					from: message.from,
+					time:time
 				});
 			},
 			onFileDownloadError: function () {

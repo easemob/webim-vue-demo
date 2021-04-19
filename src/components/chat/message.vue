@@ -494,11 +494,19 @@ export default {
 
     // TODO 可以抽离到utils
     renderTime(time) {
-      const nowStr = new Date();
-      const localStr = time ? new Date(time) : nowStr;
-      const localMoment = moment(localStr);
-      const localFormat = localMoment.format("MM-DD hh:mm A");
-      return localFormat;
+     // const nowStr = new Date();
+      // const localStr = time ? new Date(time) : nowStr;
+      // const localMoment = moment(localStr);
+      // const localFormat = localMoment.format("MM-DD hh:mm A");
+      // return localFormat;
+      var t = new Date(parseInt(time));
+      var Y = t.getFullYear();
+      var M =t.getMonth() + 1 < 10 ? "0" + (t.getMonth() + 1) : t.getMonth() + 1;
+      var D = t.getDate() < 10 ? "0" + t.getDate() : t.getDate();
+      var H = t.getHours() < 10 ? "0" + t.getHours() : t.getHours();
+      var F = t.getMinutes() < 10 ? "0" + t.getMinutes() : t.getMinutes();
+      var S = t.getSeconds() < 10 ? "0" + t.getSeconds() : t.getSeconds();
+      return `${M}-${D} ${H}:${F}`;
     },
     getLastMsg(item) {
       const { name, params } = this.$route;
