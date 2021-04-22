@@ -1,0 +1,97 @@
+.ownInfo {
+  .avatar_box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+    }
+
+    .avatar_list {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+      width: 350px;
+      height: 100px;
+      flex-wrap: wrap;
+
+      img {
+        width: 35px;
+        height: 35px;
+      }
+    }
+
+    .draw-enter-active,
+    .draw-leave-active {
+      transition: all .8s;
+    }
+
+    .draw-enter,
+    .draw-leave-to
+
+    /* .fade-leave-active below version 2.1.8 */
+      {
+      opacity: 0;
+      height: 0;
+    }
+  }
+
+  .infoSet {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-weight: 500;
+    height: 50px;
+
+    p {
+      margin-bottom: 0;
+      display: inline-block;
+      font-weight: 400;
+      color: #666;
+    }
+
+    .anticon-edit {
+      cursor: pointer;
+    }
+  }
+}
+
+.friendInfo_box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  .avatar_box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 50px;
+    img {
+      width: 50px;
+      height: 50px;
+    }
+  }
+
+  .nickname,.id,.sign,.gender,.birth,.phone,.email {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: left;
+    font-size: 16px;
+    font-weight: 500;
+    width: 400px;
+    height: 50px;
+    p {
+        font-size: 13px;
+      margin-bottom: 0;
+      display: inline-block;
+      font-weight: 400;
+      color: #666;
+    }
+  }
+}

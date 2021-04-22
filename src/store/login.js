@@ -72,7 +72,12 @@ const Login = {
 				let user_detail = res.data[userId];
 				res.data[userId] && context.commit('setUserDetaild',user_detail)
 			})
-
+		},
+		updateOwnUserInfo:({commit},payload)=>{
+			const {infoValue,type} = payload;
+			WebIM.conn.updateOwnUserInfo(type,infoValue).then((res) => {
+				res.data &&commit('setUserDetaild',res.data)
+			})
 		},
 		setRegisterFlag: function (context, flag) {
 			const path = flag ? "/register" : "/login";

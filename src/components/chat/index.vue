@@ -8,7 +8,7 @@
         @click="select2(item, getKey(item))"
       >
         <div v-if="item.friendDetail">
-          <img class="friend_portrait" :src="item.friendDetail.avatarurl?item.friendDetail.avatarurl:headPortraitImg" alt="">
+          <img class="friend_portrait" :src="item.friendDetail.avatarurl?item.friendDetail.avatarurl:headPortraitImg" alt="" @click="alertPersaonCard(item)"> 
           <span class="custom-title" >{{ item.friendDetail.nickname || item.name}}</span>
         </div>
         <span class="custom-title" v-if="!item.friendDetail">{{ item.name }}</span>
@@ -121,7 +121,8 @@ export default {
   props: [
     "type", // 聊天类型 contact, group, chatroom
     "username", // 选中的聊天对象
-    "select"
+    "select",
+    "card"
   ],
   methods: {
     ...mapActions([
@@ -164,6 +165,11 @@ export default {
           break;
       }
       return key;
+    },
+    alertPersaonCard(i){
+      if (i.friendDetail) {
+        this.card.getOthersUserInfo(i)
+      }
     },
     getUnreadNum(item) {
       const { name, params } = this.$route;

@@ -1,13 +1,20 @@
 <template>
-  <a-layout style="position: absolute;
+  <a-layout
+    style="position: absolute;
 	width: 100%;
 	overflow: hidden;
-	height: 100%;">
+	height: 100%;"
+  >
     <a-layout-header class="layout-header">
       <div class="header">
         <span class="setting">
-          <img class="head_portrait" :src="userDetail.avatarurl|| head_portraitImg" alt="">
-          <span class="username">{{userDetail.nickname||userName}}</span>
+          <img
+            class="head_portrait"
+            :src="userDetail.avatarurl || head_portraitImg"
+            alt=""
+            @click="$refs['person_card'].showModal()"
+          />
+          <span class="username">{{ userDetail.nickname || userName }}</span>
           <a-dropdown>
             <span class="ant-dropdown-link" href="#">
               <a-icon type="setting" />
@@ -25,7 +32,7 @@
             </a-menu>
           </a-dropdown>
         </span>
-        
+
         <span class="setting">
           <a-dropdown>
             <span class="ant-dropdown-link" href="#">
@@ -50,14 +57,21 @@
         v-model="current"
         mode="horizontal"
         :defaultSelectedKeys="['contact']"
-        :style="{ lineHeight: '50px', background: '#434648', color: '#fff', textAlign: 'left'}"
+        :style="{
+          lineHeight: '50px',
+          background: '#434648',
+          color: '#fff',
+          textAlign: 'left'
+        }"
         @click="contactTypeChange"
       >
         <a-menu-item key="contact">
           <a-icon type="user" class="navMenu-icon" />
           <span class="navMenu-text">好友</span>
           <!-- 信息提示 -->
-          <div class="tip-style" v-if="getUnread('contact').contact">&nbsp;</div>
+          <div class="tip-style" v-if="getUnread('contact').contact">
+            &nbsp;
+          </div>
         </a-menu-item>
         <a-menu-item key="group">
           <a-icon type="team" class="navMenu-icon" />
@@ -82,8 +96,7 @@
         @collapse="onCollapse"
         @breakpoint="onBreakpoint"
       >
-      
-        <MessageBox :type="activeKey" :select="select" ref="messageBox" />
+        <MessageBox :type="activeKey" :card="$refs['person_card']" :select="select" ref="messageBox" />
         <!-- <MessageBox v-if="activeKey == 'chatroom'"  type="chatroom" />
         <MessageBox v-if="activeKey == 'group'" type="group" />-->
       </a-layout-sider>
@@ -108,15 +121,26 @@
         <GroupRequest />
         <GroupInvite />
 
-        <EmediaModal ref="emediaModal" @changeIsVideoState="changeIsVideoState"/>
+        <EmediaModal
+          ref="emediaModal"
+          @changeIsVideoState="changeIsVideoState"
+        />
         <!-- <MultiAVModal :to="activedType[activeKey]" /> -->
 
-        <AddAVMemberModal ref="addAvMembertModal" @EmediaModalFun="EmediaModalFun"/>
+        <AddAVMemberModal
+          ref="addAvMembertModal"
+          @EmediaModalFun="EmediaModalFun"
+        />
 
-        <AlertModal v-if="showAlert"/>
-        <MultiAVModal ref="multiCall" v-if="showConfr" @show_add_member_modal="show_add_member_modal"/>
-        <Call ref="call" v-if="showCall"/>
+        <AlertModal v-if="showAlert" />
+        <MultiAVModal
+          ref="multiCall"
+          v-if="showConfr"
+          @show_add_member_modal="show_add_member_modal"
+        />
+        <Call ref="call" v-if="showCall" />
       </a-layout-content>
+      <PersonCard ref="person_card" />
     </a-layout>
   </a-layout>
 </template>
@@ -133,13 +157,14 @@ import CreateGroup from "../../components/group/createGroup.vue";
 import VidoeSetting from "../../components/videoSetting/index";
 import GroupRequest from "../../components/group/groupRequest.vue";
 import GroupInvite from "../../components/group/groupInvite.vue";
+import PersonCard from "../../components/personCard/personCard";
 
 import EmediaModal from "../../components/emediaModal/index";
 // import MultiAVModal from "../../components/emediaModal/multiAVModal";
 // import Call from "../../components/call/index"; // 多人实现 1v1 通话
-import MultiAVModal from "../../components/agoraCallModal/addAVMemberModal"
+import MultiAVModal from "../../components/agoraCallModal/addAVMemberModal";
 import Call from "../../components/agoraCallModal/channel";
-import AlertModal from "../../components/agoraCallModal/alertModal"
+import AlertModal from "../../components/agoraCallModal/alertModal";
 import AddAVMemberModal from "../../components/emediaModal/addAVMemberModal";
 
 import "./index.less";
@@ -159,7 +184,7 @@ export default {
       activeKey: "contact",
       selectedItem: "",
       showAddOptions: false,
-      nowIsVideo:false,
+      nowIsVideo: false,
       addList: [
         {
           name: "添加好友",
@@ -180,63 +205,83 @@ export default {
       userName:
         localStorage.getItem("userInfo") &&
         JSON.parse(localStorage.getItem("userInfo")).userId,
-      head_portraitImg: require('../../assets/headPortrait.jpeg'),
+      head_portraitImg: require("../../assets/headPortrait.jpeg"),
       collapsed: false,
       broken: false,
       current: ["contact"],
-
-      showAlert:false,
+      nowClickID: "",
+      showAlert: false
     };
   },
   computed: {
-   
-    userDetail(){
-      return this.$store.state.login.userDetail
+    userDetail() {
+      return this.$store.state.login.userDetail;
     },
     chatList() {
       return this.$store.state.chat.msgList;
     },
-    onSetCallStatus () {
-        return this.$store.state.agora.callStatus
+    onSetCallStatus() {
+      return this.$store.state.agora.callStatus;
     },
-     //显隐主叫弹窗
-     showCall(){
-       const {confr, callStatus} = this.$store.state.agora
-        let bool =[1, 3, 5, 6, 7].includes(callStatus) && typeof confr.type == "number" && confr.type < 2 ? true : false;
-       return bool
-     },
-     showConfr(){
-       const {confr, callStatus} = this.$store.state.agora
-        return (confr.type === 2 && [0,3,5,6,7].includes(callStatus)) ? true: false
-     }
+    //显隐主叫弹窗
+    showCall() {
+      const { confr, callStatus } = this.$store.state.agora;
+      let bool =
+        [1, 3, 5, 6, 7].includes(callStatus) &&
+        typeof confr.type == "number" &&
+        confr.type < 2
+          ? true
+          : false;
+      return bool;
+    },
+    showConfr() {
+      const { confr, callStatus } = this.$store.state.agora;
+      return confr.type === 2 && [0, 3, 5, 6, 7].includes(callStatus)
+        ? true
+        : false;
+    }
   },
-  watch:{
-    onSetCallStatus (msg) {
-      let self = this
-      console.log('触发对msg》》',this.$store.state.agora);
-        const {confr, callStatus, minisize} = this.$store.state.agora
-        console.log('confr>>',confr,'callStatus>>',callStatus,'minisize>>',minisize);
-         const status = {
-            idle: 0,
-            confirmRing: 3,
-            answerCall: 5,
-            receivedAnswerCall: 6,
-            confirmCallee: 7
-        }
-      
-        self.$data.showAlert = callStatus == 4 ? true:false // 显隐被叫弹窗
+  watch: {
+    onSetCallStatus(msg) {
+      let self = this;
+      console.log("触发对msg》》", this.$store.state.agora);
+      const { confr, callStatus, minisize } = this.$store.state.agora;
+      console.log(
+        "confr>>",
+        confr,
+        "callStatus>>",
+        callStatus,
+        "minisize>>",
+        minisize
+      );
+      const status = {
+        idle: 0,
+        confirmRing: 3,
+        answerCall: 5,
+        receivedAnswerCall: 6,
+        confirmCallee: 7
+      };
 
-     
-        if (callStatus === 3) {
-        return self.$refs.call && self.$refs.call.join() // 单人
-        }
-        if (callStatus===7) {
-        return  self.$refs.multiCall && self.$refs.multiCall.join()
-        }
-    },
+      self.$data.showAlert = callStatus == 4 ? true : false; // 显隐被叫弹窗
+
+      if (callStatus === 3) {
+        return self.$refs.call && self.$refs.call.join(); // 单人
+      }
+      if (callStatus === 7) {
+        return self.$refs.multiCall && self.$refs.multiCall.join();
+      }
+    }
   },
   methods: {
-    ...mapActions(["onLogout", "onGetFirendBlack", "initChatState","updateConfr","setCallStatus","hangup","cancelCall"]),
+    ...mapActions([
+      "onLogout",
+      "onGetFirendBlack",
+      "initChatState",
+      "updateConfr",
+      "setCallStatus",
+      "hangup",
+      "cancelCall"
+    ]),
     toLogout() {
       this.onLogout();
       this.initChatState();
@@ -251,16 +296,16 @@ export default {
     onBreakpoint(broken) {
       this.$data.broken = broken;
     },
-     changeIsVideoState(v) {
+    changeIsVideoState(v) {
       v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
     },
 
-    EmediaModalFun(tos, callType){
-        // callType: 0 1v1音频, 1 1v1视频, 2 多人
-        this.invite(tos, callType,this.$data.activeKey)
+    EmediaModalFun(tos, callType) {
+      // callType: 0 1v1音频, 1 1v1视频, 2 多人
+      this.invite(tos, callType, this.$data.activeKey);
     },
     show_add_member_modal() {
-        this.$refs.addAvMembertModal.show()
+      this.$refs.addAvMembertModal.show();
     },
     hideUserList() {
       this.$data.collapsed = true;
@@ -270,6 +315,7 @@ export default {
     },
     select(i) {
       this.$refs.messageList.select(i);
+      // 
       if (this.broken) {
         this.$data.collapsed = true;
       }
@@ -352,15 +398,13 @@ export default {
       };
     },
 
-
-
     invite(tos, callType, selectTab) {
       // // callType: 0 1v1音频, 1 1v1视频, 2 多人
-      console.log("tos",tos, "callType", callType, "selectTab", selectTab);
-      console.log('tasdjahskjdhwkjasd>>',this.$route.params.id);
+      console.log("tos", tos, "callType", callType, "selectTab", selectTab);
+      console.log("tasdjahskjdhwkjasd>>", this.$route.params.id);
       const callId = WebIM.conn.getUniqueId().toString();
       const channelName = Math.uuid(8);
-      const { callStatus } = this.$store.state.agora
+      const { callStatus } = this.$store.state.agora;
       switch (callType) {
         case 0:
           if (selectTab === "contact") {
@@ -379,7 +423,7 @@ export default {
                 ts: Date.now(),
                 msgType: "rtcCallWithAgora",
                 callerIMName: WebIM.conn.context.jid.name
-              },
+              }
             };
             msg.set(set_options);
             WebIM.conn.send(msg.body);
@@ -390,11 +434,11 @@ export default {
                 token: null,
                 type: 0,
                 callerDevId: WebIM.conn.context.jid.clientResource,
-                callId: callId,
+                callId: callId
               },
               to: tos[0],
               callerIMName: WebIM.conn.context.jid.name,
-              calleeIMName: tos[0],
+              calleeIMName: tos[0]
             });
             const inviteStatus = 1;
             this.setCallStatus(inviteStatus);
@@ -402,7 +446,7 @@ export default {
           break;
         case 1:
           if (callStatus > 0) {
-            console.log('正在通话中')
+            console.log("正在通话中");
           }
           if (selectTab === "contact") {
             let id = WebIM.conn.getUniqueId();
@@ -419,8 +463,8 @@ export default {
                 callerDevId: WebIM.conn.context.jid.clientResource, // 主叫方设备Id
                 callId: callId, // 随机uuid，每次呼叫都不同，代表一次呼叫
                 ts: Date.now(),
-                msgType: "rtcCallWithAgora",
-              },
+                msgType: "rtcCallWithAgora"
+              }
             };
             msg.set(set_options);
             WebIM.conn.send(msg.body);
@@ -430,37 +474,37 @@ export default {
                 channelName: channelName,
                 type: 1,
                 callerDevId: WebIM.conn.context.jid.clientResource,
-                callId: callId,
+                callId: callId
               },
               to: tos[0],
               callerIMName: WebIM.conn.context.jid.name,
-              calleeIMName: tos[0],
+              calleeIMName: tos[0]
             });
             const inviteStatus = 1;
             this.setCallStatus(inviteStatus);
-          } else if(selectTab === 'group'){
-            console.log('执行了group');
+          } else if (selectTab === "group") {
+            console.log("执行了group");
           }
-          const inviteStatus = 1
-          this.setCallStatus(inviteStatus)
-          let to = tos[0]
+          const inviteStatus = 1;
+          this.setCallStatus(inviteStatus);
+          let to = tos[0];
           rtc.timer = setTimeout(() => {
-              if (selectTab === 'contact') {
-                  this.cancelCall(to)
-                  this.hangup()
-              }else{
-                  // 多人不做超时
-              }
-          }, 30000)
-          break
+            if (selectTab === "contact") {
+              this.cancelCall(to);
+              this.hangup();
+            } else {
+              // 多人不做超时
+            }
+          }, 30000);
+          break;
         case 2:
-          console.log('this.$refs.multiCall>>',this.$refs.multiCall);
+          console.log("this.$refs.multiCall>>", this.$refs.multiCall);
           // this.$refs.multiCall.handleSubmit(tos,this.$route.params.id)
-          break
+          break;
         default:
           break;
       }
-    },
+    }
   },
   components: {
     MessageBox,
@@ -477,7 +521,8 @@ export default {
     MultiAVModal,
     Call,
     AddAVMemberModal,
-    AlertModal
+    AlertModal,
+    PersonCard
   }
 };
 </script>
