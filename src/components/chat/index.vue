@@ -7,7 +7,11 @@
         :key="getKey(item)"
         @click="select2(item, getKey(item))"
       >
-        <span class="custom-title">{{item.name}}</span>
+        <div v-if="item.friendDetail">
+          <img class="friend_portrait" :src="item.friendDetail.avatarurl?item.friendDetail.avatarurl:headPortraitImg" alt="" @click="alertPersaonCard(item)"> 
+          <span class="custom-title" >{{ item.friendDetail.nickname || item.name}}</span>
+        </div>
+        <span class="custom-title" v-if="!item.friendDetail">{{ item.name }}</span>
         <div class="icon-style" v-if="getUnreadNum(item) != 0">
           <span class="unreadNum">{{getUnreadNum(item)}}</span>
         </div>
@@ -36,6 +40,7 @@ export default {
         group: "",
         chatroom: ""
       },
+      headPortraitImg:require('../../assets/headPortrait.jpeg'),
       showFirendMenus: false,
       firendMenus: [
         {
@@ -63,11 +68,11 @@ export default {
     };
   },
 
-  beforeMount() {
+   beforeMount() {
     if (this.type === "contact") {
       setTimeout(() => {
         this.onGetFirendBlack();
-        this.onGetContactUserList();
+        this.onGetContactUserList();  
       }, 100);
     } else if (this.type === "group") {
       this.onGetGroupUserList();
@@ -79,6 +84,7 @@ export default {
     // 取到黑名单列表值将黑名单匹配用户列表进行筛选
     let blackList = this.$store.state.friendModule.blackList;
     this.$store.commit("changeUserList", blackList);
+    console.log('>>>>>>>已执行');
   },
   updated() {
     this.scollBottom();
@@ -97,6 +103,7 @@ export default {
             return item;
           }
         }),
+        
         group: this.group,
         chatroom: this.chatroom
       };
@@ -114,7 +121,8 @@ export default {
   props: [
     "type", // 聊天类型 contact, group, chatroom
     "username", // 选中的聊天对象
-    "select"
+    "select",
+    "card"
   ],
   methods: {
     ...mapActions([
@@ -132,7 +140,8 @@ export default {
       "onGetGroupinfo",
       "recallMessage",
       "onGetGroupBlack",
-      "onGetFirendBlack"
+      "onGetFirendBlack",
+      "onGetAllFriendsInfo"
     ]),
     handleOpen(key, keyPath) {
       // console.log(key, keyPath);
@@ -156,6 +165,11 @@ export default {
           break;
       }
       return key;
+    },
+    alertPersaonCard(i){
+      if (i.friendDetail) {
+        this.card.getOthersUserInfo(i)
+      }
     },
     getUnreadNum(item) {
       const { name, params } = this.$route;
@@ -395,6 +409,11 @@ export default {
   color: #aaa;
   width: 100%;
   text-align: center;
+}
+.friend_portrait{
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
 }
 .custom-title {
   font-weight: 500;

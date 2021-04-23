@@ -197,19 +197,27 @@ const Chat = {
 			try {
 				WebIM.conn.getRoster({
 					success: function (roster) {
-						// console.log("roster", roster);
 						const userList = roster.filter(user => ["both", "to"].includes(user.subscription));
-						context.commit("updateUserList", {
-							userList,
-							type: "contactUserList",
-							black: payload
-						});
+						const userInfoList = []
+						userList && userList.forEach(item=>{return userInfoList.push(item.name)})
+						userInfoList && WebIM.conn.fetchUserInfoById(userInfoList).then((res) => {
+								let data = res.data;
+								userList.forEach((item,idx)=>{return userList[idx].friendDetail = data[item.name]})
+								context.commit("updateUserList", {
+									userList,
+									type: "contactUserList",
+									black: payload
+								});
+							})
 					}
 				});
 			}
 			catch (e) {
 				console.log("error", e);
 			}
+		},
+		onGetAllFriendsInfo:(context,payload)=>{
+			console.log(payload);
 		},
 		onGetGroupUserList: function (context, payload) {
 			var options = {
