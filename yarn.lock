@@ -2682,10 +2682,10 @@ easemob-webrtc@^3.2.2:
   resolved "https://registry.yarnpkg.com/easemob-webrtc/-/easemob-webrtc-3.2.2.tgz#03e46093cb0ce4168bddf23e61069ed6bfe221af"
   integrity sha512-uScTb2kLKH3pST/eDpjuSFGL+EYpEnogWaRw7Tsyl7b+kEQQZ2xtleIoIunCCZqSCattPBnZ1evDY+7J/wiYfw==
 
-easemob-websdk@^3.4.4:
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/easemob-websdk/-/easemob-websdk-3.5.0.tgz#07814faf3473eae70d4edfaf2d24b64815239bf1"
-  integrity sha512-92bVl7o7nu/peGOcZIp2PZVEzP8IAHLkez+caktyQbbCis8qEGozYoQ7iDUyXoza0OleDVKK3gYXFVcUQrVBmg==
+easemob-websdk@^3.5.2:
+  version "3.5.2"
+  resolved "https://registry.yarnpkg.com/easemob-websdk/-/easemob-websdk-3.5.2.tgz#5699e66579d0d839a0ebe8796904f0d65b2df087"
+  integrity sha512-8JxHDQfNrKyVK1Wckd3pfrU4P9niColMFXqbvN8wNuPGWgJBj8bm8roWvdIy4uniHR5Ade6HhWHiDOaTXJEwsw==
 
 ee-first@1.1.1:
   version "1.1.1"
@@ -7825,9 +7825,9 @@ url-loader@^0.5.8:
     mime "1.3.x"
 
 url-parse@^1.1.8, url-parse@^1.4.3:
-  version "1.4.7"
-  resolved "https://registry.yarnpkg.com/url-parse/-/url-parse-1.4.7.tgz#a8a83535e8c00a316e403a5db4ac1b9b853ae278"
-  integrity sha512-d3uaVyzDB9tQoSXFvuSUNFibTd9zxd2bkVrDRvF5TmvWWQwqE4lgYJ5m+x1DbecWkw+LK4RNl2CU1hHuOKPVlg==
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/url-parse/-/url-parse-1.5.1.tgz#d5fa9890af8a5e1f274a2c98376510f6425f6e3b"
+  integrity sha512-HOfCOUJt7iSYzEx/UqgtwKRMC6EU91NFhsCHMv9oM03VJcVo2Qrp8T8kI9D7amFf1cu+/3CEhgb3rF9zL7k85Q==
   dependencies:
     querystringify "^2.1.1"
     requires-port "^1.0.0"
