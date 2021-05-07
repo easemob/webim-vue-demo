@@ -5,6 +5,7 @@ webim-vue demo是基于环信sdk开发的一款具有单聊、群聊、聊天室
 
 # 运行起来
 + 说明：音视频功能需要使用https。
++ 环境：Node 版本要低于 12.x，建议使用 10.x
 ``` bash
 # install dependencies
 npm install
