@@ -416,8 +416,8 @@ const Chat = {
 						bySelf: true,
 						type: "audio",
 						filename: file.data.name,
-						// file_length: file.data.size,
-						// time: data.timestamp,
+						file_length: file.data.size,
+						time: data.timestamp,
 						mid: id,
 						status: "sending"
 					});
@@ -514,7 +514,10 @@ const Chat = {
 										chatType: payload.isGroup ? "group" : "contact",
 										chatId: bySelf ? item.to : item.from,
 										bySelf: bySelf,
-										type: "audio"
+										type: "audio",
+										time: time,
+										mid: item.id,
+										status: "read"
 									};
 									if (payload.isGroup) {
 										msg.chatId = item.to;

@@ -494,11 +494,6 @@ export default {
 
     // TODO 可以抽离到utils
     renderTime(time) {
-     // const nowStr = new Date();
-      // const localStr = time ? new Date(time) : nowStr;
-      // const localMoment = moment(localStr);
-      // const localFormat = localMoment.format("MM-DD hh:mm A");
-      // return localFormat;
       var t = new Date(parseInt(time));
       var Y = t.getFullYear();
       var M =t.getMonth() + 1 < 10 ? "0" + (t.getMonth() + 1) : t.getMonth() + 1;

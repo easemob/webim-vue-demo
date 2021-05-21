@@ -84,7 +84,6 @@ export default {
     // 取到黑名单列表值将黑名单匹配用户列表进行筛选
     let blackList = this.$store.state.friendModule.blackList;
     this.$store.commit("changeUserList", blackList);
-    console.log('>>>>>>>已执行');
   },
   updated() {
     this.scollBottom();
@@ -438,6 +437,9 @@ export default {
   width: 100%;
 }
 .icon-style {
+  position: absolute;
+  right: 10px;
+  top: 25%;
   display: inline-block;
   background-color: #f04134;
   width: 20px;
