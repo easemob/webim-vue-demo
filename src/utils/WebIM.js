@@ -1,9 +1,8 @@
 import config from "./WebIMConfig";
 import websdk from "easemob-websdk";
-import emedia from "easemob-emedia";
-// import webrtc from "easemob-webrtc";
-import webrtc from "./EMedia_x1v1_3.4.1";
+import _ from 'lodash'
 
+// 声网音视频sdk
 import AgoraRTC from "agora-rtc-sdk-ng"
 import { Message } from "element-ui";
 function ack(message) {
@@ -452,11 +451,11 @@ WebIM.conn.listen({
 			return Message.error('请输入账号密码')
 		} else if (message.type == 28) {
 			return console.log("未登陆")
-		} else if (message.data.type === 17 && JSON.parse(message.data.data).error_description == "user not found") {
+		} else if (_.get(message,'data.type') === 17 && JSON.parse(message.data.data).error_description == "user not found") {
 			return Message.error("用户名不存在！")
-		} else if (message.data.type === 17 && JSON.parse(message.data.data).error_description == "invalid password") {
+		} else if (_.get(message,'data.type') === 17 && JSON.parse(message.data.data).error_description == "invalid password") {
 			return Message.error('密码无效！')
-		} else if (message.data.type === 17 && JSON.parse(message.data.data).error_description == "user not activated") {
+		} else if (_.get(message,'data.type') === 17 && JSON.parse(message.data.data).error_description == "user not activated") {
 			return Message.error("用户已被封禁！")
 		} else if (message.type == "504") {
 			return Message.error("消息撤回失败");
