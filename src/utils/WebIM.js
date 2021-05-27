@@ -1,6 +1,9 @@
 import config from "./WebIMConfig";
 import websdk from "easemob-websdk";
 import _ from 'lodash'
+import emedia from "easemob-emedia";
+// import webrtc from "easemob-webrtc";
+import webrtc from "./EMedia_x1v1_3.4.1";
 
 // 声网音视频sdk
 import AgoraRTC from "agora-rtc-sdk-ng"
