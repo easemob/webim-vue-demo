@@ -1,5 +1,5 @@
 <template>
-  <div class="messagebox" v-show="activedKey[type] != ''">
+  <div class="messagebox" v-show="toggleWindows">
     <div class="messagebox-header">
       <!-- <div>{{type}}</div> -->
       <div>
@@ -17,8 +17,9 @@
             : activedKey[type].name
         }}</span>
         <span v-else>{{
-          `${activedKey[type].name} &nbsp;&nbsp; ${activedKey[type].groupid ||
-            ""}`
+          `${activedKey[type].name} &nbsp;&nbsp; ${
+            activedKey[type].groupid || ""
+          }`
         }}</span>
         <a-icon
           v-if="type == 'group'"
@@ -54,7 +55,7 @@
         class="message-group"
         :style="{ float: item.bySelf ? 'right' : 'left' }"
       >
-        <h4 style="text-align: left;margin:0">{{ item.from }}</h4>
+        <h4 style="text-align: left; margin: 0">{{ item.from }}</h4>
         <!-- 撤回消息 -->
         <div v-if="item.status == 'recall'" class="recallMsg">
           {{ item.msg }}
@@ -86,7 +87,7 @@
               :style="{ float: item.bySelf ? 'right' : 'left' }"
             >
               <el-card :body-style="{ padding: '0px' }">
-                <div style="padding: 14px;">
+                <div style="padding: 14px">
                   <h2>文件</h2>
                   <span>
                     <h3>{{ item.filename }}</h3>
@@ -173,7 +174,7 @@
           placeholder="消息"
           class="sengTxt"
           @pressEnter="onSendTextMsg"
-          style="resize:none"
+          style="resize: none"
           ref="txtDom"
         />
         <template />
@@ -209,7 +210,7 @@ export default {
       activedKey: {
         contact: "",
         group: "",
-        chatroom: ""
+        chatroom: "",
       },
       message: "",
       isHttps: window.location.protocol === "https:",
@@ -217,9 +218,9 @@ export default {
       status: {
         sending: "发送中",
         sent: "已发送",
-        read: "已读"
+        read: "已读",
       },
-      nowIsVideo: false
+      nowIsVideo: false,
     };
   },
 
@@ -241,25 +242,40 @@ export default {
       contact: "onGetContactUserList",
       group: "onGetGroupUserList",
       chatroom: "onGetChatroomUserList",
-      msgList: "onGetCurrentChatObjMsg"
+      msgList: "onGetCurrentChatObjMsg",
     }),
+    //控制聊天框
+    toggleWindows(){
+      let show
+      switch(this.type){
+        case 'contact':
+          show = this.activedKey[this.type]!=''?true:false
+          break
+        case 'group':
+          show = this.group.find(item=>item.groupid === this.activedKey[this.type].groupid)?true:false
+          break
+        default:
+          show = this.activedKey[this.type]!=''?true:false
+      }
+      return show
+    },
     userList() {
       return {
         contact: this.contact,
         group: this.group,
-        chatroom: this.chatroom
+        chatroom: this.chatroom,
       };
     },
     selectedKeys() {
       return [this.getKey(this.activedKey[this.type]) || ""];
-    }
+    },
   },
   props: [
     "type", // 聊天类型 contact, group, chatroom
     "username", // 选中的聊天对象
     "broken", // 是否适应移动端
     "showUserList",
-    "hideUserList"
+    "hideUserList",
   ],
   methods: {
     ...mapActions([
@@ -276,7 +292,7 @@ export default {
       "onDelteFirend",
       "onGetGroupinfo",
       "recallMessage",
-      "onGetGroupBlack"
+      "onGetGroupBlack",
     ]),
     getKey(item, type) {
       let key = "";
@@ -298,7 +314,7 @@ export default {
     getCurrentMsg(props) {
       this.onGetCurrentChatObjMsg({
         type: props,
-        id: this.getKey(this.activedKey[props], props)
+        id: this.getKey(this.activedKey[props], props),
       });
     },
     select(key) {
@@ -319,7 +335,7 @@ export default {
         setTimeout(() => {
           Vue.$store.commit("updateMessageStatus", {
             action: "oneUserReadMsgs",
-            readUser: key.groupid
+            readUser: key.groupid,
           });
           this.$forceUpdate();
         }, 100);
@@ -333,7 +349,7 @@ export default {
         setTimeout(() => {
           Vue.$store.commit("updateMessageStatus", {
             action: "oneUserReadMsgs",
-            readUser: key.name
+            readUser: key.name,
           });
           this.$forceUpdate();
         }, 100);
@@ -350,7 +366,7 @@ export default {
 
         WebIM.conn.joinChatRoom({
           roomId: key.id, // 聊天室id
-          success: function() {
+          success: function () {
             // console.log("加入聊天室成功");
             if (!me.msgList) {
               me.getHistoryMessage({ name: key.id, isGroup: true });
@@ -358,14 +374,14 @@ export default {
                 me.$forceUpdate();
               }, 100);
             }
-          }
+          },
         });
       }
     },
 
     loadMoreMsgs() {
       const me = this;
-      const success = function(msgs) {
+      const success = function (msgs) {
         if (msgs.length === 0) {
           me.$data.loadText = "已无更多数据";
         }
@@ -384,7 +400,7 @@ export default {
       this.getHistoryMessage({
         name,
         isGroup,
-        success
+        success,
       });
     },
 
@@ -401,12 +417,12 @@ export default {
         case "1":
           // console.log("加入黑名单");
           this.onAddBlack({
-            userId: this.$data.activedKey[this.type]
+            userId: this.$data.activedKey[this.type],
           });
           this.$data.activedKey.contact = "";
           this.$router.push({
             // 核心语句
-            path: "/contact" // 跳转的路径
+            path: "/contact", // 跳转的路径
           });
           break;
         case "2":
@@ -414,7 +430,7 @@ export default {
             userId: this.$data.activedKey[this.type],
             callback: () => {
               this.closeContactMessage();
-            }
+            },
           });
           break;
         default:
@@ -423,7 +439,7 @@ export default {
     },
     getGroupInfo() {
       this.onGetGroupinfo({
-        select_id: this.$data.activedKey[this.type].groupid
+        select_id: this.$data.activedKey[this.type].groupid,
       });
     },
     onSendTextMsg() {
@@ -434,7 +450,7 @@ export default {
       this.onSendText({
         chatType: this.type,
         chatId: this.$data.activedKey[this.type],
-        message: this.$data.message
+        message: this.$data.message,
       });
       this.$data.message = "";
     },
@@ -496,7 +512,8 @@ export default {
     renderTime(time) {
       var t = new Date(parseInt(time));
       var Y = t.getFullYear();
-      var M =t.getMonth() + 1 < 10 ? "0" + (t.getMonth() + 1) : t.getMonth() + 1;
+      var M =
+        t.getMonth() + 1 < 10 ? "0" + (t.getMonth() + 1) : t.getMonth() + 1;
       var D = t.getDate() < 10 ? "0" + t.getDate() : t.getDate();
       var H = t.getHours() < 10 ? "0" + t.getHours() : t.getHours();
       var F = t.getMinutes() < 10 ? "0" + t.getMinutes() : t.getMinutes();
@@ -548,7 +565,7 @@ export default {
     closeContactMessage() {
       //删除好友时关闭当前聊天框
       this.$data.activedKey["contact"] = "";
-    }
+    },
     // changeIsVideoState(v) {
     //   v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
     // }
@@ -558,7 +575,7 @@ export default {
     UpLoadImage,
     UpLoadFile,
     GetGroupInfo,
-    RecordAudio
+    RecordAudio,
     // AddAVMemberModal,
     // MultiAVModal,
     // EmediaModal,
