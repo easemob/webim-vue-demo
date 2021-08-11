@@ -83,6 +83,11 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
+"@popperjs/core@^2.9.2":
+  version "2.9.3"
+  resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.9.3.tgz#8b68da1ebd7fc603999cf6ebee34a4899a14b88e"
+  integrity sha512-xDu17cEfh7Kid/d95kB6tZsLOmSWKCZKtprnhVepjsSaCij+lM3mItSJDuuHDMbCWTh8Ejmebwb+KONcCJ0eXQ==
+
 "@simonwep/pickr@~1.7.0":
   version "1.7.4"
   resolved "https://registry.yarnpkg.com/@simonwep/pickr/-/pickr-1.7.4.tgz#b14fcd945890388b870cd6db4d6c78d531f25141"
@@ -101,10 +106,17 @@
   resolved "https://registry.yarnpkg.com/@types/q/-/q-1.5.4.tgz#15925414e0ad2cd765bfef58842f7e26a7accb24"
   integrity sha512-1HcDas8SEj4z1Wc696tH56G8OlRaH/sqZOynNNB+HF0WOeXPaxTtbYzJY2oEfiUxjSKjhCKr+MvR7dCHcEelug==
 
-"@vant/icons@1.3.0":
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/@vant/icons/-/icons-1.3.0.tgz#94f4c93122fd7331e0e00df55804779aead8c9c2"
-  integrity sha512-uQ0H19C+SDZbvaUR3CfrpJe/oiMeXPtJJvdRNjswpxICh1LRdKvQf9FxG2PhhWjAJWKyP55CVXn22qFswOUIRg==
+"@vant/icons@^1.5.3":
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/@vant/icons/-/icons-1.7.0.tgz#02d427532a8142c35db159da9c364fe6890c3ac9"
+  integrity sha512-sqKvtYcSgSd6+AU1nBPaZARn2Nzf8hi0ErLhfXVR6f+Y7R0gojGZVoxuB83yUI6+0LwbitW5IfN3E6qzEsu21Q==
+
+"@vant/popperjs@^1.0.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@vant/popperjs/-/popperjs-1.1.0.tgz#b4edee5bbfa6fb18705986e313d4fd5f17942a0f"
+  integrity sha512-8MD1gz146awV/uPxYjz4pet22f7a9YVKqk7T+gFkWFwT9mEcrIUEg/xPrdOnWKLP9puXyYtm7oVfSDSefZ/p/w==
+  dependencies:
+    "@popperjs/core" "^2.9.2"
 
 "@vue/babel-helper-vue-jsx-merge-props@^1.0.0":
   version "1.0.0"
@@ -163,10 +175,10 @@ add-dom-event-listener@^1.0.2:
   dependencies:
     object-assign "4.x"
 
-agora-rtc-sdk-ng@^4.3.0:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/agora-rtc-sdk-ng/-/agora-rtc-sdk-ng-4.3.0.tgz#08dba32fbf4777cffd7069f3c3e66a33b954c1c5"
-  integrity sha512-RAz+cM2bVK6Rr/H7F1XOUSL2VgMBBgqVWbKSBvSHJ6JzqsjFhU1Yt8a/HCtHrQEKpTj25JqUb9KGRtjoXxbifQ==
+agora-rtc-sdk-ng@^4.4.0:
+  version "4.6.3"
+  resolved "https://registry.yarnpkg.com/agora-rtc-sdk-ng/-/agora-rtc-sdk-ng-4.6.3.tgz#ac90a6b705cee048ea4a0685d62a6b96a0fe9d27"
+  integrity sha512-/p+ZXhae1RnVVM4cXVZqnVCUhUrhtkccJdETxuJnhq49btaTLnkQSR9j4Xq9k5oRU4FqBxtgxwBNPzRgkFNGMA==
 
 ajv-keywords@^3.1.0:
   version "3.5.2"
@@ -2682,10 +2694,10 @@ easemob-webrtc@^3.2.2:
   resolved "https://registry.yarnpkg.com/easemob-webrtc/-/easemob-webrtc-3.2.2.tgz#03e46093cb0ce4168bddf23e61069ed6bfe221af"
   integrity sha512-uScTb2kLKH3pST/eDpjuSFGL+EYpEnogWaRw7Tsyl7b+kEQQZ2xtleIoIunCCZqSCattPBnZ1evDY+7J/wiYfw==
 
-easemob-websdk@^3.4.4:
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/easemob-websdk/-/easemob-websdk-3.5.0.tgz#07814faf3473eae70d4edfaf2d24b64815239bf1"
-  integrity sha512-92bVl7o7nu/peGOcZIp2PZVEzP8IAHLkez+caktyQbbCis8qEGozYoQ7iDUyXoza0OleDVKK3gYXFVcUQrVBmg==
+easemob-websdk@^3.5.2:
+  version "3.6.3"
+  resolved "https://registry.yarnpkg.com/easemob-websdk/-/easemob-websdk-3.6.3.tgz#08741aa30623fe36dbda1f181001bb73124e0676"
+  integrity sha512-6sdbcQyHt1GVoYZhXAX+ZyxhHKZl3Pwiu6oLYM7L5F+w5aJy/nCSuFYO30oVzH/kg5dt93+VgNcpGvj5VVspoQ==
 
 ee-first@1.1.1:
   version "1.1.1"
@@ -5571,9 +5583,9 @@ path-key@^2.0.0, path-key@^2.0.1:
   integrity sha1-QRyttXTFoUDTpLGRDUDYDMn0C0A=
 
 path-parse@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/path-parse/-/path-parse-1.0.6.tgz#d62dbb5679405d72c4737ec58600e9ddcf06d24c"
-  integrity sha512-GSmOT2EbHrINBf9SR7CDELwlJ8AENk3Qn7OikK4nFYAu3Ote2+JYNVvkpAEQm3/TLNEJFD/xZJjzyxg3KBWOzw==
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/path-parse/-/path-parse-1.0.7.tgz#fbc114b60ca42b30d9daf5858e4bd68bbedb6735"
+  integrity sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==
 
 path-to-regexp@0.1.7:
   version "0.1.7"
@@ -7902,13 +7914,14 @@ validate-npm-package-license@^3.0.1:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
 
-vant@^2.1.8:
-  version "2.10.6"
-  resolved "https://registry.yarnpkg.com/vant/-/vant-2.10.6.tgz#64259be294f5b8f5f89fe3c21fdac82c4f2a0175"
-  integrity sha512-i/5rvBxwgkPTRExaENYMWa1HA+3QWiSuKOJUJaS0c8aKm/gfzrQ/n3HKfO77/XBe7L6LKdZRmyqpSZPYhLL/sQ==
+vant@^2.12.19:
+  version "2.12.25"
+  resolved "https://registry.yarnpkg.com/vant/-/vant-2.12.25.tgz#90c2d4a5654b85dbb0252995de14e66fa3f63528"
+  integrity sha512-7WoLG/fTYbEmtd1GVUEaFAqxfDvFLQmlyN+ZQLcp5KFRJ37pUQug9CCH8Ac2vScOKNxv1TIR1ol9VKTba3KP9g==
   dependencies:
     "@babel/runtime" "7.x"
-    "@vant/icons" "1.3.0"
+    "@vant/icons" "^1.5.3"
+    "@vant/popperjs" "^1.0.0"
     "@vue/babel-helper-vue-jsx-merge-props" "^1.0.0"
     vue-lazyload "1.2.3"
 
