@@ -165,13 +165,12 @@ export default {
         channelName: channel,
         appkey: WebIM.conn.appKey,
       };
-      const { accessToken } = await this.getRtctoken(params);
+      const { accessToken,agoraUserId } = await this.getRtctoken(params);
       const uid = await rtc.client.join(
         appId,
         channel,
         accessToken,
-        // null,
-        imUserName
+        agoraUserId
       );
 
       // 通过麦克风采集的音频创建本地音频轨道对象。

@@ -356,7 +356,7 @@ const Agora = {
         getRtctoken: function (context, payload) {
             axios.defaults.headers.common['Authorization'] = 'Bearer ' + WebIM.conn.context.accessToken;
             let { username, channelName, appkey } = payload
-            return axios.get(`//a1.easemob.com/token/rtcToken?userAccount=${username}&channelName=${channelName}&appkey=${encodeURIComponent(appkey)}`)
+            return axios.get(`${WebIM.conn.apiUrl}/token/rtcToken/v1?userAccount=${username}&channelName=${channelName}&appkey=${encodeURIComponent(appkey)}`)
                 .then(function (response) {
                     return response.data
                 })
