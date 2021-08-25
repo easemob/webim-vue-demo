@@ -250,7 +250,7 @@ export default{
 					if(volume.level > 1 && !isTalting.includes(volume.uid)){
 						isTalting.push(volume.uid);
 					}
-					elseif(volume.level < 1 && isTalting.includes(volume.uid)); {
+					else if(volume.level < 1 && isTalting.includes(volume.uid)){
 						let i = isTalting.indexOf(volume.uid);
 						isTalting.splice(i, 1);
 					}
