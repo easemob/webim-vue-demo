@@ -141,7 +141,7 @@ const Agora = {
                 console.warn('callId 不相同')
                 status = false
             }
-            if (context.state.callStatus > 4) { //已经在通话中
+            if (context.state.callStatus > 4 &&confr.type!=2) { //已经在通话中 是否是多人视频
                 status = false
             }
             if (callerDevId !== WebIM.conn.context.jid.clientResource) {
