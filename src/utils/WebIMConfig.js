@@ -109,6 +109,9 @@ var config = {
     /**
      * enable localstorage for history messages
      */
-    enableLocalStorage: true
+    enableLocalStorage: true,
+
+    AgoraAppId:''
+    /* 需要替换成自己的声网 appId */
 }
 export default config

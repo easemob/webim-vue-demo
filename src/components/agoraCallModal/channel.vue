@@ -157,7 +157,7 @@ export default {
       console.log("执行join");
       const { confr } = this.$store.state.agora;
       let { channel, token, type } = confr;
-      const appId = "15cb0d28b87b425ea613fc46f7c9f974";
+      const appId = WebIM.config.AgoraAppId;
       let imUserName = WebIM.conn.context.jid.name;
 
       let params = {
