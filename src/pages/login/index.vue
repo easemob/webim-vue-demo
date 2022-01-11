@@ -31,8 +31,8 @@ const userInfo = localStorage.getItem("userInfo") && JSON.parse(localStorage.get
 export default{
 	data(){
 		return {
-			username: userInfo.userId || "",
-			password: userInfo.password || "",
+			username: userInfo ? userInfo.userId : "",
+			password: userInfo ? userInfo.password : "",
 			nickname: ""
 		};
 	},
