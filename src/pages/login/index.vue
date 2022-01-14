@@ -5,7 +5,7 @@
 		<div class="login-panel">
 			<div class="logo">Web IM</div>
 			<van-cell-group>
-				<van-field v-model="username" equired placeholder="用户名"/>
+				<van-field v-model="username" required placeholder="用户名"/>
 				<van-field v-model="password"  v-on:keyup.13="toLogin" type="password" placeholder="密码" required/>
 				<van-field v-model="nickname" placeholder="昵称" v-show="this.isRegister == true"/>
 			</van-cell-group>
@@ -31,10 +31,10 @@ const userInfo = localStorage.getItem("userInfo") && JSON.parse(localStorage.get
 export default{
 	data(){
 		return {
-			username: userInfo.userId || "",
-			password: userInfo.password || "",
+			username: userInfo && userInfo.userId || "",
+			password: userInfo && userInfo.password || "",
 			nickname: ""
-		};
+		}
 	},
 	mounted: function(){
 		const path = this.isRegister ? "/register" : "/login";
