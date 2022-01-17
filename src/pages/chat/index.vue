@@ -363,7 +363,10 @@ export default {
       this.$refs.messageList.getCurrentMsg(type.key);
     },
     changeActiveFlag () {
-      this.activeFlag = false
+      const width = document.body.clientWidth || document.documentElement.clientWidth
+      if (width <= 990) {
+        this.activeFlag = false
+      }
     },
     addModalChange() {
       this.$data.showAddOptions = !this.$data.showAddOptions;
