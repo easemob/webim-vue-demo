@@ -6,14 +6,13 @@
             <div v-if="voiceCallVisible" class="voiceCall">正在与{{contact}}通话</div>
             <video v-show="streamType == '视频'" ref='localVideo' v-bind:class="{localVideo: toggle, remoteVideo: !toggle}" autoPlay muted playsInline/>
             <video v-show="streamType == '视频'" ref='remoteVideo' v-bind:class="{localVideo: !toggle, remoteVideo: toggle}"  autoPlay playsInline/>
-            <i v-show="showMute" class="el-icon-turn-off-microphone font microphone" isopen="true" ref='audio' @click="controlStream('audioControl')"></i>
-            <i v-show="showAccept" class="el-icon-phone font accept" isopen="true" @click="accept"></i>
-            <!-- <i v-show="showMute && streamType=='视频'" class="el-icon-video-camera font camera" ref='video' isopen="true" @click="controlStream('videoControl')"></i> -->
+            <!-- <i v-show="showMute" class="el-icon-turn-off-microphone font microphone" isopen="true" ref='audio' @click="controlStream('audioControl')"></i> -->
+						<mic-close-icon v-show="showMute" class="font microphone" isopen="true" ref='audio' @click="controlStream('audioControl')" />
+						<a-icon v-show="showAccept" class="font accept" isopen="true" type="phone" @click="accept" />
             <a-icon v-show="showMute && streamType=='视频'" class="font camera" ref='video' isopen="true" type="video-camera" @click="controlStream('videoControl')"/>
-            <!-- <i v-show="showMute" class="el-icon-headset font mute" ref="mute" @click="mute"></i> -->
             <a-icon v-show="showMute" class="font mute" type="sound" ref="mute" @click="mute"/>
-            <i class="el-icon-switch-button close" @click="close"></i>
-            <i v-show="showMute && streamType=='视频'" class="el-icon-refresh font toggle" @click="toggleClick"></i>
+						<a-icon class="close" @click="close" type="poweroff" />
+						<a-icon v-show="showMute && streamType=='视频'" class="font toggle" @click="toggleClick" type="sync" />
         </div>
     </Draggable>
 </template>
@@ -23,6 +22,23 @@ import { mapActions, mapGetters } from "vuex";
 import "./index.less";
 import Draggable from "../draggable";
 import WebIM from "../../utils/WebIM";
+const micCloseSVG = {
+	template: `
+		<svg class="icon" width="200px" height="200.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+			<path fill="#333333" d="M511.221776 675.709549c-91.010807 0-164.984588-74.021877-164.984588-164.984588L346.237187 227.894384c0-90.986247 73.973782-164.984588 164.984588-164.984588 90.959641 0 164.982542 73.998341 164.982542 164.984588L676.204317 510.72496C676.204317 601.687672 602.181417 675.709549 511.221776 675.709549zM511.221776 110.047372c-64.956408 0-117.847012 52.892651-117.847012 117.847012L393.374764 510.72496c0 64.951291 52.890604 117.844965 117.847012 117.844965 64.954361 0 117.845988-52.893674 117.845988-117.844965L629.067764 227.894384C629.067764 162.940023 576.176137 110.047372 511.221776 110.047372zM817.620118 510.72496c0-13.006222-10.590196-23.570835-23.567765-23.570835-12.982686 0-23.569812 10.564613-23.569812 23.570835 0 142.980435-116.28033 259.259742-259.259742 259.259742-142.980435 0-259.261789-116.28033-259.261789-259.259742 0-13.006222-10.5421-23.570835-23.568788-23.570835-13.028735 0-23.568788 10.564613-23.568788 23.570835 0 161.02337 124.889405 293.415656 282.829554 305.47839l0 95.196129-70.707388 0c-13.028735 0-23.569812 10.588149-23.569812 23.570835 0 12.979616 10.540054 23.567765 23.569812 23.567765l188.553377 0c12.979616 0 23.569812-10.589173 23.569812-23.567765 0-12.983709-10.591219-23.570835-23.569812-23.570835l-70.708412 0 0-95.196129C692.775738 804.140617 817.620118 671.748331 817.620118 510.72496zM811.024909 781.523503 213.162356 192.250582c-11.019984-10.861372-11.122315-28.576849-0.285502-39.570227 10.842952-11.000542 28.54922-11.147898 39.569204-0.286526l597.862553 589.272921c10.968819 10.81123 11.130502 28.569686 0.287549 39.571251C839.76037 792.232402 821.992705 792.334733 811.024909 781.523503z" />
+		</svg>
+	`
+}
+const micCloseIcon = {
+	template: `
+		<a-icon :component="micCloseSVG" />
+	`,
+	data () {
+		return {
+			micCloseSVG
+		}
+	}
+}
 export default{
 	data(){
 		return {
@@ -320,7 +336,8 @@ export default{
 		}
 	},
 	components: {
-		Draggable
+		Draggable,
+		micCloseIcon
 	},
 	mounted(){
 		if(WebIM.config.isWebRTC && WebIM.WebRTC){

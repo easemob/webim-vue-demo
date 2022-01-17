@@ -6,19 +6,19 @@
       @cancel="onClosed"
     >
         <div>
-            <el-checkbox-group v-model="checkList" class="checkboxGroup" :max="6">
+            <a-checkbox-group v-model="checkList" class="checkboxGroup" :max="6">
 				<div style="border-bottom: 1px solid #f2f2f2; height: 30px" v-for="item in groupMembers"
 						:key="item.member">
-					<el-checkbox
+					<a-checkbox
 						:label="item.member||item.owner"
 						:disabled="item.member == username || item.owner == username?true:false"
 						class="checkbox"
 					/>
 				</div>
-            </el-checkbox-group>
+            </a-checkbox-group>
         </div>
         <span slot="footer" class="dialog-footer">
-            <el-button type="primary" @click="startConference">开始</el-button>
+            <a-button type="primary" @click="startConference">开始</a-button>
         </span>
     </a-modal>
 </template>

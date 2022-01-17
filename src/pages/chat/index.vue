@@ -94,6 +94,7 @@
         @breakpoint="onBreakpoint"
       >
         <MessageBox
+          v-if="activeFlag"
           :type="activeKey"
           :card="$refs['person_card']"
           :select="select"
@@ -112,6 +113,7 @@
           ref="messageList"
           @EmediaModalFun="EmediaModalFun"
           @show_add_member_modal="show_add_member_modal"
+          @changeActiveFlag="changeActiveFlag"
         />
 
         <AddFriend ref="addFriendMethods" />
@@ -213,6 +215,7 @@ export default {
       current: ["contact"],
       nowClickID: "",
       showAlert: false,
+      activeFlag: true // 在移动端情况下，为了消除列表跳详情的怪异情况
     };
   },
   computed: {
@@ -273,6 +276,13 @@ export default {
         return self.$refs.multiCall && self.$refs.multiCall.join();
       }
     },
+    userDetail: {
+      handler (val) {
+        console.log(val, 'userDetail')
+        this.contactTypeChange({key: 'contact'})
+      },
+      deep: true
+    }
   },
   methods: {
     ...mapActions([
@@ -314,6 +324,7 @@ export default {
     },
     showUserList() {
       this.$data.collapsed = false;
+      this.activeFlag = true
     },
     select(i) {
       this.$refs.messageList.select(i);
@@ -330,12 +341,12 @@ export default {
       this.$data.showSettingOptions = !this.$data.showSettingOptions;
     },
     contactTypeChange(type) {
+      this.activeFlag = true
       this.$data.activeKey = type.key;
       this.$router.push(`/${type.key}`);
       if (this.broken && this.collapsed) {
         this.$data.collapsed = false;
       }
-
       switch (type.key) {
         case "contact":
           this.$refs.messageBox.onGetContactUserList();
@@ -350,6 +361,9 @@ export default {
           break;
       }
       this.$refs.messageList.getCurrentMsg(type.key);
+    },
+    changeActiveFlag () {
+      this.activeFlag = false
     },
     addModalChange() {
       this.$data.showAddOptions = !this.$data.showAddOptions;
@@ -525,6 +539,6 @@ export default {
     AddAVMemberModal,
     AlertModal,
     PersonCard,
-  },
+  }
 };
 </script>

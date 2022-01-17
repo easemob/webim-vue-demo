@@ -71,8 +71,6 @@
           :disabled="!item.bySelf"
         >
           <span style="user-select: none">
-            <!-- <el-dropdown v-else @command="handleCommand(item)" trigger="click" :style="{'float':item.bySelf ? 'right':'left'}">
-            <span class="el-dropdown-link">-->
             <!-- 图片消息 -->
             <img
               :key="item.msg"
@@ -86,7 +84,7 @@
               class="file-style"
               :style="{ float: item.bySelf ? 'right' : 'left' }"
             >
-              <el-card :body-style="{ padding: '0px' }">
+              <a-card :body-style="{ padding: '0px' }">
                 <div style="padding: 14px">
                   <h2>文件</h2>
                   <span>
@@ -97,7 +95,7 @@
                     <a :href="item.msg" :download="item.filename">点击下载</a>
                   </div>
                 </div>
-              </el-card>
+              </a-card>
             </div>
             <!-- 音频消息 -->
             <div
@@ -117,14 +115,8 @@
               v-html="renderTxt(item.msg)"
               :class="{ byself: item.bySelf }"
             />
-
             <!-- <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div> -->
           </span>
-          <!-- <el-dropdown-menu slot="dropdown" >
-            <el-dropdown-item command="a" :disabled="!item.bySelf">撤回</el-dropdown-item>
-          </el-dropdown-menu>
-          </el-dropdown>-->
-
           <a-menu slot="overlay">
             <a-menu-item key="1" @click="handleCommand(item)">撤回</a-menu-item>
           </a-menu>
@@ -152,21 +144,24 @@
 
         <!-- 发送语音 -->
         <RecordAudio v-show="isHttps" />
-
-        <i
-          class="el-icon-video-camera icon"
+        <!-- 发视频通话 -->
+        <a-icon
+          type="video-camera"
+          class="icon"
           @click="callVideo"
           v-show="isHttps && type != 'chatroom'"
           :style="nowIsVideo ? 'pointer-events: none' : 'cursor: pointer'"
-        ></i>
-        <i
+        />
+        <!-- 发语音通话 -->
+        <a-icon
           v-if="type === 'contact'"
-          class="el-icon-microphone icon"
-          @click="callVoice"
-          v-show="isHttps && type != 'chatroom'"
+          class="icon"
+          type="audio"
           :style="nowIsVideo ? 'pointer-events: none' : 'cursor: pointer'"
-        ></i>
+          v-show="isHttps && type != 'chatroom'"
+          @click="callVoice" />
       </div>
+      <!-- 文字输入框 -->
       <div class="fotter-send">
         <a-input
           v-model="message"
@@ -377,6 +372,7 @@ export default {
           },
         });
       }
+      this.$emit('changeActiveFlag')
     },
 
     loadMoreMsgs() {
@@ -670,13 +666,6 @@ export default {
     color: #999999;
     float: right;
     text-decoration: none;
-  }
-  .el-dropdown-link {
-    cursor: pointer;
-    color: #409eff;
-  }
-  .el-icon-arrow-down {
-    font-size: 12px;
   }
 }
 </style>

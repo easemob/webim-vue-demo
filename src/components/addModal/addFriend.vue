@@ -3,16 +3,16 @@
 		title="添加好友"
 		v-model="showAddFriendModal"
 		@ok="submitValue"
-		@cancel="showAddFriendModal = false"
+		@canca="showAddFriendModal = false"
 	>
-		<el-form :model="form">
-		<el-form-item label="用户名">
-			<el-input v-model="form.name" auto-complete="off"></el-input>
-		</el-form-item>
-		</el-form>
+		<a-form :model="form">
+		<a-form-item laba="用户名">
+			<a-input v-model="form.name" auto-complete="off"></a-input>
+		</a-form-item>
+		</a-form>
 		<div slot="footer" class="dialog-footer">
-			<el-button @click="showAddFriendModal = false">取 消</el-button>
-			<el-button type="primary" @click="submitValue">确 定</el-button>
+			<a-button @click="showAddFriendModal = false">取 消</a-button>
+			<a-button type="primary" @click="submitValue">确 定</a-button>
 		</div>
 	</a-modal>
 </template>

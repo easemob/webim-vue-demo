@@ -1,10 +1,3 @@
-@font-face {
-  font-style : normal;
-  font-weight: 400;
-  font-family: 'vant-icon';
-  src        : url(https://img.yzcdn.cn/vant/vant-icon-3a7dc2.woff2) format('woff2'), url(https://img.yzcdn.cn/vant/vant-icon-3a7dc2.woff) format('woff'), url(https://img.yzcdn.cn/vant/vant-icon-3a7dc2.ttf) format('truetype')
-}
-
 .layout-header {
   height    : 100px !important;
   background: #434648 !important;
@@ -56,14 +49,6 @@
     border-bottom: 2px solid #2bb907 !important;
     color        : #05af4a !important;
   }
-}
-
-.van-icon {
-  position              : relative;
-  font                  : 14px/1 "vant-icon";
-  font-size             : inherit;
-  text-rendering        : auto;
-  -webkit-font-smoothing: antialiased
 }
 
 .tip-style {
@@ -172,44 +157,5 @@
     width   : 100%;
     height  : calc(100% - 50px);
     overflow: hidden;
-
-    .van-tabs,
-    .van-tab__pane {
-      height: 100%;
-    }
-
-    .van-tab {
-      text-align : center;
-      display    : inline-block;
-      width      : 122px;
-      line-height: 50px;
-      padding    : 0 20px;
-      cursor     : pointer;
-
-      &::before {
-        content       : "\F02D";
-        font          : 20px/1 "vant-icon";
-        vertical-align: text-top;
-        margin-right  : 5px;
-      }
-
-    }
-
-    .van-tabs__content {
-      height: calc(100% - 50px);
-    }
-
-    .van-tabs__nav {
-      background: #000;
-      color     : #fff;
-      text-align: left !important;
-    }
-
-    .van-tabs__line {
-      background  : #00ba6e;
-      width       : 122px !important;
-      height      : 2px;
-      /* transform: translateX(0) translateX(0) !important; */
-    }
   }
 }

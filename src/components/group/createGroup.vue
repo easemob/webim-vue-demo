@@ -4,43 +4,48 @@
       v-model="showCreateGroupModel"
       :footer="null"
     >
-      <el-form :model="form" v-if="showCreateModel == true">
+      <a-form :model="form" v-if="showCreateModel == true">
       <div>
-        <el-input v-model="form.groName" placeholder="群组名称"></el-input>
+        <a-input v-model="form.groName" placeholder="群组名称"></a-input>
       </div>
       <div class="groDesc">
-        <el-input type="textarea" :rows="2" placeholder="简介" v-model="form.desc"></el-input>
+        <a-input type="textarea" :rows="2" placeholder="简介" v-model="form.desc"></a-input>
       </div>
       <div class="groPub">
         <p>群组类型</p>
-        <el-radio v-model="form.radio" label="1">私有群</el-radio>
-        <el-radio v-model="form.radio" label="2">公有群</el-radio>
+        <a-radio-group v-model="form.radio">
+          <a-radio :value="1">私有群</a-radio>
+          <a-radio :value="2">公有群</a-radio>
+        </a-radio-group>
       </div>
       <div class="groPub">
         <p>加群权限</p>
-        <el-radio v-model="form.radiopom" label="1">审批</el-radio>
-        <el-radio v-model="form.radiopom" label="2">随便加</el-radio>
+        <a-radio-group v-model="form.radiopom">
+          <a-radio :value="1">审批</a-radio>
+          <a-radio :value="2">随便加</a-radio>
+        </a-radio-group>
       </div>
       <div class="groPost">
-        <el-button type="success" @click="chenageCreateModel">下一步</el-button>
+        <a-button type="success" @click="chenageCreateModel">下一步</a-button>
       </div>
-    </el-form>
+    </a-form>
     <div v-if="showFriendListModel == true">
       <div class="groPub">
-        <el-checkbox-group v-model="form.membersList">
+        <a-checkbox-group v-model="form.membersList">
           <li v-for="item in firendList" :key="item.name" class="friendItem">
-            <el-checkbox  :key="item.name" :label="item.name">
-            </el-checkbox>
+            <a-checkbox :value="item.name">
+              {{item.name}}
+            </a-checkbox>
           </li>
-        </el-checkbox-group>
+        </a-checkbox-group>
       </div>
       <div>
         <div class="groBack" @click="chenageCreateModel">
-          <i class="el-icon-back"></i>
-          <i>返回</i>
+          <a-icon type="left" />
+          返回
         </div>
         <div class="groCreate">
-          <el-button type="success" @click="postCreateGroup">创建群组</el-button>
+          <a-button type="primary" @click="postCreateGroup">创建群组</a-button>
         </div>
       </div>
     </div>
@@ -59,8 +64,8 @@ export default{
 			form: {
 				groName: "",
 				desc: "",
-				radio: "2",
-				radiopom: "2",
+				radio: 2,
+				radiopom: 2,
 				membersList: []
 			}
 		};
