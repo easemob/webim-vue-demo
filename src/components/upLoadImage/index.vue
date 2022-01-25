@@ -1,6 +1,6 @@
 <template>
-  <label for="uploadImage" @click="clickFile">
-    <van-icon name="photo-o" size="20" color="rgba(0, 0, 0, 0.65)" />
+  <label for="uploadImage" class="label-class" @click="clickFile">
+    <a-icon type="picture" :style="{fontSize: '20px', color: 'rgba(0, 0, 0, 0.65)', marginLeft: '8px'}" />
     <input type="file" class="hide" ref="imgDom" @change="pictureChange" />
   </label>
 </template>
@@ -58,6 +58,9 @@ export default {
 };
 </script>
 <style scoped>
+.label-class {
+	cursor: pointer;
+}
 .hide {
   position: absolute;
   top: 0;

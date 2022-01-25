@@ -1,8 +1,8 @@
 <template>
   <Draggable>
     <div class="multi-webim-rtc">
-      <el-row :gutter="2">
-        <el-col :span="span" v-for="item in videos" :key="item.name">
+      <a-row :gutter="2">
+        <a-col :span="span" v-for="item in videos" :key="item.name">
           <div class="default" :id="`video${item.name}`"></div>
           <div class="user-name">
             <span>{{ item.name || "" }}</span>
@@ -10,8 +10,8 @@
           <!-- <div class="{talking}">
             <img src="{talkingicon}" alt="" />
           </div> -->
-        </el-col>
-      </el-row>
+        </a-col>
+      </a-row>
       <p class="video-duration">{{ time }}</p>
       <div class="action-wrap">
         <div class="tools_p">

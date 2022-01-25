@@ -50,10 +50,7 @@
 			class="content-audio"
 			style="display: block;"
 			>语音</audio> -->
-			<i
-				class="el-icon-mic"
-				style="font-size: 20px; margin-left: 8px;"
-				@click="show"></i>
+			<mic-icon :style="{fontSize: '20px', cursor: 'pointer'}" @click.native="show" />
 		</div>
 		
 	</div>
@@ -110,7 +107,27 @@
 <script>
 import recording from "./recordAudio.js";
 import { mapActions } from "vuex";
+const micSVG = {
+	template: `
+		<svg class="icon" width="200px" height="200.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+			<path fill="#333333" d="M480 704h160q27.008-0.992 44.992-19.008T704 640v-32h-96q-14.016 0-23.008-8.992T576 576t8.992-23.008T608 544h96v-96h-96q-14.016 0-23.008-8.992T576 416t8.992-23.008T608 384h96V288h-96q-14.016 0-23.008-8.992T576 256t8.992-23.008T608 224h96V192q-0.992-27.008-19.008-44.992T640 128h-256q-27.008 0.992-44.992 19.008T320 192v32h96q14.016 0 23.008 8.992T448 256t-8.992 23.008T416 288h-96v96h96q14.016 0 23.008 8.992T448 416t-8.992 23.008T416 448h-96v96h96q14.016 0 23.008 8.992T448 576t-8.992 23.008T416 608h-96v32q0.992 27.008 19.008 44.992T384 704h96z m64 64v128h192q14.016 0 23.008 8.992T768 928t-8.992 23.008T736 960H288q-14.016 0-23.008-8.992T256 928t8.992-23.008T288 896h192v-128h-96q-54.016-0.992-90.496-37.504T256 640V192q0.992-54.016 37.504-90.496T384 64h256q54.016 0.992 90.496 37.504T768 192v448q-0.992 54.016-37.504 90.496T640 768h-96z" />
+		</svg>
+	`
+}
+const micIcon = {
+	template: `
+		<a-icon :component="micSVG" />
+	`,
+	data () {
+		return {
+			micSVG
+		}
+	}
+}
 export default{
+	components: {
+		micIcon
+	},
 	data(){
 		return {
 			form: {

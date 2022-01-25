@@ -1,5 +1,5 @@
 import { ftruncate } from "fs";
-import { Message } from "element-ui";
+import { Message } from "ant-design-vue";
 const Group = {
 	state: {
 		publicGroupList: [],
@@ -97,15 +97,9 @@ const Group = {
 				groupId: payload.select_groupid,                              // 群组ID
 				success: function (resp) {
 					if(Vue.$store.state.group.groupInfo.membersonly != true){
-						Message({
-							type: "success",
-							message: "已成功加入群组：" + Vue.$store.state.group.groupInfo.gid
-						});
+						Message.success("已成功加入群组：" + Vue.$store.state.group.groupInfo.gid)
 					}else{
-						Message({
-							type: "success",
-							message: "已申请加入群组：" + Vue.$store.state.group.groupInfo.gid + "，等待管理员同意" 
-						});
+						Message.success("已申请加入群组：" + Vue.$store.state.group.groupInfo.gid + "，等待管理员同意" )
 					}
 					
 					
@@ -163,10 +157,7 @@ const Group = {
 				groupId: joinGroupId,                              // 群组ID
 				success: function (resp) {
 					Vue.$store.dispatch('onGetGroupUserList')
-					Message({
-						type: "success",
-						message: "已同意！"
-					});
+					Message.success("已同意！")
 				},
 				error: function (e) { }
 			};
@@ -179,10 +170,7 @@ const Group = {
 				applicant: joinName,                // 申请加群的用户名
 				groupId: joinGroupId,                    // 群组ID
 				success: function (resp) {
-					Message({
-						type: "success",
-						message: "已拒绝！"
-					});
+					Message.success("已拒绝！")
 				},
 				error: function (e) { }
 			};
@@ -195,10 +183,7 @@ const Group = {
 				groupId: inviteGroupId,
 				invitee: username,
 				success: function (resp) {
-					Message({
-						type: "success",
-						message: "已同意加入群组！"
-					})
+					Message.success("已同意加入群组！")
 					Vue.$store.dispatch('onGetGroupUserList')
 					this.$forceUpdate();
 				},
@@ -213,10 +198,7 @@ const Group = {
 				invitee: username,
 				groupId: inviteGroupId,
 				success: function (resp) {
-					Message({
-						type: "success",
-						message: "已拒绝加入群组！"
-					})
+					Message.success("已拒绝加入群组！")
 				},
 				error: function (e) { }
 			}

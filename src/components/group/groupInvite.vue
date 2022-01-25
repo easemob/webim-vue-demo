@@ -1,11 +1,11 @@
 <template>
-  <!-- <el-dialog title="申请入群" :visible="this.isShowGroupInvite.isShow">
+  <!-- <a-modal title="申请入群" :visible="this.isShowGroupInvite.isShow">
     <p>{{this.$store.state.group.updateGroupInviteNotifications.from}}申请入群</p>
     <div slot="footer" class="dialog-footer">
-      <el-button @click="RejectJoinGroup">拒绝</el-button>
-      <el-button type="primary" @click="AgreeJoinGroup">同意</el-button>
+      <a-button @click="RejectJoinGroup">拒绝</a-button>
+      <a-button type="primary" @click="AgreeJoinGroup">同意</a-button>
     </div>
-  </el-dialog> -->
+  </a-modal> -->
   <a-modal
     title="加群邀请"
       :visible="this.isShowGroupInvite.isShow"
@@ -14,8 +14,8 @@
     >
     <p>{{this.$store.state.group.groupInviteNotifications.from}}邀请您加入群组:{{this.$store.state.group.groupInviteNotifications.gid}}</p>
     <div class="btn">
-      <el-button @click="RejectJoinGroup">拒绝</el-button>
-      <el-button type="primary" @click="AgreeJoinGroup">同意</el-button>
+      <a-button @click="RejectJoinGroup">拒绝</a-button>
+      <a-button type="primary" @click="AgreeJoinGroup">同意</a-button>
     </div>
   </a-modal>
 </template>

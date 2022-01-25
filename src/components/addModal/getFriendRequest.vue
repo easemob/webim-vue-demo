@@ -1,12 +1,12 @@
 <template>
   <div>
-    <el-dialog title="请求添加好友" :visible="this.isShowFriendRequest">
+    <a-modal title="请求添加好友" :visible="this.isShowFriendRequest">
       <p :class="$style.p">{{this.$store.state.friendModule.friendRequest.status}}</p>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="refusedClick">拒绝</el-button>
-        <el-button type="primary" @click="acceptSubmit">接受</el-button>
+        <a-button @click="refusedClick">拒绝</a-button>
+        <a-button type="primary" @click="acceptSubmit">接受</a-button>
       </div>
-    </el-dialog>
+    </a-modal>
   </div>
 </template>
 

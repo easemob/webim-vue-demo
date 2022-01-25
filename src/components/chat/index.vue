@@ -8,7 +8,7 @@
         @click="select2(item, getKey(item))"
       >
         <div v-if="item.friendDetail">
-          <img class="friend_portrait" :src="item.friendDetail.avatarurl?item.friendDetail.avatarurl:headPortraitImg" alt="" @click="alertPersaonCard(item)"> 
+          <img class="friend_portrait" :src="item.friendDetail.avatarurl?item.friendDetail.avatarurl:headPortraitImg" alt="" @click.stop="alertPersaonCard(item)"> 
           <span class="custom-title" >{{ item.friendDetail.nickname || item.name}}</span>
         </div>
         <span class="custom-title" v-if="!item.friendDetail">{{ item.name }}</span>
@@ -497,17 +497,6 @@ export default {
     color: #999999;
     float: right;
     text-decoration: none;
-  }
-  .el-dropdown-link {
-    cursor: pointer;
-    color: #409eff;
-  }
-  .el-icon-arrow-down {
-    font-size: 12px;
-  }
-
-  .el-menu-vertical-demo {
-    width: 100%;
   }
 }
 </style>

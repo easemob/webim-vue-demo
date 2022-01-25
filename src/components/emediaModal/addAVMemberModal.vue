@@ -1,26 +1,27 @@
 <template>
 	<a-modal
-      title="选择成员"
-      :visible="addAVMemberModalVisible"
-      @ok="startConference"
-      @cancel="onClosed"
-    >
-        <div>
-            <el-checkbox-group v-model="checkList" class="checkboxGroup" :max="6">
-				<div style="border-bottom: 1px solid #f2f2f2; height: 30px" v-for="item in groupMembers"
-						:key="item.member">
-					<el-checkbox
-						:label="item.member||item.owner"
+		title="选择成员"
+		:visible="addAVMemberModalVisible"
+		@ok="startConference"
+		@cancel="onClosed">
+		<div>
+			<a-checkbox-group v-model="checkList" class="checkboxGroup" :max="6">
+				<div style="border-bottom: 1px solid #f2f2f2;padding: 8px 0;"
+					v-for="item in groupMembers"
+					:key="item.member">
+					<a-checkbox
+						:value="item.member || item.owner"
 						:disabled="item.member == username || item.owner == username?true:false"
-						class="checkbox"
-					/>
+						class="checkbox">
+						{{item.member || item.owner}}
+					</a-checkbox>
 				</div>
-            </el-checkbox-group>
-        </div>
-        <span slot="footer" class="dialog-footer">
-            <el-button type="primary" @click="startConference">开始</el-button>
-        </span>
-    </a-modal>
+			</a-checkbox-group>
+		</div>
+		<span slot="footer" class="dialog-footer">
+			<a-button type="primary" @click="startConference">开始</a-button>
+		</span>
+	</a-modal>
 </template>
 
 <style>

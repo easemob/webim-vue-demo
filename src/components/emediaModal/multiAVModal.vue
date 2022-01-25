@@ -16,28 +16,22 @@
           <video class="video" autoplay playsinline :ref="`rv_${i}`" />
           <div class="tools">
             <span>{{ rv[i].nickName}}</span>
-            <i class="el-icon-video-camera red" @click="controlRemoteVideo(i)"></i>
+            <a-icon type="video-camera" class="red" @click="controlRemoteVideo(i)" />
           </div>
         </div>
       </div>
-      <el-row class="toolsBox">
-        <el-col :span="3">
-          <i class="el-icon-circle-plus-outline toolBtn" @click="invite"></i>
-        </el-col>
-        <el-col :span="3">
-          <i
-            :class="rv_local.openAudio?'el-icon-microphone toolBtn':'el-icon-microphone active'"
-            @click="controlLocalMic"
-          ></i>
-        </el-col>
-        <el-col :span="3">
-          <i
-            :class="rv_local.openVideo?'el-icon-video-camera toolBtn':'el-icon-video-camera active'"
-            @click="controlLocalVideo"
-          ></i>
-        </el-col>
+      <a-row class="toolsBox">
+        <a-col :span="3">
+          <a-icon type="plus-circle" class="toolBtn" @click="invite" />
+        </a-col>
+        <a-col :span="3">
+          <a-icon type="audio" :class="rv_local.openAudio ? 'toolBtn' : 'active'" @click="controlLocalMic"/>
+        </a-col>
+        <a-col :span="3">
+          <a-icon type="video-camera" :class="rv_local.openVideo ? 'toolBtn' : 'active'" @click="controlLocalVideo" />
+        </a-col>
         <a-button type="danger" plain @click="closeModal">挂断</a-button>
-      </el-row>
+      </a-row>
     </div>
   </Draggable>
 </template>
@@ -337,13 +331,13 @@ export default {
   box-shadow: 0 0 10px #adb9c1;
 }
 
-.el-row {
+.ant-row {
   margin-bottom: 20px;
   /* &:last-child {
       margin-bottom: 0;
     } */
 }
-.el-col {
+.ant-col {
   border-radius: 4px;
 }
 .bg-purple-dark {

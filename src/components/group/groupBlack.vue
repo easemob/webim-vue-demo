@@ -1,14 +1,14 @@
 <template>
-  <el-dialog title="群组黑名单" :visible.sync="showGroupBlackModel" :modal=false>
+  <a-modal title="群组黑名单" :footer="null" :visible.sync="showGroupBlackModel" @cancel="chengeBlackModel">
     <div>
       <ul v-for="item in groupBlackList" :key="item">
         {{item}}
         <label class="delete-icon">
-          <i class="el-icon-remove-outline" @click="select(item)"></i>
+					<a-icon type="minus-circle" @click="select(item)" />
         </label>
       </ul>
     </div>
-  </el-dialog>
+  </a-modal>
 </template>
 <script>
 import { mapActions } from "vuex";

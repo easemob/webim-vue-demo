@@ -1,15 +1,19 @@
 <template>
   <span>
-    <el-popover ref="popover5" placement="top-start" width="360" v-model="showModal">
-      <img
-        v-for="(v,i) in emojiList"
-        :src="require(`../../../static/faces/${v}`)"
-        :key="i"
-        @click="selectEmoji(i)"
-        class="img-style"
-      />
-    </el-popover>
-    <van-icon name="smile-o" size="20" color="rgba(0, 0, 0, 0.65)" v-popover:popover5 />
+    <a-popover placement="top" trigger="click" :visible="showPopover">
+      <template slot="content">
+        <div class="emoji-box">
+          <img
+            v-for="(v,i) in emojiList"
+            :src="require(`../../../static/faces/${v}`)"
+            :key="i"
+            @click="selectEmoji(i)"
+            class="img-style"
+          />
+        </div>
+      </template>
+      <a-icon type="smile" :style="{ fontSize: '20px', color: 'rgba(0, 0, 0, 0.65)' }" @click="showPopover = !showPopover" />
+    </a-popover>
   </span>
 </template>
 
@@ -20,14 +24,13 @@ export default {
   data() {
     return {
       emojiList: emoji.obj,
-      currentEmoji: "",
-      showModal: false
+      showPopover: false
     };
   },
   methods: {
     selectEmoji(e) {
       let value = (this.inpMessage || "") + e;
-      this.$data.showModal = false;
+      this.showPopover = false
       this.$emit("selectEmoji", value);
     }
   },
@@ -37,6 +40,9 @@ export default {
 };
 </script>
 <style scoped>
+.emoji-box {
+  width: 360px;
+}
 .img-style {
   width: 22px;
   margin: 5px;

@@ -1,14 +1,15 @@
 <template>
 	<a-modal
+		class="setting-video"
 		title="音视频录制"
 		v-model="recModalVisible"
 		:footer="null"
 	>
 		<div>
-			<el-checkbox-group v-model="checkList" @change="onChange">
-				<el-checkbox label="rec" class="checkbox">启用录制</el-checkbox>
-				<el-checkbox label="recMerge" class="checkbox">启用合并</el-checkbox>
-			</el-checkbox-group>
+			<a-checkbox-group v-model="checkList" @change="onChange">
+				<a-checkbox value="rec" class="checkbox">启用录制</a-checkbox>
+				<a-checkbox value="recMerge" class="checkbox">启用合并</a-checkbox>
+			</a-checkbox-group>
 		</div>
 	</a-modal>
 </template>
@@ -50,9 +51,12 @@ export default{
 };
 </script>
 
-<style>
+<style lang="less">
+.setting-video {
 	.checkbox{
 		display: block;
 		margin-top: 6px;
+		margin-left: 0px !important
 	}
+}
 </style>
