@@ -220,15 +220,15 @@ export default {
         titleMode: 'time',
         timeStamp: 10
       },
-      msgObj: {},
-      copyMsgObj: {
+      msgObj: {}, // 聊天窗口渲染数据的变量
+      copyMsgObj: { // 保存上一次聊天记录的变量
         contact: null,
         group: null,
         chatroom: null
       },
-      routeNewOldObj: null,
-      msgNewOldObj: null,
-      flagObj: {
+      routeNewOldObj: null, // 保存路由信息的变量
+      msgNewOldObj: null, // 保存聊天信息的变量
+      flagObj: { // 触发聊天信息更新的变量
         msgFlag: false,
         routeFlag: false
       }
@@ -629,11 +629,27 @@ export default {
       const { msgNewVal, msgOldVal} = msgVal
       const { params: { id } } = this.$route
       if (id) {
+        /**
+         * 老数据在，新数据不在，并且用户的id和老数据中的不一样，置空聊天数据
+         * 存在于，新点击的用户，没有聊天记录，
+         * 也就是从，有聊天记录的切换到没聊天记录的情况
+         */
         if (msgOldVal && !msgNewVal && id !== msgOldVal[0].chatId) {
           this.msgObj = {}
         } else if (msgOldVal && Object.keys(msgOldVal).length >= 0 && id === msgOldVal[0].chatId) {
+          /**
+           * 以旧数据优先判断和渲染使用，以为初始化新数据是空，undefined的。
+           * 旧数据存在，并且长度有值
+           * 并且当且选中聊天对象的id和数据里一致，就是赋值，渲染
+           */
           this.msgObj = msgOldVal
         } else if (msgNewVal && Object.keys(msgNewVal).length >= 0 && id === msgNewVal[0].chatId) {
+          /**
+           * 旧数据没有，新数据有
+           * 新数据长度不为0
+           * 选中的聊天对象的id和数据中的id一致
+           * 赋值，渲染
+           */
           this.msgObj = msgNewVal
         }
         // console.log(msgNewVal, msgOldVal, '20919123')
@@ -645,15 +661,16 @@ export default {
       const { name: oldName, params: { id: oldId } } = routeOldVal
       // console.log(newName, oldName, 'name', 'route', this.copyMsgObj[oldName],this.copyMsgObj[newName], newId, oldId, this.msgObj)
       if (!newId) {
+        /**
+         * newId不存在，那就是切换tab时，数据更新为上一次点击的那个用户的聊天记录
+         */
         this.msgObj = this.copyMsgObj[newName]
       } else {
-        if (newName !== oldName) {
-          this.copyMsgObj[oldName] = this.msgObj
-          // console.log(this.copyMsgObj, this.msgObj, 'this.copyMsgObj==this.copyMsgObj==============oldName')
-          this.msgObj = {}
-        } else {
+        /**
+         * newId存在，newName === oldName 也就是，在当前聊天对象列表，切换了不同的用户，那就是保存一下数据，共切换tab时使用
+         */
+        if (newName === oldName) {
           this.copyMsgObj[newName] = this.msgObj
-          // console.log(this.msgObj, this.copyMsgObj, 'this.copyMsgObj==this.copyMsgObj===============newName')
         }
       }
     },
