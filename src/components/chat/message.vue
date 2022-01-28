@@ -50,7 +50,7 @@
     <div class="messagebox-content" ref="msgContent">
       <div class="moreMsgs" @click="loadMoreMsgs">{{ loadText }}</div>
       <div
-        v-for="(item, i) in msgList"
+        v-for="(item, i) in msgObj"
         :key="i"
         class="message-group"
         :style="{ float: item.bySelf ? 'right' : 'left' }"
@@ -216,9 +216,24 @@ export default {
         read: "已读",
       },
       nowIsVideo: false,
+      titleObj: {
+        titleMode: 'time',
+        timeStamp: 10
+      },
+      msgObj: {},
+      copyMsgObj: {
+        contact: null,
+        group: null,
+        chatroom: null
+      },
+      routeNewOldObj: null,
+      msgNewOldObj: null,
+      flagObj: {
+        msgFlag: false,
+        routeFlag: false
+      }
     };
   },
-
   beforeMount() {
     if (this.type === "contact") {
       this.onGetContactUserList();
@@ -231,6 +246,49 @@ export default {
   updated() {
     // console.log("数据", this.$store);
     this.scollBottom();
+  },
+  watch: {
+    msgList: {
+      handler (msgNewVal, msgOldVal) {
+        this.msgNewOldObj = {
+          msgNewVal,
+          msgOldVal
+        }
+        this.flagObj.msgFlag = true
+        /**
+         * 处理，首次加载数据，点击列表项，第一次触发，msgOldVal有值,虽然无数据，是个空对象，但是也算有，不是undefined，msgNewVal为undefined
+         * 然后，在select方法中，判断msgList为空，就请求历史数据，历史数据请求回来，有值，msgList再次被触发，这个时候msgOldVal和msgNewVal交换
+         * msgOldVal = undefined
+         * msgNewVal = 历史数据
+         * 所以增加判断，这种情况，route不会触发，那手动改this.flagObj.routeFlag的值，以求，flagObj的触发，去更新数据
+         */
+        if (!msgOldVal) {
+          this.flagObj.routeFlag = true
+        }
+      },
+      deep: true
+    },
+    $route: {
+      handler (routeNewVal, routeOldVal) {
+        this.routeNewOldObj = {
+          routeNewVal,
+          routeOldVal
+        }
+        this.flagObj.routeFlag = true
+      },
+      deep: true
+    },
+    flagObj: {
+      handler (val) {
+        // console.log(val, 'flagObj')
+        const { msgFlag, routeFlag } = val
+        if (msgFlag && routeFlag) {
+          this.handlerMsgData(this.routeNewOldObj, this.msgNewOldObj)
+          this.changeFlagObj()
+        }
+      },
+      deep: true
+    }
   },
   computed: {
     ...mapGetters({
@@ -565,6 +623,44 @@ export default {
     // changeIsVideoState(v) {
     //   v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
     // }
+    handlerMsgData (routeVal, msgVal) {
+      // console.log(routeVal, msgVal)
+
+      const { msgNewVal, msgOldVal} = msgVal
+      const { params: { id } } = this.$route
+      if (id) {
+        if (msgOldVal && !msgNewVal && id !== msgOldVal[0].chatId) {
+          this.msgObj = {}
+        } else if (msgOldVal && Object.keys(msgOldVal).length >= 0 && id === msgOldVal[0].chatId) {
+          this.msgObj = msgOldVal
+        } else if (msgNewVal && Object.keys(msgNewVal).length >= 0 && id === msgNewVal[0].chatId) {
+          this.msgObj = msgNewVal
+        }
+        // console.log(msgNewVal, msgOldVal, '20919123')
+      }
+      // console.log(this.routeObj, 'msgList', this.msgObj)
+
+      const { routeNewVal, routeOldVal} = routeVal
+      const { name: newName, params: { id: newId } } = routeNewVal
+      const { name: oldName, params: { id: oldId } } = routeOldVal
+      // console.log(newName, oldName, 'name', 'route', this.copyMsgObj[oldName],this.copyMsgObj[newName], newId, oldId, this.msgObj)
+      if (!newId) {
+        this.msgObj = this.copyMsgObj[newName]
+      } else {
+        if (newName !== oldName) {
+          this.copyMsgObj[oldName] = this.msgObj
+          // console.log(this.copyMsgObj, this.msgObj, 'this.copyMsgObj==this.copyMsgObj==============oldName')
+          this.msgObj = {}
+        } else {
+          this.copyMsgObj[newName] = this.msgObj
+          // console.log(this.msgObj, this.copyMsgObj, 'this.copyMsgObj==this.copyMsgObj===============newName')
+        }
+      }
+    },
+    changeFlagObj () {
+      this.flagObj.msgFlag = false
+      this.flagObj.routeFlag = false
+    }
   },
   components: {
     ChatEmoji,

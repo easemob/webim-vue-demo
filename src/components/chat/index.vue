@@ -16,7 +16,7 @@
           <span class="unreadNum">{{getUnreadNum(item)}}</span>
         </div>
         <span class="time-style" style="float:right">{{getLastMsg(item).msgTime}}</span>
-        <div>{{getLastMsg(item).lastMsg}}</div>
+        <div class="last-msg">{{getLastMsg(item).lastMsg}}</div>
       </a-menu-item>
     </a-menu>
   </div>
@@ -192,6 +192,7 @@ export default {
       return unReadNum;
     },
     select2(key, index) {
+      console.log(key, index)
       this.$data.selectedKeys = [index];
       this.select(key);
       this.$data.activedKey[this.type] = key;
@@ -464,6 +465,12 @@ export default {
   color: #888c98;
   position: absolute;
   right: 5px;
+}
+.last-msg {
+  width: 80%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 .file-style {
   width: 240px;

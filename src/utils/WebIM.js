@@ -345,7 +345,7 @@ WebIM.conn.listen({
 		type === 'chat' && ack(message);
 	}, // 收到视频消息
 	onPresence: function (message) {
-		console.log("onPresence", message);
+		// console.log("onPresence", message);
 		let select_id = Vue.$store.state.group.groupInfo.gid; // 群组相关操作，更新数据时需要
 		switch (message.type) {
 			case "subscribe":
@@ -465,7 +465,7 @@ WebIM.conn.listen({
 	}, // 收到消息送达客户端回执
 
 	onReadMessage: function (message) {
-		console.log("onReadMessage", message);
+		// console.log("onReadMessage", message);
 		message.status = "read";
 		Vue.$store.commit("updateMessageStatus", message);
 	}, // 收到消息已读回执
