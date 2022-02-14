@@ -6,6 +6,7 @@ import FriendModule from "./friendModule";
 import Group from "./group";
 import Emedia from "./emedia";
 import Agora from "./agora"
+import Presence from "./presence"
 
 Vue.use(Vuex);
 
@@ -16,7 +17,8 @@ const store = new Vuex.Store({
 		friendModule: FriendModule,
 		group: Group,
 		emedia: Emedia,
-		agora:Agora
+		agora:Agora,
+		presence: Presence
 	}
 });
 

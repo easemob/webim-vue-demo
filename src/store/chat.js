@@ -201,14 +201,36 @@ const Chat = {
 						const userInfoList = []
 						userList && userList.forEach(item=>{return userInfoList.push(item.name)})
 						userInfoList && WebIM.conn.fetchUserInfoById(userInfoList).then((res) => {
-								let data = res.data;
-								userList.forEach((item,idx)=>{return userList[idx].friendDetail = data[item.name]})
-								context.commit("updateUserList", {
-									userList,
-									type: "contactUserList",
-									black: payload
-								});
+							let data = res.data;
+							userList.forEach((item,idx)=>{return userList[idx].friendDetail = data[item.name]})
+							context.commit("updateUserList", {
+								userList,
+								type: "contactUserList",
+								black: payload
 							})
+							// WebIM.conn.fetchSubscribedListWithCompletion().then(res => {
+							// 	const { data, type } = res
+							// 	if (type === 200 && data.length) {
+							// 		data.forEach(val => {
+							// 			userList.forEach(item => {
+							// 				if (item.name === val.name) {
+							// 					item.presence = data.status
+							// 				}
+							// 			})
+							// 		})
+							// 		console.log(userList)
+							// 		context.commit("updateUserList", {
+							// 			userList,
+							// 			type: "contactUserList",
+							// 			black: payload
+							// 		})
+							// 	} else {
+							// 		WebIM.conn.subscribePresence({ members: userInfoList }).then(res => {
+							// 			console.log(res)
+							// 		})
+							// 	}
+							// })
+						})
 					}
 				});
 			}
@@ -226,10 +248,33 @@ const Chat = {
 					userList.forEach((user, index) => {
 						userList[index].name = user.groupname;
 					});
+					const userInfoList = []
+					userList && userList.forEach(item => {userInfoList.push(item.name)})
 					context.commit("updateUserList", {
 						userList,
 						type: "groupUserList"
-					});
+					})
+					// WebIM.conn.fetchSubscribedListWithCompletion().then(res => {
+					// 	const { data, type } = res
+					// 	if (type === 200 && data.length) {
+					// 		data.forEach(val => {
+					// 			userList.forEach(item => {
+					// 				if (item.name === val.name) {
+					// 					item.presence = data.status
+					// 				}
+					// 			})
+					// 		})
+					// 		console.log(userList)
+					// 		context.commit("updateUserList", {
+					// 			userList,
+					// 			type: "groupUserList"
+					// 		})
+					// 	} else {
+					// 		WebIM.conn.subscribePresence({ members: userInfoList }).then(res => {
+					// 			console.log(res)
+					// 		})
+					// 	}
+					// })
 				},
 				error: function (e) { },
 			};
@@ -240,10 +285,34 @@ const Chat = {
 				pagenum: 1,                                 // 页数
 				pagesize: 20,                               // 每页个数
 				success: function (list) {
+					let userList = list.data
+					const userInfoList = []
+					userList && userList.forEach(item => {userInfoList.push(item.name)})
 					context.commit("updateUserList", {
 						userList: list.data,
 						type: "chatroomUserList"
-					});
+					})
+					// WebIM.conn.fetchSubscribedListWithCompletion().then(res => {
+					// 	const { data, type } = res
+					// 	if (type === 200 && data.length) {
+					// 		data.forEach(val => {
+					// 			userList.forEach(item => {
+					// 				if (item.name === val.name) {
+					// 					item.presence = data.status
+					// 				}
+					// 			})
+					// 		})
+					// 		console.log(userList)
+					// 		context.commit("updateUserList", {
+					// 			userList: list.data,
+					// 			type: "chatroomUserList"
+					// 		})
+					// 	} else {
+					// 		WebIM.conn.subscribePresence({ members: userInfoList }).then(res => {
+					// 			console.log(res)
+					// 		})
+					// 	}
+					// })
 				},
 				error: function () {
 					console.log("List chat room error");

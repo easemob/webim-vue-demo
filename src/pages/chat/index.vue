@@ -12,6 +12,7 @@
             @click="$refs['person_card'].showModal()"
           />
           <span class="username">{{ userDetail.nickname || userName }}</span>
+          <span class="username" @click="$refs['set_presece'].showModal()">[{{ userPresence }}]</span>
           <a-dropdown>
             <span class="ant-dropdown-link" href="#">
               <a-icon type="setting" />
@@ -145,6 +146,7 @@
         <Call ref="call" v-if="showCall" />
       </a-layout-content>
       <PersonCard ref="person_card" />
+      <SetPresece ref="set_presece" @changePresence="changePresence" />
     </a-layout>
   </a-layout>
 </template>
@@ -162,6 +164,7 @@ import VidoeSetting from "../../components/videoSetting/index";
 import GroupRequest from "../../components/group/groupRequest.vue";
 import GroupInvite from "../../components/group/groupInvite.vue";
 import PersonCard from "../../components/personCard/personCard";
+import SetPresece from "../../components/setPresence/setPresece";
 
 import EmediaModal from "../../components/emediaModal/index";
 // import MultiAVModal from "../../components/emediaModal/multiAVModal";
@@ -215,7 +218,8 @@ export default {
       current: ["contact"],
       nowClickID: "",
       showAlert: false,
-      activeFlag: true // 在移动端情况下，为了消除列表跳详情的怪异情况
+      activeFlag: true, // 在移动端情况下，为了消除列表跳详情的怪异情况
+      userPresence: '在线'
     };
   },
   computed: {
@@ -524,6 +528,9 @@ export default {
           break;
       }
     },
+    changePresence (val) {
+      this.userPresence = val.title
+    }
   },
   components: {
     MessageBox,
@@ -542,6 +549,7 @@ export default {
     AddAVMemberModal,
     AlertModal,
     PersonCard,
+    SetPresece
   }
 };
 </script>

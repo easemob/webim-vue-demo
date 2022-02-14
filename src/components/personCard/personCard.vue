@@ -175,26 +175,29 @@
             />
           </div>
           <div class="nickname">
-          昵称：<p>{{userInfo.friendDetail.nickname || '暂无昵称'}}</p>
-        </div>
-        <div class="id">
-          用户ID：<p>{{userInfo.name}}</p>
-        </div>
-        <div class="sign">
-          个性签名：<p>{{userInfo.friendDetail.sign || '无个性，不签名...'}}</p>
-        </div>
-        <div class="gender">
-          性别：<p>{{userInfo.friendDetail.gender?(userInfo.friendDetail.gender===1?'男':'女'):'未知'}}</p>
-        </div>
-        <div class="birth">
-          出生日期：<p>{{userInfo.friendDetail.birth || '未知'}}</p>
-        </div>
-        <div class="phone">
-          电话：<p>{{userInfo.friendDetail.phone || '暂无号码'}}</p>
-        </div>
-        <div class="email">
-          E-mail：<p>{{userInfo.friendDetail.mail || '暂无邮箱地址'}}</p>
-        </div>
+            昵称：<p>{{userInfo.friendDetail.nickname || '暂无昵称'}}</p>
+          </div>
+          <div class="nickname">
+            状态：<p>{{userInfo.friendDetail.presence || '暂无状态'}}</p>
+          </div>
+          <div class="id">
+            用户ID：<p>{{userInfo.name}}</p>
+          </div>
+          <div class="sign">
+            个性签名：<p>{{userInfo.friendDetail.sign || '无个性，不签名...'}}</p>
+          </div>
+          <div class="gender">
+            性别：<p>{{userInfo.friendDetail.gender?(userInfo.friendDetail.gender===1?'男':'女'):'未知'}}</p>
+          </div>
+          <div class="birth">
+            出生日期：<p>{{userInfo.friendDetail.birth || '未知'}}</p>
+          </div>
+          <div class="phone">
+            电话：<p>{{userInfo.friendDetail.phone || '暂无号码'}}</p>
+          </div>
+          <div class="email">
+            E-mail：<p>{{userInfo.friendDetail.mail || '暂无邮箱地址'}}</p>
+          </div>
         </div>
       </div>
     </a-modal>

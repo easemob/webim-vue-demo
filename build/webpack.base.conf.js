@@ -28,6 +28,9 @@ module.exports = {
             '@': resolve('src'),
         }
     },
+    externals: {
+		'AgoraRTCSdkNg': 'AgoraRTC'
+	},
     module: {
         unknownContextCritical: false,
         exprContextCritical: false,
@@ -40,7 +43,8 @@ module.exports = {
             {
                 test: /\.js$/,
                 loader: 'babel-loader',
-                include: [resolve('src'), resolve('test'), resolve('node_modules/webpack-dev-server/client')]
+                include: [resolve('src'), resolve('test'), resolve('node_modules/webpack-dev-server/client')],
+                exclude: [resolve('node_modules')]
             },
             {
                 test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,

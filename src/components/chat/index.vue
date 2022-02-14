@@ -9,7 +9,7 @@
       >
         <div v-if="item.friendDetail">
           <img class="friend_portrait" :src="item.friendDetail.avatarurl?item.friendDetail.avatarurl:headPortraitImg" alt="" @click.stop="alertPersaonCard(item)"> 
-          <span class="custom-title" >{{ item.friendDetail.nickname || item.name}}</span>
+          <span class="custom-title" >{{ item.friendDetail.nickname || item.name}}[{{'在线'}}]</span>
         </div>
         <span class="custom-title" v-if="!item.friendDetail">{{ item.name }}</span>
         <div class="icon-style" v-if="getUnreadNum(item) != 0">
@@ -87,6 +87,29 @@ export default {
   },
   updated() {
     this.scollBottom();
+  },
+  watch: {
+    contact: {
+      handler (val) {
+        console.log('%c contact', 'color:red;font-size:20px;')
+        console.log(val)
+      },
+      deep: true
+    },
+    group: {
+      handler (val) {
+        console.log('%c group', 'color:red;font-size:20px;')
+        console.log(val)
+      },
+      deep: true
+    },
+    chatroom: {
+      handler (val) {
+        console.log('%c chatroom', 'color:red;font-size:20px;')
+        console.log(val)
+      },
+      deep: true
+    }
   },
   computed: {
     ...mapGetters({
