@@ -50,7 +50,7 @@
     <div class="messagebox-content" ref="msgContent">
       <div class="moreMsgs" @click="loadMoreMsgs">{{ loadText }}</div>
       <div
-        v-for="(item, i) in msgList"
+        v-for="(item, i) in msgObj"
         :key="i"
         class="message-group"
         :style="{ float: item.bySelf ? 'right' : 'left' }"
@@ -216,9 +216,24 @@ export default {
         read: "已读",
       },
       nowIsVideo: false,
+      titleObj: {
+        titleMode: 'time',
+        timeStamp: 10
+      },
+      msgObj: {}, // 聊天窗口渲染数据的变量
+      copyMsgObj: { // 保存上一次聊天记录的变量
+        contact: null,
+        group: null,
+        chatroom: null
+      },
+      routeNewOldObj: null, // 保存路由信息的变量
+      msgNewOldObj: null, // 保存聊天信息的变量
+      flagObj: { // 触发聊天信息更新的变量
+        msgFlag: false,
+        routeFlag: false
+      }
     };
   },
-
   beforeMount() {
     if (this.type === "contact") {
       this.onGetContactUserList();
@@ -231,6 +246,49 @@ export default {
   updated() {
     // console.log("数据", this.$store);
     this.scollBottom();
+  },
+  watch: {
+    msgList: {
+      handler (msgNewVal, msgOldVal) {
+        this.msgNewOldObj = {
+          msgNewVal,
+          msgOldVal
+        }
+        this.flagObj.msgFlag = true
+        /**
+         * 处理，首次加载数据，点击列表项，第一次触发，msgOldVal有值,虽然无数据，是个空对象，但是也算有，不是undefined，msgNewVal为undefined
+         * 然后，在select方法中，判断msgList为空，就请求历史数据，历史数据请求回来，有值，msgList再次被触发，这个时候msgOldVal和msgNewVal交换
+         * msgOldVal = undefined
+         * msgNewVal = 历史数据
+         * 所以增加判断，这种情况，route不会触发，那手动改this.flagObj.routeFlag的值，以求，flagObj的触发，去更新数据
+         */
+        if (!msgOldVal) {
+          this.flagObj.routeFlag = true
+        }
+      },
+      deep: true
+    },
+    $route: {
+      handler (routeNewVal, routeOldVal) {
+        this.routeNewOldObj = {
+          routeNewVal,
+          routeOldVal
+        }
+        this.flagObj.routeFlag = true
+      },
+      deep: true
+    },
+    flagObj: {
+      handler (val) {
+        // console.log(val, 'flagObj')
+        const { msgFlag, routeFlag } = val
+        if (msgFlag && routeFlag) {
+          this.handlerMsgData(this.routeNewOldObj, this.msgNewOldObj)
+          this.changeFlagObj()
+        }
+      },
+      deep: true
+    }
   },
   computed: {
     ...mapGetters({
@@ -565,6 +623,61 @@ export default {
     // changeIsVideoState(v) {
     //   v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
     // }
+    handlerMsgData (routeVal, msgVal) {
+      // console.log(routeVal, msgVal)
+
+      const { msgNewVal, msgOldVal} = msgVal
+      const { params: { id } } = this.$route
+      if (id) {
+        /**
+         * 老数据在，新数据不在，并且用户的id和老数据中的不一样，置空聊天数据
+         * 存在于，新点击的用户，没有聊天记录，
+         * 也就是从，有聊天记录的切换到没聊天记录的情况
+         */
+        if (msgOldVal && !msgNewVal && id !== msgOldVal[0].chatId) {
+          this.msgObj = {}
+        } else if (msgOldVal && Object.keys(msgOldVal).length >= 0 && id === msgOldVal[0].chatId) {
+          /**
+           * 以旧数据优先判断和渲染使用，以为初始化新数据是空，undefined的。
+           * 旧数据存在，并且长度有值
+           * 并且当且选中聊天对象的id和数据里一致，就是赋值，渲染
+           */
+          this.msgObj = msgOldVal
+        } else if (msgNewVal && Object.keys(msgNewVal).length >= 0 && id === msgNewVal[0].chatId) {
+          /**
+           * 旧数据没有，新数据有
+           * 新数据长度不为0
+           * 选中的聊天对象的id和数据中的id一致
+           * 赋值，渲染
+           */
+          this.msgObj = msgNewVal
+        }
+        // console.log(msgNewVal, msgOldVal, '20919123')
+      }
+      // console.log(this.routeObj, 'msgList', this.msgObj)
+
+      const { routeNewVal, routeOldVal} = routeVal
+      const { name: newName, params: { id: newId } } = routeNewVal
+      const { name: oldName, params: { id: oldId } } = routeOldVal
+      // console.log(newName, oldName, 'name', 'route', this.copyMsgObj[oldName],this.copyMsgObj[newName], newId, oldId, this.msgObj)
+      if (!newId) {
+        /**
+         * newId不存在，那就是切换tab时，数据更新为上一次点击的那个用户的聊天记录
+         */
+        this.msgObj = this.copyMsgObj[newName]
+      } else {
+        /**
+         * newId存在，newName === oldName 也就是，在当前聊天对象列表，切换了不同的用户，那就是保存一下数据，共切换tab时使用
+         */
+        if (newName === oldName) {
+          this.copyMsgObj[newName] = this.msgObj
+        }
+      }
+    },
+    changeFlagObj () {
+      this.flagObj.msgFlag = false
+      this.flagObj.routeFlag = false
+    }
   },
   components: {
     ChatEmoji,
