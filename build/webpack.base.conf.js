@@ -28,6 +28,9 @@ module.exports = {
             '@': resolve('src'),
         }
     },
+    externals: {
+		'AgoraRTCSdkNg': 'AgoraRTC'
+	},
     module: {
         unknownContextCritical: false,
         exprContextCritical: false,

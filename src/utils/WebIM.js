@@ -6,7 +6,7 @@ import emedia from "easemob-emedia";
 import webrtc from "./EMedia_x1v1_3.4.1";
 
 // 声网音视频sdk
-import AgoraRTC from "agora-rtc-sdk-ng"
+import AgoraRTC from "AgoraRTCSdkNg"
 import { Message } from "ant-design-vue";
 function ack(message) {
 	var bodyId = message.id; // 需要发送已读回执的消息id
