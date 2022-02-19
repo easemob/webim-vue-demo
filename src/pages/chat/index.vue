@@ -9,10 +9,23 @@
             class="head_portrait"
             :src="userDetail.avatarurl || head_portraitImg"
             alt=""
-            @click="$refs['person_card'].showModal()"
+            @click="$refs['person_card'].showModal(statusList[statusIndex])"
           />
+          <a-popover placement="rightTop" v-model="visible" trigger="click">
+            <template slot="content">
+              <div class="status_box" v-for="(item, index) in statusList.slice(0,5)" :key="item.id" @click="changeCurrentStatus(item, index)">
+                <div>
+                  <img class="status_img" :src="item.img" alt="">
+                  <span class="online_word">{{item.title}}</span>
+                </div>
+                <img v-if="item.checked" class="check_img" src="../../assets/check_gray.png" alt="">
+              </div>
+            </template>
+            <img class="online_status" :src="statusList[statusIndex].img" alt="">
+          </a-popover>
+          
           <span class="username">{{ userDetail.nickname || userName }}</span>
-          <span class="username" @click="$refs['set_presece'].showModal()">[{{ userPresence }}]</span>
+          <!-- <span class="username" @click="$refs['set_presece'].showModal()">[{{ userPresence }}]</span> -->
           <a-dropdown>
             <span class="ant-dropdown-link" href="#">
               <a-icon type="setting" />
@@ -175,7 +188,7 @@ import AlertModal from "../../components/agoraCallModal/alertModal";
 import AddAVMemberModal from "../../components/emediaModal/addAVMemberModal";
 
 import "./index.less";
-import { mapState, mapActions } from "vuex";
+import { mapActions, mapMutations, mapState } from "vuex";
 const rtc = WebIM.rtc;
 export default {
   data() {
@@ -219,10 +232,53 @@ export default {
       nowClickID: "",
       showAlert: false,
       activeFlag: true, // 在移动端情况下，为了消除列表跳详情的怪异情况
-      userPresence: '在线'
+      userPresence: '在线',
+      visible: false,
+      // presenceStatus offline = 0, online = 1, busy = 100, donotdisturb = 101, leave = 102, custom = 103
+      statusList: [
+        {
+          id: 1,
+          title: 'Online',
+          checked: true,
+          img: require('../../assets/Online.png')
+        },
+        {
+          id: 100,
+          title: 'Busy',
+          checked: false,
+          img: require('../../assets/Busy.png')
+        },
+        {
+          id: 101,
+          title: 'Do not Disturb',
+          checked: false,
+          img: require('../../assets/Do_not_Disturb.png')
+        },
+        {
+          id: 102,
+          title: 'Leave',
+          checked: false,
+          img: require('../../assets/leave.png')
+        },
+        {
+          id: 103,
+          title: 'Custom Status',
+          checked: false,
+          img: require('../../assets/custom.png')
+        },
+        {
+          id: 0,
+          title: 'Offline',
+          checked: false,
+          img: require('../../assets/Offline.png')
+        }
+      ]
     };
   },
   computed: {
+    statusIndex () {
+      return this.$store.state.presence.statusIndex
+    },
     userDetail() {
       return this.$store.state.login.userDetail;
     },
@@ -286,9 +342,20 @@ export default {
         this.contactTypeChange({key: 'contact'})
       },
       deep: true
+    },
+    statusIndex (val) {
+      this.statusList.forEach((item, index) => {
+        if (index === this.statusIndex) {
+          item.checked = true
+        } else {
+          item.checked = false
+        }
+      })
+      console.log(this.statusList, 'this.statusList', this.statusIndex)
     }
   },
   methods: {
+    ...mapMutations(['updateUserPresenceStatus']),
     ...mapActions([
       "onLogout",
       "onGetFirendBlack",
@@ -297,6 +364,10 @@ export default {
       "setCallStatus",
       "hangup",
       "cancelCall",
+      "subFriendStatus",
+      "publishNewPresence",
+      "getSubPresence",
+      "getAllFriendsStatus"
     ]),
     toLogout() {
       this.onLogout();
@@ -345,6 +416,10 @@ export default {
       this.$data.showSettingOptions = !this.$data.showSettingOptions;
     },
     contactTypeChange(type) {
+      // let params = {
+      //   usernames: this.userName === 'luleiyu' ? ['lu1'] : ['luleiyu']
+      // }
+      // this.subFriendStatus(params)
       this.activeFlag = true
       this.$data.activeKey = type.key;
       this.$router.push(`/${type.key}`);
@@ -529,7 +604,35 @@ export default {
       }
     },
     changePresence (val) {
-      this.userPresence = val.title
+      this.statusList[4].title = val.ext
+      const params = {
+        presenceStatus: 103,
+        ext: val.ext
+      }
+      this.pubPresence(params)
+    },
+    changeCurrentStatus (val, index) {
+      this.updateUserPresenceStatus(val.title)
+      this.statusList.forEach(item => {
+        if (item.id === val.id) {
+          item.checked = true
+        } else {
+          item.checked = false
+        }
+      })
+      const params = {
+        presenceStatus: val.id,
+        ext: val.title
+      }
+      if (val.id === 103) {
+        this.$refs['set_presece'].showModal()
+      } else {
+        this.pubPresence(params)
+      }
+      this.visible = false
+    },
+    pubPresence (params) {
+      this.publishNewPresence(params)
     }
   },
   components: {

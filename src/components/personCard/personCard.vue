@@ -1,5 +1,5 @@
 <template>
-  <div class="personCard">
+  <div class="personCard" v-if="visible">
     <a-modal
       mask
       v-model="visible"
@@ -16,6 +16,12 @@
             alt=""
             @click="isShowList = !isShowList"
           />
+          <a-tooltip placement="bottom">
+            <template slot="title">
+              <span>{{statusObj.title}}</span>
+            </template>
+            <img class="status_img" :src="statusObj.img" alt="">
+          </a-tooltip>
           <transition name="draw">
             <div class="avatar_list" v-show="isShowList">
               <a-divider>自选头像</a-divider>
@@ -173,6 +179,12 @@
               :src="userInfo.friendDetail.avatarurl || defaultAvatar"
               alt=""
             />
+            <a-tooltip placement="bottom">
+              <template slot="title">
+                <span>{{userInfo.presence.ext}}</span>
+              </template>
+              <img class="status_img" :src="getUserOnlineStatus(userInfo.presence)" alt="">
+            </a-tooltip>
           </div>
           <div class="nickname">
             昵称：<p>{{userInfo.friendDetail.nickname || '暂无昵称'}}</p>
@@ -231,7 +243,8 @@ export default {
         mail: /\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/,
         phone: /^[1][0-9]{10}$/
       },
-      isShowFriendsCard: false
+      isShowFriendsCard: false,
+      statusObj: {}
     };
   },
   computed: {
@@ -251,8 +264,9 @@ export default {
     ...mapActions(["updateOwnUserInfo"]),
     //获取好友的用户属性信息
     async getOthersUserInfo(detail) {
-      const { friendDetail, name } = detail;
-      this.userInfo = { friendDetail, name };
+      console.log(detail, 'detail')
+      const { friendDetail, name, presence } = detail;
+      this.userInfo = { friendDetail, name, presence };
       this.isShowFriendsCard = true;
       this.visible = true;
       console.log(">>>>>>>>卡片页", detail);
@@ -329,11 +343,31 @@ export default {
         this.isShowFriendsCard = false;
       }, 300);
     },
-    showModal() {
+    showModal(val) {
       this.visible = true;
+      if (val) {
+        this.statusObj = val
+      }
     },
     handleOk(e) {
       this.visible = false;
+    },
+    getUserOnlineStatus (val) {
+      const { ext } = val
+      switch (ext) {
+        case 'Offline':
+          return require('../../assets/Offline.png')
+        case 'Online':
+          return require('../../assets/Online.png')
+        case 'Busy':
+          return require('../../assets/Busy.png')
+        case 'Do not Disturb':
+          return require('../../assets/Do_not_Disturb.png')
+        case 'Leave':
+          return require('../../assets/leave.png')
+        default:
+          return require('../../assets/custom.png')
+      }
     }
   }
 };

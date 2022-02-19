@@ -1,7 +1,7 @@
 import config from "./WebIMConfig";
-import websdk from "easemob-websdk";
+// import websdk from "easemob-websdk";
 
-// import websdk from "websdk";
+import websdk from "websdk";
 import _ from 'lodash'
 import emedia from "easemob-emedia";
 // import webrtc from "easemob-webrtc";
@@ -44,12 +44,20 @@ WebIM.conn = new WebIM.connection({
 	delivery: WebIM.config.delivery,
 
 	//公有云 isHttpDNS 默认配置为true
-	isHttpDNS: WebIM.config.isHttpDNS,
+	// isHttpDNS: WebIM.config.isHttpDNS,
 
 	// 私有云设置，详细文档：http://docs-im.easemob.com/im/web/other/privatedeploy
-	// isHttpDNS: false,
+	isHttpDNS: false,
 	// url: 'https://im-api-v2.easecdn.com/ws', // 设置为私有云的websocket server url
 	// apiUrl: 'https://a1.easecdn.com', // 设置为私有云的rest server url
+
+	url: 'http://msync-api-a1-test.easemob.com:8081/ws', // 设置为私有云的websocket server url
+	// url: 'https://msync-api-a1-test.easemob.com:8082/ws', // 设置为私有云的websocket server url
+
+	// url: 'https://im-api-v2-hsb.easemob.com/ws', // 设置为私有云的websocket server url
+	// url: 'http://52.80.99.104:8081/ws', // 设置为私有云的websocket server url
+	apiUrl: 'http://a1-test.easemob.com:8089', // 设置为私有云的rest server url
+	// apiUrl: 'https://a1-test.easemob.com:8090', // 设置为私有云的rest server url
 });
 
 //通话状态
@@ -73,7 +81,7 @@ WebIM.conn.listen({
 		const path = location.pathname.indexOf("login") !== -1 || location.pathname.indexOf("register") !== -1 ? "/contact" : location.pathname;
 		const redirectUrl = `${path}?username=${username}`;
 		Vue.$router.push({ path: redirectUrl });
-		Vue.$store.dispatch("getAllFriendsStatus");
+		// Vue.$store.dispatch("getAllFriendsStatus");
 	},
 	onClosed: function (message) {
 		Vue.$router.push({ path: "/login" });
@@ -359,12 +367,10 @@ WebIM.conn.listen({
 				};
 				console.log('add', 'subscribe')
 				Vue.$store.commit("changeFriendRequestState", options);
-				console.log("onPresenceStatusDidChanged", message);
 				break;
 			case "subscribed":
 				Vue.$store.dispatch("onGetContactUserList");
 				Vue.$store.dispatch("getAllFriendsStatus");
-				console.log("onPresenceStatusDidChanged", message);
 				Message.success(message.from + " " + "已订阅")
 				break;
 			case "unsubscribed":
@@ -413,8 +419,6 @@ WebIM.conn.listen({
 				break;
 			case "leaveGroup":
 				Vue.$store.dispatch("onGetGroupinfo", { select_id });
-			case 'presence':
-				console.log("onPresenceStatusDidChanged", message);
 				break;
 			default:
 				break;
@@ -490,22 +494,17 @@ WebIM.conn.listen({
 	}, // 如果用户在A群组被禁言，在A群发消息会走这个回调并且消息不会传递给群其它成员
 	onPresenceStatusDidChanged: function (message) {
 		console.log("onPresenceStatusDidChanged", message);
+		const { userId } = JSON.parse(window.localStorage.getItem('userInfo'))
+		const { data: { values } } = message
+		if (userId != values[0].uid) {
+			Vue.$store.dispatch("onGetContactUserList")
+		} else {
+			Vue.$store.commit("updateUserPresenceStatus", values[0].ext);
+		}
 	}, // 发布者发布新的状态时，订阅者触发该回调
 	onPresenceSubscription: function (message) {
 		console.log("onPresenceSubscription", message);
 	}, // 用户订阅信息变更时，其他在线设备收到此回调，action应该包括新增订阅和取消订阅两种
-	onContactInvited: function (message) {
-		console.log("onContactInvited", message);
-	},
-	onContactDeleted: function (message) {
-		console.log("onContactDeleted", message);
-	},
-	onContactAdded: function (message) {
-		console.log("onContactAdded", message);
-	},
-	onContactAgreed: function (message) {
-		console.log("onContactAgreed", message);
-	},
 });
 
 WebIM.WebRTC = window.webrtc; // 本项目引入 UMD 文件有问题，暂时这样引入

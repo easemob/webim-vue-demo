@@ -10,20 +10,16 @@
       @ok="handleOk"
       @cancel="hadleCancel">
       <div class="choose-modal">
-        状态选择：
-        <div class="radio-choose">
-          <a-radio-group v-model="value">
-            <a-radio
-              v-for="item in statusList"
-              :key="item.title"
-              :value="item.value">
-              {{item.title}}
-            </a-radio>
-          </a-radio-group>
+        <div class="input-choose">
+          <a-input size="large" style="width: 300px" v-model="selfStatus" placeholder="自己定义状态">
+            <a-icon slot="suffix" @click="selfStatus = ''" type="close-circle" />
+          </a-input>
         </div>
-        <div v-show="value === 5" class="input-choose">
-          <a-input v-model="selfStatus" placeholder="没有满意的状态，可以自己定义"></a-input>
-        </div>
+        <!-- <a-select size="large" placeholder="自定义状态期限" style="width: 300px" @change="handleChange">
+          <a-select-option v-for="i in selectOption" :key="i.value">
+            {{i.title}}
+          </a-select-option>
+        </a-select> -->
       </div>
     </a-modal>
   </div>
@@ -36,32 +32,24 @@ export default {
   data () {
     return {
       visible: false,
-      value: 1,
       selfStatus: '',
-      statusList: [
+      selectValue: 0,
+      selectOption: [
         {
-          title: '离线',
+          title: "Don't Clear",
           value: 0
         },
         {
-          title: '在线',
+          title: 'Clear in 1 hour',
           value: 1
         },
         {
-          title: '离开',
+          title: 'Clear in 8 hour',
           value: 2
         },
         {
-          title: '隐身',
+          title: 'Clear Tomorow',
           value: 3
-        },
-        {
-          title: '忙碌',
-          value: 4
-        },
-        {
-          title: '自定义',
-          value: 5
         }
       ]
     }
@@ -72,38 +60,28 @@ export default {
       this.visible = true
     },
     handleOk () {
-      if (!this.selfStatus && this.value === 5) {
+      if (!this.selfStatus) {
         this.$message.error('自定义状态不能为空')
         return
       }
       const params = {
-        presenceStatus: this.value,
-        ext: '',
-        to: 'lu1',
-        message: 'message'
+        // data: this.selectOption[this.selectValue],
+        ext: this.selfStatus
       }
-      if (this.value === 5) {
-        params.ext = this.selfStatus
-        params.message = this.selfStatus
-      } else {
-        params.ext = ''
-      }
-      let data = ''
-      this.statusList.forEach(item => {
-        if (item.value === this.value) {
-          data = item
-        }
-      })
-      this.$emit('changePresence', data)
-      this.publishNewPresence(params)
-      params.members = ['1','2','3','4']
-      this.subFriendStatus(params)
-      this.unsubFriendStatus(params)
-      this.getSubPresence(params)
+      this.$emit('changePresence', params)
+      // this.publishNewPresence(params)
+      // params.usernames = JSON.parse(localStorage.getItem("userInfo")).userId === 'luleiyu' ? ['lu1'] : ['luleiyu']
+      // this.subFriendStatus(params)
+      // this.unsubFriendStatus(params)
+      // this.getSubPresence(params)
       this.hadleCancel()
     },
     hadleCancel () {
       this.visible = false
+    },
+    handleChange(value) {
+      console.log(`Selected: ${value}`)
+      this.selectValue = value
     }
   }
 }

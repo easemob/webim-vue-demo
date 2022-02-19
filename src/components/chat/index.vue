@@ -7,9 +7,10 @@
         :key="getKey(item)"
         @click="select2(item, getKey(item))"
       >
-        <div v-if="item.friendDetail">
+        <div v-if="item.friendDetail" class="name_box">
           <img class="friend_portrait" :src="item.friendDetail.avatarurl?item.friendDetail.avatarurl:headPortraitImg" alt="" @click.stop="alertPersaonCard(item)"> 
-          <span class="custom-title" >{{ item.friendDetail.nickname || item.name}}[{{'在线'}}]</span>
+          <span class="custom-title" >{{ item.friendDetail.nickname || item.name}}</span>
+          <img class="status_img" v-if="dataFlag" :src="getUserOnlineStatus(item.presence)" alt="">
         </div>
         <span class="custom-title" v-if="!item.friendDetail">{{ item.name }}</span>
         <div class="icon-style" v-if="getUnreadNum(item) != 0">
@@ -63,7 +64,8 @@ export default {
         read: "已读"
       },
       isCollapse: true,
-      unRead: ""
+      unRead: "",
+      dataFlag: false
       // selectedKeys: [ this.getKey(this.activedKey[this.type]) ]
     };
   },
@@ -91,8 +93,30 @@ export default {
   watch: {
     contact: {
       handler (val) {
+        // this.getAllFriendsStatus()
+        this.dataFlag = false
         console.log('%c contact', 'color:red;font-size:20px;')
-        console.log(val)
+        const params = {
+          usernames: []
+        }
+        val.forEach(item => {
+          params.usernames.push(item.name)
+        })
+        console.log(params)
+        params.usernames.length && this.getSubPresence(params).then(res => {
+          console.log(res, this.contact, '333333333333333333')
+          val.forEach(item => {
+            res.result.forEach(val => {
+              if (item.name === val.uid) {
+                item.presence = val
+              }
+            })
+          })
+          console.log(this.userList, 'this.userList===this.userList')
+          setTimeout(() => {
+            this.dataFlag = true
+          }, 500)
+        })
       },
       deep: true
     },
@@ -116,7 +140,8 @@ export default {
       contact: "onGetContactUserList",
       group: "onGetGroupUserList",
       chatroom: "onGetChatroomUserList",
-      msgList: "onGetCurrentChatObjMsg"
+      msgList: "onGetCurrentChatObjMsg",
+      userPresenceList: 'userPresenceList'
     }),
     userList() {
       return {
@@ -125,7 +150,6 @@ export default {
             return item;
           }
         }),
-        
         group: this.group,
         chatroom: this.chatroom
       };
@@ -163,7 +187,9 @@ export default {
       "recallMessage",
       "onGetGroupBlack",
       "onGetFirendBlack",
-      "onGetAllFriendsInfo"
+      "onGetAllFriendsInfo",
+      "getAllFriendsStatus",
+      "getSubPresence"
     ]),
     handleOpen(key, keyPath) {
       // console.log(key, keyPath);
@@ -413,6 +439,23 @@ export default {
         to: name,
         message: item
       });
+    },
+    getUserOnlineStatus (val) {
+      const { ext } = val
+      switch (ext) {
+        case 'Offline':
+          return require('../../assets/Offline.png')
+        case 'Online':
+          return require('../../assets/Online.png')
+        case 'Busy':
+          return require('../../assets/Busy.png')
+        case 'Do not Disturb':
+          return require('../../assets/Do_not_Disturb.png')
+        case 'Leave':
+          return require('../../assets/leave.png')
+        default:
+          return require('../../assets/custom.png')
+      }
     }
   }
 };
@@ -433,6 +476,9 @@ export default {
   width: 100%;
   text-align: center;
 }
+.name_box {
+  position: relative;
+}
 .friend_portrait{
   width: 35px;
   height: 35px;
@@ -442,6 +488,13 @@ export default {
   font-weight: 500;
   width: 100%;
   height: 50px;
+}
+.status_img {
+  width: 18px;
+  height: 18px;
+  position: absolute;
+  bottom: 10px;
+  left: 20px;
 }
 .moreMsgs {
   background: #ccc !important;

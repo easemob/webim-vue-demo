@@ -17,8 +17,9 @@ var config = {
     /*
      * Application AppKey
      */
-    //appkey:"gdpwq123#ceshi",
-    appkey: "easemob-demo#easeim",
+    // appkey:"gdpwq123#ceshi",
+    appkey:"5101220107132865#test",
+    // appkey: "easemob-demo#easeim",
     /*
      * Application Host
      */
@@ -48,7 +49,7 @@ var config = {
      * @parameter {Boolean} true or false
      */
     isWindowSDK: false,
-    /**
+    /**a
      * @parameter {Boolean} true or false
      */
     isSandBox: false,// 内部测试环境，集成时设为false
