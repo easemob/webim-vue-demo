@@ -11,6 +11,7 @@
     justify-content: space-between;
 
     .setting {
+      position: relative;
       display: flex;
       justify-content: space-around;
       align-items: center;
@@ -22,6 +23,14 @@
         width: 35px;
         height: 35px;
         border-radius: 50%;
+      }
+      .online_status {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        bottom: 8px;
+        left: 20px;
+        vertical-align: middle;
       }
       .username{
         margin: 0 5px;
@@ -50,7 +59,32 @@
     color        : #05af4a !important;
   }
 }
-
+.status_box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 224px;
+  height: 38px;
+  padding: 5px;
+  border-radius: 8px;
+  cursor: pointer;
+  .status_img {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+  }
+  .online_word {
+    
+  }
+  .check_img {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+  }
+}
+.status_box:hover {
+  background: #F6F7F8;
+}
 .tip-style {
   display         : inline-block;
   width           : 10px;

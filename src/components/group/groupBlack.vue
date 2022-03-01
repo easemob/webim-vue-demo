@@ -11,7 +11,7 @@
   </a-modal>
 </template>
 <script>
-import { mapActions } from "vuex";
+import { mapActions } from 'vuex';
 export default{
 	data(){
 		return {
@@ -24,7 +24,7 @@ export default{
 		}
 	},
 	methods: {
-		...mapActions(["onRemoveGroupBlack"]),
+		...mapActions(['onRemoveGroupBlack']),
 		chengeBlackModel(){
 			this.$data.showGroupBlackModel = !this.$data.showGroupBlackModel;
 		},

@@ -18,10 +18,10 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from "vuex";
-import "./index.less";
-import Draggable from "../draggable";
-import WebIM from "../../utils/WebIM";
+import { mapActions, mapGetters } from 'vuex';
+import './index.less';
+import Draggable from '../draggable';
+import WebIM from '../../utils/WebIM';
 const micCloseSVG = {
 	template: `
 		<svg class="icon" width="200px" height="200.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -33,7 +33,7 @@ const micCloseIcon = {
 	template: `
 		<a-icon :component="micCloseSVG" />
 	`,
-	data () {
+	data(){
 		return {
 			micCloseSVG
 		}
@@ -48,38 +48,39 @@ export default{
 			callerWaitVisible: false,
 			calleeWaitVisible: false,
 			voiceCallVisible: false,
-			contact: "",
-			streamType: "视频",
+			contact: '',
+			streamType: '视频',
 			toggle: true,
 			serverStyle: {
-				width: "360px",
-				height: "360px"
+				width: '360px',
+				height: '360px'
 			}
 		};
 	},
 	watch: {
-    'emediaModalVisible': {
-      deep: true,
-      handler: function(newV, oldV) {
-		if (newV) {
-			this.$emit("changeIsVideoState",true); 
-		}else{
-			this.$emit("changeIsVideoState",false); 
+		emediaModalVisible: {
+			deep: true,
+			handler: function(newV, oldV){
+				if(newV){
+					this.$emit('changeIsVideoState', true);
+				}
+				else{
+					this.$emit('changeIsVideoState', false);
+				}
+			}
 		}
-      }
-    }
-  },
+	},
 	methods: {
 		...mapActions([
-			"showMultiAVModal",
-			"hideMultiAVModal"
+			'showMultiAVModal',
+			'hideMultiAVModal'
 		]),
 		initWebRTC(){
-			console.log("InitWebRTC..........");
+			console.log('InitWebRTC..........');
 			// if (WebIM.call) {
 			//     return
 			// }
-			console.log("InitWebRTC end..........");
+			console.log('InitWebRTC end..........');
 			const me = this;
 
 			WebIM.call = new WebIM.WebRTC.Call({
@@ -108,47 +109,47 @@ export default{
 
 				listener: {
 					onOtherUserOpenVoice: function(from, opened){
-						console.log("from open:", opened, " voice .", from);
+						console.log('from open:', opened, ' voice .', from);
 					},
 					onOtherUserOpenVideo: function(from, opened){
-						console.log("from open:", opened, " voideo .", from);
+						console.log('from open:', opened, ' voideo .', from);
 					},
 					onAcceptCall: function(from, options, enableVoice, enableVideo){
-						console.log("onAcceptCall", from, options, enableVoice, enableVideo);
+						console.log('onAcceptCall', from, options, enableVoice, enableVideo);
 					},
 					onGotRemoteStream: function(stream, streamType){
-						if(streamType == "VOICE"){
+						if(streamType == 'VOICE'){
 							me.$data.voiceCallVisible = true;
-							me.$data.streamType = "语音";
+							me.$data.streamType = '语音';
 						}
 						else{
 							me.$data.voiceCallVisible = false;
-							me.$data.streamType = "视频";
+							me.$data.streamType = '视频';
 						}
 						me.$refs.remoteVideo.srcObject = stream;
 						me.$data.callerWaitVisible = false;
 					},
 					onGotLocalStream: function(stream, streamType){
-						if(streamType == "VOICE"){
+						if(streamType == 'VOICE'){
 							me.$data.voiceCallVisible = true;
-							me.$data.streamType = "语音";
+							me.$data.streamType = '语音';
 						}
 						else{
 							me.$data.voiceCallVisible = false;
-							me.$data.streamType = "视频";
+							me.$data.streamType = '视频';
 						}
 						me.$refs.localVideo.srcObject = stream;
 						me.$data.calleeWaitVisible = false;
 					},
 					onRinging: function(caller, streamType){
-						console.log("onRinging", caller);
-						if(streamType != "VOICE"){
+						console.log('onRinging', caller);
+						if(streamType != 'VOICE'){
 							me.$data.calleeWaitVisible = true;
-							me.$data.streamType = "视频";
+							me.$data.streamType = '视频';
 						}
 						else{
 							me.$data.calleeWaitVisible = true;
-							me.$data.streamType = "语音";
+							me.$data.streamType = '语音';
 						}
 						me.$data.contact = caller;
 						me.$data.emediaModalVisible = true;
@@ -159,25 +160,25 @@ export default{
 						// "ok"      -> 'HANGUP'     "success" -> 'HANGUP'   "timeout"          -> 'NORESPONSE'
 						// "decline" -> 'REJECT'     "busy"    -> 'BUSY'     "failed-transport" -> 'FAIL'
 						// TODO reason undefine if reason is busy
-						console.log("onTermCall", reason);
-						if(reason && (reason == "busy" || reason == "BUSY")){
-							me.$message.error("Target is busy. Try it later.");
+						console.log('onTermCall', reason);
+						if(reason && (reason == 'busy' || reason == 'BUSY')){
+							me.$message.error('Target is busy. Try it later.');
 						}
-						if(reason && (reason == "timeout" || reason == "noresponse")){
-							me.$message.error("Target no response. Try it later.");
+						if(reason && (reason == 'timeout' || reason == 'noresponse')){
+							me.$message.error('Target no response. Try it later.');
 						}
-						if(reason && (reason == "decline" || reason == "reject")){
-							me.$message.error("Target reject.");
+						if(reason && (reason == 'decline' || reason == 'reject')){
+							me.$message.error('Target reject.');
 						}
-						if(reason && (reason == "failed-transport" || reason == "fail")){
-							me.$message.error("Call failed. Try it later.");
+						if(reason && (reason == 'failed-transport' || reason == 'fail')){
+							me.$message.error('Call failed. Try it later.');
 						}
-						if(reason && (reason == "ok" || reason == "success" || reason == "hangup")){
-							me.$message.success("Target hangup. ");
+						if(reason && (reason == 'ok' || reason == 'success' || reason == 'hangup')){
+							me.$message.success('Target hangup. ');
 						}
 
-						WebIM.call.caller = "";
-						WebIM.call.callee = "";
+						WebIM.call.caller = '';
+						WebIM.call.callee = '';
 						me.closeEmediaModal();
 						me.$data.emediaModalVisible = false;
 						me.$data.showAccept = false;
@@ -185,30 +186,30 @@ export default{
 						me.$data.callerWaitVisible = false;
 						me.$data.calleeWaitVisible = false;
 						me.$data.voiceCallVisible = false;
-						me.$data.contact = "";
+						me.$data.contact = '';
 						me.$refs.audio.isopen = true;
 						me.$refs.video.isopen = true;
 						me.$refs.remoteVideo.muted = false;
-						me.$refs.video.style.color = "#2c3e50";
-						me.$refs.audio.style.color = "#2c3e50";
-						me.$refs.mute.style.color = "#2c3e50";
+						me.$refs.video.style.color = '#2c3e50';
+						me.$refs.audio.style.color = '#2c3e50';
+						me.$refs.mute.style.color = '#2c3e50';
 					},
 					onIceConnectionStateChange: function(iceState){
-						console.log("onIceConnectionStateChange");
+						console.log('onIceConnectionStateChange');
 
-						if(iceState == "disconnected"){
+						if(iceState == 'disconnected'){
 							if(!me.rtcTimeoutID){
 								// console.warn("Warn. disconnect. notify offline");
 
 								me.rtcTimeoutID = setTimeout(function(){
 									if(!(WebIM.call.pattern && WebIM.call.pattern.hangup)){
-										me.$message.success("Target is offline");
+										me.$message.success('Target is offline');
 										me.closeEmediaModal();
 									}
 								}, 10000);
 							}
 						}
-						else if(iceState == "connected"){
+						else if(iceState == 'connected'){
 							if(me.rtcTimeoutID){
 								clearTimeout(me.rtcTimeoutID);
 								me.rtcTimeoutID = null;
@@ -217,15 +218,15 @@ export default{
 					},
 					onError: function(e){
 						var close = false;
-						var closeButton = document.getElementById("webrtc_close");
+						var closeButton = document.getElementById('webrtc_close');
 						if(e && e.message){
 							switch(e.message){
-							case "CALLLING_EACH_OTHER_AT_THE_SAME_TIME":
-								e.message = "Target is calling. Please try again later.";
+							case 'CALLLING_EACH_OTHER_AT_THE_SAME_TIME':
+								e.message = 'Target is calling. Please try again later.';
 								close = true;
 								break;
-							case "TARGET_OFFLINE":
-								e.message = "Target is offline.";
+							case 'TARGET_OFFLINE':
+								e.message = 'Target is offline.';
 								break;
 							default:
 								break;
@@ -234,38 +235,38 @@ export default{
 								closeButton && closeButton.click();
 							}
 						}
-						me.$message.error(e && e.message ? e.message : "An error occured when calling webrtc");
+						me.$message.error(e && e.message ? e.message : 'An error occured when calling webrtc');
 						me.closeEmediaModal();
 					},
 					onInvite: function(from, rtcOption){
 						const { confrId, password, gid } = rtcOption;
                         
-                        const { appkey } = WebIM.config
+						const { appkey } = WebIM.config
                    
-                        let host = WebIM.conn.url && WebIM.conn.url.split('.')
-                        if(host.length && host.length > 2) host = '@' + host[1] + '.' + host[2];
+						let host = WebIM.conn.url && WebIM.conn.url.split('.')
+						if(host.length && host.length > 2) host = '@' + host[1] + '.' + host[2];
                         
-						from = from.replace(appkey + "_", "");
-						from = from.replace(host, "");
+						from = from.replace(appkey + '_', '');
+						from = from.replace(host, '');
 						let callback = (confr) => {
-							me.$confirm(from + "邀请您进入多人会议", "提示", {
-								confirmButtonText: "确认",
-								cancelButtonText: "拒绝",
-								type: "info"
+							me.$confirm(from + '邀请您进入多人会议', '提示', {
+								confirmButtonText: '确认',
+								cancelButtonText: '拒绝',
+								type: 'info'
 							}).then(() => {
 								me.showMultiAVModal(confr);
 								setTimeout(() => {
 									const tkt = confr.ticket;
-									WebIM.EMService.joinConferenceWithTicket(confr.confrId, tkt, "user ext field").then(function(){
-										WebIM.EMService.publish({ audio: true, video: true }, "user ext field")["catch"](function(e){
+									WebIM.EMService.joinConferenceWithTicket(confr.confrId, tkt, 'user ext field').then(function(){
+										WebIM.EMService.publish({ audio: true, video: true }, 'user ext field')['catch'](function(e){
 											console.error(e);
 										});
-									})["catch"](function(e){
+									})['catch'](function(e){
 										console.error(e);
 									});
 								}, 0);
 
-							})["catch"](action => {
+							})['catch'](action => {
 							});
 						};
 						emedia.mgr.getConferenceTkt(confrId, password).then(function(confr){
@@ -281,7 +282,7 @@ export default{
 				WebIM.call.endCall();
 			}
 			catch(e){
-				console.log("endCall error1:", e);
+				console.log('endCall error1:', e);
 			}
 		},
 		toggleClick(){
@@ -290,25 +291,25 @@ export default{
 		mute(){
 			let muted = this.$refs.remoteVideo.muted;
 			if(muted){
-				this.$refs.mute.style.color = "#2c3e50";
+				this.$refs.mute.style.color = '#2c3e50';
 				this.$refs.remoteVideo.muted = false;
 			}
 			else{
-				this.$refs.mute.style.color = "#4eb1f4";
+				this.$refs.mute.style.color = '#4eb1f4';
 				this.$refs.remoteVideo.muted = true;
 			}
 		},
 		controlStream(type){
 			let controlType;
-			let to = WebIM.call.callee.split("@")[0].split("_")[1];
-			if(type === "audioControl"){
+			let to = WebIM.call.callee.split('@')[0].split('_')[1];
+			if(type === 'audioControl'){
 				controlType = this.$refs.audio.isopen ? 0 : 1;
-				this.$refs.audio.style.color = this.$refs.audio.isopen ? "#2c3e50" : "#4eb1f4";
+				this.$refs.audio.style.color = this.$refs.audio.isopen ? '#2c3e50' : '#4eb1f4';
 				this.$refs.audio.isopen = !this.$refs.audio.isopen;
 			}
 			else{
 				controlType = this.$refs.video.isopen ? 3 : 2;
-				this.$refs.video.style.color = this.$refs.video.isopen ? "#2c3e50" : "#4eb1f4";
+				this.$refs.video.style.color = this.$refs.video.isopen ? '#2c3e50' : '#4eb1f4';
 				this.$refs.video.isopen = !this.$refs.video.isopen;
 			}
 			WebIM.call.controlStream(controlType, to);
@@ -345,7 +346,7 @@ export default{
 			// this.channel = new RTCChannel(this.refs.rtcWrapper, this.props.collapsed)
 		}
 		var video = this.$refs.localVideo;
-		video.addEventListener("loadedmetadata", this.loadedmetadataLocalHandler);
+		video.addEventListener('loadedmetadata', this.loadedmetadataLocalHandler);
 	},
 };
 </script>

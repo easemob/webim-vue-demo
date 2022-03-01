@@ -15,8 +15,8 @@
 	</a-modal>
 </template>
 <script>
-import { mapActions } from "vuex";
-import "./firend.less";
+import { mapActions } from 'vuex';
+import './firend.less';
 export default{
 	data(){
 		return {
@@ -29,7 +29,7 @@ export default{
 		}
 	},
 	methods: {
-		...mapActions(["onGetFirendBlack", "onRemoveBlack"]),
+		...mapActions(['onGetFirendBlack', 'onRemoveBlack']),
 		changModel(){
 			this.$data.showBlackModel = !this.$data.showBlackModel;
 		},

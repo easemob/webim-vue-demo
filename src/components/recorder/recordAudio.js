@@ -1,3 +1,8 @@
+/* eslint-disable no-redeclare */
+/* eslint-disable block-scoped-var */
+/* eslint-disable no-inner-declarations */
+/* eslint-disable no-new-wrappers */
+/* eslint-disable vars-on-top */
 
 window.URL = window.URL || window.webkitURL;
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
@@ -74,16 +79,16 @@ const HZRecorder = function(stream, config){
 			};
 
 			// 资源交换文件标识符
-			writeString("RIFF");
+			writeString('RIFF');
 			offset += 4;
 			// 下个地址开始到文件尾总字节数,即文件大小-8
 			data.setUint32(offset, 36 + dataLength, true);
 			offset += 4;
 			// WAV文件标志
-			writeString("WAVE");
+			writeString('WAVE');
 			offset += 4;
 			// 波形格式标志
-			writeString("fmt ");
+			writeString('fmt ');
 			offset += 4;
 			// 过滤字节,一般为 0x10 = 16
 			data.setUint32(offset, 16, true);
@@ -107,7 +112,7 @@ const HZRecorder = function(stream, config){
 			data.setUint16(offset, sampleBits, true);
 			offset += 2;
 			// 数据标识符
-			writeString("data");
+			writeString('data');
 			offset += 4;
 			// 采样数据总数,即数据总大小-44
 			data.setUint32(offset, dataLength, true);
@@ -128,7 +133,7 @@ const HZRecorder = function(stream, config){
 				}
 			}
 
-			return new Blob([data], { type: "audio/wav" });
+			return new Blob([data], { type: 'audio/wav' });
 		}
 	};
 
@@ -153,7 +158,7 @@ const HZRecorder = function(stream, config){
 			if(emptyDatacount > 10){
 				// recording = false;
 				// this.stop();
-				console.log("stoped");
+				console.log('stoped');
 				return true;
 			}
 		}
@@ -164,7 +169,7 @@ const HZRecorder = function(stream, config){
 	};
 	// 停止
 	this.stop = function(){
-		if(context.state === "running"){
+		if(context.state === 'running'){
 			context.close();
 		}
 
@@ -204,34 +209,34 @@ HZRecorder.get = function(callback, config){
 				{ audio: true } // 只启用音频
 				, function(stream){
 					let rec = new HZRecorder(stream, config);
-					callback(rec,stream);
+					callback(rec, stream);
 				}
 				, function(error){
 					switch(error.code || error.name){
-					case "PERMISSION_DENIED":
-					case "PermissionDeniedError":
-						Message.error("用户拒绝提供信息。");
+					case 'PERMISSION_DENIED':
+					case 'PermissionDeniedError':
+						Message.error('用户拒绝提供信息。');
 						break;
-					case "NOT_SUPPORTED_ERROR":
-					case "NotSupportedError":
-						Message.error("浏览器不支持硬件设备。");
+					case 'NOT_SUPPORTED_ERROR':
+					case 'NotSupportedError':
+						Message.error('浏览器不支持硬件设备。');
 						break;
-					case "MANDATORY_UNSATISFIED_ERROR":
-					case "MandatoryUnsatisfiedError":
-						Message.error("无法发现指定的硬件设备。");
+					case 'MANDATORY_UNSATISFIED_ERROR':
+					case 'MandatoryUnsatisfiedError':
+						Message.error('无法发现指定的硬件设备。');
 						break;
 					default:
 						// Message.error("无法打开麦克风。异常信息:" + (error.code || error.name));
-						Message.error("当前浏览器不支持录音功能。(建议使用Chrome)");
+						Message.error('当前浏览器不支持录音功能。(建议使用Chrome)');
 						break;
 					}
 				});
 		}
 		else{
-			Message.error("当前浏览器不支持录音功能。");
+			Message.error('当前浏览器不支持录音功能。');
 		}
 	}
 };
 
-import { Message } from "ant-design-vue";
+import { Message } from 'ant-design-vue';
 export default HZRecorder;

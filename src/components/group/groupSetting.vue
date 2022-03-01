@@ -55,137 +55,140 @@
   </div>
 </template>
 <script>
-import { mapActions } from "vuex";
-import "./group.less";
-import GroupBlack from "./groupBlack.vue";
-export default {
-  data() {
-    return {
-      showGroupSetting: false,
-      showAdminIcon: false,
-      showCloseIcon: false,
-      username: '',
-      modalVisible: false,
-      title: '邀请群成员',
-      popoverVisible: false,
-      okText: '确定',
-      editGroupFlag: false,
-      placeholder: '请输入用户名'
-    };
-  },
-  computed: {
-    loginName() {
-      const username =
-        localStorage.getItem("userInfo") &&
-        JSON.parse(localStorage.getItem("userInfo")).userId;
-      return username;
-    },
-    groupAdmin() {
-      return this.$store.state.group.groupInfo.admin;
-    }
-  },
-  methods: {
-    ...mapActions([
-      "onInviteGroup",
-      "onUpdataGroupInfo",
-      "onGetGroupBlack",
-      "onDissolveGroup",
-      "onQuitGroup"
-    ]),
-    changeSettingModel() {
-      this.showGroupSetting = !this.showGroupSetting;
-    },
-    changeSetInfo(val) {
-      this.popoverVisible = true
-      if (this.loginName == this.groupAdmin) {
-        this.showAdminIcon = true
-      } else {
-        this.showCloseIcon = true
-      }
-    },
-    changeBlackModel() {
-      this.changeSetModel()
-      this.onGetGroupBlack({
-        select_id: this.$store.state.group.groupInfo.gid
-      });
-      this.$refs.groupBlackModel.chengeBlackModel();
-    },
-    openInvite() {
-      this.title = '邀请群成员'
-      this.okText = '确定'
-      this.placeholder = '用户名'
-      this.editGroupFlag = false
-      this.modalVisible = true
-      this.changeSetModel()
-    },
-    updatedGroupInfo() {
-      this.title = '修改群信息'
-      this.okText = '修改'
-      this.placeholder = '请输入群组名'
-      this.editGroupFlag = true
-      this.modalVisible = true
-      this.changeSetModel()
-    },
-    quitGroup() {
-      this.onQuitGroup({
-        select_id: this.$store.state.group.groupInfo.gid,
-        callback: () => {
-          this.closeModa();
-        }
-      });
-    },
-    dissolution() {
-      this.onDissolveGroup({
-        select_id: this.$store.state.group.groupInfo.gid,
-        callback: () => {
-          this.closeModa();
-        }
-      });
-    },
-    closeModa() {
-      // 退出群组 or 解散群组 关闭弹窗
-      this.showGroupSetting = false;
-      this.changeSetModel();
-      this.$emit("closeGroupSet");
-      Vue.$router.push("/group");
-    },
-    changeSetModel() {
-      this.popoverVisible = false
-      if (this.loginName == this.groupAdmin) {
-        this.showAdminIcon = false;
-      } else {
-        this.showCloseIcon = false;
-      }
-    },
-    handleOk () {
-      if (this.editGroupFlag) {
-        this.onUpdataGroupInfo({
-          select_id: this.$store.state.group.groupInfo.gid,
-          updateName: this.username,
-          updateDesc: this.$store.state.group.groupInfo.desc
-        })
-        this.$message.success('修改成功')
-      } else {
-        this.onInviteGroup({
-          select_id: this.$store.state.group.groupInfo.gid,
-          select_name: this.username
-        })
-      }
-      this.handleCancel()
-    },
-    handleCancel () {
-      this.username = ''
-      this.modalVisible = false
-    },
-    visibleChange (val) {
-      if (!val) {
-        this.changeSetModel()
-      }
-    }
-  },
-  components: {
-    GroupBlack
-  }
+import { mapActions } from 'vuex';
+import './group.less';
+import GroupBlack from './groupBlack.vue';
+export default{
+	data(){
+		return {
+			showGroupSetting: false,
+			showAdminIcon: false,
+			showCloseIcon: false,
+			username: '',
+			modalVisible: false,
+			title: '邀请群成员',
+			popoverVisible: false,
+			okText: '确定',
+			editGroupFlag: false,
+			placeholder: '请输入用户名'
+		};
+	},
+	computed: {
+		loginName(){
+			const username =
+        localStorage.getItem('userInfo') &&
+        JSON.parse(localStorage.getItem('userInfo')).userId;
+			return username;
+		},
+		groupAdmin(){
+			return this.$store.state.group.groupInfo.admin;
+		}
+	},
+	methods: {
+		...mapActions([
+			'onInviteGroup',
+			'onUpdataGroupInfo',
+			'onGetGroupBlack',
+			'onDissolveGroup',
+			'onQuitGroup'
+		]),
+		changeSettingModel(){
+			this.showGroupSetting = !this.showGroupSetting;
+		},
+		changeSetInfo(val){
+			this.popoverVisible = true
+			if(this.loginName == this.groupAdmin){
+				this.showAdminIcon = true
+			}
+			else{
+				this.showCloseIcon = true
+			}
+		},
+		changeBlackModel(){
+			this.changeSetModel()
+			this.onGetGroupBlack({
+				select_id: this.$store.state.group.groupInfo.gid
+			});
+			this.$refs.groupBlackModel.chengeBlackModel();
+		},
+		openInvite(){
+			this.title = '邀请群成员'
+			this.okText = '确定'
+			this.placeholder = '用户名'
+			this.editGroupFlag = false
+			this.modalVisible = true
+			this.changeSetModel()
+		},
+		updatedGroupInfo(){
+			this.title = '修改群信息'
+			this.okText = '修改'
+			this.placeholder = '请输入群组名'
+			this.editGroupFlag = true
+			this.modalVisible = true
+			this.changeSetModel()
+		},
+		quitGroup(){
+			this.onQuitGroup({
+				select_id: this.$store.state.group.groupInfo.gid,
+				callback: () => {
+					this.closeModa();
+				}
+			});
+		},
+		dissolution(){
+			this.onDissolveGroup({
+				select_id: this.$store.state.group.groupInfo.gid,
+				callback: () => {
+					this.closeModa();
+				}
+			});
+		},
+		closeModa(){
+			// 退出群组 or 解散群组 关闭弹窗
+			this.showGroupSetting = false;
+			this.changeSetModel();
+			this.$emit('closeGroupSet');
+			Vue.$router.push('/group');
+		},
+		changeSetModel(){
+			this.popoverVisible = false
+			if(this.loginName == this.groupAdmin){
+				this.showAdminIcon = false;
+			}
+			else{
+				this.showCloseIcon = false;
+			}
+		},
+		handleOk(){
+			if(this.editGroupFlag){
+				this.onUpdataGroupInfo({
+					select_id: this.$store.state.group.groupInfo.gid,
+					updateName: this.username,
+					updateDesc: this.$store.state.group.groupInfo.desc
+				})
+				this.$message.success('修改成功')
+			}
+			else{
+				this.onInviteGroup({
+					select_id: this.$store.state.group.groupInfo.gid,
+					select_name: this.username
+				})
+			}
+			this.handleCancel()
+		},
+		handleCancel(){
+			this.username = ''
+			this.modalVisible = false
+		},
+		visibleChange(val){
+			if(!val){
+				this.changeSetModel()
+			}
+		}
+	},
+	components: {
+		GroupBlack
+	}
 };
 </script>
 <style scoped>

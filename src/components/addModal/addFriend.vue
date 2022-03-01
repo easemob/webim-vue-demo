@@ -18,14 +18,14 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from "vuex";
-import Vue from "vue";
+import { mapActions, mapGetters } from 'vuex';
+import Vue from 'vue';
 
 export default{
 	data(){
 		return {
 			form: {
-				name: "",
+				name: '',
 			},
 			showAddFriendModal: false
 		};
@@ -36,7 +36,7 @@ export default{
 		// }),
 	},
 	methods: {
-		...mapActions(["addfirend"]),
+		...mapActions(['addfirend']),
 		changeModal(){
 			this.$data.showAddFriendModal = !this.$data.showAddFriendModal;
 		},
@@ -47,8 +47,8 @@ export default{
 			};
 			this.changeModal();
 			this.addfirend(option);
-			this.$message.success("已发送请求");
-			this.$data.form.name =''
+			this.$message.success('已发送请求');
+			this.$data.form.name = ''
 		}
 	}
 };

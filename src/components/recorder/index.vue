@@ -105,8 +105,8 @@
 </style>
 
 <script>
-import recording from "./recordAudio.js";
-import { mapActions } from "vuex";
+import recording from './recordAudio.js';
+import { mapActions } from 'vuex';
 const micSVG = {
 	template: `
 		<svg class="icon" width="200px" height="200.00px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -118,7 +118,7 @@ const micIcon = {
 	template: `
 		<a-icon :component="micSVG" />
 	`,
-	data () {
+	data(){
 		return {
 			micSVG
 		}
@@ -131,17 +131,17 @@ export default{
 	data(){
 		return {
 			form: {
-				time: "按住说话(60秒)",
-				audioUrl: ""
+				time: '按住说话(60秒)',
+				audioUrl: ''
 			},
 			num: 60, // 按住说话时间
 			recorder: null,
-			mediaStream:null,
-			interval: "",
+			mediaStream: null,
+			interval: '',
 			audioFileList: [], // 上传语音列表
-			startTime: "", // 语音开始时间
-			endTime: "", // 语音结束
-			audioSrc: "",
+			startTime: '', // 语音开始时间
+			endTime: '', // 语音结束
+			audioSrc: '',
 
 			randomheight: [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
 			runAnimation: false,
@@ -149,7 +149,7 @@ export default{
 		};
 	},
 	methods: {
-		...mapActions(["sendRecorder"]),
+		...mapActions(['sendRecorder']),
 		// 清除定时器
 		clearTimer(){
 			if(this.interval){
@@ -183,7 +183,7 @@ export default{
 			this.clearTimer();
 			this.startTime = new Date().getTime();
       
-			recording.get((rec,val) => {
+			recording.get((rec, val) => {
 				// 当首次按下时，要获取浏览器的麦克风权限，所以这时要做一个判断处理
 				if(rec && val){
 					// 首次按下，只调用一次
@@ -204,7 +204,7 @@ export default{
 							}
 							else{
 								this.num--;
-								this.time = "松开结束（" + this.num + "秒）";
+								this.time = '松开结束（' + this.num + '秒）';
 								this.recorder.start();
 							}
 						}, 1000);
@@ -216,6 +216,7 @@ export default{
 		// 松开时上传语音
 		mouseEnd(type){
 			this.$data.runAnimation = false;
+			// eslint-disable-next-line no-return-assign
 			this.$data.randomheight = this.randomheight.map(i => i = 30);
 			this.hide();
 			this.clearTimer();
@@ -226,11 +227,11 @@ export default{
 				this.recorder.stop();
 				// 重置说话时间
 				this.num = 60;
-				this.time = "按住说话（" + this.num + "秒）";
+				this.time = '按住说话（' + this.num + '秒）';
 				// 获取语音二进制文件
 				let blob = this.recorder.getBlob();
 				// 发送语音功能
-				if(type === "audio"){
+				if(type === 'audio'){
 					this.$data.audioSrc = WebIM.utils.parseDownloadResponse.call(WebIM.conn, blob);
 					const { name, params } = Vue.$route;
 
@@ -244,8 +245,8 @@ export default{
 
 					let uri = {
 						url: WebIM.utils.parseDownloadResponse.call(WebIM.conn, blob),
-						filename: "audio",
-						filetype: "audio",
+						filename: 'audio',
+						filetype: 'audio',
 						data: blob
 					};
 					this.sendRecorder({

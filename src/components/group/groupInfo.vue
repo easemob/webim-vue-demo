@@ -31,7 +31,7 @@
               :key="index"
               @click="select(item)"
             >
-              <span v-if="!item.owner" class="info-name">{{item.member}}</span>
+              <span v-if="!item.owner" class="info-name" :class="(!item.owner&&(adminList.includes(username) || groupinfoList.admin == username)&&username != item.member) ? 'info-name-width' : ''">{{item.member}}</span>
 
               <span v-if="!item.owner&&(adminList.includes(username) || groupinfoList.admin == username)&&username != item.member" class="info-icon">
 
@@ -334,6 +334,16 @@ export default{
   right: 30px;
   cursor: pointer;
   overflow: hidden;
+}
+.info-name {
+	display: inline-block;
+	width: 190px;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+}
+.info-name-width {
+	width: 80px;
 }
 .info-name ::selection {
   width: 40px;
