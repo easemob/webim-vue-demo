@@ -66,10 +66,10 @@
 </template>
 
 <script>
-import "./webrtc.less";
-import Draggable from "../draggable";
-import WebIM from "../../utils/WebIM";
-import { mapActions, mapGetters } from "vuex";
+import './webrtc.less';
+import Draggable from '../draggable';
+import WebIM from '../../utils/WebIM';
+import { mapActions, mapGetters } from 'vuex';
 const rtc = WebIM.rtc;
 const AgoraRTC = WebIM.AgoraRTC;
 export default{
@@ -95,13 +95,13 @@ export default{
 		videos(){
 			let { joinedMembers, invitedMembers } = this.$store.state.agora;
 			console.log(
-				"joinedMembers>>",
+				'joinedMembers>>',
 				joinedMembers,
-				"invitedMembers>>",
+				'invitedMembers>>',
 				invitedMembers
 			);
 			let a = joinedMembers.concat(invitedMembers);
-			console.log("a>>>>>>", a);
+			console.log('a>>>>>>', a);
 			return joinedMembers.concat(invitedMembers);
 		}
 	},
@@ -115,7 +115,7 @@ export default{
 	},
 
 	mounted(){
-		rtc.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+		rtc.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
 		this.addListener();
 		this.interval();
 
@@ -140,34 +140,34 @@ export default{
 
 	methods: {
 		...mapActions([
-			"updateConfr",
-			"setCallStatus",
-			"hangup",
-			"cancelCall",
-			"setCallDuration",
-			"getRtctoken",
-			"setJoinedMembers",
-			"updateJoinedMembers",
-			"setInvitedMembers"
+			'updateConfr',
+			'setCallStatus',
+			'hangup',
+			'cancelCall',
+			'setCallDuration',
+			'getRtctoken',
+			'setJoinedMembers',
+			'updateJoinedMembers',
+			'setInvitedMembers'
 		]),
 		video_class(item){
-			let joining = item ? "" : "joining";
-			let newClass = "default" + joining;
-			console.log("newClass>>", newClass);
+			let joining = item ? '' : 'joining';
+			let newClass = 'default' + joining;
+			console.log('newClass>>', newClass);
 			return newClass;
 		},
 
 		addListener(){
-			rtc.client.on("user-published", async (user, mediaType) => {
-				console.log("有远端画面 -------- ");
+			rtc.client.on('user-published', async (user, mediaType) => {
+				console.log('有远端画面 -------- ');
 				console.log(user, mediaType);
 				// 开始订阅远端用户。
 				await rtc.client.subscribe(user, mediaType);
 
-				console.log("subscribe success");
+				console.log('subscribe success');
 
 				let { joinedMembers } = this.$store.state.agora;
-				let videoElm = "";
+				let videoElm = '';
 				let exist = false;
 
 				if(joinedMembers.length > 4){
@@ -178,7 +178,7 @@ export default{
 				}
 
 				joinedMembers.forEach((item, index) => {
-					console.log("item>>", item);
+					console.log('item>>', item);
 					if(item.name === user.uid){
 						exist = true;
 					}
@@ -188,16 +188,16 @@ export default{
 				if(!exist){
 					joined = {
 						name: user.uid,
-						videoElm: "video" + user.uid,
+						videoElm: 'video' + user.uid,
 						type: mediaType,
 						value: user.uid
 					};
-					videoElm = "video" + user.uid;
+					videoElm = 'video' + user.uid;
 					this.setJoinedMembers(joined);
 				}
 
 				// 表示本次订阅的是视频。
-				if(mediaType === "video"){
+				if(mediaType === 'video'){
 					// 订阅完成后，从 `user` 中获取远端视频轨道对象。
 					const remoteVideoTrack = user.videoTrack;
 					// 也可以只传入该 DIV 节点的 ID。
@@ -210,7 +210,7 @@ export default{
 				}
 
 				// 表示本次订阅的是音频。
-				if(mediaType === "audio"){
+				if(mediaType === 'audio'){
 					// 订阅完成后，从 `user` 中获取远端音频轨道对象。
 					const remoteAudioTrack = user.audioTrack;
 					// 播放音频因为不会有画面，不需要提供 DOM 元素的信息。
@@ -219,12 +219,12 @@ export default{
 			});
 
 			// 监听远端取消发布
-			rtc.client.on("user-unpublished", (user, mediaType) => {
-				console.log("取消发布了");
+			rtc.client.on('user-unpublished', (user, mediaType) => {
+				console.log('取消发布了');
 			});
 
-			rtc.client.on("user-left", user => {
-				console.log("-- 对方已离开 ---", user);
+			rtc.client.on('user-left', user => {
+				console.log('-- 对方已离开 ---', user);
 
 				this.updateJoinedMembers({ name: user.uid });
 
@@ -243,7 +243,7 @@ export default{
 			});
 
 			rtc.client.enableAudioVolumeIndicator();
-			rtc.client.on("volume-indicator", result => {
+			rtc.client.on('volume-indicator', result => {
 				let isTalting = [...this.$data.isTalting];
 				result.forEach((volume, index) => {
 					// console.log(`**** ${index} UID ${volume.uid} Level ${volume.level} ***`);
@@ -268,7 +268,7 @@ export default{
 				channelName: confr.channel,
 				appkey: WebIM.conn.appKey
 			};
-			console.log("params>>>>", params);
+			console.log('params>>>>', params);
 			const { accessToken, agoraUserId } = await this.getRtctoken(params);
 			const uid = await rtc.client.join(
 				appId,
@@ -285,17 +285,17 @@ export default{
 			await rtc.client.publish([rtc.localAudioTrack, rtc.localVideoTrack]);
 			let { joinedMembers, invitedMembers } = this.$store.state.agora;
 			console.log(
-				"joinedMembers>>",
+				'joinedMembers>>',
 				joinedMembers,
-				"invitedMembers>>",
+				'invitedMembers>>',
 				invitedMembers
 			);
-			console.log("publish success! --- ");
-			let videoElm = "video" + WebIM.conn.context.jid.name;
+			console.log('publish success! --- ');
+			let videoElm = 'video' + WebIM.conn.context.jid.name;
 			this.setJoinedMembers({
 				videoElm: videoElm,
 				name: imUserName,
-				type: "video"
+				type: 'video'
 			});
 			setTimeout(() => {
 				rtc.localVideoTrack.play(videoElm);
@@ -303,12 +303,12 @@ export default{
 		},
 
 		closeModal(){
-			console.log("挂断");
+			console.log('挂断');
 			const { invitedMembers, callStatus } = this.$store.state.agora;
 			let members = [...invitedMembers];
 			if([1, 3].includes(callStatus)){
 				members.forEach(item => {
-					console.log("members>>", members);
+					console.log('members>>', members);
 					this.cancelCall({ to: item });
 				});
 			}
@@ -339,24 +339,24 @@ export default{
 		},
 		loadTime(hour, minute, second){
 			const n2s = n => {
-				let s = "";
+				let s = '';
 				if(n >= 0 && n < 10){
-					s = "0" + n;
+					s = '0' + n;
 				}
 				else{
-					s = n + "";
+					s = n + '';
 				}
 				return s;
 			};
-			let str = "";
+			let str = '';
 			let hs = n2s(hour),
 				ms = n2s(minute),
 				ss = n2s(second);
-			str = hs == "00" ? ms + ":" + ss : hs + ":" + ms + ":" + ss;
+			str = hs == '00' ? ms + ':' + ss : hs + ':' + ms + ':' + ss;
 			return str;
 		},
 		addMember(){
-			this.$emit("show_add_member_modal");
+			this.$emit('show_add_member_modal');
 		},
 
 		open_mic(){

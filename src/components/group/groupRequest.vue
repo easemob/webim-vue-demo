@@ -20,39 +20,39 @@
   </a-modal>
 </template>
 <script>
-import { mapActions } from "vuex";
-export default {
-  data() {
-    return {
-      showGroupRequestModel: this.$store.state.group.groupNotifications.isShow
-    };
-  },
-  computed: {
-    isShowGroupReques() {
-      return this.$store.state.group.groupNotifications;
-    }
-  },
-  methods: {
-    ...mapActions(["onAgreeJoinGroup", "onRejectJoinGroup"]),
-    changeGroupRequestModal() {
-      this.$store.state.group.groupNotifications.isShow = !this.$store.state
-        .group.groupNotifications.isShow;
-    },
-    AgreeJoinGroup() {
-      this.onAgreeJoinGroup({
-        joinName: this.$store.state.group.groupNotifications.from,
-        joinGroupId: this.$store.state.group.groupNotifications.gid
-      });
-      this.changeGroupRequestModal();
-    },
-    RejectJoinGroup() {
-      this.onRejectJoinGroup({
-        joinName: this.$store.state.group.groupNotifications.from,
-        joinGroupId: this.$store.state.group.groupNotifications.gid
-      });
-      this.changeGroupRequestModal();
-    }
-  }
+import { mapActions } from 'vuex';
+export default{
+	data(){
+		return {
+			showGroupRequestModel: this.$store.state.group.groupNotifications.isShow
+		};
+	},
+	computed: {
+		isShowGroupReques(){
+			return this.$store.state.group.groupNotifications;
+		}
+	},
+	methods: {
+		...mapActions(['onAgreeJoinGroup', 'onRejectJoinGroup']),
+		changeGroupRequestModal(){
+			this.$store.state.group.groupNotifications.isShow = !this.$store.state
+			.group.groupNotifications.isShow;
+		},
+		AgreeJoinGroup(){
+			this.onAgreeJoinGroup({
+				joinName: this.$store.state.group.groupNotifications.from,
+				joinGroupId: this.$store.state.group.groupNotifications.gid
+			});
+			this.changeGroupRequestModal();
+		},
+		RejectJoinGroup(){
+			this.onRejectJoinGroup({
+				joinName: this.$store.state.group.groupNotifications.from,
+				joinGroupId: this.$store.state.group.groupNotifications.gid
+			});
+			this.changeGroupRequestModal();
+		}
+	}
 };
 </script>
 <style scoped>

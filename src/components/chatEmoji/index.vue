@@ -18,25 +18,25 @@
 </template>
 
 <script>
-import emoji from "../../config/emoji";
+import emoji from '../../config/emoji';
 
-export default {
-  data() {
-    return {
-      emojiList: emoji.obj,
-      showPopover: false
-    };
-  },
-  methods: {
-    selectEmoji(e) {
-      let value = (this.inpMessage || "") + e;
-      this.showPopover = false
-      this.$emit("selectEmoji", value);
-    }
-  },
-  props: {
-    inpMessage: String
-  }
+export default{
+	data(){
+		return {
+			emojiList: emoji.obj,
+			showPopover: false
+		};
+	},
+	methods: {
+		selectEmoji(e){
+			let value = (this.inpMessage || '') + e;
+			this.showPopover = false
+			this.$emit('selectEmoji', value);
+		}
+	},
+	props: {
+		inpMessage: String
+	}
 };
 </script>
 <style scoped>

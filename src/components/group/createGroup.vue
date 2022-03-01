@@ -26,7 +26,7 @@
         </a-radio-group>
       </div>
       <div class="groPost">
-        <a-button type="success" @click="chenageCreateModel">下一步</a-button>
+        <a-button type="primary" @click="chenageCreateModel">下一步</a-button>
       </div>
     </a-form>
     <div v-if="showFriendListModel == true">
@@ -52,8 +52,8 @@
     </a-modal>
 </template>
 <script>
-import "./group.less";
-import { mapActions } from "vuex";
+import './group.less';
+import { mapActions } from 'vuex';
 export default{
 	data(){
 		return {
@@ -62,8 +62,8 @@ export default{
 			showFriendListModel: false,
 
 			form: {
-				groName: "",
-				desc: "",
+				groName: '',
+				desc: '',
 				radio: 2,
 				radiopom: 2,
 				membersList: []
@@ -76,20 +76,24 @@ export default{
 		}
 	},
 	methods: {
-		...mapActions(["onCreateGroup"]),
+		...mapActions(['onCreateGroup']),
 		changeCreateModel(){
 			this.$data.showCreateGroupModel = !this.$data.showCreateGroupModel;
 			if(!this.$data.showCreateModel){
 				this.chenageCreateModel();
 			}
-			this.$data.form.groName = "";
-			this.$data.form.desc = "";
+			this.$data.form.groName = '';
+			this.$data.form.desc = '';
 		},
 		chenageCreateModel(){
 			this.$data.showCreateModel = !this.$data.showCreateModel;
 			this.$data.showFriendListModel = !this.$data.showFriendListModel;
 		},
 		postCreateGroup(){
+			if(!this.form.groName){
+				this.$message.warning('群名称不能为空')
+				return
+			}
 			this.onCreateGroup({
 				groupname: this.$data.form.groName,
 				desc: this.$data.form.desc,
@@ -103,4 +107,7 @@ export default{
 };
 </script>
 <style scoped>
+.friendItem {
+  white-space: nowrap;
+}
 </style>

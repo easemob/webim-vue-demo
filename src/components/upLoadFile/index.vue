@@ -6,10 +6,10 @@
 </template>
 
 <script>
-import WebIM from "../../utils/WebIM";
-import Config from "../../config/index";
+import WebIM from '../../utils/WebIM';
+import Config from '../../config/index';
 
-import { mapActions } from "vuex";
+import { mapActions } from 'vuex';
 export default{
 	data(){
 		return {
@@ -17,7 +17,7 @@ export default{
 		};
 	},
 	methods: {
-		...mapActions(["sendFileMessage"]),
+		...mapActions(['sendFileMessage']),
 		clickFile(){
 			let img = this.$refs.imgDom;
 			img && img.click();
@@ -27,7 +27,7 @@ export default{
 		},
 		// TODO 当前username、及type不是从pams里取
 		fileChange(e){
-			let isRoom = this.type == "chatroom" || this.type == "groupchat";
+			let isRoom = this.type == 'chatroom' || this.type == 'groupchat';
 			let file = WebIM.utils.getFileUrl(e.target);
 			if(!file.filename){
 				this.$refs.imgDom.value = null;
@@ -47,8 +47,8 @@ export default{
 		}
 	},
 	props: [
-		"type", // 聊天类型 contact, group, chatroom
-		"chatId" // 选中的聊天对象
+		'type', // 聊天类型 contact, group, chatroom
+		'chatId' // 选中的聊天对象
 	]
 };
 </script>

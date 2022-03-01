@@ -217,158 +217,159 @@
 </template>
 
 <script>
-import "./personCard.less";
-import { mapActions, mapState } from "vuex";
-export default {
-  data() {
-    return {
-      loginUser: JSON.parse(localStorage.getItem("userInfo")).userId || "",
-      visible: false,
-      userInfo: null,
-      baseAvatarUrl:
-        "https://download-sdk.oss-cn-beijing.aliyuncs.com/downloads/IMDemo/avatar/",
-      defaultAvatar: require("../../assets/headPortrait.jpeg"),
-      inputSyle: "width:300px",
-      isShowList: false,
-      inputInfo: {
-        nickname: { state: false, value: "" },
-        sign: { state: false, value: "" },
-        gender: { state: false, value: "" },
-        birth: { state: false, value: "" },
-        phone: { state: false, value: "" },
-        mail: { state: false, value: "" }
-      },
-      ruler: {
-        birth: /^((19[2-9]\d{1})|(20((0[0-9])|(1[0-8]))))\-((0?[1-9])|(1[0-2]))\-((0?[1-9])|([1-2][0-9])|30|31)$/,
-        mail: /\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/,
-        phone: /^[1][0-9]{10}$/
-      },
-      isShowFriendsCard: false,
-      statusObj: {}
-    };
-  },
-  computed: {
-    ...mapState({
-      ownInfo: state => state.login.userDetail
-    }),
-    avatarList: function() {
-      let count = 9;
-      let list = [];
-      for (let i = 0; i < count; i++) {
-        list.push(`${this.baseAvatarUrl}Image${i + 1}.png`);
-      }
-      return list;
-    }
-  },
-  methods: {
-    ...mapActions(["updateOwnUserInfo"]),
-    //获取好友的用户属性信息
-    async getOthersUserInfo(detail) {
-      console.log(detail, 'detail')
-      const { friendDetail, name, presence } = detail;
-      this.userInfo = { friendDetail, name, presence };
-      this.isShowFriendsCard = true;
-      this.visible = true;
-      console.log(">>>>>>>>卡片页", detail);
-    },
-    //提交要设置的用户属性
-    async commitUserInfo(type, value) {
-      //头像属性处理
-      if (type === "avatarurl") {
-        await this.updateOwnUserInfo({
-          infoValue: value,
-          type
-        });
-      }
-      //性别属性处理
-      if (type === "gender") {
-        //性别属性处理
-        this.inputInfo.gender.state = !this.inputInfo.gender.state;
-        let val = this.inputInfo.gender.value;
-        if (val === "" || val == value) {
-          return false;
-        } else {
-          await this.updateOwnUserInfo({
-            infoValue: this.inputInfo.gender.value,
-            type
-          });
-          this.inputInfo.gender.value = "";
-        }
-      }
-      //其他属性处理
-      if (type !== "avatarurl" && type !== "gender") {
-        if (this.inputInfo[type].value) {
-          let val = this.inputInfo[type].value;
-          switch (type) {
-            case "birth": {
-              if (!this.ruler["birth"].test(val))
-                return this.$message.warning(
-                  "出生日期格式不合法，请重新输入..."
-                );
-              break;
-            }
-            case "phone": {
-              if (!this.ruler["phone"].test(val))
-                return this.$message.warning("号码格式不合法，请重新输入...");
-              break;
-            }
-            case "mail": {
-              if (!this.ruler["mail"].test(val))
-                return this.$message.warning("邮箱地址不合法，请重新输入...");
-              break;
-            }
-            default:
-              break;
-          }
-          await this.updateOwnUserInfo({
-            infoValue: val,
-            type
-          });
-          (this.inputInfo[type].state = false), (val = "");
-        } else {
-          this.inputInfo[type].state = false;
-        }
-      }
-    },
+import './personCard.less';
+import { mapActions, mapState } from 'vuex';
+export default{
+	data(){
+		return {
+			loginUser: JSON.parse(localStorage.getItem('userInfo')).userId || '',
+			visible: false,
+			userInfo: null,
+			baseAvatarUrl:
+        'https://download-sdk.oss-cn-beijing.aliyuncs.com/downloads/IMDemo/avatar/',
+			defaultAvatar: require('../../assets/headPortrait.jpeg'),
+			inputSyle: 'width:300px',
+			isShowList: false,
+			inputInfo: {
+				nickname: { state: false, value: '' },
+				sign: { state: false, value: '' },
+				gender: { state: false, value: '' },
+				birth: { state: false, value: '' },
+				phone: { state: false, value: '' },
+				mail: { state: false, value: '' }
+			},
+			ruler: {
+				// eslint-disable-next-line no-useless-escape
+				birth: /^((19[2-9]\d{1})|(20((0[0-9])|(1[0-8]))))\-((0?[1-9])|(1[0-2]))\-((0?[1-9])|([1-2][0-9])|30|31)$/,
+				mail: /\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/,
+				phone: /^[1][0-9]{10}$/
+			},
+			isShowFriendsCard: false,
+			statusObj: {}
+		};
+	},
+	computed: {
+		...mapState({
+			ownInfo: state => state.login.userDetail
+		}),
+		avatarList: function(){
+			let count = 9;
+			let list = [];
+			for(let i = 0; i < count; i++){
+				list.push(`${this.baseAvatarUrl}Image${i + 1}.png`);
+			}
+			return list;
+		}
+	},
+	methods: {
+		...mapActions(['updateOwnUserInfo']),
+		// 获取好友的用户属性信息
+		// eslint-disable-next-line require-await
+		async getOthersUserInfo(detail){
+			console.log(detail, 'detail')
+			const { friendDetail, name, presence } = detail;
+			this.userInfo = { friendDetail, name, presence };
+			this.isShowFriendsCard = true;
+			this.visible = true;
+			console.log('>>>>>>>>卡片页', detail);
+		},
+		// 提交要设置的用户属性
+		async commitUserInfo(type, value){
+			// 头像属性处理
+			if(type === 'avatarurl'){
+				await this.updateOwnUserInfo({
+					infoValue: value,
+					type
+				});
+			}
+			// 性别属性处理
+			if(type === 'gender'){
+				// 性别属性处理
+				this.inputInfo.gender.state = !this.inputInfo.gender.state;
+				let val = this.inputInfo.gender.value;
+				if(val === '' || val == value){
+					return false;
+				}
+				await this.updateOwnUserInfo({
+					infoValue: this.inputInfo.gender.value,
+					type
+				});
+				this.inputInfo.gender.value = '';
+        
+			}
+			// 其他属性处理
+			if(type !== 'avatarurl' && type !== 'gender'){
+				if(this.inputInfo[type].value){
+					let val = this.inputInfo[type].value;
+					switch(type){
+					case 'birth':{
+						if(!this.ruler.birth.test(val)) return this.$message.warning(
+							'出生日期格式不合法，请重新输入...'
+						);
+						break;
+					}
+					case 'phone':{
+						if(!this.ruler.phone.test(val)) return this.$message.warning('号码格式不合法，请重新输入...');
+						break;
+					}
+					case 'mail':{
+						if(!this.ruler.mail.test(val)) return this.$message.warning('邮箱地址不合法，请重新输入...');
+						break;
+					}
+					default:
+						break;
+					}
+					await this.updateOwnUserInfo({
+						infoValue: val,
+						type
+					});
+					// eslint-disable-next-line no-sequences
+					(this.inputInfo[type].state = false), (val = '');
+				}
+				else{
+					this.inputInfo[type].state = false;
+				}
+			}
+		},
 
-    //关闭个性页初始化弹窗
-    initInfoState() {
-      this.inputInfo.nickname.state = false;
-      this.inputInfo.sign.state = false;
-      this.inputInfo.gender.state = false;
-      this.inputInfo.birth.state = false;
-      this.inputInfo.phone.state = false;
-      this.inputInfo.mail.state = false;
-      setTimeout(() => {
-        this.isShowFriendsCard = false;
-      }, 300);
-    },
-    showModal(val) {
-      this.visible = true;
-      if (val) {
-        this.statusObj = val
-      }
-    },
-    handleOk(e) {
-      this.visible = false;
-    },
-    getUserOnlineStatus (val) {
-      const { ext } = val
-      switch (ext) {
-        case 'Offline':
-          return require('../../assets/Offline.png')
-        case 'Online':
-          return require('../../assets/Online.png')
-        case 'Busy':
-          return require('../../assets/Busy.png')
-        case 'Do not Disturb':
-          return require('../../assets/Do_not_Disturb.png')
-        case 'Leave':
-          return require('../../assets/leave.png')
-        default:
-          return require('../../assets/custom.png')
-      }
-    }
-  }
+		// 关闭个性页初始化弹窗
+		initInfoState(){
+			this.inputInfo.nickname.state = false;
+			this.inputInfo.sign.state = false;
+			this.inputInfo.gender.state = false;
+			this.inputInfo.birth.state = false;
+			this.inputInfo.phone.state = false;
+			this.inputInfo.mail.state = false;
+			setTimeout(() => {
+				this.isShowFriendsCard = false;
+			}, 300);
+		},
+		showModal(val){
+			this.visible = true;
+			if(val){
+				this.statusObj = val
+			}
+		},
+		handleOk(e){
+			this.visible = false;
+		},
+		getUserOnlineStatus(val){
+			const { ext } = val
+			switch(ext){
+			case 'Offline':
+				return require('../../assets/Offline.png')
+			case 'Online':
+				return require('../../assets/Online.png')
+			case 'Busy':
+				return require('../../assets/Busy.png')
+			case 'Do not Disturb':
+				return require('../../assets/Do_not_Disturb.png')
+			case 'Leave':
+				return require('../../assets/leave.png')
+			default:
+				return require('../../assets/custom.png')
+			}
+		}
+	}
 };
 </script>

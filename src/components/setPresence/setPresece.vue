@@ -28,61 +28,61 @@
 <script>
 import './setPresence.less'
 import { mapActions } from 'vuex'
-export default {
-  data () {
-    return {
-      visible: false,
-      selfStatus: '',
-      selectValue: 0,
-      selectOption: [
-        {
-          title: "Don't Clear",
-          value: 0
-        },
-        {
-          title: 'Clear in 1 hour',
-          value: 1
-        },
-        {
-          title: 'Clear in 8 hour',
-          value: 2
-        },
-        {
-          title: 'Clear Tomorow',
-          value: 3
-        }
-      ]
-    }
-  },
-  methods: {
-    ...mapActions(['publishNewPresence', 'subFriendStatus', 'unsubFriendStatus', 'getSubPresence']),
-    showModal () {
-      this.visible = true
-    },
-    handleOk () {
-      if (!this.selfStatus) {
-        this.$message.error('自定义状态不能为空')
-        return
-      }
-      const params = {
-        // data: this.selectOption[this.selectValue],
-        ext: this.selfStatus
-      }
-      this.$emit('changePresence', params)
-      // this.publishNewPresence(params)
-      // params.usernames = JSON.parse(localStorage.getItem("userInfo")).userId === 'luleiyu' ? ['lu1'] : ['luleiyu']
-      // this.subFriendStatus(params)
-      // this.unsubFriendStatus(params)
-      // this.getSubPresence(params)
-      this.hadleCancel()
-    },
-    hadleCancel () {
-      this.visible = false
-    },
-    handleChange(value) {
-      console.log(`Selected: ${value}`)
-      this.selectValue = value
-    }
-  }
+export default{
+	data(){
+		return {
+			visible: false,
+			selfStatus: '',
+			selectValue: 0,
+			selectOption: [
+				{
+					title: 'Don\'t Clear',
+					value: 0
+				},
+				{
+					title: 'Clear in 1 hour',
+					value: 1
+				},
+				{
+					title: 'Clear in 8 hour',
+					value: 2
+				},
+				{
+					title: 'Clear Tomorow',
+					value: 3
+				}
+			]
+		}
+	},
+	methods: {
+		...mapActions(['publishNewPresence', 'subFriendStatus', 'unsubFriendStatus', 'getSubPresence']),
+		showModal(){
+			this.visible = true
+		},
+		handleOk(){
+			if(!this.selfStatus){
+				this.$message.error('自定义状态不能为空')
+				return
+			}
+			const params = {
+				// data: this.selectOption[this.selectValue],
+				description: this.selfStatus
+			}
+			this.$emit('changePresence', params)
+			// this.publishNewPresence(params)
+			// params.usernames = JSON.parse(localStorage.getItem("userInfo")).userId === 'luleiyu' ? ['lu1'] : ['luleiyu']
+			// this.subFriendStatus(params)
+			// this.unsubFriendStatus(params)
+			// this.getSubPresence(params)
+			this.hadleCancel()
+		},
+		hadleCancel(){
+			this.visible = false
+		},
+		handleChange(value){
+			console.log(`Selected: ${value}`)
+			this.selectValue = value
+		}
+	}
 }
 </script>
