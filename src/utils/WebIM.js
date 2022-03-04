@@ -27,7 +27,7 @@ const rtc = {
 	localAudioTrack: null,
 	localVideoTrack: null,
 };
-console.log(window.location.protocol, 'window.location.protocol')
+
 // 初始化IM SDK
 let WebIM = {};
 WebIM = window.WebIM = websdk;

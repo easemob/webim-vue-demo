@@ -18,7 +18,7 @@
           />
           <a-tooltip placement="bottom">
             <template slot="title">
-              <span>{{statusObj.title}}</span>
+              <span>{{statusExt || statusObj.title}}</span>
             </template>
             <img class="status_img" :src="statusObj.img" alt="">
           </a-tooltip>
@@ -245,7 +245,8 @@ export default{
 				phone: /^[1][0-9]{10}$/
 			},
 			isShowFriendsCard: false,
-			statusObj: {}
+			statusObj: {},
+			statusExt: ''
 		};
 	},
 	computed: {
@@ -344,8 +345,9 @@ export default{
 				this.isShowFriendsCard = false;
 			}, 300);
 		},
-		showModal(val){
+		showModal(val, ext){
 			this.visible = true;
+			this.statusExt = ext
 			if(val){
 				this.statusObj = val
 			}
