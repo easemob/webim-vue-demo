@@ -9,7 +9,7 @@
             class="head_portrait"
             :src="userDetail.avatarurl || head_portraitImg"
             alt=""
-            @click="$refs['person_card'].showModal(statusList[statusIndex])"
+            @click="$refs['person_card'].showModal(statusList[statusIndex], statusExt)"
           />
           <a-popover placement="rightTop" v-model="visible" trigger="click">
             <template slot="content">
@@ -275,6 +275,9 @@ export default{
 		};
 	},
 	computed: {
+		statusExt(){
+			return this.$store.state.presence.ext;
+		},
 		statusIndex(){
 			return this.$store.state.presence.statusIndex;
 		},
@@ -609,18 +612,21 @@ export default{
 			const params = {
 				description: val.description
 			};
+			this.statusList[4].checked = true
 			this.updateUserPresenceStatus(val.description);
 			this.pubPresence(params);
 		},
 		changeCurrentStatus(val, index){
-			this.statusList.forEach(item => {
-				if(item.id === val.id){
-					item.checked = true;
-				}
-				else{
-					item.checked = false;
-				}
-			});
+			if(val.id !== 103){
+				this.statusList.forEach(item => {
+					if(item.id === val.id){
+						item.checked = true;
+					}
+					else{
+						item.checked = false;
+					}
+				});
+			}
 			const params = {
 				description: val.title
 			};

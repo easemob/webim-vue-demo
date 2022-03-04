@@ -16,6 +16,7 @@ const Presence = {
 		},
 		updateUserPresenceStatus(state, ext){
 			console.log(ext, ' ext');
+			state.ext = ext
 			switch(ext){
 			case 'Offline':
 				state.statusIndex = 5;
