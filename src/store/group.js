@@ -186,7 +186,7 @@ const Group = {
 				success: function(resp){
 					Message.success('已同意加入群组！');
 					Vue.$store.dispatch('onGetGroupUserList');
-					this.$forceUpdate();
+					Vue.$forceUpdate();
 				},
 				error: function(e){ }
 			};
@@ -215,7 +215,7 @@ const Group = {
 				success: function(resp){
 					Vue.$store.dispatch('onGetGroupUserList');
 					Vue.$store.dispatch('onGetGroupinfo', { select_id });
-					this.$forceUpdate();
+					Vue.$forceUpdate();
 				}
 			};
 			WebIM.conn.modifyGroup(option);
@@ -308,7 +308,7 @@ const Group = {
 				username: select_name,                         // 将要被加入黑名单的用户名
 				success: function(resp){
 					Vue.$store.dispatch('onGetGroupinfo', { select_id });
-					this.$forceUpdate();
+					Vue.$forceUpdate();
 					console.log('添加群组黑名单成功');
 				},
 				error: function(e){ }
@@ -324,7 +324,7 @@ const Group = {
 				success: function(resp){
 					console.log('移除成功Response: ', resp);
 					Vue.$store.dispatch('onGetGroupBlack', { select_id });
-					this.$forceUpdate();
+					Vue.$forceUpdate();
 				},
 				error: function(e){ }
 			};
@@ -364,7 +364,7 @@ const Group = {
 				success: function(){
 					Vue.$store.dispatch('onGetGroupUserList');
 					payload.callback();
-					this.$forceUpdate();
+					Vue.$forceUpdate();
 				},
 				error: function(){
 					console.log('Leave room faild');
@@ -379,7 +379,7 @@ const Group = {
 				success: function(){
 					Vue.$store.dispatch('onGetGroupUserList');
 					payload.callback();
-					this.$forceUpdate();
+					Vue.$forceUpdate();
 				}
 			};
 			WebIM.conn.dissolveGroup(option);
