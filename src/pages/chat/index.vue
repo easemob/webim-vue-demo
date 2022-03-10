@@ -345,6 +345,7 @@ export default{
 			this.statusList.forEach((item, index) => {
 				if(index === this.statusIndex){
 					item.checked = true;
+					item.title = this.statusExt
 				}
 				else{
 					item.checked = false;
@@ -478,6 +479,7 @@ export default{
 				group: false,
 			};
 			if(JSON.stringify(chatList) != '{}'){
+				// eslint-disable-next-line guard-for-in
 				for(const item in chatList){
 					chatList[item].map((v, k) => {
 						if(v.status === 'unread'){
@@ -618,6 +620,10 @@ export default{
 		},
 		changeCurrentStatus(val, index){
 			if(val.id !== 103){
+				if(this.statusList[4].checked){
+					this.seconndConnfirm(val)
+					return
+				}
 				this.statusList.forEach(item => {
 					if(item.id === val.id){
 						item.checked = true;
@@ -625,11 +631,11 @@ export default{
 					else{
 						item.checked = false;
 					}
-				});
+				})
 			}
 			const params = {
 				description: val.title
-			};
+			}
 			if(val.id === 103){
 				this.$refs.set_presece.showModal();
 			}
@@ -638,6 +644,21 @@ export default{
 				this.pubPresence(params);
 			}
 			this.visible = false;
+		},
+		seconndConnfirm(val){
+			this.$confirm({
+				title: 'Clear your Custom Status?',
+				content: `Clear ”${this.statusList[4].title}”, change to ${val.title}.`,
+				onOk: () => {
+					const params = {
+						description: val.title
+					}
+					this.updateUserPresenceStatus(val.title);
+					this.pubPresence(params);
+					this.visible = false;
+				},
+				onCancel(){},
+			})
 		},
 		pubPresence(params){
 			this.publishNewPresence(params);
