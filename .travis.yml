@@ -4,7 +4,7 @@ language: node_js
 node_js: node
 env:
   global:
-    - "nexus_auth=ci-deploy:Xyc-R5c-SdS-2Qr"
+    - "nexus_auth=ci-deploy:${EASEMOB_NEXUS_PASSWORD}"
 
 install:
   - npm install
