@@ -83,6 +83,11 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
+"@popperjs/core@^2.9.2":
+  version "2.11.5"
+  resolved "https://registry.npmmirror.com/@popperjs/core/-/core-2.11.5.tgz#db5a11bf66bdab39569719555b0f76e138d7bd64"
+  integrity sha512-9X2obfABZuDVLCgPK9aX0a/x4jaOEweTTWE2+9sr0Qqqevj2Uv5XorvusThmc9XGYpS9yI+fhh8RTafBtGposw==
+
 "@simonwep/pickr@~1.7.0":
   version "1.7.4"
   resolved "https://registry.yarnpkg.com/@simonwep/pickr/-/pickr-1.7.4.tgz#b14fcd945890388b870cd6db4d6c78d531f25141"
@@ -2660,10 +2665,10 @@ easemob-webrtc@^3.2.2:
   resolved "https://registry.yarnpkg.com/easemob-webrtc/-/easemob-webrtc-3.2.2.tgz#03e46093cb0ce4168bddf23e61069ed6bfe221af"
   integrity sha512-uScTb2kLKH3pST/eDpjuSFGL+EYpEnogWaRw7Tsyl7b+kEQQZ2xtleIoIunCCZqSCattPBnZ1evDY+7J/wiYfw==
 
-easemob-websdk@^3.5.2:
-  version "3.6.3"
-  resolved "https://registry.yarnpkg.com/easemob-websdk/-/easemob-websdk-3.6.3.tgz#08741aa30623fe36dbda1f181001bb73124e0676"
-  integrity sha512-6sdbcQyHt1GVoYZhXAX+ZyxhHKZl3Pwiu6oLYM7L5F+w5aJy/nCSuFYO30oVzH/kg5dt93+VgNcpGvj5VVspoQ==
+easemob-websdk@^4.0.3:
+  version "4.0.3"
+  resolved "https://registry.npmmirror.com/easemob-websdk/-/easemob-websdk-4.0.3.tgz#b8dfede7664b7bc0662c80514587d95b6693ec13"
+  integrity sha512-M7dN5lXt7di7EA+7WQ/A7fe+uxeUALufouTnEttVgx3cpPlGj2BTL+4JntxJHIu716W5j8jXlXNh9ZOOTQigUA==
 
 ee-first@1.1.1:
   version "1.1.1"
