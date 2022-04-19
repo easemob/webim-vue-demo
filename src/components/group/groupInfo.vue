@@ -1,5 +1,5 @@
 <template>
-  <el-drawer
+  <a-drawer
     title="群组信息"
     :modal="true"
     :append-to-body="true"
@@ -8,6 +8,7 @@
     size="350px"
     style="margin-top: 95px; list-style-type:none;"
     :wrapperClosable="true"
+		@close="chengeInfoModel"
   >
     <div class="info-modal">
       <div>
@@ -35,63 +36,63 @@
               <span v-if="!item.owner&&(adminList.includes(username) || groupinfoList.admin == username)&&username != item.member" class="info-icon">
 
                 <!-- 设置管理员 -->
-                <el-tooltip
+                <a-tooltip
                   class="item"
                   effect="dark"
-                  :content="setAdminIcon"
-                  placement="bottom-start"
+                  :title="setAdminIcon"
+                  placement="bottom"
                   v-show="!adminList.includes(item.member)&&groupinfoList.admin == username"
                 >
-                  <i class="el-icon-top" @click="openSetAdmin"></i>
-                </el-tooltip>
+									<a-icon type="arrow-up" @click="openSetAdmin" />
+                </a-tooltip>
 
                 <!-- 移除管理员 -->
-                <el-tooltip
+                <a-tooltip
                   class="item"
                   effect="dark"
-                  :content="removeAdminIcon"
-                  placement="bottom-start"
+                  :title="removeAdminIcon"
+                  placement="bottom"
                   v-show="adminList.includes(item.member)&&groupinfoList.admin == username"
                 >
-                  <i class="el-icon-bottom" @click="openRemoveAdmin"></i>
-                </el-tooltip>
+									<a-icon type="arrow-down" @click="openRemoveAdmin" />
+                </a-tooltip>
 
                 <!-- 设置禁言 -->
-                <el-tooltip
+                <a-tooltip
                   class="item"
                   effect="dark"
-                  :content="setMute"
-                  placement="bottom-start"
+                  :title="setMute"
+                  placement="bottom"
                   v-show="muteList.filter((muteItem)=>{ return muteItem.user == item.member }).length == 0"
                 >
-                  <i class="el-icon-lock" @click="openSetMute"></i>
-                </el-tooltip>
+									<a-icon type="lock" @click="openSetMute" />
+                </a-tooltip>
 
                 <!-- 移除禁言 -->
-                <el-tooltip
+                <a-tooltip
                   class="item"
                   effect="dark"
-                  :content="removeMute"
-                  placement="bottom-start"
+                  :title="removeMute"
+                  placement="bottom"
                   v-show="muteList.filter((muteItem)=>{ return muteItem.user == item.member }).length != 0"
                 >
-                  <i class="el-icon-unlock" @click="openRemoveMute"></i>
-                </el-tooltip>
+									<a-icon type="unlock" @click="openRemoveMute" />
+                </a-tooltip>
 
                 <!-- 加黑名单 -->
-                <el-tooltip class="item" effect="dark" :content="setBlack" placement="bottom-start">
-                  <i class="el-icon-warning-outline" @click="openGroupBlack"></i>
-                </el-tooltip>
+                <a-tooltip class="item" effect="dark" :title="setBlack" placement="bottom">
+									<a-icon type="exclamation-circle" @click="openGroupBlack" />
+                </a-tooltip>
 
                 <!-- 移出群 -->
-                <el-tooltip
+                <a-tooltip
                   class="item"
                   effect="dark"
-                  :content="setRemove"
-                  placement="bottom-start"
+                  :title="setRemove"
+                  placement="bottom"
                 >
-                  <i class="el-icon-circle-close" @click="openRemoveGroupUser"></i>
-                </el-tooltip>
+									<a-icon type="close-circle" @click="openRemoveGroupUser" />
+                </a-tooltip>
 
               </span>
             </div>
@@ -102,7 +103,7 @@
       </div>
     </div>
     <GetGroupSetting ref="groupSettingModel" @closeGroupSet="closeGroupSet"/>
-  </el-drawer>
+  </a-drawer>
 </template>
 
 <script>
@@ -193,135 +194,123 @@ export default{
 		},
 		openSetAdmin(){
 			const me = this;
-			this.$confirm("确认操作: 设为管理员", {
-				confirmButtonText: "确定",
-				cancelButtonText: "取消",
-				type: "warning"
-			})
-			.then(() => {
-				this.onSetAdmin({
+			this.$confirm({
+				title: '确认操作: 设为管理员',
+				okText: "确定",
+				cancelText: "取消",
+				icon: 'exclamation-circle',
+				centered: true,
+				onOk: () => {
+					this.onSetAdmin({
 					select_id: this.$store.state.group.groupInfo.gid,
 					select_name: this.$data.select_name,
-					success: function(){
-						me.getGroupAdmin({ select_id: me.$store.state.group.groupInfo.gid });
-						me.$forceUpdate();
-					}
-				});
-				this.chengeAdminIcon();
-				this.$message({
-					type: "success",
-					message: "设置管理员成功"
-				});
+						success: function(){
+							me.getGroupAdmin({ select_id: me.$store.state.group.groupInfo.gid });
+							me.$forceUpdate();
+						}
+					});
+					// this.chengeAdminIcon();
+					this.$message.success('设置管理员成功')
+				}
 			})
-			["catch"](() => {});
 		},
 		openRemoveAdmin(){
 			const me = this;
-			this.$confirm("确认操作: 移除管理员", {
-				confirmButtonText: "确定",
-				cancelButtonText: "取消",
-				type: "warning"
-			})
-			.then(() => {
-				this.onRemoveAdmin({
+			this.$confirm({
+				title: '确认操作: 移除管理员',
+				okText: "确定",
+				cancelText: "取消",
+				icon: 'exclamation-circle',
+				centered: true,
+				onOk: () => {
+					this.onRemoveAdmin({
 					select_id: this.$store.state.group.groupInfo.gid,
 					select_name: this.$data.select_name,
-					success: function(){
-						me.getGroupAdmin({ select_id: me.$store.state.group.groupInfo.gid });
-						me.$forceUpdate();
-					}
-				});
-				this.chengeAdminIcon();
-				this.$message({
-					type: "success",
-					message: "移除管理员成功"
-				});
+						success: function(){
+							me.getGroupAdmin({ select_id: me.$store.state.group.groupInfo.gid });
+							me.$forceUpdate();
+						}
+					});
+					// this.chengeAdminIcon();
+					this.$message.success('移除管理员成功')
+				}
 			})
-			["catch"](() => {});
 		},
 		openSetMute(){
 			const me = this;
-			this.$confirm("确认操作: 禁言", {
-				confirmButtonText: "确定",
-				cancelButtonText: "取消",
-				type: "warning"
-			})
-			.then(() => {
-				this.onAddMute({
+			this.$confirm({
+				title: '确认操作: 禁言',
+				okText: "确定",
+				cancelText: "取消",
+				icon: 'exclamation-circle',
+				centered: true,
+				onOk: () => {
+					this.onAddMute({
 					select_id: this.$store.state.group.groupInfo.gid,
 					select_name: this.$data.select_name,
-					success: function(){
-						me.getMuted({ select_id: me.$store.state.group.groupInfo.gid });
-						me.$forceUpdate();
-					}
-				});
-				// this.chengeMuteIcon();
-				this.$message({
-					type: "success",
-					message: "禁言成功"
-				});
+						success: function(){
+							me.getMuted({ select_id: me.$store.state.group.groupInfo.gid });
+							me.$forceUpdate();
+						}
+					});
+					// this.chengeMuteIcon();
+					this.$message.success('禁言成功')
+				}
 			})
-			["catch"](() => {});
 		},
 		openRemoveMute(){
 			const me = this;
-			this.$confirm("确认操作: 移除禁言", {
-				confirmButtonText: "确定",
-				cancelButtonText: "取消",
-				type: "warning"
-			})
-			.then(() => {
-				this.onRemoveMute({
+			this.$confirm({
+				title: '确认操作: 移除禁言',
+				okText: "确定",
+				cancelText: "取消",
+				icon: 'exclamation-circle',
+				centered: true,
+				onOk: () => {
+					this.onRemoveMute({
 					select_id: this.$store.state.group.groupInfo.gid,
 					select_name: this.$data.select_name,
 					success: function(){
-						me.getMuted({ select_id: me.$store.state.group.groupInfo.gid });
-						me.$forceUpdate();
-					}
-				});
-				// this.chengeMuteIcon();
-				this.$message({
-					type: "success",
-					message: "移除禁言列表成功"
-				});
+							me.getMuted({ select_id: me.$store.state.group.groupInfo.gid });
+							me.$forceUpdate();
+						}
+					});
+					// this.chengeMuteIcon();
+					this.$message.success('移除禁言列表成功')
+				}
 			})
-			["catch"](() => {});
 		},
 		openGroupBlack(){
-			this.$confirm("确认操作: 加入群黑名单", {
-				confirmButtonText: "确定",
-				cancelButtonText: "取消",
-				type: "warning"
+			this.$confirm({
+				title: '确认操作: 加入群黑名单',
+				okText: "确定",
+				cancelText: "取消",
+				icon: 'exclamation-circle',
+				centered: true,
+				onOk: () => {
+					this.onAddGroupBlack({
+						select_id: this.$store.state.group.groupInfo.gid,
+						select_name: this.$data.select_name
+					});
+					this.$message.success('加入群黑名单成功')
+				}
 			})
-			.then(() => {
-				this.onAddGroupBlack({
-					select_id: this.$store.state.group.groupInfo.gid,
-					select_name: this.$data.select_name
-				});
-				this.$message({
-					type: "success",
-					message: "加入群黑名单成功"
-				});
-			})
-			["catch"](() => {});
 		},
 		openRemoveGroupUser(){
-			this.$confirm("确认操作: 从本群移除", {
-				confirmButtonText: "确定",
-				cancelButtonText: "取消",
-				type: "warning"
+			this.$confirm({
+				title: '确认操作: 从本群移除',
+				okText: "确定",
+				cancelText: "取消",
+				icon: 'exclamation-circle',
+				centered: true,
+				onOk: () => {
+					this.onRemoveGroupUser({
+						select_id: this.$store.state.group.groupInfo.gid,
+						select_name: this.$data.select_name
+					});
+					this.$message.success('移除成员成功')
+				}
 			})
-			.then(() => {
-				this.onRemoveGroupUser({
-					select_id: this.$store.state.group.groupInfo.gid,
-					select_name: this.$data.select_name
-				});
-				this.$message({
-					type: "success",
-					message: "移除成员成功"
-				});
-			})
-			["catch"](() => {});
 		}
 	},
 	components: {

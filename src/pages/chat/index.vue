@@ -1,9 +1,6 @@
 <template>
   <a-layout
-    style="position: absolute;
-	width: 100%;
-	overflow: hidden;
-	height: 100%;"
+    style="position: absolute; width: 100%; overflow: hidden; height: 100%"
   >
     <a-layout-header class="layout-header">
       <div class="header">
@@ -61,7 +58,7 @@
           lineHeight: '50px',
           background: '#434648',
           color: '#fff',
-          textAlign: 'left'
+          textAlign: 'left',
         }"
         @click="contactTypeChange"
       >
@@ -96,7 +93,13 @@
         @collapse="onCollapse"
         @breakpoint="onBreakpoint"
       >
-        <MessageBox :type="activeKey" :card="$refs['person_card']" :select="select" ref="messageBox" />
+        <MessageBox
+          v-if="activeFlag"
+          :type="activeKey"
+          :card="$refs['person_card']"
+          :select="select"
+          ref="messageBox"
+        />
         <!-- <MessageBox v-if="activeKey == 'chatroom'"  type="chatroom" />
         <MessageBox v-if="activeKey == 'group'" type="group" />-->
       </a-layout-sider>
@@ -110,6 +113,7 @@
           ref="messageList"
           @EmediaModalFun="EmediaModalFun"
           @show_add_member_modal="show_add_member_modal"
+          @changeActiveFlag="changeActiveFlag"
         />
 
         <AddFriend ref="addFriendMethods" />
@@ -176,7 +180,7 @@ export default {
       activedType: {
         contact: "",
         group: "",
-        chatroom: ""
+        chatroom: "",
       },
       groupRead: false,
       contactRead: false,
@@ -189,18 +193,18 @@ export default {
         {
           name: "添加好友",
           id: "1",
-          icon: "chat"
+          icon: "chat",
         },
         {
           name: "申请入群",
           id: "2",
-          icon: "friends"
+          icon: "friends",
         },
         {
           name: "创建群组",
           id: "3",
-          icon: "comment"
-        }
+          icon: "comment",
+        },
       ],
       userName:
         localStorage.getItem("userInfo") &&
@@ -210,7 +214,8 @@ export default {
       broken: false,
       current: ["contact"],
       nowClickID: "",
-      showAlert: false
+      showAlert: false,
+      activeFlag: true // 在移动端情况下，为了消除列表跳详情的怪异情况
     };
   },
   computed: {
@@ -239,7 +244,7 @@ export default {
       return confr.type === 2 && [0, 3, 5, 6, 7].includes(callStatus)
         ? true
         : false;
-    }
+    },
   },
   watch: {
     onSetCallStatus(msg) {
@@ -259,7 +264,7 @@ export default {
         confirmRing: 3,
         answerCall: 5,
         receivedAnswerCall: 6,
-        confirmCallee: 7
+        confirmCallee: 7,
       };
 
       self.$data.showAlert = callStatus == 4 ? true : false; // 显隐被叫弹窗
@@ -270,6 +275,13 @@ export default {
       if (callStatus === 7) {
         return self.$refs.multiCall && self.$refs.multiCall.join();
       }
+    },
+    userDetail: {
+      handler (val) {
+        console.log(val, 'userDetail')
+        this.contactTypeChange({key: 'contact'})
+      },
+      deep: true
     }
   },
   methods: {
@@ -280,7 +292,7 @@ export default {
       "updateConfr",
       "setCallStatus",
       "hangup",
-      "cancelCall"
+      "cancelCall",
     ]),
     toLogout() {
       this.onLogout();
@@ -312,10 +324,11 @@ export default {
     },
     showUserList() {
       this.$data.collapsed = false;
+      this.activeFlag = true
     },
     select(i) {
       this.$refs.messageList.select(i);
-      // 
+      //
       if (this.broken) {
         this.$data.collapsed = true;
       }
@@ -328,12 +341,12 @@ export default {
       this.$data.showSettingOptions = !this.$data.showSettingOptions;
     },
     contactTypeChange(type) {
+      this.activeFlag = true
       this.$data.activeKey = type.key;
       this.$router.push(`/${type.key}`);
       if (this.broken && this.collapsed) {
         this.$data.collapsed = false;
       }
-
       switch (type.key) {
         case "contact":
           this.$refs.messageBox.onGetContactUserList();
@@ -348,6 +361,12 @@ export default {
           break;
       }
       this.$refs.messageList.getCurrentMsg(type.key);
+    },
+    changeActiveFlag () {
+      const width = document.body.clientWidth || document.documentElement.clientWidth
+      if (width <= 990) {
+        this.activeFlag = false
+      }
     },
     addModalChange() {
       this.$data.showAddOptions = !this.$data.showAddOptions;
@@ -375,7 +394,7 @@ export default {
       const chatList = this.chatList[type];
       let obj = {
         contact: false,
-        group: false
+        group: false,
       };
       if (JSON.stringify(chatList) != "{}") {
         for (const item in chatList) {
@@ -394,7 +413,7 @@ export default {
       }
       return {
         contact: obj.contact,
-        group: obj.group
+        group: obj.group,
       };
     },
 
@@ -422,8 +441,8 @@ export default {
                 callId: callId, // 随机uuid，每次呼叫都不同，代表一次呼叫
                 ts: Date.now(),
                 msgType: "rtcCallWithAgora",
-                callerIMName: WebIM.conn.context.jid.name
-              }
+                callerIMName: WebIM.conn.context.jid.name,
+              },
             };
             msg.set(set_options);
             WebIM.conn.send(msg.body);
@@ -434,11 +453,11 @@ export default {
                 token: null,
                 type: 0,
                 callerDevId: WebIM.conn.context.jid.clientResource,
-                callId: callId
+                callId: callId,
               },
               to: tos[0],
               callerIMName: WebIM.conn.context.jid.name,
-              calleeIMName: tos[0]
+              calleeIMName: tos[0],
             });
             const inviteStatus = 1;
             this.setCallStatus(inviteStatus);
@@ -463,8 +482,8 @@ export default {
                 callerDevId: WebIM.conn.context.jid.clientResource, // 主叫方设备Id
                 callId: callId, // 随机uuid，每次呼叫都不同，代表一次呼叫
                 ts: Date.now(),
-                msgType: "rtcCallWithAgora"
-              }
+                msgType: "rtcCallWithAgora",
+              },
             };
             msg.set(set_options);
             WebIM.conn.send(msg.body);
@@ -474,11 +493,11 @@ export default {
                 channelName: channelName,
                 type: 1,
                 callerDevId: WebIM.conn.context.jid.clientResource,
-                callId: callId
+                callId: callId,
               },
               to: tos[0],
               callerIMName: WebIM.conn.context.jid.name,
-              calleeIMName: tos[0]
+              calleeIMName: tos[0],
             });
             const inviteStatus = 1;
             this.setCallStatus(inviteStatus);
@@ -504,7 +523,7 @@ export default {
         default:
           break;
       }
-    }
+    },
   },
   components: {
     MessageBox,
@@ -522,7 +541,7 @@ export default {
     Call,
     AddAVMemberModal,
     AlertModal,
-    PersonCard
+    PersonCard,
   }
 };
 </script>

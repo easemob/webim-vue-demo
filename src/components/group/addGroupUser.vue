@@ -36,7 +36,8 @@
       </div>
       <div>
         <div class="groBack" @click="changeGroupListModel">
-          <i class="el-icon-back"></i>
+          <!-- <i class="a-arrow-left"></i> -->
+          <a-icon type="arrow-left" />
           <i>返回</i>
         </div>
         <div class="groCreate">

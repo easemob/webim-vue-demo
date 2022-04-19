@@ -233,5 +233,5 @@ HZRecorder.get = function(callback, config){
 	}
 };
 
-import { Message } from "element-ui";
+import { Message } from "ant-design-vue";
 export default HZRecorder;

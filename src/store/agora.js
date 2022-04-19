@@ -1,4 +1,4 @@
-import { Message } from "element-ui";
+import { Message } from "ant-design-vue";
 import axios from 'axios'
 const rtc = WebIM.rtc;
 const CALLSTATUS = {
@@ -141,7 +141,7 @@ const Agora = {
                 console.warn('callId 不相同')
                 status = false
             }
-            if (context.state.callStatus > 4) { //已经在通话中
+            if (context.state.callStatus > 4 &&confr.type!=2) { //已经在通话中 是否是多人视频
                 status = false
             }
             if (callerDevId !== WebIM.conn.context.jid.clientResource) {
@@ -356,7 +356,7 @@ const Agora = {
         getRtctoken: function (context, payload) {
             axios.defaults.headers.common['Authorization'] = 'Bearer ' + WebIM.conn.context.accessToken;
             let { username, channelName, appkey } = payload
-            return axios.get(`//a1.easemob.com/token/rtcToken?userAccount=${username}&channelName=${channelName}&appkey=${encodeURIComponent(appkey)}`)
+            return axios.get(`${WebIM.conn.apiUrl}/token/rtcToken/v1?userAccount=${username}&channelName=${channelName}&appkey=${encodeURIComponent(appkey)}`)
                 .then(function (response) {
                     return response.data
                 })

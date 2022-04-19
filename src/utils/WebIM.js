@@ -7,7 +7,7 @@ import webrtc from "./EMedia_x1v1_3.4.1";
 
 // 声网音视频sdk
 import AgoraRTC from "agora-rtc-sdk-ng"
-import { Message } from "element-ui";
+import { Message } from "ant-design-vue";
 function ack(message) {
 	var bodyId = message.id; // 需要发送已读回执的消息id
 	var msg = new WebIM.message("read", WebIM.conn.getUniqueId());
@@ -208,15 +208,9 @@ WebIM.conn.listen({
 					Vue.$store.dispatch('confirmCallee', { to: msg.from, calleeDevId: deviceId, result: msgInfo.result })
 					if (msgInfo.result !== 'accept') {
 						if (msgInfo.result === 'busy') {
-							Message({
-								type: "error",
-								message: '对方正忙'
-							});
+							Message.error('对方正忙')
 						} else if (msgInfo.result === 'refuse') {
-							Message({
-								type: "error",
-								message: '对方已拒绝'
-							});
+							Message.error('对方已拒绝')
 						}
 
 						if (callVideo.confr.type !== 2) { // 单人情况挂断，多人不挂断
@@ -231,10 +225,7 @@ WebIM.conn.listen({
 						if (msg.to == WebIM.conn.context.jid.name) {
 							Vue.$store.dispatch('hangup')
 							Vue.$store.dispatch('setCallStatus', CALLSTATUS.idle)
-							return Message({
-								type: "error",
-								message: '已在其他设备处理'
-							});
+							return Message.error('已在其他设备处理')
 						}
 						return
 					}
@@ -366,10 +357,7 @@ WebIM.conn.listen({
 				break;
 			case "subscribed":
 				Vue.$store.dispatch("onGetContactUserList");
-				Message({
-					type: "success",
-					message: message.from + " " + "已订阅"
-				});
+				Message.success(message.from + " " + "已订阅")
 				break;
 			case "unsubscribed":
 				Vue.$store.dispatch("onGetContactUserList");
@@ -378,19 +366,13 @@ WebIM.conn.listen({
 					alert(message.from + " " + "请求被拒绝");
 				}
 				else {
-					Message({
-						type: "success",
-						message: message.from + " " + "已退订"
-					});
+					Message.success(message.from + " " + "已退订")
 				}
 				break;
 
 			case "direct_joined": // 被拉进群--不需要同意
 				Vue.$store.dispatch("onGetGroupUserList")
-				Message({
-					type: "success",
-					message: `${message.from}邀请您加入群：${message.gid}`
-				})
+				Message.success(`${message.from}邀请您加入群：${message.gid}`)
 				break;
 			case "invite": //收到邀请进群的通知
 				let groupInviteOptions = {
@@ -408,27 +390,18 @@ WebIM.conn.listen({
 				break;
 			case "memberJoinPublicGroupSuccess": // 成员加入聊天室成功回调
 				Vue.$store.dispatch("onGetGroupinfo", { select_id });
-				Message({
-					type: "success",
-					message: `${message.from}已加入群组`
-				})
+				Message.success(`${message.from}已加入群组`)
 				break;
 			case "joinPublicGroupSuccess":  //申请加入群组成功回调
 				Vue.$store.dispatch("onGetGroupUserList");
 				break;
 			case "deleteGroupChat": // 解散群组
 				Vue.$store.dispatch("onGetGroupUserList")
-				Message({
-					type: "error",
-					message: `${message.from}将群：${message.gid} 已解散`
-				})
+				Message.error(`${message.from}将群：${message.gid} 已解散`)
 				break
 			case "removedFromGroup": //移除
 				Vue.$store.dispatch("onGetGroupUserList")
-				Message({
-					type: "success",
-					message: "已被" + message.from + "移除群：" + message.gid
-				})
+				Message.success("已被" + message.from + "移除群：" + message.gid)
 				break;
 			case "leaveGroup":
 				Vue.$store.dispatch("onGetGroupinfo", { select_id });

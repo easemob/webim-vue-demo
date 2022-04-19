@@ -1,4 +1,4 @@
-import { Message } from "element-ui";
+import { Message } from "ant-design-vue";
 const Login = {
 	state: {
 		isRegister: false,
@@ -42,11 +42,8 @@ const Login = {
 				nickname: payload.nickname,
 				appKey: WebIM.config.appkey,
 				success: () => {
-					Message({
-						type: "success",
-						message: "注册成功"
-					});
-					context.commit("setRegisterFlag", false);
+					Message.success("注册成功")
+					context.commit("setRegisterFlag", false)
 				},
 				error: (err) => {
 					if (JSON.parse(err.data).error == "duplicate_unique_property_exists") {
