@@ -240,15 +240,15 @@ export default{
 		};
 	},
 	beforeMount(){
-		if(this.type === 'contact'){
-			this.onGetContactUserList();
-		}
-		else if(this.type === 'group'){
-			this.onGetGroupUserList();
-		}
-		else if(this.type === 'chatroom'){
-			this.onGetChatroomUserList();
-		}
+		// if(this.type === 'contact'){
+		// 	this.onGetContactUserList();
+		// }
+		// else if(this.type === 'group'){
+		// 	this.onGetGroupUserList();
+		// }
+		// else if(this.type === 'chatroom'){
+		// 	this.onGetChatroomUserList();
+		// }
 	},
 	updated(){
 		// console.log("数据", this.$store);
@@ -321,13 +321,13 @@ export default{
 			}
 			return show
 		},
-		userList(){
-			return {
-				contact: this.contact,
-				group: this.group,
-				chatroom: this.chatroom,
-			};
-		},
+		// userList(){
+		// 	return {
+		// 		contact: this.contact,
+		// 		group: this.group,
+		// 		chatroom: this.chatroom,
+		// 	};
+		// },
 		selectedKeys(){
 			return [this.getKey(this.activedKey[this.type]) || ''];
 		},

@@ -2,6 +2,7 @@ import config from './WebIMConfig';
 // import websdk from "easemob-websdk";
 
 import websdk from 'websdk';
+
 import _ from 'lodash';
 import emedia from 'easemob-emedia';
 // import webrtc from "easemob-webrtc";
@@ -33,6 +34,7 @@ let WebIM = {};
 WebIM = window.WebIM = websdk;
 WebIM.config = config;
 WebIM.conn = new WebIM.connection({
+	isReport: false,
 	appKey: WebIM.config.appkey,
 	isMultiLoginSessions: WebIM.config.isMultiLoginSessions,
 	https: WebIM.config.https,
@@ -47,17 +49,17 @@ WebIM.conn = new WebIM.connection({
 	// isHttpDNS: WebIM.config.isHttpDNS,
 
 	// 私有云设置，详细文档：http://docs-im.easemob.com/im/web/other/privatedeploy
-	isHttpDNS: false,
+	// isHttpDNS: false,
 	// url: 'https://im-api-v2.easecdn.com/ws', // 设置为私有云的websocket server url
 	// apiUrl: 'https://a1.easecdn.com', // 设置为私有云的rest server url
 
 	// url: 'http://msync-api-a1-test.easemob.com:8081/ws', // 设置为私有云的websocket server url
-	url: window.location.protocol + '//msync-api-a1-test.easemob.com/ws', // 设置为私有云的websocket server url
+	// url: window.location.protocol + '//msync-api-a1-test.easemob.com/ws', // 设置为私有云的websocket server url
 
 	// url: 'https://im-api-v2-hsb.easemob.com/ws', // 设置为私有云的websocket server url
 	// url: 'http://52.80.99.104:8081/ws', // 设置为私有云的websocket server url
 	// apiUrl: 'http://a1-test.easemob.com:8089', // 设置为私有云的rest server url
-	apiUrl: window.location.protocol + '//a1-test.easemob.com', // 设置为私有云的rest server url
+	// apiUrl: window.location.protocol + '//a1-test.easemob.com', // 设置为私有云的rest server url
 });
 
 // 通话状态
