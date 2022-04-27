@@ -18,8 +18,9 @@ var config = {
      * Application AppKey
      */
 	// appkey:"gdpwq123#ceshi",
-	appkey: '5101220107132865#test',
-	// appkey: "easemob-demo#easeim",
+	// appkey: '5101220107132865#test',
+	appkey: 'easemob-demo#easeim',
+	// appkey: 'easemobpush#push1',
 	/*
      * Application Host
      */
