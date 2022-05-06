@@ -1,32 +1,14 @@
-// The Vue build version to load with the `import` command
-// (runtime-only or standalone) has been set in webpack.base.conf with an alias.
-import Vue from 'vue'
-import App from './App'
-import router from './router'
-import WebIM from './utils/WebIM';
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router';
 import store from './store';
 
-import Antd from './utils/antd-vue'
+import ElementPlus from 'element-plus';
+import './styles/element/index.scss';
+import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
-import Router from 'vue-router'
-
-Vue.config.productionTip = false
-Vue.use(Antd)
-
-const originalPush = Router.prototype.push
-Router.prototype.push = function push(location) {
-  return originalPush.call(this, location).catch(err => err)
-}
-
-Vue.config.productionTip = false
-
-/* eslint-disable no-new */
-window.Vue = new Vue({
-  el: '#app',
-  router,
-  components: { App },
-  template: '<App/>',
-  store,
-  WebIM,
-  render: h => h(App)
-})
+createApp(App)
+  .use(store)
+  .use(router)
+  .use(ElementPlus, { locale: zhCn })
+  .mount('#app');

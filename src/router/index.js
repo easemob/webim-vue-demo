@@ -1,60 +1,28 @@
-import Vue from 'vue'
-import Router from 'vue-router';
-import Login from '../pages/login/index.vue';
-import Contact from '../pages/chat/index.vue';
+import { createRouter, createWebHistory } from 'vue-router';
+import Login from '../views/Login';
 
-Vue.use(Router)
+const routes = [
+  {
+    path: '/',
+    name: 'login',
+    component: Login,
+  },
+  {
+    path: '/login',
+    name: 'Login',
 
-export default new Router({
-    mode: 'history',
-    routes: [
-        { 
-            path: '',
-            redirect: '/login'
-        },
-        { 
-            path: '/',
-            redirect: '/login'
-        },
-        {
-            path: '/login',
-            name: 'login',
-            component: Login
-        },
-        {
-            path: '/register',
-            name: 'login',
-            component: Login
-        },
-        {
-            path: '/contact/:id',
-            name: 'contact',
-            component: Contact
-        },
-        {
-            path: '/contact',
-            name: 'contact',
-            component: Contact
-        },
-        {
-            path: '/group/:id',
-            name: 'group',
-            component: Contact
-        },
-        {
-            path: '/group',
-            name: 'group',
-            component: Contact
-        },
-        {
-            path: '/chatroom/:id',
-            name: 'chatroom',
-            component: Contact
-        },
-        {
-            path: '/chatroom',
-            name: 'chatroom',
-            component: Contact
-        },
-    ]
-})
+    component: () => import(/* webpackChunkName: "about" */ '../views/Login'),
+  },
+  {
+    path: '/chat',
+    name: 'Chat',
+    component: () => import(/* webpackChunkName: "about" */ '../views/Chat'),
+  },
+];
+
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL),
+  routes,
+});
+
+export default router;
