@@ -1,15 +1,272 @@
+<script setup>
+import { ref } from 'vue';
+import { ElNotification } from 'element-plus';
+import Ease from '@/IM/initwebsdk';
+import { useSDKErrorNotifi } from '@/hooks';
+
+//login图
+const logo = require('@/assets/images/loginIcon.png');
+// 登陆注册所用
+const isRegister = ref(false);
+const username = ref('');
+const password = ref('');
+const confirmPwd = ref('');
+const loginIM = async () => {
+  let resultStatus = checkParams({ username, password });
+  if (resultStatus) {
+    try {
+      await Ease.conn.open({
+        user: username.value,
+        pwd: password.value,
+      });
+      username.value = '';
+      password.value = '';
+    } catch (error) {
+      console.log('>>>>登陆失败', error);
+      useSDKErrorNotifi(error.type, error.message);
+      username.value = '';
+      password.value = '';
+    }
+
+    console.log('>>>>>>开始登陆');
+  }
+};
+
+const registerIM = async () => {
+  let resultStatus = checkParams({ username, password, confirmPwd });
+  if (resultStatus) {
+    console.log('>>>>>>开始注册');
+    try {
+      await Ease.conn.registerUser({
+        username: username.value,
+        password: password.value,
+      });
+      ElNotification({
+        title: 'Easemob',
+        message: '注册成功！',
+        type: 'success',
+      });
+      username.value = '';
+      password.value = '';
+      confirmPwd.value = '';
+      isRegister.value = false;
+      console.log(first);
+    } catch (error) {
+      console.log('注册error', error);
+      const errorMsg = error.message && JSON.parse(error.message);
+      useSDKErrorNotifi(error.type, errorMsg.error);
+      username.value = '';
+      password.value = '';
+      confirmPwd.value = '';
+    }
+  }
+};
+const checkParams = (params) => {
+  console.log('>>>>>收集到参数', params);
+  if (params['username'] && params['username'].value === '') {
+    ElNotification({
+      title: 'Easemob',
+      message: '环信ID不可为空！',
+      type: 'error',
+    });
+    return false;
+  }
+  if (params['password'] && params['password'].value === '') {
+    ElNotification({
+      title: 'Easemob',
+      message: '环信密码不可为空！',
+      type: 'error',
+    });
+    return false;
+  }
+  if (params['confirmPwd'] && params['confirmPwd'].value === '') {
+    ElNotification({
+      title: 'Easemob',
+      message: '请再次确认密码！',
+      type: 'error',
+    });
+    return false;
+  }
+  if (params['password'] && params['confirmPwd']) {
+    if (params['password'].value !== params['confirmPwd'].value) {
+      ElNotification({
+        title: 'Easemob',
+        message: '两次密码输入不一致！',
+        type: 'error',
+      });
+      return false;
+    }
+  }
+  return true;
+};
+const toEasemob = () => {
+  const linkUrl = 'https://www.easemob.com//?utm_source=baidu-ppwx';
+  window.open(linkUrl, '_blank');
+};
+</script>
 <template>
-  <div>
-    <el-container>
-      <el-header>Header</el-header>
-      <el-main>Main</el-main>
-      <el-footer>Footer</el-footer>
-    </el-container>
-  </div>
+  <el-container class="app_container">
+    <el-main class="login_box">
+      <div>
+        <el-row
+          class="login_box_card out-drawer animate__animated animate__slideInLeft"
+        >
+          <el-col>
+            <img class="logo" :src="logo" @click="toEasemob" alt="" />
+          </el-col>
+          <el-col>
+            <el-input
+              class="login_input_style"
+              v-model="username"
+              placeholder="请输入用户名..."
+              clearable
+              key="loginUserId"
+              maxlength="64"
+            />
+          </el-col>
+
+          <el-col>
+            <el-input
+              class="login_input_style"
+              v-model="password"
+              type="password"
+              placeholder="请输入密码..."
+              show-password
+              key="loginPwd"
+            />
+          </el-col>
+          <el-col v-if="isRegister">
+            <el-input
+              class="login_input_style"
+              v-model="confirmPwd"
+              type="password"
+              placeholder="请再次确认密码..."
+              show-password
+            />
+          </el-col>
+          <el-col>
+            <div class="function_button_box">
+              <el-button
+                v-if="!isRegister"
+                type="primary"
+                round
+                @click="loginIM"
+                >登陆</el-button
+              >
+              <el-button
+                v-else
+                class="reister_button"
+                type="primary"
+                round
+                @click="registerIM"
+                >注册</el-button
+              >
+            </div>
+          </el-col>
+          <el-col>
+            <p class="login_text">
+              <span
+                class="login_text_isuserid"
+                v-text="isRegister ? '没有账号?' : '已有账号？'"
+              ></span
+              ><span
+                class="login_text_tologin"
+                v-text="isRegister ? '登陆' : '注册'"
+                @click="isRegister = !isRegister"
+              ></span>
+            </p>
+          </el-col>
+        </el-row>
+      </div>
+    </el-main>
+    <el-footer>
+      <div class="copyright">Copyright © easemob Web IM 版本号：4.x</div>
+    </el-footer>
+  </el-container>
 </template>
 
-<script setup>
-// defineName('Login');
-</script>
-
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.app_container {
+  width: 100vw;
+  height: 100vh;
+  background: url('@/assets/images/web-demo-base.png');
+  background-size: cover;
+  .login_box {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    height: 800px;
+    .login_box_card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 800px;
+      margin: 15% auto;
+      border-radius: 5px;
+      .logo {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 20px;
+        transition: all 0.3s;
+        &:hover {
+          transform: scale(1.2);
+        }
+      }
+      .login_input_style {
+        margin: 10px 0;
+        width: 400px;
+        height: 50px;
+        font-size: 17px;
+        padding: 0 10px;
+      }
+      .function_button_box {
+        margin-top: 10px;
+        width: 400px;
+        button {
+          margin: 10px;
+          width: 380px;
+          height: 40px;
+          background: linear-gradient(90deg, #04aef0 0%, #5a5dd0 100%);
+          border: none;
+          font-weight: 300;
+          font-size: 17px;
+          &:active {
+            background: linear-gradient(90deg, #0b83b2 0%, #363df4 100%);
+          }
+          &:hover {
+          }
+          // width: 100%;
+        }
+      }
+      .login_text {
+        display: inline-block;
+        width: 400px;
+        text-align: right;
+        .login_text_isuserid {
+          display: inline-block;
+          width: 100px;
+          text-align: center;
+          color: #fff;
+        }
+        .login_text_tologin {
+          margin-right: 20px;
+          width: 80px;
+          color: #00a9d9;
+          cursor: pointer;
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+  }
+  .copyright {
+    width: 100%;
+    height: 30px;
+    font-size: 13px;
+    color: #fff;
+    line-height: 30px;
+    text-align: center;
+  }
+}
+</style>
