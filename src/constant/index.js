@@ -1,3 +1,3 @@
 import handleErrorCode from './handleErrorCode';
-
-export { handleErrorCode };
+import onLineStatus from './onLineStatus';
+export { handleErrorCode, onLineStatus };

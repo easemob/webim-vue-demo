@@ -17,7 +17,27 @@ const routes = [
   {
     path: '/chat',
     name: 'Chat',
+    redirect: '/chat/conversation',
     component: () => import('../views/Chat'),
+    children: [
+      {
+        path: 'conversation',
+        name: 'Conversation',
+
+        meta: {
+          title: '会话',
+        },
+        component: () => import('../components/Conversation'),
+      },
+      {
+        path: 'contacts',
+        name: 'Contacts',
+        meta: {
+          title: '联系页',
+        },
+        component: () => import('../components/Contacts'),
+      },
+    ],
   },
 ];
 

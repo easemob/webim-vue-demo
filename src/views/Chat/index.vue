@@ -1,7 +1,49 @@
+<script setup>
+import NavBar from '@/components/NavBar';
+</script>
 <template>
-  <div>chat聊天页</div>
+  <div class="app-container">
+    <el-container class="chat_container">
+      <el-aside class="chat_nav_bar" width="80px"> <NavBar /> </el-aside>
+      <el-main>
+        <router-view></router-view>
+      </el-main>
+    </el-container>
+  </div>
 </template>
 
-<script setup></script>
+<style lang="scss" scoped>
+.app-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: url('@/assets/images/web-demo-base.png');
+  background-size: cover;
 
-<style lang="scss" scoped></style>
+  .chat_container {
+    width: 95%;
+    height: 95%;
+
+    background: rgba(255, 255, 255, 0.196);
+    position: relative;
+    top: 50%;
+    /*
+      	transform的百分比相对的是自身的宽度或高度( refer to the size of bounding box )
+      */
+    transform: translateY(-50%);
+    margin: auto auto;
+    border-radius: 5px;
+    .chat_nav_bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-radius: 5px 0 0 5px;
+      width: 80px;
+      background: #262626;
+      overflow: hidden;
+    }
+  }
+}
+</style>

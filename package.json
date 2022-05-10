@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@vueuse/core": "^8.4.2",
     "core-js": "^3.8.3",
     "easemob-websdk": "^4.0.4",
     "element-plus": "^2.1.11",

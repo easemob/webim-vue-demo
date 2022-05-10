@@ -12,22 +12,20 @@
 <script setup>
 import { useStore } from 'vuex';
 import router from '@/router';
-import { useRoute } from 'vue-router';
 import Ease from '@/IM/initwebsdk';
 import { useSDKErrorNotifi } from '@/hooks';
 
-const route = useRoute();
-const sotre = useStore();
-console.log(sotre);
+const store = useStore();
 Ease.conn.addEventHandler('connection&message', {
   onConnected: () => {
     console.log('>>>>>环信连接成功');
-    router.push('/chat');
-    sotre.commit('CHANGE_LOGIN_STATUS', true);
+    store.commit('CHANGE_LOGIN_STATUS', true);
+    getMyUserInfos();
+    router.replace('/chat');
   },
   onDisconnected: () => {
     router.push('/login');
-    sotre.commit('CHANGE_LOGIN_STATUS', false);
+    store.commit('CHANGE_LOGIN_STATUS', false);
   },
 
   onError: (error) => {
@@ -35,6 +33,21 @@ Ease.conn.addEventHandler('connection&message', {
     useSDKErrorNotifi(error.type, error.message);
   },
 });
+Ease.conn.addEventHandler('presenceStatusChange', {
+  onPresenceStatusChange: (status) => {
+    console.log('状态更新', status);
+    getUserPresence(...status);
+  },
+});
+//获取登陆用户属性
+const getMyUserInfos = () => {
+  const userId = Ease.conn.user;
+  store.dispatch('getMyUserInfo', userId);
+};
+//处理登陆用户状态的变更
+const getUserPresence = (status) => {
+  store.dispatch('handlePresenceChanges', status);
+};
 </script>
 <style type="scss">
 @import './styles/reset/reset.css';
@@ -43,7 +56,7 @@ Ease.conn.addEventHandler('connection&message', {
 }
 
 .slide-fade-leave-active {
-  transition: all 0.5s;
+  transition: all 0.3s;
 }
 .slide-fade-enter-from,
 .slide-fade-leave-to {
