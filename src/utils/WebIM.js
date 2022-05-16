@@ -46,7 +46,7 @@ WebIM.conn = new WebIM.connection({
 	delivery: WebIM.config.delivery,
 
 	// 公有云 isHttpDNS 默认配置为true
-	// isHttpDNS: WebIM.config.isHttpDNS,
+	isHttpDNS: WebIM.config.isHttpDNS,
 
 	// 私有云设置，详细文档：http://docs-im.easemob.com/im/web/other/privatedeploy
 	// isHttpDNS: false,
