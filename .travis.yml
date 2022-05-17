@@ -1,10 +1,11 @@
 
 dist: trusty
 language: node_js
-node_js: node
+node_js:
+  - "17"
 env:
   global:
-    - "nexus_auth=ci-deploy:Xyc-R5c-SdS-2Qr"
+    - "nexus_auth=ci-deploy:${EASEMOB_NEXUS_PASSWORD}"
 
 install:
   - npm install
