@@ -1,7 +1,8 @@
 
 dist: trusty
 language: node_js
-node_js: node
+node_js:
+  - "17.3"
 env:
   global:
     - "nexus_auth=ci-deploy:${EASEMOB_NEXUS_PASSWORD}"
