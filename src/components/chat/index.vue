@@ -10,7 +10,7 @@
         <div v-if="item.friendDetail" class="name_box">
           <img class="friend_portrait" :src="item.friendDetail.avatarurl?item.friendDetail.avatarurl:headPortraitImg" alt="" @click.stop="alertPersaonCard(item)">
           <span class="custom-title" >{{ item.friendDetail.nickname || item.name}}</span>
-          <img class="status_img" v-if="dataFlag" :src="getUserOnlineStatus(item.presence)" alt="">
+          <!-- <img class="status_img" v-if="dataFlag" :src="getUserOnlineStatus(item.presence)" alt=""> -->
         </div>
         <span class="custom-title" v-if="!item.friendDetail">{{ item.name }}</span>
         <div class="icon-style" v-if="getUnreadNum(item) != 0">
@@ -105,35 +105,35 @@ export default{
 					params.usernames.push(item.name)
 				})
 				console.log(params)
-				params.usernames.length && this.subFriendStatus(params).then(res => {
-					console.log(res, this.contact, '333333333333333333')
-					let tempArr = []
-					val.forEach((item) => {
-						res.result.forEach(val => {
-							if(item.name === val.uid){
-								tempArr.push(val.uid)
-								item.presence = val
-							}
-						})
-					})
-					console.log(tempArr, 'tempArr')
-					val.forEach(item => {
-						if (!tempArr.includes(item.name)) {
-							item.presence = {
-								uid: item.name,
-								ext: 'Offline',
-								status: [],
-								expiry: new Date().getTime(),
-								last_time: new Date().getTime()
-							}
-						}
-					})
+				// params.usernames.length && this.subFriendStatus(params).then(res => {
+				// 	console.log(res, this.contact, '333333333333333333')
+				// 	let tempArr = []
+				// 	val.forEach((item) => {
+				// 		res.result.forEach(val => {
+				// 			if(item.name === val.uid){
+				// 				tempArr.push(val.uid)
+				// 				item.presence = val
+				// 			}
+				// 		})
+				// 	})
+				// 	console.log(tempArr, 'tempArr')
+				// 	val.forEach(item => {
+				// 		if (!tempArr.includes(item.name)) {
+				// 			item.presence = {
+				// 				uid: item.name,
+				// 				ext: 'Offline',
+				// 				status: [],
+				// 				expiry: new Date().getTime(),
+				// 				last_time: new Date().getTime()
+				// 			}
+				// 		}
+				// 	})
 					
-					console.log(this.userList, 'this.userList===this.userList')
-					setTimeout(() => {
-						this.dataFlag = true
-					}, 500)
-				})
+				// 	console.log(this.userList, 'this.userList===this.userList')
+				// 	setTimeout(() => {
+				// 		this.dataFlag = true
+				// 	}, 500)
+				// })
 			},
 			deep: true
 		},

@@ -11,7 +11,7 @@
             alt=""
             @click="$refs['person_card'].showModal(statusList[statusIndex], statusExt)"
           />
-          <a-popover placement="rightTop" v-model="visible" trigger="click">
+          <!-- <a-popover placement="rightTop" v-model="visible" trigger="click">
             <template slot="content">
               <div class="status_box" v-for="(item, index) in statusList.slice(0,5)" :key="item.id" @click="changeCurrentStatus(item, index)">
                 <div>
@@ -22,7 +22,7 @@
               </div>
             </template>
             <img class="online_status" :src="statusList[statusIndex].img" alt="">
-          </a-popover>
+          </a-popover> -->
           <span class="username">{{ userDetail.nickname || userName }}</span>
           <a-dropdown>
             <span class="ant-dropdown-link" href="#">
