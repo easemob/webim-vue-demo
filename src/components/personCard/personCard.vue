@@ -16,12 +16,12 @@
             alt=""
             @click="isShowList = !isShowList"
           />
-          <a-tooltip placement="bottom">
+          <!-- <a-tooltip placement="bottom">
             <template slot="title">
               <span>{{statusExt || statusObj.title}}</span>
             </template>
             <img class="status_img" :src="statusObj.img" alt="">
-          </a-tooltip>
+          </a-tooltip> -->
           <transition name="draw">
             <div class="avatar_list" v-show="isShowList">
               <a-divider>自选头像</a-divider>
@@ -179,12 +179,12 @@
               :src="userInfo.friendDetail.avatarurl || defaultAvatar"
               alt=""
             />
-            <a-tooltip placement="bottom">
+            <!-- <a-tooltip placement="bottom">
               <template slot="title">
                 <span>{{userInfo.presence.ext}}</span>
               </template>
               <img class="status_img" :src="getUserOnlineStatus(userInfo.presence)" alt="">
-            </a-tooltip>
+            </a-tooltip> -->
           </div>
           <div class="nickname">
             昵称：<p>{{userInfo.friendDetail.nickname || '暂无昵称'}}</p>

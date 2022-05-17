@@ -52,7 +52,7 @@ const Chat = {
 			state.userList[type] = userList;
 		},
 		updateMsgList(state, payload){
-			console.log(state, payload, 'state, payload');
+			// console.log(state, payload, 'state, payload');
 			const { chatType, chatId, msg, bySelf, type, id } = payload;
 			// payload的消息为漫游历史消息的话，进入判断筛选出已存在msgList当中的消息，此类消息不再添加进msgList。
 			if(payload.isHistory){
@@ -256,27 +256,6 @@ const Chat = {
 						userList,
 						type: 'groupUserList'
 					});
-					// WebIM.conn.fetchSubscribedListWithCompletion().then(res => {
-					// 	const { data, type } = res
-					// 	if (type === 200 && data.length) {
-					// 		data.forEach(val => {
-					// 			userList.forEach(item => {
-					// 				if (item.name === val.name) {
-					// 					item.presence = data.status
-					// 				}
-					// 			})
-					// 		})
-					// 		console.log(userList)
-					// 		context.commit("updateUserList", {
-					// 			userList,
-					// 			type: "groupUserList"
-					// 		})
-					// 	} else {
-					// 		WebIM.conn.subscribePresence({ members: userInfoList }).then(res => {
-					// 			console.log(res)
-					// 		})
-					// 	}
-					// })
 				},
 				error: function(e){ },
 			};
@@ -294,27 +273,6 @@ const Chat = {
 						userList: list.data,
 						type: 'chatroomUserList'
 					});
-					// WebIM.conn.fetchSubscribedListWithCompletion().then(res => {
-					// 	const { data, type } = res
-					// 	if (type === 200 && data.length) {
-					// 		data.forEach(val => {
-					// 			userList.forEach(item => {
-					// 				if (item.name === val.name) {
-					// 					item.presence = data.status
-					// 				}
-					// 			})
-					// 		})
-					// 		console.log(userList)
-					// 		context.commit("updateUserList", {
-					// 			userList: list.data,
-					// 			type: "chatroomUserList"
-					// 		})
-					// 	} else {
-					// 		WebIM.conn.subscribePresence({ members: userInfoList }).then(res => {
-					// 			console.log(res)
-					// 		})
-					// 	}
-					// })
 				},
 				error: function(){
 					console.log('List chat room error');
@@ -645,7 +603,9 @@ const Chat = {
 						console.log('error', e);
 					}
 				},
-				fail: function(){ }
+				fail: function(err){
+					console.log(err, 'err')
+				}
 			};
 			WebIM.conn.fetchHistoryMessages(options);
 		},
