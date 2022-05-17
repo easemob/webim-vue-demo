@@ -26,13 +26,13 @@ export default{
 		onChange(checkedList){
 			this.$data.checkList = checkedList;
 			const videoSettingObj = {
-				recMerge: checkedList.indexOf("recMerge") != -1,
-				rec: checkedList.indexOf("rec") != -1,
+				recMerge: checkedList.indexOf('recMerge') != -1,
+				rec: checkedList.indexOf('rec') != -1,
 			};
-			localStorage.setItem("videoSetting", JSON.stringify(videoSettingObj));
+			localStorage.setItem('videoSetting', JSON.stringify(videoSettingObj));
 		},
 		show(){
-			const videoSetting = JSON.parse(localStorage.getItem("videoSetting"));
+			const videoSetting = JSON.parse(localStorage.getItem('videoSetting'));
 			let checkedList = [];
 			if(videoSetting){
 				checkedList = Object.keys(videoSetting).filter((key) => {

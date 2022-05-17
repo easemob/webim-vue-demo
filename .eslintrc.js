@@ -112,7 +112,7 @@ module.exports = {
         "no-mixed-spaces-and-tabs":     1,                  // 警告：混合了 tab 和 space
         "no-unneeded-ternary":          1,                  // 警告：精简条件表达式
         "object-curly-spacing":     [1, "always"],          // 警告：obj 大括号需要空格
-        "semi":                         1,                  // 警告：缺少分号
+        "semi":                         0,                  // 警告：缺少分号
         "semi-spacing":                 1,                  // 警告：分号后需要空格
         "switch-colon-spacing":         1,                  // 警告：case 冒号需要空格
         "spaced-comment":               1,                  // 警告：注释需要空格
@@ -134,7 +134,7 @@ module.exports = {
             "asyncArrow": "always"
         }],
         // 引号规则
-        "quotes": [1, "double", { "allowTemplateLiterals":true }],
+        "quotes": [1, "single", { "allowTemplateLiterals":true }],
         // 强制属性引号
         "quote-props": [2, "as-needed", { "keywords":true }],
         // 警告：行末空格

@@ -20,7 +20,7 @@
   </a-modal>
 </template>
 <script>
-import { mapActions } from "vuex";
+import { mapActions } from 'vuex';
 export default{
 	data(){
 		return {
@@ -34,7 +34,7 @@ export default{
    
 	},
 	methods: {
-		...mapActions(["onAgreeInviteGroup", "onRejectInviteGroup"]),
+		...mapActions(['onAgreeInviteGroup', 'onRejectInviteGroup']),
 		changeGroupInviteModal(){
 			this.$store.state.group.groupInviteNotifications.isShow = !this.$store.state
 			.group.groupInviteNotifications.isShow;
@@ -42,16 +42,16 @@ export default{
 		AgreeJoinGroup(){
             
 			this.onAgreeInviteGroup({
-				username: localStorage.getItem("userInfo") &&
-        JSON.parse(localStorage.getItem("userInfo")).userId,
+				username: localStorage.getItem('userInfo') &&
+        JSON.parse(localStorage.getItem('userInfo')).userId,
 				inviteGroupId: this.$store.state.group.groupInviteNotifications.gid
 			});
 			this.changeGroupInviteModal();
 		},
 		RejectJoinGroup(){
 			this.onRejectInviteGroup({
-                username: localStorage.getItem("userInfo") &&
-        JSON.parse(localStorage.getItem("userInfo")).userId,
+				username: localStorage.getItem('userInfo') &&
+        JSON.parse(localStorage.getItem('userInfo')).userId,
 				inviteGroupId: this.$store.state.group.groupInviteNotifications.gid
 			});
 			this.changeGroupInviteModal();

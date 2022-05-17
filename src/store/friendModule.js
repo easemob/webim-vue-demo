@@ -14,11 +14,11 @@ const FriendModule = {
 	},
 	actions: {
 		addfirend: function(context, payload){
-			const username = localStorage.getItem("userInfo") && JSON.parse(localStorage.getItem("userInfo")).userId;
+			const username = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).userId;
 			const { id } = payload;
 			WebIM.conn.subscribe({
 				to: id,
-				message: username + "请求添加你为好友"
+				message: username + '请求添加你为好友'
 			});
 		},
 
@@ -26,17 +26,17 @@ const FriendModule = {
 		acceptSubscribe: function(context, payload){
 			WebIM.conn.subscribed({
 				to: payload,
-				message: "[resp:true]"
+				message: '[resp:true]'
 			});
 		},
 
 		// 拒绝好友请求
 		declineSubscribe: function(context, payload){
-			const username = localStorage.getItem("userInfo") && JSON.parse(localStorage.getItem("userInfo")).userId;
+			const username = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).userId;
 			const { id } = payload;
 			WebIM.conn.unsubscribed({
 				to: id,
-				message: username + "拒绝您的好友请求"
+				message: username + '拒绝您的好友请求'
 			});
 		},
 		// 添加黑名单-单人
@@ -45,7 +45,7 @@ const FriendModule = {
 			WebIM.conn.addToBlackList({
 				name: addName,
 			});
-			Vue.$store.dispatch("onGetContactUserList", { type: "addBlack", addName });
+			Vue.$store.dispatch('onGetContactUserList', { type: 'addBlack', addName });
 		},
 		// 获取黑名单
 		onGetFirendBlack: function(context, payload){
@@ -58,10 +58,10 @@ const FriendModule = {
 			WebIM.conn.removeFromBlackList({
 				name: blackName,
 				success: function(){
-					console.log("Remove from black list success.");
+					console.log('Remove from black list success.');
 				},
 				error: function(){
-					console.log("Remove from black list error.");
+					console.log('Remove from black list error.');
 				}
 			});
 		},
@@ -75,13 +75,13 @@ const FriendModule = {
 					conn.unsubscribed({
 						to: deleteName
 					});
-					console.log("删除好友成功");
+					console.log('删除好友成功');
 				},
 				error: function(){    // 删除失败
 				}
-			}
+			};
 			payload.callback();
-			Vue.$router.push("/contact");
+			Vue.$router.push('/contact');
 			WebIM.conn.removeRoster(option);
 		}
 	},

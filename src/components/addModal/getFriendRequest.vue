@@ -11,45 +11,45 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from "vuex";
-import Vue from "vue";
+import { mapActions, mapGetters } from 'vuex';
+import Vue from 'vue';
 
-export default {
-  data() {
-    return {
-      showRequestFriendModal: this.$store.state.friendModule.friendRequest
-        .isShow
-    };
-  },
-  computed: {
-    // ...mapGetters({
+export default{
+	data(){
+		return {
+			showRequestFriendModal: this.$store.state.friendModule.friendRequest
+			.isShow
+		};
+	},
+	computed: {
+		// ...mapGetters({
 
-    // }),
-    isShowFriendRequest() {
-      return this.$store.state.friendModule.friendRequest.isShow;
-    }
-  },
+		// }),
+		isShowFriendRequest(){
+			return this.$store.state.friendModule.friendRequest.isShow;
+		}
+	},
 
-  methods: {
-    ...mapActions(["acceptSubscribe", "declineSubscribe"]),
-    changeModal() {
-      this.$store.state.friendModule.friendRequest.isShow = !this.$store.state
-        .friendModule.friendRequest.isShow;
-    },
-    acceptSubmit() {
-      const id = this.$store.state.friendModule.friendRequest.from;
-      this.acceptSubscribe(id);
-      this.changeModal();
-    },
-    refusedClick() {
-      const options = {
-        id: this.$store.state.friendModule.friendRequest.from,
-        params: this.$route.query.username
-      };
-      this.declineSubscribe(options);
-      this.changeModal();
-    }
-  }
+	methods: {
+		...mapActions(['acceptSubscribe', 'declineSubscribe']),
+		changeModal(){
+			this.$store.state.friendModule.friendRequest.isShow = !this.$store.state
+			.friendModule.friendRequest.isShow;
+		},
+		acceptSubmit(){
+			const id = this.$store.state.friendModule.friendRequest.from;
+			this.acceptSubscribe(id);
+			this.changeModal();
+		},
+		refusedClick(){
+			const options = {
+				id: this.$store.state.friendModule.friendRequest.from,
+				params: this.$route.query.username
+			};
+			this.declineSubscribe(options);
+			this.changeModal();
+		}
+	}
 };
 </script>
 <style module>
