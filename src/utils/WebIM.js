@@ -1,8 +1,7 @@
 import config from './WebIMConfig';
-// import websdk from "easemob-websdk";
+import websdk from "easemob-websdk";
 
-// import websdk from 'websdk';
-import websdk from '../../static/Easemob-chat';
+// import websdk from '../../static/Easemob-chat';
 
 import _ from 'lodash';
 import emedia from 'easemob-emedia';
