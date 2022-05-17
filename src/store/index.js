@@ -1,5 +1,6 @@
 import { createStore } from 'vuex';
 import Ease from '@/IM/initwebsdk';
+import Conversation from './conversation';
 export default createStore({
   state: {
     loginState: false,
@@ -45,5 +46,7 @@ export default createStore({
       }
     },
   },
-  modules: {},
+  modules: {
+    Conversation,
+  },
 });

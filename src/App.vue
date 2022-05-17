@@ -14,7 +14,6 @@ import { useStore } from 'vuex';
 import router from '@/router';
 import Ease from '@/IM/initwebsdk';
 import { useSDKErrorNotifi } from '@/hooks';
-
 const store = useStore();
 Ease.conn.addEventHandler('connection&message', {
   onConnected: () => {

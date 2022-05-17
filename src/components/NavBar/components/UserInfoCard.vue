@@ -58,9 +58,10 @@ console.log('userInfos', userInfos);
       position: absolute;
       right: 0;
       top: 25%;
+
       transition: all 0.3s;
       &:hover {
-        transform: scale(1.1);
+        transform: scale(1.2);
         box-shadow: 1px 1px 3px #b8b8b8;
       }
     }

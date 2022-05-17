@@ -48,7 +48,8 @@ const selectOnlineMode = async (statusType) => {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: start;
+    justify-content: flex-start;
+
     height: 30px;
     border-radius: 5px;
     margin: 3px;

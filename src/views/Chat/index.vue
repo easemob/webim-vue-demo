@@ -5,7 +5,7 @@ import NavBar from '@/components/NavBar';
   <div class="app-container">
     <el-container class="chat_container">
       <el-aside class="chat_nav_bar" width="80px"> <NavBar /> </el-aside>
-      <el-main>
+      <el-main class="chat_main_box">
         <router-view></router-view>
       </el-main>
     </el-container>
@@ -23,9 +23,8 @@ import NavBar from '@/components/NavBar';
   background-size: cover;
 
   .chat_container {
-    width: 95%;
+    width: 85%;
     height: 95%;
-
     background: rgba(255, 255, 255, 0.196);
     position: relative;
     top: 50%;
@@ -43,6 +42,11 @@ import NavBar from '@/components/NavBar';
       width: 80px;
       background: #262626;
       overflow: hidden;
+    }
+    .chat_main_box {
+      // height: 100%;
+      // overflow: hidden;
+      padding: 0;
     }
   }
 }

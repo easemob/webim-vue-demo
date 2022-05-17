@@ -11,7 +11,8 @@
     "@vueuse/core": "^8.4.2",
     "core-js": "^3.8.3",
     "easemob-websdk": "^4.0.4",
-    "element-plus": "^2.1.11",
+    "element-plus": "2.2.0",
+    "nprogress": "^0.2.0",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3",
     "vuex": "^4.0.0"

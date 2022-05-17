@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import NProgress from 'nprogress'; // progress bar
+import 'nprogress/nprogress.css'; // progress bar style
 import store from '@/store';
 import Login from '../views/Login';
 console.log(store.state.loginState);
@@ -8,27 +10,43 @@ const routes = [
     name: 'login',
     component: Login,
   },
+  /* 登陆页 */
   {
     path: '/login',
     name: 'Login',
 
     component: () => import('../views/Login'),
   },
+  /* 聊天页 */
   {
     path: '/chat',
     name: 'Chat',
     redirect: '/chat/conversation',
     component: () => import('../views/Chat'),
     children: [
+      /* 会话列表 */
       {
         path: 'conversation',
         name: 'Conversation',
-
         meta: {
           title: '会话',
         },
         component: () => import('../components/Conversation'),
+        children: [
+          //系统通知详情框
+
+          {
+            path: 'informdetails',
+            component: () => import('../components/InformDetails'),
+          },
+          //聊天对话框
+          {
+            path: 'message',
+            component: () => import('../components/Message'),
+          },
+        ],
       },
+      /* 联系人页 */
       {
         path: 'contacts',
         name: 'Contacts',
@@ -36,6 +54,13 @@ const routes = [
           title: '联系页',
         },
         component: () => import('../components/Contacts'),
+        children: [
+          {
+            path: 'message',
+
+            component: () => import('../components/Message'),
+          },
+        ],
       },
     ],
   },
@@ -45,16 +70,19 @@ const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
 });
-console.log('router', router);
 router.beforeEach((to, from, next) => {
+  NProgress.start();
   let loginState = store.state.loginState;
   if (to.path === '/login' || to.path === '/') {
     next();
+    NProgress.done();
   } else {
     if (loginState) {
       next();
+      NProgress.done();
     } else {
       next('/login');
+      NProgress.done();
     }
   }
 });

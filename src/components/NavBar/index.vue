@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 /* vuex */
 import { useStore } from 'vuex';
 /* router */
@@ -14,7 +14,6 @@ import { onLineStatus } from '@/constant';
 /* vueUse */
 import { onClickOutside } from '@vueuse/core';
 
-let skipRouterName = ref('conversation');
 const store = useStore();
 /* 取用户头像 */
 let loginUserAvatar = computed(() => {
@@ -33,7 +32,8 @@ let loginUserOnlineStatusIcon = computed(() => {
   }
 });
 
-//图片资源
+/* tabbar icon 路由跳转 */
+let skipRouterName = ref('conversation');
 let highligthConversation = require('@/assets/images/tabbar/sessionhighlight2x.png');
 let grayConversation = require('@/assets/images/tabbar/session2x.png');
 let highligthContacts = require('@/assets/images/tabbar/comtactshighlight2x.png');

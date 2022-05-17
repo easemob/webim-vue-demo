@@ -1,17 +1,21 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { ElNotification } from 'element-plus';
 import Ease from '@/IM/initwebsdk';
 import { useSDKErrorNotifi } from '@/hooks';
-
+import { useStore } from 'vuex';
+const store = useStore();
 //login图
 const logo = require('@/assets/images/loginIcon.png');
 // 登陆注册所用
+
 const isRegister = ref(false);
 const username = ref('');
 const password = ref('');
 const confirmPwd = ref('');
+const buttonLoding = ref(false);
 const loginIM = async () => {
+  buttonLoding.value = true;
   let resultStatus = checkParams({ username, password });
   if (resultStatus) {
     try {
@@ -19,8 +23,6 @@ const loginIM = async () => {
         user: username.value,
         pwd: password.value,
       });
-      username.value = '';
-      password.value = '';
     } catch (error) {
       console.log('>>>>登陆失败', error);
       useSDKErrorNotifi(error.type, error.message);
@@ -31,7 +33,15 @@ const loginIM = async () => {
     console.log('>>>>>>开始登陆');
   }
 };
-
+//根据登陆初始化一部分状态
+const loginState = computed(() => store.state.loginState);
+watch(loginState, (newVal, oldVal) => {
+  if (newVal) {
+    buttonLoding.value = false;
+    username.value = '';
+    password.value = '';
+  }
+});
 const registerIM = async () => {
   let resultStatus = checkParams({ username, password, confirmPwd });
   if (resultStatus) {
@@ -151,6 +161,7 @@ const toEasemob = () => {
                 type="primary"
                 round
                 @click="loginIM"
+                :loading="buttonLoding"
                 >登陆</el-button
               >
               <el-button
