@@ -1,7 +1,6 @@
-import config from './WebIMConfig'
-import websdk from 'easemob-websdk'
-console.log(websdk, 'websdk')
-// import websdk from 'websdk';
+import config from './WebIMConfig';
+import websdk from "easemob-websdk";
+
 // import websdk from '../../static/Easemob-chat';
 
 import _ from 'lodash';

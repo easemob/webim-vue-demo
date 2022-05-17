@@ -34,7 +34,7 @@ const webpackConfig = merge(baseWebpackConfig, {
 		}),
 		new UglifyJsPlugin({
 			uglifyOptions: {
-				// compress: {
+				// compress: { // 注释这里，因为打包后会报错。fix build package not run
 				// 	warnings: false
 				// }
 			},
