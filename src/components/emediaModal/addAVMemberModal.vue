@@ -11,7 +11,7 @@
 					:key="item.member">
 					<a-checkbox
 						:value="item.member || item.owner"
-						:disabled="item.member == username || item.owner == username?true:false"
+						:disabled="(item.member == username) || (item.owner == username?true:false)"
 						class="checkbox">
 						{{item.member || item.owner}}
 					</a-checkbox>
@@ -46,7 +46,8 @@ export default{
 		};
 	},
 	props: [
-		'to'
+		'to',
+		'type'
 	],
 	computed: {
 		groupMembers(){
@@ -131,9 +132,9 @@ export default{
 			console.log('this.$store.state.confr>>', this.$store.state.agora.confr);
 			const { channel } = this.$store.state.agora.confr;
 			let set_options = {
-				msg: '邀请您进行视频通话',
+				msg: this.type === 'singleChat' ? '邀请您进行视频通话' : '邀请您进行多人视频通话',
 				to: to,
-				chatType: 'singleChat',
+				chatType: this.type,
 				ext: {
 					action: 'invite',
 					channelName: channel,
@@ -146,6 +147,8 @@ export default{
 				},
 			};
 			msg.set(set_options);
+			console.log(msg, 'sendInviteMsg')
+			console.log('%c sendInviteMsg', 'font-size:20px;color:red;')
 			WebIM.conn.send(msg.body);
 		},
 	},

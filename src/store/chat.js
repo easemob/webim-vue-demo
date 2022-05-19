@@ -103,7 +103,7 @@ const Chat = {
 			}
 
 			if(chatType === 'chatroom' && !bySelf){ // 聊天室消息去重处理
-				state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], 'mid');
+				// state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], 'mid');
 			}
 			else{
 				state.currentMsgs = Object.assign({}, state.msgList[chatType][params.id || chatId]); // 这里params.id在路由跳转的时候会undefind，取chatId兼容

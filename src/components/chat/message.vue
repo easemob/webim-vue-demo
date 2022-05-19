@@ -55,7 +55,7 @@
         class="message-group"
         :style="{ float: item.bySelf ? 'right' : 'left' }"
       >
-        <h4 style="text-align: left; margin: 0">{{ item.from }}</h4>
+        <h4 v-if="!item.bySelf" style="text-align: left; margin: 0">{{ item.from }}</h4>
         <!-- 撤回消息 -->
         <div v-if="item.status == 'recall'" class="recallMsg">
           {{ item.msg }}
@@ -191,7 +191,7 @@ import UpLoadImage from '../upLoadImage/index.vue';
 import UpLoadFile from '../upLoadFile/index.vue';
 import RecordAudio from '../recorder/index.vue';
 import './index.less';
-import { mapActions, mapGetters } from 'vuex';
+import { mapActions, mapGetters, mapState } from 'vuex';
 
 import moment from 'moment';
 import _ from 'lodash';
@@ -238,7 +238,8 @@ export default{
 				chatroom: ''
 			},
 			globalHistoryMsg: {},
-			conversationId: ''
+			conversationId: '',
+			userId: ''
 		};
 	},
 	beforeMount(){
@@ -251,13 +252,14 @@ export default{
 		// else if(this.type === 'chatroom'){
 		// 	this.onGetChatroomUserList();
 		// }
+		this.userId = JSON.parse(localStorage.getItem('userInfo')).userId
 	},
 	updated(){
 		// console.log("数据", this.$store);
 		this.scollBottom();
 	},
 	watch: {
-		msgList: {
+		curMsgList: {
 			handler(msgNewVal, msgOldVal){
 				console.log(msgNewVal, msgOldVal, 'msgNewVal, msgOldVal', this.$route, this.globalHistoryMsg)
 				console.log('第0个判断', this.msgObj)
@@ -281,7 +283,7 @@ export default{
 								console.log('第1-2个判断', this.msgObj, msgNewVal[item])
 								if(Object.keys(this.msgObj).length){
 									console.log('第1-3个判断', this.msgObj, msgNewVal[item], Object.values(this.msgObj))
-									if(Object.values(this.msgObj).findIndex(val => val.time === msgNewVal[item].time) === -1){
+									if(Object.values(this.msgObj).findIndex(val => Number(val.time) === Number(msgNewVal[item].time)) === -1){
 										console.log('第1-4个判断', this.msgObj, msgNewVal[item], Object.values(this.msgObj))
 										this.globalHistoryMsg[this.conversationId].push(msgNewVal[item])
 									}
@@ -306,7 +308,7 @@ export default{
 									console.log('第2-2个判断', this.msgObj)
 									if(Object.keys(this.msgObj).length){
 										console.log('第2-3个判断', this.msgObj)
-										if(Object.values(this.msgObj).findIndex(val => val.time === msgOldVal[item].time) === -1){
+										if(Object.values(this.msgObj).findIndex(val => Number(val.time) === Number(msgOldVal[item].time)) === -1){
 											console.log('第2-4个判断', this.msgObj)
 											this.globalHistoryMsg[this.conversationId].push(msgOldVal[item])
 										}
@@ -332,7 +334,7 @@ export default{
 									console.log('第3-3个判断', this.msgObj)
 									if(Object.keys(this.msgObj).length){
 										console.log('第3-4个判断', this.msgObj)
-										if(Object.values(this.msgObj).findIndex(val => val.time === msgNewVal[item].time) === -1){
+										if(Object.values(this.msgObj).findIndex(val => Number(val.time) === Number(msgNewVal[item].time)) === -1){
 											console.log('第3-6个判断', this.msgObj)
 											tempArr.push(msgNewVal[item])
 										}
@@ -346,7 +348,7 @@ export default{
 							this.globalHistoryMsg[this.conversationId] = [...tempArr, ...this.globalHistoryMsg[this.conversationId]]
 						}
 						else{
-							this.globalHistoryMsg[this.conversationId].push(msgNewVal[Object.keys(msgNewVal).length - 1])
+							this.globalHistoryMsg[this.conversationId] && this.globalHistoryMsg[this.conversationId].push(msgNewVal[Object.keys(msgNewVal).length - 1])
 						}
 					}
 					else{
@@ -357,7 +359,7 @@ export default{
 								console.log('第4-1个判断', this.msgObj)
 								if(Object.keys(this.msgObj).length){
 									console.log('第4-2个判断', this.msgObj)
-									if(Object.values(this.msgObj).findIndex(val => val.time === msgOldVal[item].time) === -1){
+									if(Object.values(this.msgObj).findIndex(val => Number(val.time) === Number(msgOldVal[item].time)) === -1){
 										console.log('第4-3个判断', this.msgObj)
 										this.globalHistoryMsg[this.conversationId].push(msgOldVal[item])
 									}
@@ -375,7 +377,7 @@ export default{
 								console.log('第4-5个判断', this.msgObj)
 								if(Object.keys(this.msgObj).length){
 									console.log('第4-6个判断', this.msgObj)
-									if(Object.values(this.msgObj).findIndex(val => val.time === msgNewVal[item].time) === -1){
+									if(Object.values(this.msgObj).findIndex(val => Number(val.time) === Number(msgNewVal[item].time)) === -1){
 										console.log('第4-7个判断', this.msgObj)
 										this.globalHistoryMsg[this.conversationId].push(msgNewVal[item])
 									}
@@ -394,10 +396,17 @@ export default{
 					console.log(this.conversationId, id, 'this.conversationId')
 					const tempObj = {}
 					let num = 0
+					this.globalHistoryMsg[this.conversationId].sort((a, b) => {
+						return a.time - b.time
+					})
+					console.log(this.globalHistoryMsg[this.conversationId], '第9个判断')
 					this.globalHistoryMsg[this.conversationId].forEach((item, index) => {
+						if(item.from && item.from === this.userId){
+							item.bySelf = true
+						}
 						if(item.chatId === id){
 							console.log('第7个判断', tempObj, Object.values(tempObj))
-							if(Object.values(tempObj).length > 0 && Object.values(tempObj).findIndex(val => val.time === item.time) === -1){
+							if(Object.values(tempObj).length > 0 && Object.values(tempObj).findIndex(val => Number(val.time) === Number(item.time)) === -1){
 								num++
 								tempObj[num] = item
 							}
@@ -409,7 +418,7 @@ export default{
 					})
 					console.log('第6个判断', tempObj)
 					this.msgObj = tempObj
-					console.log(this.msgObj)
+					console.log(this.msgObj, this.$store.state.chat.msgList[this.type][id])
 				}
 				else{
 					this.msgObj = {}
@@ -460,7 +469,7 @@ export default{
 			// contact: 'onGetContactUserList',
 			group: 'onGetGroupUserList',
 			// chatroom: 'onGetChatroomUserList',
-			msgList: 'onGetCurrentChatObjMsg'
+			curMsgList: 'onGetCurrentChatObjMsg'
 		}),
 		// 控制聊天框
 		toggleWindows(){
@@ -588,7 +597,7 @@ export default{
 					this.$forceUpdate();
 				}, 100);
 
-				if(!this.msgList){
+				if(!this.curMsgList){
 					this.getHistoryMessage({ name: key.groupid, isGroup: true });
 				}
 			}
@@ -603,13 +612,13 @@ export default{
 					});
 					this.$forceUpdate();
 				}, 100);
-				console.log(this.msgList, 'this.msgList=select=contact')
-				if(!this.msgList){
+				console.log(this.curMsgList, 'this.curMsgList=select=contact')
+				if(!this.curMsgList){
 					this.getHistoryMessage({ name: key.name, isGroup: false });
 				}
 			}
 			else if(this.type === 'chatroom'){
-				console.log(this.msgList, 'chatroom===chatroom')
+				console.log(this.curMsgList, 'chatroom===chatroom')
 				this.typeId.chatroom = key.id
 				const me = this;
 				// let flag = true
@@ -618,9 +627,9 @@ export default{
 						flag: true
 					}
 				}
-				// if(this.msgList && Object.keys(this.msgList).length){
-				// 	console.log(this.msgList[0].chatId, key.id)
-				// 	if(this.msgList[0].chatId !== key.id){
+				// if(this.curMsgList && Object.keys(this.curMsgList).length){
+				// 	console.log(this.curMsgList[0].chatId, key.id)
+				// 	if(this.curMsgList[0].chatId !== key.id){
 				// 		flag = false
 				// 	}
 				// }
@@ -767,7 +776,7 @@ export default{
 			else if(this.type == 'group'){
 				this.getGroupMembers(this.$data.activedKey[this.type].groupid);
 				let _this = this;
-				this.$emit('show_add_member_modal');
+				this.$emit('show_add_member_modal', this.type);
 			}
 		},
 		callVoice(){
@@ -916,7 +925,7 @@ export default{
 				}
 				console.log(msgNewVal, msgOldVal, '20919123')
 			}
-			console.log(this.routeObj, 'msgList', this.msgObj)
+			console.log(this.routeObj, 'curMsgList', this.msgObj)
 
 			const { routeNewVal, routeOldVal } = routeVal
 			const { name: newName, params: { id: newId } } = routeNewVal
