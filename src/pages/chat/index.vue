@@ -106,7 +106,7 @@
         @breakpoint="onBreakpoint"
       >
         <MessageBox
-          v-if="activeFlag"
+          v-show="activeFlag"
           :type="activeKey"
           :card="$refs['person_card']"
           :select="select"
