@@ -1,7 +1,7 @@
 <template>
   <Draggable>
     <div class="multi-webim-rtc">
-      <a-row :gutter="2">
+      <a-row :gutter="2" class="video_box">
         <a-col :span="span" v-for="item in videos" :key="item.name">
           <div class="default" :id="`video${item.name}`"></div>
           <div class="user-name">
@@ -356,7 +356,7 @@ export default{
 			return str;
 		},
 		addMember(){
-			this.$emit('show_add_member_modal');
+			this.$emit('show_add_member_modal', 'groupChat');
 		},
 
 		open_mic(){
@@ -383,3 +383,9 @@ export default{
 	}
 };
 </script>
+<style scoped>
+.video_box {
+	max-height: 600px;
+	overflow-y: scroll;
+}
+</style>

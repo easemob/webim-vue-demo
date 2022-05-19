@@ -372,7 +372,7 @@ WebIM.conn.listen({
 			break;
 		case 'subscribed':
 			Vue.$store.dispatch('onGetContactUserList');
-			Vue.$store.dispatch('getAllFriendsStatus');
+			// Vue.$store.dispatch('getAllFriendsStatus');
 			Message.success(`${message.from} 已订阅`);
 			break;
 		case 'unsubscribed':

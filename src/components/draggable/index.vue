@@ -55,17 +55,19 @@ export default{
 		el.addEventListener(startEvent, startFun, true);
 
 		function startFun(e){
+			let divx = 0
+			let divy = 0
 			// 获取鼠标点击处分别与div左边和上边的距离：鼠标位置-div位置
 			if(!_isPc){
 				if(e.targetTouches && e.targetTouches.length == 1){
 					let touch = e.targetTouches[0];  // 把元素放在手指所在的位置
-					let divx = touch.pageX - document.getElementById(id).offsetLeft;
-					let divy = touch.pageY - document.getElementById(id).offsetTop;
+					divx = touch.pageX - document.getElementById(id).offsetLeft;
+					divy = touch.pageY - document.getElementById(id).offsetTop;
 				}
 			}
 			else{
-				let divx = e.clientX - document.getElementById(id).offsetLeft;
-				let divy = e.clientY - document.getElementById(id).offsetTop;
+				divx = e.clientX - document.getElementById(id).offsetLeft;
+				divy = e.clientY - document.getElementById(id).offsetTop;
 			}
 			// 包含在onmousedown里，表示点击后才移动，为防止鼠标移出div，使用document.onmousemove
 			document.addEventListener(moveEvent, moveFun, true);
