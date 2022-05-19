@@ -110,6 +110,7 @@
           :type="activeKey"
           :card="$refs['person_card']"
           :select="select"
+					:broken="broken"
           ref="messageBox"
         />
         <!-- <MessageBox v-if="activeKey == 'chatroom'"  type="chatroom" />

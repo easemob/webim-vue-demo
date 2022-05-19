@@ -232,7 +232,13 @@ const Chat = {
 							// 		})
 							// 	}
 							// })
-						});
+						})['catch'](err => {
+							context.commit('updateUserList', {
+								userList,
+								type: 'contactUserList',
+								black: payload
+							});
+						})
 					}
 				});
 			}
