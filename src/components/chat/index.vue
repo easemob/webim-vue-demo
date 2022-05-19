@@ -12,7 +12,10 @@
           <span class="custom-title" >{{ item.friendDetail.nickname || item.name}}</span>
           <!-- <img class="status_img" v-if="dataFlag" :src="getUserOnlineStatus(item.presence)" alt=""> -->
         </div>
-        <span class="custom-title" v-if="!item.friendDetail">{{ item.name }}</span>
+				<div v-else class="name_box">
+					<img v-if="type === 'contact'" class="friend_portrait" :src="headPortraitImg" alt="">
+          <span class="custom-title" :class="{'custom-title-width': !broken}">{{ item.name }}</span>
+				</div>
         <div class="icon-style" v-if="getUnreadNum(item) != 0">
           <span class="unreadNum">{{getUnreadNum(item)}}</span>
         </div>
@@ -184,7 +187,8 @@ export default{
 		'type', // 聊天类型 contact, group, chatroom
 		'username', // 选中的聊天对象
 		'select',
-		'card'
+		'card',
+		'broken'
 	],
 	methods: {
 		...mapActions([
@@ -522,7 +526,13 @@ export default{
 .custom-title {
   font-weight: 500;
   width: 100%;
-  height: 50px;
+  // height: 50px;
+}
+.custom-title-width {
+	width: 290px;
+	overflow: hidden;
+	display: inline-block;
+	line-height: 30px;
 }
 .status_img {
   width: 18px;
@@ -571,7 +581,7 @@ export default{
 .time-style {
   clear: both;
   margin-left: 2px;
-  margin-top: 3px;
+  // margin-top: 3px;
   font-size: 12px;
   color: #888c98;
   position: absolute;
@@ -582,6 +592,7 @@ export default{
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+	line-height: 30px;
 }
 .file-style {
   width: 240px;
