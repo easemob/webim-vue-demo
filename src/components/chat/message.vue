@@ -16,9 +16,9 @@
             ? activedKey[type].friendDetail.nickname
             : activedKey[type].name
         }}</span>
-        <span class="chat_box" v-else>
+        <span v-else>
 					<span class="chat_name">{{activedKey[type].name}}</span>
-					<span>{{activedKey[type].groupid}}</span>
+					<span class="groupid">{{activedKey[type].groupid}}</span>
 				</span>
         <a-icon
           v-if="type == 'group'"
