@@ -11,16 +11,15 @@
         />
         <!-- {{activedKey[type].name}} -->
 
-        <span v-if="activedKey[type].friendDetail">{{
+        <span class="chat_name" v-if="activedKey[type].friendDetail">{{
           activedKey[type].friendDetail.nickname
             ? activedKey[type].friendDetail.nickname
             : activedKey[type].name
         }}</span>
-        <span v-else>{{
-          `${activedKey[type].name} &nbsp;&nbsp; ${
-            activedKey[type].groupid || ""
-          }`
-        }}</span>
+        <span class="chat_box" v-else>
+					<span class="chat_name">{{activedKey[type].name}}</span>
+					<span>{{activedKey[type].groupid}}</span>
+				</span>
         <a-icon
           v-if="type == 'group'"
           type="ellipsis"
@@ -262,6 +261,7 @@ export default{
 		curMsgList: {
 			handler(msgNewVal, msgOldVal){
 				const { params: { id } } = this.$route
+				console.log(msgNewVal, msgOldVal, 'msgNewVal, msgOldVal')
 				if(!msgOldVal){
 					if(msgNewVal && Object.keys(msgNewVal).length){
 						// eslint-disable-next-line guard-for-in
@@ -485,7 +485,6 @@ export default{
 					}
 				})
 				this.msgObj = tempObj
-				this.msgObj = tempObj
 			}
 			this.$data.activedKey[this.type] = key;
 			const me = this;
@@ -532,19 +531,11 @@ export default{
 			else if(this.type === 'chatroom'){
 				this.typeId.chatroom = key.id
 				const me = this;
-				// let flag = true
 				if(!this.copyMsgObj[key.id]){
 					this.copyMsgObj[key.id] = {
 						flag: true
 					}
 				}
-				// if(this.curMsgList && Object.keys(this.curMsgList).length){
-				// 	console.log(this.curMsgList[0].chatId, key.id)
-				// 	if(this.curMsgList[0].chatId !== key.id){
-				// 		flag = false
-				// 	}
-				// }
-				// me.roomId = key.id
 
 				this.$router.push({ name: this.type, params: { id: key.id } });
 				this.onGetCurrentChatObjMsg({ type: this.type, id: key.id });
@@ -552,6 +543,7 @@ export default{
 				WebIM.conn.joinChatRoom({
 					roomId: key.id, // 聊天室id
 					success: () => {
+						console.log('成功加入聊天室')
 						if(this.copyMsgObj[key.id].flag){
 							this.copyMsgObj[key.id] = {
 								flag: false

@@ -52,7 +52,7 @@ const Chat = {
 			state.userList[type] = userList;
 		},
 		updateMsgList(state, payload){
-			// console.log(state, payload, 'state, payload');
+			console.log(state, payload, 'state, payload');
 			const { chatType, chatId, msg, bySelf, type, id } = payload;
 			// payload的消息为漫游历史消息的话，进入判断筛选出已存在msgList当中的消息，此类消息不再添加进msgList。
 			if(payload.isHistory){
@@ -103,7 +103,8 @@ const Chat = {
 			}
 
 			if(chatType === 'chatroom' && !bySelf){ // 聊天室消息去重处理
-				// state.currentMsgs = _.uniqBy(state.msgList[chatType][chatId], 'mid');
+				console.log(state.msgList[chatType][chatId], 'state.msgList[chatType][chatId]')
+				state.currentMsgs = state.msgList[chatType][chatId] // _.uniqBy(state.msgList[chatType][chatId], 'mid');
 			}
 			else{
 				state.currentMsgs = Object.assign({}, state.msgList[chatType][params.id || chatId]); // 这里params.id在路由跳转的时候会undefind，取chatId兼容
@@ -528,7 +529,7 @@ const Chat = {
 										msg.chatId = bySelf ? item.to : item.from;
 									}
 								}
-								else if(!item.ext.file_length && item.filename !== 'audio' && item.filename.substring(item.filename.length - 3) !== 'mp4'){ // 为图片的情况
+								else if(!item.ext.file_length && item.filename !== 'audio' && item.filename.substring(item.filename.length - 3) !== 'mp4' && item.filename.substring(item.filename.length - 3) !== 'mp3' && item.filename.substring(item.filename.length - 3) !== 'amr'){ // 为图片的情况
 									msg = {
 										msg: item.url,
 										chatType: payload.isGroup ? 'group' : 'contact',
@@ -546,7 +547,7 @@ const Chat = {
 										msg.chatId = bySelf ? item.to : item.from;
 									}
 								}
-								else if(item.filename === 'audio'){
+								else if(item.filename === 'audio' || item.filename.substring(item.filename.length - 3) === 'mp3' || item.filename.substring(item.filename.length - 3) === 'amr'){
 									msg = {
 										msg: item.url,
 										chatType: payload.isGroup ? 'group' : 'contact',
