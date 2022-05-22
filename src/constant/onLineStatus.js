@@ -1,11 +1,11 @@
 const onLineStatus = {
-  Online: { label: '在线', icon: require('@/assets/online_icon/Online.png') },
-  Busy: { label: '忙碌', icon: require('@/assets/online_icon/Busy.png') },
-  'Do not Disturb': {
+  Online: { label: '在线', style: 'background-color:#49FD1D' },
+  Leave: { label: '离开', style: 'background-color:#4E4239' },
+  Cloaking: {
     label: '勿扰',
-    icon: require('@/assets/online_icon/Do_not_Disturb.png'),
+    style: 'background-color:#F27014',
   },
-  Leave: { label: '离开', icon: require('@/assets/online_icon/leave.png') },
+  Offline: { label: '离线', style: 'background-color:#BEC1BD' },
 };
 
 export default onLineStatus;

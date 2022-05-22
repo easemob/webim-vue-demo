@@ -10,8 +10,8 @@ const logo = require('@/assets/images/loginIcon.png');
 // 登陆注册所用
 
 const isRegister = ref(false);
-const username = ref('');
-const password = ref('');
+const username = ref('hfp');
+const password = ref('1');
 const confirmPwd = ref('');
 const buttonLoding = ref(false);
 const loginIM = async () => {
@@ -29,8 +29,10 @@ const loginIM = async () => {
       username.value = '';
       password.value = '';
     }
+    finally {
+      buttonLoding.value = false;
+    }
 
-    console.log('>>>>>>开始登陆');
   }
 };
 //根据登陆初始化一部分状态
@@ -72,7 +74,7 @@ const registerIM = async () => {
   }
 };
 const checkParams = (params) => {
-  console.log('>>>>>收集到参数', params);
+
   if (params['username'] && params['username'].value === '') {
     ElNotification({
       title: 'Easemob',
@@ -118,73 +120,33 @@ const toEasemob = () => {
   <el-container class="app_container">
     <el-main class="login_box">
       <div>
-        <el-row
-          class="login_box_card out-drawer animate__animated animate__slideInLeft"
-        >
+        <el-row class="login_box_card out-drawer animate__animated animate__slideInLeft">
           <el-col>
             <img class="logo" :src="logo" @click="toEasemob" alt="" />
           </el-col>
           <el-col>
-            <el-input
-              class="login_input_style"
-              v-model="username"
-              placeholder="请输入用户名..."
-              clearable
-              key="loginUserId"
-              maxlength="64"
-            />
+            <el-input class="login_input_style" v-model="username" placeholder="请输入用户名..." clearable key="loginUserId"
+              maxlength="64" />
           </el-col>
 
           <el-col>
-            <el-input
-              class="login_input_style"
-              v-model="password"
-              type="password"
-              placeholder="请输入密码..."
-              show-password
-              key="loginPwd"
-            />
+            <el-input class="login_input_style" v-model="password" type="password" placeholder="请输入密码..." show-password
+              key="loginPwd" />
           </el-col>
           <el-col v-if="isRegister">
-            <el-input
-              class="login_input_style"
-              v-model="confirmPwd"
-              type="password"
-              placeholder="请再次确认密码..."
-              show-password
-            />
+            <el-input class="login_input_style" v-model="confirmPwd" type="password" placeholder="请再次确认密码..."
+              show-password />
           </el-col>
           <el-col>
             <div class="function_button_box">
-              <el-button
-                v-if="!isRegister"
-                type="primary"
-                round
-                @click="loginIM"
-                :loading="buttonLoding"
-                >登陆</el-button
-              >
-              <el-button
-                v-else
-                class="reister_button"
-                type="primary"
-                round
-                @click="registerIM"
-                >注册</el-button
-              >
+              <el-button v-if="!isRegister" type="primary" round @click="loginIM" :loading="buttonLoding">登陆</el-button>
+              <el-button v-else class="reister_button" type="primary" round @click="registerIM">注册</el-button>
             </div>
           </el-col>
           <el-col>
             <p class="login_text">
-              <span
-                class="login_text_isuserid"
-                v-text="isRegister ? '没有账号?' : '已有账号？'"
-              ></span
-              ><span
-                class="login_text_tologin"
-                v-text="isRegister ? '登陆' : '注册'"
-                @click="isRegister = !isRegister"
-              ></span>
+              <span class="login_text_isuserid" v-text="isRegister ? '没有账号?' : '已有账号？'"></span><span
+                class="login_text_tologin" v-text="isRegister ? '登陆' : '注册'" @click="isRegister = !isRegister"></span>
             </p>
           </el-col>
         </el-row>
@@ -202,11 +164,13 @@ const toEasemob = () => {
   height: 100vh;
   background: url('@/assets/images/web-demo-base.png');
   background-size: cover;
+
   .login_box {
     display: flex;
     justify-content: center;
     width: 100%;
     height: 800px;
+
     .login_box_card {
       display: flex;
       flex-direction: column;
@@ -214,15 +178,18 @@ const toEasemob = () => {
       width: 800px;
       margin: 15% auto;
       border-radius: 5px;
+
       .logo {
         width: 100px;
         height: 100px;
         margin-bottom: 20px;
         transition: all 0.3s;
+
         &:hover {
           transform: scale(1.2);
         }
       }
+
       .login_input_style {
         margin: 10px 0;
         width: 400px;
@@ -230,9 +197,11 @@ const toEasemob = () => {
         font-size: 17px;
         padding: 0 10px;
       }
+
       .function_button_box {
         margin-top: 10px;
         width: 400px;
+
         button {
           margin: 10px;
           width: 380px;
@@ -241,29 +210,35 @@ const toEasemob = () => {
           border: none;
           font-weight: 300;
           font-size: 17px;
+
           &:active {
             background: linear-gradient(90deg, #0b83b2 0%, #363df4 100%);
           }
-          &:hover {
-          }
+
+          &:hover {}
+
           // width: 100%;
         }
       }
+
       .login_text {
         display: inline-block;
         width: 400px;
         text-align: right;
+
         .login_text_isuserid {
           display: inline-block;
           width: 100px;
           text-align: center;
           color: #fff;
         }
+
         .login_text_tologin {
           margin-right: 20px;
           width: 80px;
           color: #00a9d9;
           cursor: pointer;
+
           &:hover {
             text-decoration: underline;
           }
@@ -271,6 +246,7 @@ const toEasemob = () => {
       }
     }
   }
+
   .copyright {
     width: 100%;
     height: 30px;

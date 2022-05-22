@@ -6,22 +6,24 @@ const store = useStore();
 const userInfos = computed(() => {
   return store.getters.loginUserInfo;
 });
-console.log('userInfos', userInfos);
+
 </script>
 <template>
   <el-card class="user_info_card" shadow="hover">
     <div class="info_fist_col">
       <el-avatar class="avatar" :src="userInfos.avatarurl" />
       <span class="nickname">{{
-        userInfos.nickname
-          ? userInfos.nickname + '(' + userInfos.hxId + ')'
-          : userInfos.hxId
+          userInfos.nickname
+            ? userInfos.nickname + '(' + userInfos.hxId + ')'
+            : userInfos.hxId
       }}</span>
-      <el-icon class="share_icon"><Share /></el-icon>
+      <el-icon class="share_icon">
+        <Share />
+      </el-icon>
     </div>
     <div class="info_second_col">
       地区：<span class="text">{{
-        userInfos.add ? userInfos.add : '地球'
+          userInfos.add ? userInfos.add : '地球'
       }}</span>
     </div>
   </el-card>
@@ -45,33 +47,39 @@ console.log('userInfos', userInfos);
     flex-direction: row;
     align-items: center;
     position: relative;
+
     .avatar {
       width: 33px;
       height: 33px;
     }
+
     .nickname {
       margin-left: 10px;
       display: inline-block;
       // width: 60px;
     }
+
     .share_icon {
       position: absolute;
       right: 0;
       top: 25%;
 
       transition: all 0.3s;
+
       &:hover {
         transform: scale(1.2);
         box-shadow: 1px 1px 3px #b8b8b8;
       }
     }
   }
+
   .info_second_col {
     margin-top: 15px;
     margin-left: 45px;
     display: inline-block;
     height: 50px;
     line-height: 50px;
+
     .text {
       color: #b8b8b8;
       font-weight: 300;

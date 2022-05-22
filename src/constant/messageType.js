@@ -4,4 +4,9 @@ const SESSION_MESSAGE_TYPE = {
   audio: '[语音]',
 };
 
-export default { SESSION_MESSAGE_TYPE };
+const CHAT_TYPE = {
+  SINGLE: 'singleChat',
+  GROUP: 'groupChat',
+};
+
+export default { SESSION_MESSAGE_TYPE, CHAT_TYPE };

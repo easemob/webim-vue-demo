@@ -4,11 +4,11 @@ import Easemob_SDK from 'easemob-websdk';
 const appKey = 'easemob-demo#easeim';
 // const appKey = 'easemob-demo#chatdemoui';
 //存放实例化后所有的方法
-let Ease = {};
-Ease = Easemob_SDK;
+let EaseIM = {};
+window.EaseIM = EaseIM = Easemob_SDK;
 //实例化环信SDK
-Ease.conn = new Easemob_SDK.connection({
+EaseIM.conn = new Easemob_SDK.connection({
   appKey,
 });
 // console.log('Ease', Ease);
-export default Ease;
+export default EaseIM;

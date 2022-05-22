@@ -1,9 +1,12 @@
 import { createStore } from 'vuex';
-import Ease from '@/IM/initwebsdk';
-import Conversation from './conversation';
+import EaseIM from '@/IM/initwebsdk';
+import Conversation from './modules/conversation';
+import Contacts from './modules/contacts';
+import Message from './modules/message';
 export default createStore({
   state: {
     loginState: false,
+    networkStatus: true,
     loginUserInfo: {
       hxId: '',
       nickname: '',
@@ -20,6 +23,10 @@ export default createStore({
     CHANGE_LOGIN_STATUS: (state, status) => {
       state.loginState = status;
     },
+    CHANGE_NETWORK_STATUS: (state, status) => {
+      state.networkStatus = status;
+    },
+
     SET_LOGIN_USER_INFO: (state, infos) => {
       state.loginUserInfo = Object.assign(state.loginUserInfo, infos);
     },
@@ -30,15 +37,13 @@ export default createStore({
   },
   actions: {
     getMyUserInfo: async ({ commit }, userId) => {
-      const { data } = await Ease.conn.fetchUserInfoById(userId);
+      const { data } = await EaseIM.conn.fetchUserInfoById(userId);
       data[userId].hxId = userId;
       commit('SET_LOGIN_USER_INFO', data[userId]);
     },
     handlePresenceChanges: ({ commit, dispatch }, status) => {
-      console.log('>>>>>>拿到要订阅的用户状态', status);
       const { userId, ext: statusType } = status || {};
-      if (userId === Ease.conn.user) {
-        console.log('statusType');
+      if (userId === EaseIM.conn.user) {
         commit(
           'SET_LOGIN_USER_ONLINE_STATUS',
           statusType ? statusType : 'Unset'
@@ -48,5 +53,7 @@ export default createStore({
   },
   modules: {
     Conversation,
+    Contacts,
+    Message,
   },
 });

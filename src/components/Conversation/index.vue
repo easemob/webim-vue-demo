@@ -22,10 +22,7 @@ const informConversationData = computed(() => {
         <SearchInput />
       </div>
       <div class="chat_conversation_list">
-        <ConversationList v-if="
-          conversationList.length > 0 || informConversationData.length > 0
-        " />
-        <el-empty v-else description="暂无会话..." />
+        <ConversationList />
       </div>
     </el-aside>
     <el-main class="chat_converation_main_box">
@@ -57,6 +54,6 @@ const informConversationData = computed(() => {
 .chat_converation_main_box {
   width: 100%;
   height: 100%;
-  background: green;
+
 }
 </style>

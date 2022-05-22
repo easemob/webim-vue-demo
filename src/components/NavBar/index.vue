@@ -46,7 +46,6 @@ const changeSkipRouterName = (routerName) => {
 /* 用户信息卡片显隐 */
 const isShowUserInfoCard = ref(false);
 const changeUserInfoCard = ref(null);
-console.log('changeUserInfoCard', changeUserInfoCard);
 onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
 </script>
 
@@ -57,14 +56,11 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
     </el-avatar>
     <el-popover trigger="click" placement="right-start" :show-arrow="false">
       <template #reference>
-        <img
-          class="online_status"
-          :src="
-            loginUserOnlineStatusIcon
-              ? loginUserOnlineStatusIcon
-              : defaultStatusIcon
-          "
-      /></template>
+        <img class="online_status" :src="
+          loginUserOnlineStatusIcon
+            ? loginUserOnlineStatusIcon
+            : defaultStatusIcon
+        " /></template>
       <!-- 用户在线状态切换卡片 -->
       <UserOnlineStatusCard />
     </el-popover>
@@ -72,32 +68,27 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
   <!-- 用户个人信息卡片 -->
   <UserInfoCard ref="changeUserInfoCard" v-show="isShowUserInfoCard" />
   <!-- 去往会话 -->
-  <div
-    class="chat_converation chat_icon_box"
-    @click="changeSkipRouterName('conversation')"
-  >
-    <img
-      :src="
+  <div class="chat_converation chat_icon_box" @click="changeSkipRouterName('conversation')">
+    <div class="img_box">
+      <img :src="
         skipRouterName === 'conversation'
           ? highligthConversation
           : grayConversation
-      "
-      alt=""
-    />
+      " alt="">
+      <span class="badge"></span>
+    </div>
+
+
+
   </div>
   <!-- 去往联系人 -->
-  <div
-    class="chat_contacts chat_icon_box"
-    @click="changeSkipRouterName('contacts')"
-  >
-    <img
-      class="chat_contacts_icon"
-      :src="skipRouterName === 'contacts' ? highligthContacts : grayContacts"
-      alt=""
-    />
+  <div class="chat_contacts chat_icon_box" @click="changeSkipRouterName('contacts')">
+    <img class="chat_contacts_icon" :src="skipRouterName === 'contacts' ? highligthContacts : grayContacts" alt="" />
   </div>
   <div class="chat_settings">
-    <el-icon><Plus /></el-icon>
+    <el-icon>
+      <Plus />
+    </el-icon>
   </div>
 </template>
 
@@ -108,48 +99,91 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
   width: 44px;
   height: 44px;
   transition: all 0.3s;
+
   &:hover {
     transform: scale(1.3);
   }
+
   span {
     display: inline-block;
     width: 100%;
     height: 100%;
   }
+
   .online_status {
     position: absolute;
-    right: -5px;
+    right: 0;
     bottom: 0;
     display: inline-block;
-    width: 18px;
-    height: 18px;
+    width: 10px;
+    height: 10px;
     background: #fff;
     border-radius: 50%;
     transition: all 0.3s;
     cursor: pointer;
+
     &:hover {
       transform: scale(1.2);
     }
   }
 }
+
+
 .chat_icon_box {
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin-top: 15px;
   width: 100%;
   height: 67px;
   text-align: center;
   line-height: 67px;
+
+}
+
+.chat_converation {
+  .img_box {
+    position: relative;
+    width: 30px;
+    height: 30px;
+
+    img {
+      display: inline-block;
+      width: 27px;
+      height: 27px;
+    }
+
+    .badge {
+      position: absolute;
+      right: 0;
+      top: 15px;
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: red;
+
+    }
+  }
+
+}
+
+.chat_contacts {
   img {
     display: inline-block;
     width: 27px;
     height: 27px;
   }
 }
+
 .chat_settings {
   position: absolute;
   bottom: 46px;
   font-size: 24px;
   color: #8e8e8e;
   cursor: pointer;
+
   &:hover {
     color: #1b83f9;
   }

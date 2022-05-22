@@ -44,13 +44,8 @@ onMounted(() => {
 });
 </script>
 <template>
-  <el-autocomplete
-    style="width: 100%"
-    v-model="state"
-    :fetch-suggestions="querySearchAsync"
-    placeholder="搜索"
-    @select="handleSelect"
-  >
+  <el-autocomplete style="width: 100%" v-model="state" :fetch-suggestions="querySearchAsync" placeholder="搜索"
+    @select="handleSelect">
     <template #suffix>
       <el-icon class="el-input__icon">
         <Search />
@@ -59,4 +54,5 @@ onMounted(() => {
   </el-autocomplete>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+</style>

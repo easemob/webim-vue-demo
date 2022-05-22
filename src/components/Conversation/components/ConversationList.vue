@@ -2,80 +2,32 @@
 import { ref, computed } from 'vue';
 import { useStore } from 'vuex';
 import router from '@/router';
-import Ease from '@/IM/initwebsdk'
+import EaseIM from '@/IM/initwebsdk'
 import dateFormater from '@/utils/dateFormat'
-import { useConversation } from '@/hooks'
+
+/* 头像相关 */
+import informIcon from '@/assets/images/avatar/inform.png'
 const store = useStore();
-/* 在此处挂载关于环信的消息相关监听用来做更新会话列表使用 */
-Ease.conn.addEventHandler('messageListen', {
-  onTextMessage: function (message) {
-    console.log('>>>>>>>mesage', message)
-    let resultData = useConversation(message)
-    store.dispatch('createNewConversation', resultData)
-    // console.log('>>>>>>在会话中接收message', resultData)
-  },    // 收到文本消息。
-  onEmojiMessage: function (message) { },   // 收到表情消息。
-  onImageMessage: function (message) {
-  },   // 收到图片消息。
-  onCmdMessage: function (message) { },     // 收到命令消息。
-  onAudioMessage: function (message) { },   // 收到音频消息。
-  onLocationMessage: function (message) { },// 收到位置消息。
-  onFileMessage: function (message) { },    // 收到文件消息。
-  onCustomMessage: function (message) { },  // 收到自定义消息。
-  onVideoMessage: function (message) { },     // 收到视频消息。
-  onRecallMessage: function (message) { },    // 收到消息撤回回执。
-})
+
+
 //取会话数据
 const conversationList = computed(() => {
   return store.state.Conversation.conversationListData;
 });
-//处理会话列表头像
-const handleConversationData = computed(() => {
-  const defaultGroupAvatarUrl = require('@/assets/images/avatar/jiaqun2x.png')
-  const defaultSingleAvatarUrl = require('@/assets/images/avatar/theme2x.png')
-
-  return (data) => {
-    console.log('data', data)
-    let conversationData = {
-      avatarUrl: data.conversationType === 'singleChat' ? defaultSingleAvatarUrl : defaultGroupAvatarUrl,
-      name: '测试',
-      unReadNum: data.unreadMessageNum || 0,
-      latestSendTime: dateFormater('MM/DD/HH:mm', 1652274260558),
-      latestMessage: '11111221',
-      fromName: '张三'
-    }
-
-    // if (data.conversationType === 'groupChat') { conversationData.defaultGroupAvatarUrl }
-    return conversationData
-  }
-
-})
-//处理会话列表头像
-const handleAvatarUrl = computed(() => {
-  let avatarUrl;
-  const defaultGroupAvatarUrl = require('@/assets/images/avatar/jiaqun2x.png')
-  const defaultSingleAvatarUrl = require('@/assets/images/avatar/theme2x.png')
-  return chatType => {
-    console.log('chatType', chatType)
-    return avatarUrl = chatType === 'singleChat' ? defaultSingleAvatarUrl : defaultGroupAvatarUrl
-  }
-})
-//处理latestMessage
-const handleLatestMessage = computed(() => {
-  return lastestMessage => {
-    return console.log('>>>>>>>', lastestMessage)
-  }
+//取网络状态
+const networkStatus = computed(() => {
+  return store.state.networkStatus
 })
 //系统通知
-const informIcon = require('@/assets/images/avatar/inform.png');
 const toInformDetails = () => {
   router.push('/chat/conversation/informdetails');
 };
 //普通会话
 let checkedConverItemIndex = ref(null);
-const toChatMessage = (index) => {
-  console.log('index', index);
+const toChatMessage = (item, itemKey, index) => {
   checkedConverItemIndex.value = index;
+  if (item && item.unreadMessageNum > 0) store.commit('CLEAR_UNREAD_NUM', itemKey)
+  //跳转至对应的消息界面
   router.push('/chat/conversation/message');
 };
 //加载到底拉取新数据
@@ -86,6 +38,7 @@ const load = () => {
 </script>
 <template>
   <ul v-infinite-scroll="load" class="session_list" style="overflow: auto" @click="getItem">
+    <li class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</li>
     <!-- 系统通知会话 -->
     <li class="session_list_item" @click="toInformDetails">
       <div class="item_body item_left">
@@ -104,36 +57,64 @@ const load = () => {
     </li>
 
     <!-- 普通会话 -->
-    <li class="session_list_item" :style="{ background: (checkedConverItemIndex === index ? '#d2d2d2' : '') }"
-      v-for="( item, itemKey, index) in conversationList" :key="index" @click="toChatMessage(index)">
+
+    <li v-if="conversationList" class="session_list_item" v-for="( item, itemKey, index) in conversationList"
+      :key="index" @click="toChatMessage(item, itemKey, index)"
+      :style="{ background: (checkedConverItemIndex === index ? '#E5E5E5' : '') }">
       <div class="item_body item_left">
-        <!-- 头像 -->
-        <el-badge :value="item.unreadMessageNum" :hidden="item.unreadMessageNum === 0" :max="99">
-          <div class="session_other_avatar">
-            <el-avatar :src="handleAvatarUrl(item.conversationType)" />
-          </div>
-        </el-badge>
+        <div class="session_other_avatar">
+          <el-avatar :src="item.conversationInfo.avatarUrl"></el-avatar>
+        </div>
+
       </div>
       <div class="item_body item_main">
         <div class="name">{{ item.conversationInfo.name }}</div>
-        <div class="last_msg_body">{{
-            handleConversationData(item).fromName + '：' + handleConversationData(item).latestMessage
-        }}
+        <div class="last_msg_body">{{ item.fromInfo.fromId }}：{{ item.latestMessage.msg }}
         </div>
       </div>
       <div class="item_body item_right">
         <span class="time">{{ dateFormater('MM/DD/HH:mm', item.latestSendTime) }}</span>
+        <span class="unReadNum_box" v-if="item.unreadMessageNum >= 1">
+          <sup class="unReadNum_count" v-text="item.unreadMessageNum >= 99 ? '99+' : item.unreadMessageNum"></sup>
+        </span>
+
       </div>
+
     </li>
+    <el-empty v-else description="暂无会话..." />
   </ul>
 </template>
 
 <style lang="scss" scoped>
 .session_list {
+  position: relative;
   height: 100%;
   padding: 0;
   margin: 0;
   list-style: none;
+}
+
+.offline_hint {
+  width: 100%;
+  height: 30px;
+  text-align: center;
+  line-height: 30px;
+  color: #F35F81;
+  background: #FCE7E8;
+  font-size: 7px;
+
+  .plaint_icon {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    color: #E5E5E5;
+    text-align: center;
+    line-height: 15px;
+    font-size: 7px;
+    font-weight: bold;
+    background: #E6686E;
+    border-radius: 50%;
+  }
 }
 
 .session_list .session_list_item {
@@ -147,7 +128,7 @@ const load = () => {
   cursor: pointer;
 
   &:hover {
-    background: #d2d2d2;
+    background: #E5E5E5;
   }
 
   .item_body {
@@ -165,12 +146,13 @@ const load = () => {
 
   .item_main {
     width: 50%;
+    height: 40px;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-around;
     align-items: flex-start;
 
     .name {
-      max-width: 56px;
+      min-width: 56px;
       max-height: 20px;
       font-size: 14px;
       font-weight: bold;
@@ -189,14 +171,34 @@ const load = () => {
 
   .item_right {
     width: 25%;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
+    height: 45px;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-around;
+    margin-right: 10px;
 
     .time {
       font-size: 10px;
       color: #a3a3a3;
       font-weight: 400;
+    }
+
+    .unReadNum_box {
+      vertical-align: middle;
+
+      .unReadNum_count {
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        color: #fff;
+        font-weight: normal;
+        font-size: 12px;
+        line-height: 20px;
+        white-space: nowrap;
+        text-align: center;
+        background: #f5222d;
+        border-radius: 10px;
+      }
     }
   }
 }
