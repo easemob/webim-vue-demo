@@ -11,12 +11,9 @@ export default function (conversationList) {
   });
 
   sortedArr.forEach((item) => {
-    const key =
-      item.conversationType === CHAT_TYPE.SINGLE
-        ? item.targetId === loginUserId
-          ? item.fromInfo.fromId
-          : item.targetId
-        : item.targetId;
+    console.log(item);
+    const key = item.conversationKey;
+
     return (newConversationObj[key] = item);
   });
   return newConversationObj;

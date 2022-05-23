@@ -1,28 +1,47 @@
 <script setup>
 import { computed } from 'vue';
 import { useStore } from 'vuex';
+import _ from 'lodash'
 import router from '@/router';
 
 /* 搜索框组件 */
 import SearchInput from '@/components/searchInput';
 /* 会话列表组件 */
 import ConversationList from './components/ConversationList.vue';
+
+
 const store = useStore();
+
 const conversationList = computed(() => {
-  return Object.values(store.state.Conversation.conversationListData);
+  return _.values(store.state.Conversation.conversationListData);
 });
 const informConversationData = computed(() => {
-  return Object.values(store.state.Conversation.informConversationData);
+  return _.values(store.state.Conversation.informConversationData);
 });
+//路由跳转-系统通知
+const toInformDetails = () => {
+  router.push('/chat/conversation/informdetails');
+}
+
+//路由跳转-对应好友会话
+const toChatMessage = (id) => {
+  console.log('>>>>>>>id', id)
+  router.push({
+    path: '/chat/conversation/message', query: {
+      id
+    }
+  });
+}
+
+// const 
 </script>
 <template>
   <el-container style="height: 100%">
     <el-aside class="chat_converation_box">
-      <div class="chat_conversation_search">
-        <SearchInput />
-      </div>
+      <!-- 搜索组件 -->
+      <SearchInput :searchType="'conversation'" :searchData="conversationList" @toChatMessage="toChatMessage" />
       <div class="chat_conversation_list">
-        <ConversationList />
+        <ConversationList @toInformDetails="toInformDetails" @toChatMessage="toChatMessage" />
       </div>
     </el-aside>
     <el-main class="chat_converation_main_box">
@@ -33,27 +52,20 @@ const informConversationData = computed(() => {
 
 <style lang="scss" scoped>
 .chat_converation_box {
+  position: relative;
   width: 30%;
   background: #cfdbf171;
   overflow: hidden;
 
   .chat_conversation_list {
     height: calc(100% - 60px);
-    // overflow-y: auto;
+
   }
 
-  .chat_conversation_search {
-    width: 100%;
-    height: 60px;
-    background: #eff0f0;
-    padding: 14px 20px;
-    box-sizing: border-box;
-  }
 }
 
 .chat_converation_main_box {
   width: 100%;
   height: 100%;
-
 }
 </style>

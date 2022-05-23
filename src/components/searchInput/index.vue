@@ -1,58 +1,257 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { ref, watch, defineProps, defineEmits } from 'vue';
 import { Search } from '@element-plus/icons-vue';
-const state = ref('');
-const links = ref([]);
+import { useStore } from "vuex";
+import { useLocalStorage } from '@vueuse/core'
+import _ from "lodash"
+import { messageType } from '@/constant'
+import dateFormater from '@/utils/dateFormat'
+const store = useStore();
+const { CHAT_TYPE } = messageType
+const props = defineProps({
+  searchType: {
+    type: String,
+    required: true
+  },
+  searchData: {
+    type: Array,
+    required: true
+  }
+})
+const emit = defineEmits(['toChatMessage'])
+//搜索框value
+const inputValue = ref('');
+//控制搜索结果展示
+const isShowResultContent = ref(false)
+//搜索本地记录
+const searchHistory = useLocalStorage('search_hisory', [])
+//筛选出来的搜索建议
+const searchSuggest = ref([])
+//搜索相匹配的值
+const querySearch = () => {
+  if (inputValue.value) {
+    //搜索会话 conversation
+    if (props.searchType === 'conversation') {
+      const resultList = _.filter(props.searchData, (o) => {
+        console.log('>>>inputValue.value>>', inputValue.value)
+        return o.conversationInfo.name.includes(inputValue.value)
+      })
+      searchSuggest.value = resultList
+      console.log('>>>>>搜索结果')
+    }
+    //搜索联系人 contacts
 
-const loadAll = () => {
-  return [
-    { value: 'vue', link: 'https://github.com/vuejs/vue' },
-    { value: 'element', link: 'https://github.com/ElemeFE/element' },
-    { value: 'cooking', link: 'https://github.com/ElemeFE/cooking' },
-    { value: 'mint-ui', link: 'https://github.com/ElemeFE/mint-ui' },
-    { value: 'vuex', link: 'https://github.com/vuejs/vuex' },
-    { value: 'vue-router', link: 'https://github.com/vuejs/vue-router' },
-    { value: 'babel', link: 'https://github.com/babel/babel' },
-  ];
-};
-let timeout;
-const querySearchAsync = (queryString, cb) => {
-  const results = queryString
-    ? links.value.filter(createFilter(queryString))
-    : links.value;
+  }
+  //监听输入框为空字符串的时候置空搜索建议
+  watch(inputValue, (newVal) => {
+    console.log('>>>>>newVal', newVal)
+    if (newVal === '') searchSuggest.value = []
+  })
+}
+//选中则通知父组件跳转
+const emitParentComit = (fromType, item) => {
+  // fromType 0 为来自历史 1 为来自搜索
+  if (fromType === 0) {
+    searchHistory.value.length > 0 && searchHistory.value.forEach((v, index) => {
+      if (item.value === v.value) {
+        console.log('>> searchHistory.value[index]>>>', searchHistory.value[index])
+        searchHistory.value.splice(index, 1)
+        searchHistory.value.unshift(item)
+      }
+    })
+    emit('toChatMessage', item.value)
+  }
+  if (fromType === 1) {
+    emit('toChatMessage', item.conversationKey)
+    searchHistory.value.unshift({ label: item.fromInfo.fromName, value: item.conversationKey })
+  }
+  console.log('item', item)
+  inputValue.value = ''
+  searchSuggest.value = []
+  isShowResultContent.value = false
 
-  clearTimeout(timeout);
-  timeout = setTimeout(() => {
-    cb(results);
-  }, 3000 * Math.random());
-};
-
-const createFilter = (queryString) => {
-  return (restaurant) => {
-    return (
-      restaurant.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0
-    );
-  };
-};
-
-const handleSelect = (item) => {
-  console.log(item);
-};
-
-onMounted(() => {
-  links.value = loadAll();
-});
+}
 </script>
 <template>
-  <el-autocomplete style="width: 100%" v-model="state" :fetch-suggestions="querySearchAsync" placeholder="搜索"
-    @select="handleSelect">
-    <template #suffix>
-      <el-icon class="el-input__icon">
-        <Search />
-      </el-icon>
-    </template>
-  </el-autocomplete>
-</template>
+  <div class="search_box">
+    <div>
+      <el-input v-model.trim="inputValue" placeholder="搜索" @focus="isShowResultContent = true"
+        @clear="isShowResultContent = false" @input="querySearch" :prefix-icon="Search" clearable />
+    </div>
 
+    <div v-if="isShowResultContent" class="resultContent">
+      <div class="search_history" v-if="inputValue.length <= 0 && searchHistory">
+        <div class="title search_history_title">
+          <span>搜索历史</span>
+          <span class="clear_search_history" @click="searchHistory = null">清空</span>
+        </div>
+        <ul class="search_history_item">
+          <li v-for="(item, index) in searchHistory" :key="item.label + index" @click="emitParentComit(0, item)">
+            <span>{{ item.value }}</span>
+          </li>
+        </ul>
+      </div>
+      <div v-if="searchType === 'conversation'">
+        <div v-for="(item, index) in searchSuggest" :key="index">
+          <div class="title" v-if="item.conversationType === CHAT_TYPE.SINGLE">
+            联系人
+          </div>
+          <div class="title" v-if="item.conversationType === CHAT_TYPE.GROUP">
+            群组
+          </div>
+          <div class="search_result_item" @click="emitParentComit(1, item)">
+            <div class="item_body item_left">
+              <div class="session_other_avatar">
+                <el-avatar :src="item.conversationInfo.avatarUrl"></el-avatar>
+              </div>
+            </div>
+            <div class="item_body item_main">
+              <div class="name">{{ item.conversationInfo.name }}</div>
+              <div class="last_msg_body">{{ item.fromInfo.fromId }}：{{ item.latestMessage.msg }}
+              </div>
+            </div>
+            <div class="item_body item_right">
+              <span class="time">{{ dateFormater('MM/DD/HH:mm', item.latestSendTime) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <el-empty v-if="inputValue.length > 0 && searchSuggest.length <= 0" :image-size="200" description="暂无会话记录" />
+    </div>
+  </div>
+</template>
 <style lang="scss" scoped>
+.search_box {
+  width: 100%;
+  height: 60px;
+  background: #F8F8F8;
+  padding: 14px 20px;
+  box-sizing: border-box;
+}
+
+.resultContent {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 60px);
+  background-color: #EDEDED;
+  z-index: 1000000;
+  overflow-y: auto;
+
+  .search_history {
+    .search_history_item {
+      width: 100%;
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 17px;
+      letter-spacing: 0.669643px;
+      color: #000000;
+
+      li {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 0 15px;
+        background: #FFF;
+        margin: 1px 0;
+        height: 32px;
+        transition: all .5s;
+        cursor: pointer;
+
+        &:hover {
+          background: #E5E5E5;
+        }
+
+      }
+    }
+  }
+
+  .title {
+    height: 32px;
+    line-height: 32px;
+    padding: 0 15px;
+    background: #f2f2f2;
+    font-weight: 400;
+    font-size: 12px;
+    letter-spacing: 0.342857px;
+    color: #333333;
+  }
+
+  .search_history_title {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    .clear_search_history:hover {
+      color: #00A0FB;
+      cursor: pointer;
+    }
+  }
+
+  .search_result_item {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    height: 66px;
+    background: #FFF;
+    padding: 0 14px;
+    cursor: pointer;
+
+    .item_left {
+      padding: 0;
+      margin-right: 11px;
+    }
+
+    .item_main {
+      width: 25%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-around;
+      height: 40px;
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-weight: 500;
+      font-size: 14px;
+
+
+      .last_msg_body {
+        max-width: 100px;
+        height: 17px;
+        font-family: 'PingFang SC';
+        font-style: normal;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 17px;
+        letter-spacing: 0.3px;
+        color: #A3A3A3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+      }
+    }
+
+    .time {
+      position: absolute;
+      right: 15px;
+      top: 13px;
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-weight: 400;
+      font-size: 10px;
+      line-height: 14px;
+      letter-spacing: 0.25px;
+      color: #A3A3A3;
+    }
+
+
+  }
+}
 </style>

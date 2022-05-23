@@ -3,7 +3,7 @@ import _ from 'lodash';
 import store from '@/store';
 import { messageType } from '@/constant';
 import EaseIM from '@/IM/initwebsdk';
-import { useLocalStorage } from '@vueuse/core';
+
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
 import defaultSingleAvatarUrl from '@/assets/images/avatar/theme2x.png';
 import { useSetMessageKey } from '@/hooks';
@@ -64,10 +64,12 @@ export default function (corresMessage) {
     latestSendTime:"", 最近一条消息的发送时间,
    */
     const loginUserId = EaseIM.conn.user;
+    const listKey = useSetMessageKey(msgBody);
     const { chatType, from, ext, id, msg, time, to, type } = msgBody;
     if (operateType === 'create') {
       let state = {
         conversationType: chatType,
+        conversationKey: listKey,
         conversationInfo: {
           name: '',
           avatarUrl:

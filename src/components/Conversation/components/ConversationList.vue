@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, defineEmits } from 'vue';
 import { useStore } from 'vuex';
 import router from '@/router';
 import EaseIM from '@/IM/initwebsdk'
@@ -18,17 +18,18 @@ const conversationList = computed(() => {
 const networkStatus = computed(() => {
   return store.state.networkStatus
 })
+const emit = defineEmits(['toInformDetails', 'toChatMessage'])
 //系统通知
-const toInformDetails = () => {
-  router.push('/chat/conversation/informdetails');
-};
+// const toInformDetails = () => {
+//   router.push('/chat/conversation/informdetails');
+// };
 //普通会话
 let checkedConverItemIndex = ref(null);
 const toChatMessage = (item, itemKey, index) => {
   checkedConverItemIndex.value = index;
   if (item && item.unreadMessageNum > 0) store.commit('CLEAR_UNREAD_NUM', itemKey)
   //跳转至对应的消息界面
-  router.push('/chat/conversation/message');
+  emit('toChatMessage', itemKey)
 };
 //加载到底拉取新数据
 const load = () => {
@@ -40,7 +41,7 @@ const load = () => {
   <ul v-infinite-scroll="load" class="session_list" style="overflow: auto" @click="getItem">
     <li class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</li>
     <!-- 系统通知会话 -->
-    <li class="session_list_item" @click="toInformDetails">
+    <li class="session_list_item" @click="$emit('toInformDetails')">
       <div class="item_body item_left">
         <!-- 通知头像 -->
         <div class="session_other_avatar">
@@ -77,7 +78,6 @@ const load = () => {
         <span class="unReadNum_box" v-if="item.unreadMessageNum >= 1">
           <sup class="unReadNum_count" v-text="item.unreadMessageNum >= 99 ? '99+' : item.unreadMessageNum"></sup>
         </span>
-
       </div>
 
     </li>
@@ -157,6 +157,9 @@ const load = () => {
       font-size: 14px;
       font-weight: bold;
       color: #000;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .last_msg_body {
@@ -166,6 +169,9 @@ const load = () => {
       color: #a3a3a3;
       font-size: 12px;
       font-weight: 300;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 
