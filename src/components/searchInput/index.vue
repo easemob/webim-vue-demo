@@ -1,9 +1,10 @@
 <script setup>
-import { ref, watch, defineProps, defineEmits } from 'vue';
+import { ref, toRaw, watch, defineProps, defineEmits } from 'vue';
 import { Search } from '@element-plus/icons-vue';
 import { useStore } from "vuex";
 import { useLocalStorage } from '@vueuse/core'
 import _ from "lodash"
+import { onClickOutside } from '@vueuse/core';
 import { messageType } from '@/constant'
 import dateFormater from '@/utils/dateFormat'
 const store = useStore();
@@ -18,6 +19,7 @@ const props = defineProps({
     required: true
   }
 })
+
 const emit = defineEmits(['toChatMessage'])
 //搜索框value
 const inputValue = ref('');
@@ -25,6 +27,10 @@ const inputValue = ref('');
 const isShowResultContent = ref(false)
 //搜索本地记录
 const searchHistory = useLocalStorage('search_hisory', [])
+console.log('searchHistorysearchHistorysearchHistory', toRaw(searchHistory.value))
+//点击非搜索部分关闭页面
+const searchBox = ref(null)
+onClickOutside(searchBox, () => (isShowResultContent.value = false));
 //筛选出来的搜索建议
 const searchSuggest = ref([])
 //搜索相匹配的值
@@ -44,12 +50,21 @@ const querySearch = () => {
   }
   //监听输入框为空字符串的时候置空搜索建议
   watch(inputValue, (newVal) => {
-    console.log('>>>>>newVal', newVal)
     if (newVal === '') searchSuggest.value = []
   })
 }
-//选中则通知父组件跳转
-const emitParentComit = (fromType, item) => {
+//点击历史记录通知对应类型的不同的组件跳转 例如 通知会话部分 通知联系人部分
+const clickHistoryItem = (historyItem) => {
+  if (props.searchType === 'conversation') {
+    emitConversation(0, historyItem)
+  }
+  if (props.searchType === 'contacts') {
+    console.log('.....')
+  }
+}
+//选中则通知会话组件跳转
+const emitConversation = (fromType, item) => {
+  console.log('>>>>>>fromType,item', fromType, item)
   // fromType 0 为来自历史 1 为来自搜索
   if (fromType === 0) {
     searchHistory.value.length > 0 && searchHistory.value.forEach((v, index) => {
@@ -62,32 +77,51 @@ const emitParentComit = (fromType, item) => {
     emit('toChatMessage', item.value)
   }
   if (fromType === 1) {
+    const _rawSearchHistory = _.cloneDeep(toRaw(searchHistory.value))
+    console.log('searchHistory', _rawSearchHistory)
+    if (_rawSearchHistory.length === 0) {
+      console.log('>>>>>>_rawSearchHistory为空是新建一条')
+      searchHistory.value.unshift({ label: item.conversationInfo.name, value: item.conversationKey })
+    }
+    if (_rawSearchHistory.length > 0) {
+      console.log('>>>>>>_rawSearchHistory不为空时开始筛选')
+      let _index = _rawSearchHistory.findIndex((v) => {
+        return v.value === item.conversationKey
+      })
+      if (_index === -1) {
+        searchHistory.value.unshift({ label: item.conversationInfo.name, value: item.conversationKey })
+      } else {
+        searchHistory.value.splice(_index, 1)
+        searchHistory.value.unshift({ label: item.conversationInfo.name, value: item.conversationKey })
+      }
+
+      console.log(_index)
+
+    }
     emit('toChatMessage', item.conversationKey)
-    searchHistory.value.unshift({ label: item.fromInfo.fromName, value: item.conversationKey })
   }
-  console.log('item', item)
   inputValue.value = ''
   searchSuggest.value = []
   isShowResultContent.value = false
-
 }
+
 </script>
 <template>
-  <div class="search_box">
+  <div class="search_box" ref="searchBox">
     <div>
       <el-input v-model.trim="inputValue" placeholder="搜索" @focus="isShowResultContent = true"
         @clear="isShowResultContent = false" @input="querySearch" :prefix-icon="Search" clearable />
     </div>
 
-    <div v-if="isShowResultContent" class="resultContent">
+    <div v-if="isShowResultContent" ref="resultContent" class="resultContent">
       <div class="search_history" v-if="inputValue.length <= 0 && searchHistory">
         <div class="title search_history_title">
           <span>搜索历史</span>
           <span class="clear_search_history" @click="searchHistory = null">清空</span>
         </div>
         <ul class="search_history_item">
-          <li v-for="(item, index) in searchHistory" :key="item.label + index" @click="emitParentComit(0, item)">
-            <span>{{ item.value }}</span>
+          <li v-for="(item, index) in searchHistory" :key="item.label + index" @click="clickHistoryItem(item)">
+            <span>{{ item.label ? item.label : item.value }}</span>
           </li>
         </ul>
       </div>
@@ -99,7 +133,7 @@ const emitParentComit = (fromType, item) => {
           <div class="title" v-if="item.conversationType === CHAT_TYPE.GROUP">
             群组
           </div>
-          <div class="search_result_item" @click="emitParentComit(1, item)">
+          <div class="search_result_item" @click="emitConversation(1, item)">
             <div class="item_body item_left">
               <div class="session_other_avatar">
                 <el-avatar :src="item.conversationInfo.avatarUrl"></el-avatar>
@@ -116,7 +150,8 @@ const emitParentComit = (fromType, item) => {
           </div>
         </div>
       </div>
-      <el-empty v-if="inputValue.length > 0 && searchSuggest.length <= 0" :image-size="200" description="暂无会话记录" />
+
+      <el-empty v-if="inputValue.length > 0 && searchSuggest.length <= 0" :image-size="200" description="没有找到匹配结果" />
     </div>
   </div>
 </template>
@@ -136,7 +171,7 @@ const emitParentComit = (fromType, item) => {
   width: 100%;
   height: calc(100% - 60px);
   background-color: #EDEDED;
-  z-index: 1000000;
+  z-index: 888;
   overflow-y: auto;
 
   .search_history {

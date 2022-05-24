@@ -28,7 +28,7 @@ let loginUserOnlineStatusIcon = computed(() => {
   if (loginUserOnlineStatus === 'Unset' || loginUserOnlineStatus === '') {
     return '';
   } else {
-    return onLineStatus[loginUserOnlineStatus].icon;
+    return onLineStatus[loginUserOnlineStatus].style;
   }
 });
 
@@ -54,13 +54,10 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
   <div class="chat_avatar">
     <el-avatar :src="loginUserAvatar" @click="isShowUserInfoCard = true">
     </el-avatar>
-    <el-popover trigger="click" placement="right-start" :show-arrow="false">
+    <el-popover v-if="loginUserOnlineStatusIcon" trigger="click" placement="right-start" :show-arrow="false">
       <template #reference>
-        <img class="online_status" :src="
-          loginUserOnlineStatusIcon
-            ? loginUserOnlineStatusIcon
-            : defaultStatusIcon
-        " /></template>
+        <div class="online_status" :style="loginUserOnlineStatusIcon"></div>
+      </template>
       <!-- 用户在线状态切换卡片 -->
       <UserOnlineStatusCard />
     </el-popover>
@@ -77,9 +74,6 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
       " alt="">
       <span class="badge"></span>
     </div>
-
-
-
   </div>
   <!-- 去往联系人 -->
   <div class="chat_contacts chat_icon_box" @click="changeSkipRouterName('contacts')">
