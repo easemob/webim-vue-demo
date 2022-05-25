@@ -106,10 +106,11 @@
         @breakpoint="onBreakpoint"
       >
         <MessageBox
-          v-if="activeFlag"
+          v-show="activeFlag"
           :type="activeKey"
           :card="$refs['person_card']"
           :select="select"
+					:broken="broken"
           ref="messageBox"
         />
         <!-- <MessageBox v-if="activeKey == 'chatroom'"  type="chatroom" />
@@ -145,6 +146,7 @@
 
         <AddAVMemberModal
           ref="addAvMembertModal"
+					:type="videoChatType"
           @EmediaModalFun="EmediaModalFun"
         />
 
@@ -271,7 +273,8 @@ export default{
 					img: require('../../assets/Offline.png')
 				}
 			],
-			typeId: ''
+			typeId: '',
+			videoChatType: 'singleChat'
 		};
 	},
 	computed: {
@@ -392,7 +395,8 @@ export default{
 			// callType: 0 1v1音频, 1 1v1视频, 2 多人
 			this.invite(tos, callType, this.$data.activeKey);
 		},
-		show_add_member_modal(){
+		show_add_member_modal(type){
+			this.videoChatType = type
 			this.$refs.addAvMembertModal.show();
 		},
 		hideUserList(){

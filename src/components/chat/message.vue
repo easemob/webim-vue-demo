@@ -11,16 +11,15 @@
         />
         <!-- {{activedKey[type].name}} -->
 
-        <span v-if="activedKey[type].friendDetail">{{
+        <span class="chat_name" v-if="activedKey[type].friendDetail">{{
           activedKey[type].friendDetail.nickname
             ? activedKey[type].friendDetail.nickname
             : activedKey[type].name
         }}</span>
-        <span v-else>{{
-          `${activedKey[type].name} &nbsp;&nbsp; ${
-            activedKey[type].groupid || ""
-          }`
-        }}</span>
+        <span v-else>
+					<span class="chat_name">{{activedKey[type].name}}</span>
+					<span class="groupid">{{activedKey[type].groupid}}</span>
+				</span>
         <a-icon
           v-if="type == 'group'"
           type="ellipsis"
@@ -55,7 +54,7 @@
         class="message-group"
         :style="{ float: item.bySelf ? 'right' : 'left' }"
       >
-        <h4 style="text-align: left; margin: 0">{{ item.from }}</h4>
+        <h4 v-if="!item.bySelf" style="text-align: left; margin: 0">{{ item.from }}</h4>
         <!-- 撤回消息 -->
         <div v-if="item.status == 'recall'" class="recallMsg">
           {{ item.msg }}
@@ -191,7 +190,7 @@ import UpLoadImage from '../upLoadImage/index.vue';
 import UpLoadFile from '../upLoadFile/index.vue';
 import RecordAudio from '../recorder/index.vue';
 import './index.less';
-import { mapActions, mapGetters } from 'vuex';
+import { mapActions, mapGetters, mapState } from 'vuex';
 
 import moment from 'moment';
 import _ from 'lodash';
@@ -238,7 +237,8 @@ export default{
 				chatroom: ''
 			},
 			globalHistoryMsg: {},
-			conversationId: ''
+			conversationId: '',
+			userId: ''
 		};
 	},
 	beforeMount(){
@@ -251,43 +251,28 @@ export default{
 		// else if(this.type === 'chatroom'){
 		// 	this.onGetChatroomUserList();
 		// }
+		this.userId = JSON.parse(localStorage.getItem('userInfo')).userId
 	},
 	updated(){
 		// console.log("数据", this.$store);
 		this.scollBottom();
 	},
 	watch: {
-		msgList: {
+		curMsgList: {
 			handler(msgNewVal, msgOldVal){
-				console.log(msgNewVal, msgOldVal, 'msgNewVal, msgOldVal', this.$route, this.globalHistoryMsg)
-				console.log('第0个判断', this.msgObj)
 				const { params: { id } } = this.$route
-				if(id){
-					// eslint-disable-next-line guard-for-in
-					// for(let i in this.globalHistoryMsg){
-					// 	if(id !== i){
-					// 		this.globalHistoryMsg[i] = []
-					// 	}
-					// }
-				}
-				// console.log('Object.keys(msgNewVal).length', Object.values(msgNewVal))
-				// console.log(Object.keys(msgOldVal), 'Object.keys(msgOldVal).length', Object.values(msgOldVal))
+				console.log(msgNewVal, msgOldVal, 'msgNewVal, msgOldVal')
 				if(!msgOldVal){
-					console.log('第一个判断', this.msgObj)
 					if(msgNewVal && Object.keys(msgNewVal).length){
 						// eslint-disable-next-line guard-for-in
 						for(let item in msgNewVal){
 							if(msgNewVal[item].chatId === id){
-								console.log('第1-2个判断', this.msgObj, msgNewVal[item])
 								if(Object.keys(this.msgObj).length){
-									console.log('第1-3个判断', this.msgObj, msgNewVal[item], Object.values(this.msgObj))
-									if(Object.values(this.msgObj).findIndex(val => val.time === msgNewVal[item].time) === -1){
-										console.log('第1-4个判断', this.msgObj, msgNewVal[item], Object.values(this.msgObj))
+									if(Object.values(this.msgObj).findIndex(val => Number(val.time) === Number(msgNewVal[item].time)) === -1){
 										this.globalHistoryMsg[this.conversationId].push(msgNewVal[item])
 									}
 								}
 								else{
-									console.log('第1-5个判断', this.msgObj)
 									this.globalHistoryMsg[this.conversationId].push(msgNewVal[item])
 								}
 							}
@@ -295,19 +280,13 @@ export default{
 					}
 				}
 				else if(!msgNewVal){
-					console.log('第2个判断', this.msgObj)
 					if(this.conversationId){
-						console.log('第2-0个判断', this.msgObj)
 						if(msgOldVal && Object.keys(msgOldVal).length){
-							console.log('第2-1个判断', this.msgObj)
 							// eslint-disable-next-line guard-for-in
 							for(let item in msgOldVal){
 								if(msgOldVal[item].chatId === id){
-									console.log('第2-2个判断', this.msgObj)
 									if(Object.keys(this.msgObj).length){
-										console.log('第2-3个判断', this.msgObj)
-										if(Object.values(this.msgObj).findIndex(val => val.time === msgOldVal[item].time) === -1){
-											console.log('第2-4个判断', this.msgObj)
+										if(Object.values(this.msgObj).findIndex(val => Number(val.time) === Number(msgOldVal[item].time)) === -1){
 											this.globalHistoryMsg[this.conversationId].push(msgOldVal[item])
 										}
 									}
@@ -320,25 +299,18 @@ export default{
 					}
 				}
 				else if(msgNewVal && msgOldVal){
-					console.log('第3个判断', this.msgObj)
 					if(Object.keys(msgNewVal).length > Object.keys(msgOldVal).length){
-						console.log('第3-1个判断', this.msgObj)
 						if(new Date().getTime() - msgNewVal[Object.keys(msgNewVal).length - 1].time > 2000){
-							console.log('第3-2个判断', this.msgObj)
 							const tempArr = []
 							// eslint-disable-next-line guard-for-in
 							for(let item in msgNewVal){
 								if(msgNewVal[item].chatId === id){
-									console.log('第3-3个判断', this.msgObj)
 									if(Object.keys(this.msgObj).length){
-										console.log('第3-4个判断', this.msgObj)
-										if(Object.values(this.msgObj).findIndex(val => val.time === msgNewVal[item].time) === -1){
-											console.log('第3-6个判断', this.msgObj)
+										if(Object.values(this.msgObj).findIndex(val => Number(val.time) === Number(msgNewVal[item].time)) === -1){
 											tempArr.push(msgNewVal[item])
 										}
 									}
 									else{
-										console.log('第3-5个判断', this.msgObj)
 										tempArr.push(msgNewVal[item])
 									}
 								}
@@ -346,121 +318,73 @@ export default{
 							this.globalHistoryMsg[this.conversationId] = [...tempArr, ...this.globalHistoryMsg[this.conversationId]]
 						}
 						else{
-							this.globalHistoryMsg[this.conversationId].push(msgNewVal[Object.keys(msgNewVal).length - 1])
+							this.globalHistoryMsg[this.conversationId] && this.globalHistoryMsg[this.conversationId].push(msgNewVal[Object.keys(msgNewVal).length - 1])
 						}
 					}
 					else{
 						// eslint-disable-next-line guard-for-in
-						console.log('第4个判断', this.msgObj)
 						for(let item in msgOldVal){
 							if(msgOldVal[item].chatId === id){
-								console.log('第4-1个判断', this.msgObj)
 								if(Object.keys(this.msgObj).length){
-									console.log('第4-2个判断', this.msgObj)
-									if(Object.values(this.msgObj).findIndex(val => val.time === msgOldVal[item].time) === -1){
-										console.log('第4-3个判断', this.msgObj)
+									if(Object.values(this.msgObj).findIndex(val => Number(val.time) === Number(msgOldVal[item].time)) === -1){
 										this.globalHistoryMsg[this.conversationId].push(msgOldVal[item])
 									}
 								}
 								else{
-									console.log('第4-4个判断', this.msgObj)
 									this.globalHistoryMsg[this.conversationId].push(msgOldVal[item])
 								}
 							}
 						}
 						// eslint-disable-next-line guard-for-in
 						for(let item in msgNewVal){
-							console.log(item, msgNewVal[item])
 							if(msgNewVal[item].chatId === id){
-								console.log('第4-5个判断', this.msgObj)
 								if(Object.keys(this.msgObj).length){
-									console.log('第4-6个判断', this.msgObj)
-									if(Object.values(this.msgObj).findIndex(val => val.time === msgNewVal[item].time) === -1){
-										console.log('第4-7个判断', this.msgObj)
+									if(Object.values(this.msgObj).findIndex(val => Number(val.time) === Number(msgNewVal[item].time)) === -1){
 										this.globalHistoryMsg[this.conversationId].push(msgNewVal[item])
 									}
 								}
 								else{
-									console.log('第4-8个判断', this.msgObj)
 									this.globalHistoryMsg[this.conversationId].push(msgNewVal[item])
 								}
 							}
 						}
 					}
 				}
-				console.log('第5个判断', this.msgObj)
-				console.log(this.conversationId, id, 'this.conversationId', this.globalHistoryMsg[this.conversationId])
 				if(this.conversationId && this.globalHistoryMsg[this.conversationId].length){
-					console.log(this.conversationId, id, 'this.conversationId')
 					const tempObj = {}
 					let num = 0
+					this.globalHistoryMsg[this.conversationId].sort((a, b) => {
+						return a.time - b.time
+					})
 					this.globalHistoryMsg[this.conversationId].forEach((item, index) => {
+						if(item.from && item.from === this.userId){
+							item.bySelf = true
+						}
 						if(item.chatId === id){
-							console.log('第7个判断', tempObj, Object.values(tempObj))
-							if(Object.values(tempObj).length > 0 && Object.values(tempObj).findIndex(val => val.time === item.time) === -1){
+							if(Object.values(tempObj).length > 0 && Object.values(tempObj).findIndex(val => Number(val.time) === Number(item.time)) === -1){
 								num++
 								tempObj[num] = item
 							}
 							else if(!Object.values(tempObj).length){
-								console.log('第8个判断', tempObj)
 								tempObj[num] = item
 							}
 						}
 					})
-					console.log('第6个判断', tempObj)
 					this.msgObj = tempObj
-					console.log(this.msgObj)
 				}
 				else{
 					this.msgObj = {}
 				}
-				// this.msgNewOldObj = {
-				// 	msgNewVal,
-				// 	msgOldVal
-				// }
-				// this.flagObj.msgFlag = true
-				/**
-         * 处理，首次加载数据，点击列表项，第一次触发，msgOldVal有值,虽然无数据，是个空对象，但是也算有，不是undefined，msgNewVal为undefined
-         * 然后，在select方法中，判断msgList为空，就请求历史数据，历史数据请求回来，有值，msgList再次被触发，这个时候msgOldVal和msgNewVal交换
-         * msgOldVal = undefined
-         * msgNewVal = 历史数据
-         * 所以增加判断，这种情况，route不会触发，那手动改this.flagObj.routeFlag的值，以求，flagObj的触发，去更新数据
-         */
-				// if(!msgOldVal){
-				// 	this.flagObj.routeFlag = true
-				// }
-				// this.flagObj.routeFlag = true
 			},
 			deep: true
 		},
-		// $route: {
-		// 	handler(routeNewVal, routeOldVal){
-		// 		this.routeNewOldObj = {
-		// 			routeNewVal,
-		// 			routeOldVal
-		// 		}
-		// 		this.flagObj.routeFlag = true
-		// 	},
-		// 	deep: true
-		// },
-		// flagObj: {
-		// 	handler(val){
-		// 		console.log(val, 'flagObj')
-		// 		const { msgFlag, routeFlag } = val
-		// 		if(msgFlag && routeFlag){
-		// 			this.handlerMsgData(this.routeNewOldObj, this.msgNewOldObj)
-		// 			this.changeFlagObj()
-		// 		}
-		// 	},
-		// 	deep: true
-		// }
 	},
 	computed: {
 		...mapGetters({
 			// contact: 'onGetContactUserList',
 			group: 'onGetGroupUserList',
 			// chatroom: 'onGetChatroomUserList',
-			msgList: 'onGetCurrentChatObjMsg'
+			curMsgList: 'onGetCurrentChatObjMsg'
 		}),
 		// 控制聊天框
 		toggleWindows(){
@@ -561,10 +485,7 @@ export default{
 					}
 				})
 				this.msgObj = tempObj
-				console.log(this.msgObj)
-				this.msgObj = tempObj
 			}
-			console.log(this.globalHistoryMsg, 'this.globalHistoryMsg')
 			this.$data.activedKey[this.type] = key;
 			const me = this;
 			me.$data.loadText = '加载更多';
@@ -588,7 +509,7 @@ export default{
 					this.$forceUpdate();
 				}, 100);
 
-				if(!this.msgList){
+				if(!this.curMsgList){
 					this.getHistoryMessage({ name: key.groupid, isGroup: true });
 				}
 			}
@@ -603,28 +524,18 @@ export default{
 					});
 					this.$forceUpdate();
 				}, 100);
-				console.log(this.msgList, 'this.msgList=select=contact')
-				if(!this.msgList){
+				if(!this.curMsgList){
 					this.getHistoryMessage({ name: key.name, isGroup: false });
 				}
 			}
 			else if(this.type === 'chatroom'){
-				console.log(this.msgList, 'chatroom===chatroom')
 				this.typeId.chatroom = key.id
 				const me = this;
-				// let flag = true
 				if(!this.copyMsgObj[key.id]){
 					this.copyMsgObj[key.id] = {
 						flag: true
 					}
 				}
-				// if(this.msgList && Object.keys(this.msgList).length){
-				// 	console.log(this.msgList[0].chatId, key.id)
-				// 	if(this.msgList[0].chatId !== key.id){
-				// 		flag = false
-				// 	}
-				// }
-				// me.roomId = key.id
 
 				this.$router.push({ name: this.type, params: { id: key.id } });
 				this.onGetCurrentChatObjMsg({ type: this.type, id: key.id });
@@ -632,14 +543,12 @@ export default{
 				WebIM.conn.joinChatRoom({
 					roomId: key.id, // 聊天室id
 					success: () => {
-						// console.log("加入聊天室成功");
-						console.log(this.copyMsgObj[key.id].flag, 'empty')
+						console.log('成功加入聊天室')
 						if(this.copyMsgObj[key.id].flag){
-							console.log('加入聊天室成功')
 							this.copyMsgObj[key.id] = {
 								flag: false
 							}
-							me.getHistoryMessage({ name: key.id, isGroup: true });
+							me.getHistoryMessage({ name: key.id, isGroup: true, success: () => {this.onGetCurrentChatObjMsg({ type: this.type, id: key.id });} });
 						}
 					},
 				});
@@ -767,7 +676,7 @@ export default{
 			else if(this.type == 'group'){
 				this.getGroupMembers(this.$data.activedKey[this.type].groupid);
 				let _this = this;
-				this.$emit('show_add_member_modal');
+				this.$emit('show_add_member_modal', this.type);
 			}
 		},
 		callVoice(){
@@ -846,103 +755,6 @@ export default{
 		// changeIsVideoState(v) {
 		//   v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);
 		// }
-		handlerMsgData(routeVal, msgVal){
-			console.log(routeVal, msgVal)
-
-			const { msgNewVal, msgOldVal } = msgVal
-			const { params: { id } } = this.$route
-			msgOldVal && console.log(Object.keys(msgOldVal).length, 'Object.keys(msgOldVal).length')
-			if(id){
-				/**
-         * 老数据在，新数据不在，并且用户的id和老数据中的不一样，置空聊天数据
-         * 存在于，新点击的用户，没有聊天记录，
-         * 也就是从，有聊天记录的切换到没聊天记录的情况
-         */
-				msgOldVal && console.log(Object.keys(msgOldVal).length, 'Object.keys(msgOldVal).length')
-				if(msgOldVal && !msgNewVal && Object.keys(msgOldVal).length && id !== msgOldVal[0].chatId){
-					this.msgObj = {}
-					console.log(this.msgObj, 'this.msgObj===8')
-				}
-				else if(msgOldVal && Object.keys(msgOldVal).length && id === msgOldVal[0].chatId){
-					console.log(this.msgObj, 'this.msgObj===7')
-					/**
-           * 以旧数据优先判断和渲染使用，以为初始化新数据是空，undefined的。
-           * 旧数据存在，并且长度有值
-           * 并且当且选中聊天对象的id和数据里一致，就是赋值，渲染
-           */
-					if(Object.keys(msgNewVal).length > Object.keys(msgOldVal).length){
-						console.log(msgOldVal, msgNewVal, 'this.msgObj')
-						const obj1 = {}
-						console.log(Object.keys(msgNewVal).length - 1, msgNewVal[Object.keys(msgNewVal).length - 1], 'msgNewVal[Object.keys(msgNewVal).length - 1]')
-						this.globalHistoryMsg.push(msgNewVal[Object.keys(msgNewVal).length - 1])
-						console.log(this.globalHistoryMsg, 'this.msgObj')
-						this.globalHistoryMsg.forEach((item, index) => {
-							obj1[index] = item
-						})
-						this.msgObj = obj1
-						console.log(this.msgObj, 'this.msgObj===6')
-					}
-					else{
-						const obj = []
-						const obj1 = {}
-						// eslint-disable-next-line guard-for-in
-						for(let item in msgOldVal){
-							obj.push(msgOldVal[item])
-						}
-						// eslint-disable-next-line guard-for-in
-						for(let item in msgNewVal){
-							console.log(item, msgNewVal[item])
-							obj.push(msgNewVal[item])
-						}
-						console.log(obj, 'obj, obj1, obj2')
-						this.globalHistoryMsg = obj
-						obj.forEach((item, index) => {
-							obj1[index] = item
-						})
-						console.log(msgOldVal, msgNewVal, obj1, 'this.msgObj')
-						this.msgObj = obj1
-						console.log(this.msgObj, obj, 'this.msgObj')
-					}
-				}
-				else if(msgNewVal && Object.keys(msgNewVal).length && id === msgNewVal[0].chatId){
-					/**
-           * 旧数据没有，新数据有
-           * 新数据长度不为0
-           * 选中的聊天对象的id和数据中的id一致
-           * 赋值，渲染
-           */
-					this.msgObj = msgNewVal
-					console.log(this.msgObj, 'this.msgObj===4')
-				}
-				console.log(msgNewVal, msgOldVal, '20919123')
-			}
-			console.log(this.routeObj, 'msgList', this.msgObj)
-
-			const { routeNewVal, routeOldVal } = routeVal
-			const { name: newName, params: { id: newId } } = routeNewVal
-			const { name: oldName, params: { id: oldId } } = routeOldVal
-			console.log(newName, oldName, 'name', 'route', this.copyMsgObj[oldName], this.copyMsgObj[newName], newId, oldId, this.msgObj)
-			if(!newId){
-				/**
-         * newId不存在，那就是切换tab时，数据更新为上一次点击的那个用户的聊天记录
-         */
-				console.log(this.copyMsgObj[newName], 'this.copyMsgObj[newName]')
-				this.msgObj = this.copyMsgObj[newName]
-				console.log(this.msgObj, 'this.msgObj===2')
-			}
-			else{
-				/**
-         * newId存在，newName === oldName 也就是，在当前聊天对象列表，切换了不同的用户，那就是保存一下数据，共切换tab时使用
-         */
-				this.copyMsgObj[newName] = this.msgObj
-				console.log(this.msgObj, 'this.msgObj===5')
-			}
-			console.log(this.msgObj, 'this.msgObj===3')
-		},
-		changeFlagObj(){
-			this.flagObj.msgFlag = false
-			this.flagObj.routeFlag = false
-		}
 	},
 	components: {
 		ChatEmoji,

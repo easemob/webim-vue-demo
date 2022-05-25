@@ -30,7 +30,7 @@ module.exports = {
 	},
 	externals: {
 		AgoraRTCSdkNg: 'AgoraRTC',
-		websdk: 'websdk'
+		// websdk: 'websdk'
 	},
 	module: {
 		unknownContextCritical: false,

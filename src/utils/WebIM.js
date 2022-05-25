@@ -1,8 +1,5 @@
 import config from './WebIMConfig';
-// import websdk from "easemob-websdk";
-
-// import websdk from 'websdk';
-import websdk from '../../static/Easemob-chat';
+import websdk from "easemob-websdk";
 
 import _ from 'lodash';
 import emedia from 'easemob-emedia';
@@ -375,7 +372,7 @@ WebIM.conn.listen({
 			break;
 		case 'subscribed':
 			Vue.$store.dispatch('onGetContactUserList');
-			Vue.$store.dispatch('getAllFriendsStatus');
+			// Vue.$store.dispatch('getAllFriendsStatus');
 			Message.success(`${message.from} 已订阅`);
 			break;
 		case 'unsubscribed':

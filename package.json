@@ -39,7 +39,7 @@
     "chalk": "^2.0.1",
     "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.28.0",
-    "easemob-websdk": "^4.0.3",
+    "easemob-websdk": "^4.0.5",
     "eslint": "^6.5.1",
     "eslint-plugin-html": "^6.0.0",
     "eslint-plugin-vue": "^5.2.3",

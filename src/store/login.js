@@ -68,10 +68,11 @@ const Login = {
 		getLoginUserInfo: (context, payload)=>{
 			const { userId } = payload;
 			WebIM.conn.fetchUserInfoById(userId).then((res) => {
-				console.log(res.data[userId]);
 				let user_detail = res.data[userId];
 				res.data[userId] && context.commit('setUserDetaild', user_detail);
-			});
+			})['catch'](err => {
+				context.commit('setUserDetaild', {})
+			})
 		},
 		updateOwnUserInfo: ({ commit }, payload)=>{
 			const { infoValue, type } = payload;
