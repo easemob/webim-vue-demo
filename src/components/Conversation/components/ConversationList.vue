@@ -9,20 +9,25 @@ import dateFormater from '@/utils/dateFormat'
 import informIcon from '@/assets/images/avatar/inform.png'
 const store = useStore();
 
+//取系统通知数据
+const informDetail = computed(() => {
+  let informDetailArr = store.state.Conversation.informDetail;
+  let lastInformDeatail = informDetailArr[0]
+  let untreated = _.sumBy(informDetailArr, 'untreated') || 0;
+  return { untreated, lastInformDeatail };
+});
 
 //取会话数据
 const conversationList = computed(() => {
   return store.state.Conversation.conversationListData;
 });
+
 //取网络状态
 const networkStatus = computed(() => {
   return store.state.networkStatus
 })
+
 const emit = defineEmits(['toInformDetails', 'toChatMessage'])
-//系统通知
-// const toInformDetails = () => {
-//   router.push('/chat/conversation/informdetails');
-// };
 //普通会话
 let checkedConverItemIndex = ref(null);
 const toChatMessage = (item, itemKey, index) => {
@@ -50,10 +55,14 @@ const load = () => {
       </div>
       <div class="item_body item_main">
         <div class="name">系统通知</div>
-        <div class="last_msg_body">张三：申请加您为好友！</div>
+        <div class="last_msg_body">{{ informDetail.lastInformDeatail.from }}：{{ informDetail.lastInformDeatail.desc }}
+        </div>
       </div>
       <div class="item_body item_right">
-        <span class="time">11:30</span>
+        <span class="time">{{ dateFormater('MM/DD/HH:mm', informDetail.lastInformDeatail.time) }}</span>
+        <span class="unReadNum_box" v-if="informDetail.untreated >= 1">
+          <sup class="unReadNum_count" v-text="informDetail.untreated >= 99 ? '99+' : informDetail.untreated"></sup>
+        </span>
       </div>
     </li>
 

@@ -2,87 +2,138 @@
 import { computed } from 'vue';
 import { useStore } from 'vuex';
 import { Share } from '@element-plus/icons-vue';
+import EaseIM from '@/IM/initwebsdk'
+
 const store = useStore();
 const userInfos = computed(() => {
   return store.getters.loginUserInfo;
 });
+const loginUserId = EaseIM.conn.user
 
 </script>
 <template>
-  <el-card class="user_info_card" shadow="hover">
+  <div class="user_info_card line3" shadow="hover">
     <div class="info_fist_col">
       <el-avatar class="avatar" :src="userInfos.avatarurl" />
       <span class="nickname">{{
           userInfos.nickname
             ? userInfos.nickname + '(' + userInfos.hxId + ')'
-            : userInfos.hxId
+            : `暂无昵称(${loginUserId})`
       }}</span>
-      <el-icon class="share_icon">
-        <Share />
-      </el-icon>
     </div>
     <div class="info_second_col">
-      地区：<span class="text">{{
+      <p class="add"><b class="label"> 地区：</b><span class="address">{{
           userInfos.add ? userInfos.add : '地球'
-      }}</span>
+      }}</span></p>
+      <div>
+        <span>♀</span>
+        <span>
+          <Share style="width: 1em; height: 1em; margin-right: 8px" />
+        </span>
+      </div>
     </div>
-  </el-card>
+  </div>
 </template>
 
 <style lang="scss" scoped>
+/* 头像相关动效 */
+@keyframes avatar {
+  0% {
+    width: 0;
+    height: 0;
+  }
+
+
+  50% {
+    width: 30px;
+    height: 30px;
+  }
+
+
+  100% {
+    width: 60px;
+    height: 60px;
+
+  }
+}
+
+
+
+
+
 .user_info_card {
   position: absolute;
   left: 80px;
   top: 50px;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.20633);
   z-index: 999;
   transition: all 0.5s;
-  width: 226px;
-  height: 132px;
+  width: 216px;
+  height: 216px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 
+  .user_info_card>.el-card__body {
+    height: 100%;
+    padding: 0;
+  }
+
   .info_fist_col {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    position: relative;
+    justify-content: center;
+    flex: 1;
+    // height: 190px;
 
     .avatar {
-      width: 33px;
-      height: 33px;
+      width: 60px;
+      height: 60px;
+      box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.20633);
+      animation: avatar .3s linear 1;
     }
 
     .nickname {
-      margin-left: 10px;
+      margin-top: 3px;
       display: inline-block;
-      // width: 60px;
-    }
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-weight: 600;
+      font-size: 20px;
+      line-height: 28px;
+      color: #0D0D0D;
 
-    .share_icon {
-      position: absolute;
-      right: 0;
-      top: 25%;
-
-      transition: all 0.3s;
-
-      &:hover {
-        transform: scale(1.2);
-        box-shadow: 1px 1px 3px #b8b8b8;
-      }
     }
   }
 
   .info_second_col {
-    margin-top: 15px;
-    margin-left: 45px;
-    display: inline-block;
+    margin-left: 22px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     height: 50px;
-    line-height: 50px;
 
-    .text {
-      color: #b8b8b8;
-      font-weight: 300;
+    .add {
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-size: 13px;
+      line-height: 24px;
+      letter-spacing: 0.229412px;
+
+      .label {
+        color: #333333;
+        font-weight: 400;
+      }
+
+      .address {
+        font-weight: 200;
+        opacity: .5;
+        color: #333333;
+      }
     }
   }
 }

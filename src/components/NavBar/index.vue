@@ -21,8 +21,7 @@ let loginUserAvatar = computed(() => {
 });
 
 /* 关于用户在线状态--图标展示 */
-//暂无在线状态的发布展示默认图标
-const defaultStatusIcon = require('@/assets/online_icon/custom.png');
+
 let loginUserOnlineStatusIcon = computed(() => {
   const loginUserOnlineStatus = store.state.loginUserOnlineStatus;
   if (loginUserOnlineStatus === 'Unset' || loginUserOnlineStatus === '') {
@@ -43,6 +42,14 @@ const changeSkipRouterName = (routerName) => {
   router.push(`/chat/${routerName}`);
 };
 
+/* 取会话以及系统消息未读数控制会话icon badge显隐 */
+const conversationUnreadCount = computed(() => {
+
+  let informCount = _.sumBy(store.state.Conversation.informDetail, 'untreated') || 0
+  let commonConversationCount = _.sumBy(_.values(store.state.Conversation.conversationListData), 'unreadMessageNum')
+  return { informCount, commonConversationCount }
+})
+console.log('>>>>conversationUnreadCount>>>>>', conversationUnreadCount)
 /* 用户信息卡片显隐 */
 const isShowUserInfoCard = ref(false);
 const changeUserInfoCard = ref(null);
@@ -72,7 +79,8 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
           ? highligthConversation
           : grayConversation
       " alt="">
-      <span class="badge"></span>
+      <span v-if="conversationUnreadCount.informCount || conversationUnreadCount.commonConversationCount"
+        class="badge"></span>
     </div>
   </div>
   <!-- 去往联系人 -->

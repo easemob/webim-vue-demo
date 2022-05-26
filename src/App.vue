@@ -3,9 +3,8 @@ import { useStore } from 'vuex';
 import { useLocalStorage } from '@vueuse/core';
 import router from '@/router';
 import EaseIM from '@/IM/initwebsdk';
-import _ from 'lodash'
 import { useSDKErrorNotifi, useSetMessageKey } from '@/hooks';
-
+import { informType } from '@/constant'
 const store = useStore();
 EaseIM.logger.disableAll()
 /* connect 相关监听 */
@@ -99,22 +98,133 @@ EaseIM.conn.addEventHandler('messageListen', {
   },     // 收到视频消息。
   onRecallMessage: function (message) { },    // 收到消息撤回回执。
 })
-//侦听一个响应式对象或数组将始终返回该对象的当前值和上一个状态值的引用。为了完全侦听深度嵌套的对象和数组，可能需要对值进行深拷贝。
-// watchEffect(() => _.cloneDeep(store.state.Message.messageList), (newVal, oldVal) => {
-//   console.log('>>>>执行监听器', newVal, oldVal)
-//   store.dispatch('gatherConversation', newVal)
-//   //布置该监听为新消息添加后针对于会话列表进行收集更新
-// }, { deep: true })
-
-
 //接收的消息往store中push
 const pushNewMessage = (message) => {
   let key = useSetMessageKey(message)
   store.dispatch('createNewMessage', message)
   store.dispatch('gatherConversation', key)
+}
+
+/* 好友关系相关监听 */
+const { INFORM_FROM } = informType
+EaseIM.conn.addEventHandler('friendListen', {
+  // 收到好友邀请触发此方法。
+  onContactInvited: (data) => {
+    //写入INFORM
+    console.log('>>>>>>收到好友申请', data)
+    submitInformData(INFORM_FROM.FRIEND, data)
+  },
+  // 联系人被删除时触发此方法。
+  onContactDeleted: (data) => {
+    //写入INFORM
+    console.log('>>>>收到好友关系解散', data)
+    submitInformData(INFORM_FROM.FRIEND, data)
+  },
+  // 新增联系人会触发此方法。
+  onContactAdded: (data) => {
+    console.log('>>>>好友新增监听', data)
+    submitInformData(INFORM_FROM.FRIEND, data)
+    //新增好友重新获取好友列表
+    fetchFriendList()
+
+  },
+  // 好友请求被拒绝时触发此方法。
+  onContactRefuse: (data) => {
+    //写入INFORM
+    console.log('>>>>>>好友申请被拒绝', data)
+    data.type = 'other_person_refuse'
+    submitInformData(INFORM_FROM.FRIEND, data)
+  },
+  // 好友请求被同意时触发此方法。
+  onContactAgreed: (data) => {
+    //写入INFORM
+    console.log('>>>>>对方统一了好友申请', data)
+    //改掉data中的type
+    data.type = 'other_person_agree'
+    submitInformData(INFORM_FROM.FRIEND, data)
+  }
+})
+const submitInformData = (fromType, informContent) => {
+  console.log('>>>submitInformData>>>', fromType, informContent)
+  store.dispatch('createNewInform', { fromType, informContent })
 
 }
 
+/* 群组相关监听 */
+EaseIM.conn.addEventHandler('groupEvent', {
+  onGroupChange: (msg) => {
+    switch (msg.type) {
+      case 'rmGroupMute':
+        // 解除群组一键禁言。
+        break;
+      case 'muteGroup':
+        // 设置群组一键禁言。
+        break;
+      case 'deleteAnnouncement':
+        // 删除群公告。
+        break;
+      case 'updateAnnouncement':
+        // 更新群公告。
+        break;
+      case 'removeMute':
+        // 解除禁言。
+        break;
+      case 'addMute':
+        // 禁言用户。
+        break;
+      case 'removeAdmin':
+        // 移除管理员。
+        break;
+      case 'addAdmin':
+        // 添加管理员。
+        break;
+      case 'changeOwner':
+        // 转让群组。
+        break;
+      case 'direct_joined':
+        // 用户直接被拉进群。
+        break;
+      case 'leaveGroup':
+        // 退群。
+        break;
+      case 'memberJoinPublicGroupSuccess':
+        // 加入公开群成功。
+        break;
+      case 'removedFromGroup':
+        // 从群组移除。
+        break;
+      case 'invite_decline':
+        // 拒绝加群邀请。
+        break;
+      case 'invite_accept':
+        // 接收加群邀请（群含权限情况）。
+        break;
+      case 'invite':
+        // 加群邀请。
+        break;
+      case 'joinPublicGroupDeclined':
+        // 拒绝入群申请。
+        break;
+      case 'joinPublicGroupSuccess':
+        // 同意入群申请。
+        break;
+      case 'joinGroupNotifications':
+        // 申请入群。
+        break;
+      case 'leave':
+        // 退出群。
+        break;
+      case 'join':
+        // 加入群。
+        break;
+      case 'deleteGroupChat':
+        // 解散群。
+        break;
+      default:
+        break;
+    }
+  }
+})
 
 
 </script>

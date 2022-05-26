@@ -15,9 +15,7 @@ const store = useStore();
 const conversationList = computed(() => {
   return _.values(store.state.Conversation.conversationListData);
 });
-const informConversationData = computed(() => {
-  return _.values(store.state.Conversation.informConversationData);
-});
+
 //路由跳转-系统通知
 const toInformDetails = () => {
   router.push('/chat/conversation/informdetails');
@@ -33,7 +31,6 @@ const toChatMessage = (id) => {
   });
 }
 
-// const 
 </script>
 <template>
   <el-container style="height: 100%">
