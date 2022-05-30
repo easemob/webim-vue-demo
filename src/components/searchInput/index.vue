@@ -37,11 +37,9 @@ const searchSuggest = ref([])
 const querySearch = () => {
   if (inputValue.value) {
     //搜索会话 conversation
+    //todo 后续计划在会话数据结构中加keywords字段 通过keywords字段实现更多条件的搜索
     if (props.searchType === 'conversation') {
-      const resultList = _.filter(props.searchData, (o) => {
-        console.log('>>>inputValue.value>>', inputValue.value)
-        return o.conversationInfo.name.includes(inputValue.value)
-      })
+      const resultList = _.filter(props.searchData, (o) => o.conversationInfo.name.includes(inputValue.value))
       searchSuggest.value = resultList
       console.log('>>>>>搜索结果')
     }

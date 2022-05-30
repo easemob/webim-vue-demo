@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 /* vuex */
 import { useStore } from 'vuex';
 /* router */
@@ -9,6 +9,7 @@ import { Plus } from '@element-plus/icons-vue';
 /* 组件 */
 import UserInfoCard from './components/UserInfoCard.vue';
 import UserOnlineStatusCard from './components/UserOnlineStatusCard.vue';
+import SettingComponents from './components/SettingComponents'
 /* constants */
 import { onLineStatus } from '@/constant';
 /* vueUse */
@@ -20,8 +21,7 @@ let loginUserAvatar = computed(() => {
   return store.getters.loginUserInfo.avatarurl;
 });
 
-/* 关于用户在线状态--图标展示 */
-
+/* 用户在线状态--样式展示逻辑 */
 let loginUserOnlineStatusIcon = computed(() => {
   const loginUserOnlineStatus = store.state.loginUserOnlineStatus;
   if (loginUserOnlineStatus === 'Unset' || loginUserOnlineStatus === '') {
@@ -44,16 +44,29 @@ const changeSkipRouterName = (routerName) => {
 
 /* 取会话以及系统消息未读数控制会话icon badge显隐 */
 const conversationUnreadCount = computed(() => {
-
   let informCount = _.sumBy(store.state.Conversation.informDetail, 'untreated') || 0
   let commonConversationCount = _.sumBy(_.values(store.state.Conversation.conversationListData), 'unreadMessageNum')
   return { informCount, commonConversationCount }
 })
-console.log('>>>>conversationUnreadCount>>>>>', conversationUnreadCount)
 /* 用户信息卡片显隐 */
 const isShowUserInfoCard = ref(false);
 const changeUserInfoCard = ref(null);
 onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
+
+
+/* 设置部分 */
+const settingComp = ref(null)
+const settingPopover = ref(null)
+const modalType = ref('');
+const isShowPopover = ref(false)
+onClickOutside(settingPopover, () => (isShowPopover.value = false));
+const showInputModal = (type) => {
+  modalType.value = type
+  settingComp.value.dialogVisible = true
+  console.log('>>>>>>跳转对应modal')
+}
+
+
 </script>
 
 <template>
@@ -61,7 +74,8 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
   <div class="chat_avatar">
     <el-avatar :src="loginUserAvatar" @click="isShowUserInfoCard = true">
     </el-avatar>
-    <el-popover v-if="loginUserOnlineStatusIcon" trigger="click" placement="right-start" :show-arrow="false">
+    <el-popover :width="10" v-if="loginUserOnlineStatusIcon" trigger="click" placement="right-start"
+      :show-arrow="false">
       <template #reference>
         <div class="online_status" :style="loginUserOnlineStatusIcon"></div>
       </template>
@@ -88,10 +102,35 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
     <img class="chat_contacts_icon" :src="skipRouterName === 'contacts' ? highligthContacts : grayContacts" alt="" />
   </div>
   <div class="chat_settings">
-    <el-icon>
-      <Plus />
-    </el-icon>
+    <el-popover ref="settingPopover" v-model:visible="isShowPopover" placement="right-end" trigger="click">
+      <template #reference>
+        <el-icon @click="isShowPopover = true">
+          <Plus />
+        </el-icon>
+      </template>
+      <template #default>
+        <div class="setting_fun_list">
+          <div class="func_item" @click="showInputModal('createNewGroups')">
+            <span class="settting_fun_icon">ICON</span>
+            <span class="setting_fun_text">创建群组</span>
+          </div>
+          <div class="func_item" @click="showInputModal('applyJoinGroups')">
+            <span class="settting_fun_icon">ICON</span>
+            <span class="setting_fun_text apply_groups">
+              <b class="line"></b>
+              申请入群
+              <b class="line"></b>
+            </span>
+          </div>
+          <div class="func_item" @click="showInputModal('addNewFriend')">
+            <span class="settting_fun_icon">ICON</span>
+            <span class="setting_fun_text">添加好友</span>
+          </div>
+        </div>
+      </template>
+    </el-popover>
   </div>
+  <SettingComponents ref="settingComp" :modalType="modalType" />
 </template>
 
 <style lang="scss" scoped>
@@ -154,6 +193,12 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
       display: inline-block;
       width: 27px;
       height: 27px;
+      transition: all .5s;
+
+      &:hover {
+        transform: scale(1.3);
+      }
+
     }
 
     .badge {
@@ -176,6 +221,11 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
     display: inline-block;
     width: 27px;
     height: 27px;
+    transition: all .5s;
+
+    &:hover {
+      transform: scale(1.3);
+    }
   }
 }
 
@@ -185,9 +235,53 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
   font-size: 24px;
   color: #8e8e8e;
   cursor: pointer;
+  transition: all .5s;
 
   &:hover {
     color: #1b83f9;
+    transform: scale(1.3);
   }
+
+  .chat_setting_item {
+    width: 100%;
+    height: 30px;
+    background: pink;
+  }
+}
+
+.setting_fun_list {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  .func_item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+
+    .setting_fun_text {
+      display: inline-block;
+      text-align: center;
+      height: 50px;
+      line-height: 50px;
+      width: 70px;
+    }
+
+    .apply_groups {
+      display: flex;
+      flex-direction: column;
+
+    }
+  }
+
+}
+
+.line {
+  display: inline-block;
+  width: 100%;
+  height: 1px;
+  background: #000;
 }
 </style>

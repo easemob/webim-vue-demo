@@ -58,7 +58,9 @@ const fetchGroupList = () => {
 }
 /* presence 相关监听 */
 EaseIM.conn.addEventHandler('presenceStatusChange', {
+
   onPresenceStatusChange: (status) => {
+    console.log('>>>>>presenceStatusChange', status)
     getUserPresence(...status);
   },
 });

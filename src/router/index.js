@@ -14,8 +14,10 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-
     component: () => import('../views/Login'),
+    meta: {
+      title: '登陆环信',
+    },
   },
   /* 聊天页 */
   {
@@ -23,6 +25,9 @@ const routes = [
     name: 'Chat',
     redirect: '/chat/conversation',
     component: () => import('../views/Chat'),
+    meta: {
+      title: '开始聊天',
+    },
     children: [
       /* 会话列表 */
       {

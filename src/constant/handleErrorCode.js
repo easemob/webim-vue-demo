@@ -10,7 +10,8 @@ export default {
   17: {
     duplicate_unique_property_exists: 'id已存在！',
     resource_limited: '注册已达上限请开通企业版！',
-    unauthorized: '未开发授权注册！',
+    unauthorized: '未开放授权注册！',
+    resource_not_found: '账号不存在！',
   },
   28: {
     'appkey or token error': '未登录！',
