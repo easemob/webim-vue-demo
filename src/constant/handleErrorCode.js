@@ -16,4 +16,10 @@ export default {
   28: {
     'appkey or token error': '未登录！',
   },
+  603: {
+    forbidden_op: '已在群组当中！',
+  },
+  605: {
+    resource_not_found: '此群不存在！',
+  },
 };

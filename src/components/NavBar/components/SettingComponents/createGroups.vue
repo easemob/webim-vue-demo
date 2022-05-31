@@ -68,8 +68,8 @@ const searchFriend = () => {
 /* 创建群组form */
 //创建群组群组所用参数
 let groupCreateForm = reactive({
-    groupname: "groupName",
-    desc: "A description of a group",
+    groupname: "群描述...",
+    desc: "群名称...",
     members: [],
     public: true,
     approval: true,
@@ -85,8 +85,8 @@ watch(dialogVisible, (newVal) => {
 })
 const sourceForm = () => {
     return {
-        groupname: "groupName",
-        desc: "A description of a group",
+        groupname: "群名称...",
+        desc: "群描述...",
         members: [],
         public: true,
         approval: true,
@@ -111,7 +111,7 @@ const createNewGroups = async () => {
             message: `${groupCreateForm.groupname}创建成功！`,
             type: 'success',
         })
-        resetCreateModal()
+        resetTheModalStatus()
     }
     catch (error) {
         if (error && error.type && error.message) {
@@ -128,7 +128,7 @@ const createNewGroups = async () => {
 
 //重置创建群Modal
 
-const resetCreateModal = () => {
+const resetTheModalStatus = () => {
     handleRenderFiendList()
     nextStep.value = 0
     serachInputValue.value = ''
