@@ -43,6 +43,8 @@ const getMyUserInfos = () => {
 };
 //获取好友列表
 const fetchFriendList = () => {
+  const { value = {} } = useLocalStorage('friendList')
+  if (Object.values(JSON.parse(value)).length > 0) return
   store.dispatch('fetchFriendList')
 }
 //获取加入的群组列表

@@ -34,7 +34,7 @@ const toChatMessage = (item, itemKey, index) => {
   checkedConverItemIndex.value = index;
   if (item && item.unreadMessageNum > 0) store.commit('CLEAR_UNREAD_NUM', itemKey)
   //跳转至对应的消息界面
-  emit('toChatMessage', itemKey)
+  emit('toChatMessage', itemKey, item.conversationType)
 };
 //加载到底拉取新数据
 const load = () => {

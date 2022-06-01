@@ -68,8 +68,8 @@ const searchFriend = () => {
 /* 创建群组form */
 //创建群组群组所用参数
 let groupCreateForm = reactive({
-    groupname: "群描述...",
-    desc: "群名称...",
+    groupname: "群名称...",
+    desc: "群描述...",
     members: [],
     public: true,
     approval: true,

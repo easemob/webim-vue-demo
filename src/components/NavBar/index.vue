@@ -36,7 +36,7 @@ let skipRouterName = ref('conversation');
 let highligthConversation = require('@/assets/images/tabbar/sessionhighlight2x.png');
 let grayConversation = require('@/assets/images/tabbar/session2x.png');
 let highligthContacts = require('@/assets/images/tabbar/comtactshighlight2x.png');
-let grayContacts = require('@/assets/images/tabbar/comtacts2x.png');
+let grayContacts = require('@/assets/images/tabbar/1491654067271_.pic.jpg');
 const changeSkipRouterName = (routerName) => {
   skipRouterName.value = routerName;
   router.push(`/chat/${routerName}`);
@@ -59,6 +59,10 @@ const settingComp = ref(null)
 const settingPopover = ref(null)
 const modalType = ref('');
 const isShowPopover = ref(false)
+//设置相关icon
+const createGroupIcon = require('@/assets/images/tabbar/1461654066965_.pic.jpg')
+const applyJoinGroupIcon = require('@/assets/images/tabbar/1471654067125_.pic.jpg')
+const applyAddFriendIcon = require('@/assets/images/tabbar/1481654067168_.pic.jpg')
 onClickOutside(settingPopover, () => (isShowPopover.value = false));
 const showInputModal = (type) => {
   modalType.value = type
@@ -101,6 +105,7 @@ const showInputModal = (type) => {
   <div class="chat_contacts chat_icon_box" @click="changeSkipRouterName('contacts')">
     <img class="chat_contacts_icon" :src="skipRouterName === 'contacts' ? highligthContacts : grayContacts" alt="" />
   </div>
+  <!-- 设置添加部分 -->
   <div class="chat_settings">
     <el-popover ref="settingPopover" v-model:visible="isShowPopover" placement="right-end" trigger="click">
       <template #reference>
@@ -111,11 +116,15 @@ const showInputModal = (type) => {
       <template #default>
         <div class="setting_fun_list">
           <div class="func_item" @click="showInputModal('createNewGroups')">
-            <span class="settting_fun_icon">ICON</span>
+            <span class="settting_fun_icon">
+              <img :src="createGroupIcon" alt="">
+            </span>
             <span class="setting_fun_text">创建群组</span>
           </div>
           <div class="func_item" @click="showInputModal('applyJoinGroups')">
-            <span class="settting_fun_icon">ICON</span>
+            <span class="settting_fun_icon">
+              <img :src="applyJoinGroupIcon" alt="">
+            </span>
             <span class="setting_fun_text apply_groups">
               <b class="line"></b>
               申请入群
@@ -123,7 +132,9 @@ const showInputModal = (type) => {
             </span>
           </div>
           <div class="func_item" @click="showInputModal('addNewFriend')">
-            <span class="settting_fun_icon">ICON</span>
+            <span class="settting_fun_icon">
+              <img :src="applyAddFriendIcon" alt="">
+            </span>
             <span class="setting_fun_text">添加好友</span>
           </div>
         </div>
@@ -245,7 +256,6 @@ const showInputModal = (type) => {
   .chat_setting_item {
     width: 100%;
     height: 30px;
-    background: pink;
   }
 }
 
@@ -254,12 +264,29 @@ const showInputModal = (type) => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding: 0 15px;
+
 
   .func_item {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-around;
+    width: 100%;
+
+    &:hover {
+      background-color: #F2F2F2;
+    }
+
+    .settting_fun_icon {
+      // display: flex;
+      // background: pink;
+
+      img {
+        width: 20px;
+        height: 20px;
+      }
+    }
 
     .setting_fun_text {
       display: inline-block;
@@ -267,6 +294,7 @@ const showInputModal = (type) => {
       height: 50px;
       line-height: 50px;
       width: 70px;
+      cursor: pointer;
     }
 
     .apply_groups {

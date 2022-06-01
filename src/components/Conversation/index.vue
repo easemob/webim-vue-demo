@@ -22,11 +22,12 @@ const toInformDetails = () => {
 }
 
 //路由跳转-对应好友会话
-const toChatMessage = (id) => {
+const toChatMessage = (id, chatType) => {
   console.log('>>>>>>>id', id)
   router.push({
     path: '/chat/conversation/message', query: {
-      id
+      id,
+      chatType
     }
   });
 }
@@ -50,19 +51,18 @@ const toChatMessage = (id) => {
 <style lang="scss" scoped>
 .chat_converation_box {
   position: relative;
-  width: 30%;
+  width: 25%;
   background: #cfdbf171;
   overflow: hidden;
 
   .chat_conversation_list {
     height: calc(100% - 60px);
-
   }
-
 }
 
 .chat_converation_main_box {
   width: 100%;
   height: 100%;
+  padding: 0;
 }
 </style>
