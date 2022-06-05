@@ -39,9 +39,12 @@ onMounted(() => {
 const friendList = computed(() => store.state.Contacts.friendList)
 const handleRenderFiendList = () => {
     let newFriendList = []
-    friendList.value.length > 0 && friendList.value.forEach(v => {
-        return newFriendList.push({ name: v, isChecked: false, keywords: v })
-    })
+    for (const key in friendList.value) {
+        if (Object.hasOwnProperty.call(friendList.value, key)) {
+            const v = friendList.value[key];
+            newFriendList.push({ name: v.hxId, isChecked: false, keywords: v.hxId })
+        }
+    }
     return renderFriendList.value = newFriendList
 }
 /* 搜索逻辑 */
@@ -127,7 +130,6 @@ const createNewGroups = async () => {
 }
 
 //重置创建群Modal
-
 const resetTheModalStatus = () => {
     handleRenderFiendList()
     nextStep.value = 0

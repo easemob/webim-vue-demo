@@ -1,25 +1,45 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import { messageType } from '@/constant'
+
+//组件
+import MessageList from './components/messageList.vue'
+import InputBox from './components/inputBox.vue'
 const store = useStore()
 const route = useRoute()
 const drawer = ref(false)
 const { CHAT_TYPE } = messageType
-
+const nowPickInfo = ref({});
+const friendList = computed(() => store.state.Contacts.friendList)
+const groupList = computed(() => store.state.Contacts.groupList)
 //获取路由ID对应的信息
-const getIdInfo = ({ id, chatType }) => {
-
-  console.log('>>>>>', id, chatType)
-  if (chatType === CHAT_TYPE.GROUP) {
-    store.dispatch('getAssignGroupDetail', id)
+const getIdInfo = async ({ id, chatType }) => {
+  //类型为单聊
+  if (chatType === CHAT_TYPE.SINGLE) {
+    if (friendList.value[id].userInfo) {
+      nowPickInfo.value.userInfo = friendList[id].userInfo
+    } else {
+      return
+    }
   }
+  //类型为群组
+  if (chatType === CHAT_TYPE.GROUP) {
+    if (groupList.value[id].groupDetail) {
+      return nowPickInfo.value.groupDetail = groupList.value[id].groupDetail
+    } else {
+      await store.dispatch('getAssignGroupDetail', id)
+      return nowPickInfo.value.groupDetail = groupList.value[id].groupDetail
+    }
+  }
+
+
 
 }
 watch(() => route.query, (routeVal) => {
-  // console.log('route', newVal, route.query)
   if (routeVal) {
+    nowPickInfo.value = { ...routeVal }
     getIdInfo(routeVal)
 
   }
@@ -27,24 +47,39 @@ watch(() => route.query, (routeVal) => {
   immediate: true
 })
 
+//获取其id对应的消息内容
+const messageData = computed(() => {
 
-
+  return nowPickInfo.value.id && store.state.Message.messageList[nowPickInfo.value.id] || []
+})
+console.log('>>>>>messageData', messageData)
 </script>
 <template>
   <el-container class="app_container">
     <el-header class="chat_message_header">
-      <div class="chat_user_name"> 小当家</div>
+      <div v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE" class="chat_user_name">{{ nowPickInfo.id }}</div>
+      <div v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP" class="chat_user_name">
+        {{ nowPickInfo.groupDetail && nowPickInfo.groupDetail.name || '' }} {{ `(${nowPickInfo.groupDetail &&
+            nowPickInfo.groupDetail.affiliations_count || ''})`
+        }}
+      </div>
       <span class="more" @click="drawer = !drawer">
         ...
       </span>
     </el-header>
 
     <el-main class="chat_message_main">
-      <div v-for="item in 200">{{ item }}</div>
+      <div class="chat_message_tips">
+      </div>
+      <MessageList :messageData="messageData" />
+      <!-- <div v-for="item in 200">{{ item }}</div> -->
 
     </el-main>
     <el-footer class="chat_message_inputbar">
-      <div class="chat_func_box"></div>
+      <div class="chat_func_box">
+
+      </div>
+      <InputBox />
     </el-footer>
 
   </el-container>

@@ -34,7 +34,7 @@ const toChatMessage = (id, chatType) => {
 
 </script>
 <template>
-  <el-container style="height: 100%">
+  <el-container style="height: 100% ">
     <el-aside class="chat_converation_box">
       <!-- 搜索组件 -->
       <SearchInput :searchType="'conversation'" :searchData="conversationList" @toChatMessage="toChatMessage" />

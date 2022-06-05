@@ -8,6 +8,7 @@ const Contacts = {
   },
   mutations: {
     SET_FRIEND_LIST: (state, payload) => {
+      //todo 后续添加用户属性字段 userInfo到friendList中
       state.friendList = _.assign({}, payload);
     },
     SET_GROUP_LIST: (state, payload) => {
@@ -64,7 +65,7 @@ const Contacts = {
         groupId: goupsId, // 群组id
       };
       let result = await EaseIM.conn.getGroupInfo(options);
-      console.log('>>>>>>>群详情获取成功result', result);
+      // console.log('>>>>>>>群详情获取成功result', result);
       result.data &&
         commit('SET_GROUP_LIST', {
           setType: 'replenish',

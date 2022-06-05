@@ -12,11 +12,12 @@ const store = useStore();
 //取系统通知数据
 const informDetail = computed(() => {
   let informDetailArr = store.state.Conversation.informDetail;
-  let lastInformDeatail = informDetailArr[0]
+  let lastInformDeatail = informDetailArr[0] || {}
   let untreated = _.sumBy(informDetailArr, 'untreated') || 0;
+  console.log('>>>>>lastInformDeatail', lastInformDeatail)
   return { untreated, lastInformDeatail };
 });
-
+console.log('>>>>>informDetail', informDetail.lastInformDeatail)
 //取会话数据
 const conversationList = computed(() => {
   return store.state.Conversation.conversationListData;
@@ -46,7 +47,7 @@ const load = () => {
   <ul v-infinite-scroll="load" class="session_list" style="overflow: auto" @click="getItem">
     <li class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</li>
     <!-- 系统通知会话 -->
-    <li class="session_list_item" @click="$emit('toInformDetails')">
+    <li v-if="informDetail.lastInformDeatail" class="session_list_item" @click="$emit('toInformDetails')">
       <div class="item_body item_left">
         <!-- 通知头像 -->
         <div class="session_other_avatar">
@@ -100,7 +101,6 @@ const load = () => {
   height: 100%;
   padding: 0;
   margin: 0;
-  list-style: none;
 }
 
 .offline_hint {

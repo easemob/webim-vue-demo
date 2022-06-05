@@ -41,7 +41,6 @@ const querySearch = () => {
     if (props.searchType === 'conversation') {
       const resultList = _.filter(props.searchData, (o) => o.conversationInfo.name.includes(inputValue.value))
       searchSuggest.value = resultList
-      console.log('>>>>>搜索结果')
     }
     //搜索联系人 contacts
 
@@ -72,14 +71,15 @@ const emitConversation = (fromType, item) => {
         searchHistory.value.unshift(item)
       }
     })
-    emit('toChatMessage', item.value)
+    emit('toChatMessage', item.value, item.chatType)
   }
   if (fromType === 1) {
+    const searchItem = { label: item.conversationInfo.name, value: item.conversationKey, chatType: item.conversationType }
     const _rawSearchHistory = _.cloneDeep(toRaw(searchHistory.value))
     console.log('searchHistory', _rawSearchHistory)
-    if (_rawSearchHistory.length === 0) {
+    if (_rawSearchHistory.length === 0 || _rawSearchHistory === null) {
       console.log('>>>>>>_rawSearchHistory为空是新建一条')
-      searchHistory.value.unshift({ label: item.conversationInfo.name, value: item.conversationKey })
+      searchHistory.value.unshift(searchItem)
     }
     if (_rawSearchHistory.length > 0) {
       console.log('>>>>>>_rawSearchHistory不为空时开始筛选')
@@ -87,16 +87,16 @@ const emitConversation = (fromType, item) => {
         return v.value === item.conversationKey
       })
       if (_index === -1) {
-        searchHistory.value.unshift({ label: item.conversationInfo.name, value: item.conversationKey })
+        searchHistory.value.unshift(searchItem)
       } else {
         searchHistory.value.splice(_index, 1)
-        searchHistory.value.unshift({ label: item.conversationInfo.name, value: item.conversationKey })
+        searchHistory.value.unshift(searchItem)
       }
 
       console.log(_index)
 
     }
-    emit('toChatMessage', item.conversationKey)
+    emit('toChatMessage', item.conversationKey, item.conversationType)
   }
   inputValue.value = ''
   searchSuggest.value = []
