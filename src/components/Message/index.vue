@@ -72,14 +72,10 @@ console.log('>>>>>messageData', messageData)
       <div class="chat_message_tips">
       </div>
       <MessageList :messageData="messageData" />
-      <!-- <div v-for="item in 200">{{ item }}</div> -->
 
     </el-main>
     <el-footer class="chat_message_inputbar">
-      <div class="chat_func_box">
-
-      </div>
-      <InputBox />
+      <InputBox :nowPickInfo="nowPickInfo" />
     </el-footer>
 
   </el-container>
@@ -137,18 +133,11 @@ console.log('>>>>>messageData', messageData)
 }
 
 .chat_message_inputbar {
+  width: 100%;
   height: 25%;
   padding: 0;
   background-color: #F9F9F9;
 
-  .chat_func_box {
-    height: 40px;
-    width: 100%;
-    border-radius: 5px;
-    background-color: #f7f7f7;
-    border-top: 1px solid #E6E6E6;
-    border-bottom: 1px solid #E6E6E6;
-  }
 
 }
 </style>

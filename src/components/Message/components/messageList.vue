@@ -8,7 +8,7 @@ import { messageType } from '@/constant'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 import myAvatar from '@/assets/images/loginIcon.png'
 
-const loginUserId = EaseIM.conn.user;
+/* props */
 const props = defineProps({
     messageData: {
         type: Array,
@@ -16,7 +16,12 @@ const props = defineProps({
     },
 });
 const { messageData } = toRefs(props);
+/* constant */
 const { ALL_MESSAGE_TYPE } = messageType
+/* login hxId */
+const loginUserId = EaseIM.conn.user;
+
+/* computed-- 消息来源是否为自己 */
 const isMyself = computed(() => {
     return (msgBody) => {
         return (msgBody.from === loginUserId)
@@ -27,7 +32,6 @@ const audioPlayStatus = reactive({
     isPlaying: false,//是否在播放中
     playIndex: -1, //在播放的音频消息下标
 })
-
 //开始播放
 const startplayAudio = (msgBody, index) => {
     let armRec = new BenzAMRRecorder();
@@ -66,10 +70,7 @@ const startplayAudio = (msgBody, index) => {
                 </p>
                 <!-- 图片类型消息 -->
                 <div v-if="msgBody.type === ALL_MESSAGE_TYPE.IMAGE">
-                    <el-image v-if="isMyself(msgBody)" :src="msgBody.url" :preview-src-list="[msgBody.url]"
-                        :initial-index="1" fit="cover" />
-                    <el-image v-else :src="msgBody.thumb" :preview-src-list="[msgBody.url]" :initial-index="1"
-                        fit="cover" />
+                    <el-image :src="msgBody.thumb" :preview-src-list="[msgBody.url]" :initial-index="1" fit="cover" />
                 </div>
                 <!-- 语音类型消息 -->
                 <div :class="['message_box_content_audio', isMyself(msgBody) ? 'message_box_content_audio_mine' : 'message_box_content_audio_other']"
@@ -81,6 +82,9 @@ const startplayAudio = (msgBody, index) => {
                     <div :class="[isMyself(msgBody) ? 'play_audio_icon_mine' : 'play_audio_icon_other', audioPlayStatus.playIndex === index && 'start_play_audio']"
                         style=" background-size: 100% 100%;">
                     </div>
+                </div>
+                <div v-if="msgBody.type === ALL_MESSAGE_TYPE.LOCAL">
+                    <p style="padding: 10px">[暂不支持位置消息展示]</p>
                 </div>
             </div>
         </div>

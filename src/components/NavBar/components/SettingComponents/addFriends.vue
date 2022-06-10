@@ -53,7 +53,7 @@ const resetTheModalStatus = () => {
 </script>
 <template>
     <div class="app_container">
-        <el-form label-position="top" label-width="100px" style="max-width: 460px">
+        <el-form label-position="top" label-width="100px">
             <el-form-item label="好友ID">
                 <el-input style="height:40px" v-model.trim="applyAddFriendsForm.username" />
             </el-form-item>

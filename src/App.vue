@@ -242,8 +242,9 @@ EaseIM.conn.addEventHandler('groupEvent', {
 
 <style type="scss">
 @import './styles/reset/reset.css';
+@import './styles/iconfont/iconfont.css';
 
-.slide-fade-enter-active {
+/* .slide-fade-enter-active {
   transition: all 0.3s ease-out;
 }
 
@@ -259,5 +260,5 @@ EaseIM.conn.addEventHandler('groupEvent', {
 .slide-fade-enter-to,
 .slide-fade-leave-from {
   opacity: 1;
-}
+} */
 </style>

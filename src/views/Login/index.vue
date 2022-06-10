@@ -112,8 +112,8 @@ const checkParams = (params) => {
   return true;
 };
 const toEasemob = () => {
-  const linkUrl = 'https://www.easemob.com//?utm_source=baidu-ppwx';
-  window.open(linkUrl, '_blank');
+  const linkUrl = 'https://www.easemob.com/?utm_source=baidu-ppwx';
+  window.open(linkUrl, 'Easemob');
 };
 </script>
 <template>

@@ -194,7 +194,7 @@ const resetTheModalStatus = () => {
                     <el-input v-model="groupCreateForm.groupname" input-style="border-radius: 2px;" size="large" />
                 </el-form-item>
                 <el-form-item label="群详情">
-                    <el-input v-model="groupCreateForm.desc" maxlength="300" :autosize="{ minRows: 2, maxRows: 4 }"
+                    <el-input v-model="groupCreateForm.desc" maxlength="300" :autosize="{ minRows: 1, maxRows: 4 }"
                         resize="none" placeholder="Please input" show-word-limit type="textarea" />
                 </el-form-item>
                 <el-form-item label="群人数">
