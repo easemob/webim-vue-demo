@@ -1,9 +1,9 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import { messageType } from '@/constant'
-
+import EaseIM from '@/IM/initwebsdk'
 //组件
 import MessageList from './components/messageList.vue'
 import InputBox from './components/inputBox.vue'
@@ -46,13 +46,33 @@ watch(() => route.query, (routeVal) => {
 }, {
   immediate: true
 })
+//获取历史记录
+const fechHistoryMessage = () => {
+  console.log('>>>>>>执行拉取漫游')
+  if (nowPickInfo.value) {
+    store.dispatch('getHistoryMessage', nowPickInfo.value)
+  } else {
+    return []
+  }
 
+}
 //获取其id对应的消息内容
 const messageData = computed(() => {
-
-  return nowPickInfo.value.id && store.state.Message.messageList[nowPickInfo.value.id] || []
+  //如果Message.messageList中不存在的话调用拉取漫游取一下历史消息
+  return nowPickInfo.value.id && store.state.Message.messageList[nowPickInfo.value.id] || fechHistoryMessage()
 })
-console.log('>>>>>messageData', messageData)
+const messageContainer = ref(null);
+const scrollMessageList = () => {
+  nextTick(() => {
+    console.log('scrollMessageList被调用', messageContainer.value.scrollHeight)
+    messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+  })
+}
+
+
+
+
+
 </script>
 <template>
   <el-container class="app_container">
@@ -69,9 +89,12 @@ console.log('>>>>>messageData', messageData)
     </el-header>
 
     <el-main class="chat_message_main">
-      <div class="chat_message_tips">
+      <div class="main_container" ref="messageContainer">
+        <div class="chat_message_tips">
+        </div>
+        <MessageList :messageData="messageData" @scrollMessageList="scrollMessageList" />
       </div>
-      <MessageList :messageData="messageData" />
+
 
     </el-main>
     <el-footer class="chat_message_inputbar">
@@ -129,7 +152,12 @@ console.log('>>>>>messageData', messageData)
 
 .chat_message_main {
   background: #F9F9F9;
-  overflow-y: scroll;
+
+  .main_container {
+    height: 100%;
+    overflow-y: scroll;
+  }
+
 }
 
 .chat_message_inputbar {

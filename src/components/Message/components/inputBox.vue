@@ -190,7 +190,7 @@ const addOneEmoji = (emoji) => {
     font-family: 'PingFang SC';
     width: 100%;
     box-sizing: border-box;
-    min-height: 150px;
+    min-height: 100px;
     border: none;
     background: none;
     letter-spacing: .5px;

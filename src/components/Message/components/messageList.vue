@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, toRefs, defineProps } from 'vue';
+import { reactive, computed, onUpdated, toRefs, defineProps, defineEmits } from 'vue';
 import EaseIM from '@/IM/initwebsdk'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import dateFormat from '@/utils/dateFormat'
@@ -14,7 +14,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+
 });
+/* emits */
+const emit = defineEmits(['scrollMessageList'])
 const { messageData } = toRefs(props);
 /* constant */
 const { ALL_MESSAGE_TYPE } = messageType
@@ -55,8 +58,20 @@ const startplayAudio = (msgBody, index) => {
         audioPlayStatus.playIndex = -1;
     })
 }
+
+
+//触发更新
+onUpdated(() => {
+    console.log('>>>>>>>触发数据更新', emit)
+    emit('scrollMessageList')
+})
+
+
+
+
 </script>
 <template>
+
     <div class="messageList_box" v-for="(msgBody, index) in messageData" :key="msgBody.id">
         <div class="message_box_item" :style="{ flexDirection: (isMyself(msgBody) ? 'row-reverse' : 'row') }">
             <div class="message_item_time">{{ dateFormat('MM/DD/HH:mm', msgBody.time) }}</div>
@@ -89,6 +104,8 @@ const startplayAudio = (msgBody, index) => {
             </div>
         </div>
     </div>
+
+
 </template>
 
 <style lang="scss" scoped>
