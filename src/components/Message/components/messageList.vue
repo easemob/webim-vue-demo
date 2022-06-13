@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, computed, onUpdated, toRefs, defineProps, defineEmits } from 'vue';
+import { reactive, computed, onUpdated, toRefs } from 'vue';
 import EaseIM from '@/IM/initwebsdk'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import dateFormat from '@/utils/dateFormat'
@@ -60,11 +60,7 @@ const startplayAudio = (msgBody, index) => {
 }
 
 
-//触发更新
-onUpdated(() => {
-    console.log('>>>>>>>触发数据更新', emit)
-    emit('scrollMessageList')
-})
+
 
 
 

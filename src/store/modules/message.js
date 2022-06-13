@@ -36,24 +36,36 @@ const Message = {
   },
   actions: {
     //添加新消息
-    createNewMessage: ({ commit }, params) => {
+    createNewMessage: ({ dispatch, commit }, params) => {
+      let key = useSetMessageKey(params);
       commit('UPDATE_MESSAGE_LIST', params);
+      dispatch('gatherConversation', key);
     },
     //获取历史消息
-    getHistoryMessage: async ({ commit }, params) => {
+    getHistoryMessage: async ({ dispatch, commit }, params) => {
       console.log('>>>>>>>>>>params', params);
       const { id, chatType } = params;
-      let options = {
-        queue: id, //需特别注意：如果 queue 属性值为大小写字母混合输入或全部大写会导致拉取漫游为空数组，因此需将属性值转换为全部小写。
-        isGroup: chatType === CHAT_TYPE.GROUP,
-        format: true,
-        count: 10,
-      };
-      let historyMessage = await EaseIM.conn.fetchHistoryMessages(options);
-      commit('UPDATE_HISTORY_MESSAGE', { listKey: id, historyMessage });
+      return new Promise(async (resolve, reject) => {
+        let options = {
+          queue: id, //需特别注意：如果 queue 属性值为大小写字母混合输入或全部大写会导致拉取漫游为空数组，因此需将属性值转换为全部小写。
+          isGroup: chatType === CHAT_TYPE.GROUP,
+          format: true,
+          count: 10,
+        };
+        try {
+          let historyMessage = await EaseIM.conn.fetchHistoryMessages(options);
+          resolve(historyMessage);
+          commit('UPDATE_HISTORY_MESSAGE', { listKey: id, historyMessage });
+          //提示会话列表更新
+          //todo 漫游调用之后也需要更新会话列表，但是目前还没有想到如何拉取历史消息再更新会话列表，后续再完善。
+          // dispatch('gatherConversation', id);
+        } catch (error) {
+          reject(error);
+        }
+      });
     },
     //发送展示类型消息
-    sendShowTypeMessage: async ({ commit }, params) => {
+    sendShowTypeMessage: async ({ dispatch, commit }, params) => {
       let options = useCreateMessage.createOptions(params);
       return new Promise(async (resolve, reject) => {
         let msg = WebIM.message.create(options);
@@ -65,6 +77,8 @@ const Message = {
           let msgBody = useCreateMessage.createMsgBody(msg);
           console.log(msgBody);
           commit('UPDATE_MESSAGE_LIST', msgBody);
+          //提示会话列表更新
+          dispatch('gatherConversation', msgBody.to);
           resolve('OK');
         } catch (error) {
           reject(error);

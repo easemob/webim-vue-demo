@@ -1,17 +1,19 @@
 <script setup>
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, toRefs, nextTick, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import { messageType } from '@/constant'
-import EaseIM from '@/IM/initwebsdk'
+import { useScroll } from '@vueuse/core'
 //组件
 import MessageList from './components/messageList.vue'
 import InputBox from './components/inputBox.vue'
 const store = useStore()
 const route = useRoute()
-const drawer = ref(false)
+const drawer = ref(false) //抽屉显隐
 const { CHAT_TYPE } = messageType
 const nowPickInfo = ref({});
+const loadingHistoryMsg = ref(false); //是否正在加载中
+const isMoreHistoryMsg = ref(true) //加载文案展示为加载更多还是已无更多。
 const friendList = computed(() => store.state.Contacts.friendList)
 const groupList = computed(() => store.state.Contacts.groupList)
 //获取路由ID对应的信息
@@ -33,10 +35,8 @@ const getIdInfo = async ({ id, chatType }) => {
       return nowPickInfo.value.groupDetail = groupList.value[id].groupDetail
     }
   }
-
-
-
 }
+//监听路由改变获取对应的getIdInfo
 watch(() => route.query, (routeVal) => {
   if (routeVal) {
     nowPickInfo.value = { ...routeVal }
@@ -48,29 +48,53 @@ watch(() => route.query, (routeVal) => {
 })
 //获取历史记录
 const fechHistoryMessage = () => {
-  console.log('>>>>>>执行拉取漫游')
   if (nowPickInfo.value) {
-    store.dispatch('getHistoryMessage', nowPickInfo.value)
+    loadingHistoryMsg.value = true;
+    store.dispatch('getHistoryMessage', nowPickInfo.value).then((res) => {
+      if (res.length > 0) {
+        //返回数组有数据显示加载更多
+        isMoreHistoryMsg.value = true;
+      } else {
+        //否则已无更多。
+        isMoreHistoryMsg.value = false;
+      }
+      loadingHistoryMsg.value = false
+    })
+
   } else {
     return []
   }
-
 }
+
 //获取其id对应的消息内容
 const messageData = computed(() => {
   //如果Message.messageList中不存在的话调用拉取漫游取一下历史消息
   return nowPickInfo.value.id && store.state.Message.messageList[nowPickInfo.value.id] || fechHistoryMessage()
 })
+
 const messageContainer = ref(null);
+//滚动置底
 const scrollMessageList = () => {
   nextTick(() => {
-    console.log('scrollMessageList被调用', messageContainer.value.scrollHeight)
     messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
   })
 }
+//监听到消息内容改变 置底滚动。
+watch(messageData, () => {
+  scrollMessageList()
+}, {
+  deep: true
+})
+//滚动置顶拉取历史消息
+const { arrivedState, } = useScroll(messageContainer)
+const { top } = toRefs(arrivedState)
+watch(top, async (isTop) => {
 
+  if (isTop && !loadingHistoryMsg.value) {
+    fechHistoryMessage()
+  }
 
-
+})
 
 
 </script>
@@ -91,6 +115,11 @@ const scrollMessageList = () => {
     <el-main class="chat_message_main">
       <div class="main_container" ref="messageContainer">
         <div class="chat_message_tips">
+          <div class="load_more_msg">
+            <span v-if="!loadingHistoryMsg" v-text="isMoreHistoryMsg ? '加载更多' : '已无更多'"></span>
+            <span v-else>消息加载中...</span>
+          </div>
+
         </div>
         <MessageList :messageData="messageData" @scrollMessageList="scrollMessageList" />
       </div>
@@ -151,11 +180,20 @@ const scrollMessageList = () => {
 }
 
 .chat_message_main {
+  padding: 0;
   background: #F9F9F9;
 
   .main_container {
+    padding: 0 20px;
     height: 100%;
     overflow-y: scroll;
+
+    .chat_message_tips {
+      width: 100%;
+      height: 30px;
+      text-align: center;
+      line-height: 30px;
+    }
   }
 
 }

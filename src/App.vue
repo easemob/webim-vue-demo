@@ -104,9 +104,7 @@ EaseIM.conn.addEventHandler('messageListen', {
 })
 //接收的消息往store中push
 const pushNewMessage = (message) => {
-  let key = useSetMessageKey(message)
   store.dispatch('createNewMessage', message)
-  store.dispatch('gatherConversation', key)
 }
 
 /* 好友关系相关监听 */
