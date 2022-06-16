@@ -11,6 +11,7 @@ const ALL_MESSAGE_TYPE = {
   AUDIO: 'audio',
   LOCAL: 'loc',
   VIDEO: 'video',
+  FILE: 'file',
 };
 const CHAT_TYPE = {
   SINGLE: 'singleChat',

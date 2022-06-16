@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, toRefs, nextTick, computed } from 'vue'
+import { ref, watch, toRaw, toRefs, nextTick, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import { messageType } from '@/constant'
@@ -12,8 +12,6 @@ const route = useRoute()
 const drawer = ref(false) //抽屉显隐
 const { CHAT_TYPE } = messageType
 const nowPickInfo = ref({});
-const loadingHistoryMsg = ref(false); //是否正在加载中
-const isMoreHistoryMsg = ref(true) //加载文案展示为加载更多还是已无更多。
 const friendList = computed(() => store.state.Contacts.friendList)
 const groupList = computed(() => store.state.Contacts.groupList)
 //获取路由ID对应的信息
@@ -41,31 +39,32 @@ watch(() => route.query, (routeVal) => {
   if (routeVal) {
     nowPickInfo.value = { ...routeVal }
     getIdInfo(routeVal)
-
   }
 }, {
   immediate: true
 })
+
+const loadingHistoryMsg = ref(false); //是否正在加载中
+const isMoreHistoryMsg = ref(true) //加载文案展示为加载更多还是已无更多。
+const notScrollBottom = ref(false); //是否滚动置底
 //获取历史记录
-const fechHistoryMessage = () => {
+const fechHistoryMessage = async () => {
   if (nowPickInfo.value) {
     loadingHistoryMsg.value = true;
-    store.dispatch('getHistoryMessage', nowPickInfo.value).then((res) => {
-      if (res.length > 0) {
-        //返回数组有数据显示加载更多
-        isMoreHistoryMsg.value = true;
-      } else {
-        //否则已无更多。
-        isMoreHistoryMsg.value = false;
-      }
-      loadingHistoryMsg.value = false
-    })
-
-  } else {
-    return []
+    notScrollBottom.value = true;
+    let res = await store.dispatch('getHistoryMessage', nowPickInfo.value)
+    if (res.length > 0) {
+      //返回数组有数据显示加载更多
+      isMoreHistoryMsg.value = true;
+    } else {
+      //否则已无更多。
+      isMoreHistoryMsg.value = false;
+    }
+    loadingHistoryMsg.value = false
+    notScrollBottom.value = false;
   }
+  return []
 }
-
 //获取其id对应的消息内容
 const messageData = computed(() => {
   //如果Message.messageList中不存在的话调用拉取漫游取一下历史消息
@@ -76,24 +75,25 @@ const messageContainer = ref(null);
 //滚动置底
 const scrollMessageList = () => {
   nextTick(() => {
-    messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+    if (!notScrollBottom.value) {
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+    }
   })
 }
 //监听到消息内容改变 置底滚动。
-watch(messageData, () => {
+watch(() => store.state.Message.messageList[nowPickInfo.value.id], (messageData) => {
+  console.log('>>>>监听到的messageData', messageData)
   scrollMessageList()
 }, {
   deep: true
 })
-//滚动置顶拉取历史消息
+// 滚动置顶拉取历史消息
 const { arrivedState, } = useScroll(messageContainer)
 const { top } = toRefs(arrivedState)
 watch(top, async (isTop) => {
-
   if (isTop && !loadingHistoryMsg.value) {
     fechHistoryMessage()
   }
-
 })
 
 
@@ -189,10 +189,20 @@ watch(top, async (isTop) => {
     overflow-y: scroll;
 
     .chat_message_tips {
+      margin-top: 5px;
       width: 100%;
       height: 30px;
       text-align: center;
       line-height: 30px;
+
+      .load_more_msg {
+        width: 200px;
+        height: 30px;
+        border-radius: 20px;
+        margin: 0 auto;
+        background: #FFF;
+        box-shadow: 1px 1px 1px 1px rgba(128, 128, 128, 0.193);
+      }
     }
   }
 

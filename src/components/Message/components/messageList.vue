@@ -1,7 +1,8 @@
 <script setup>
-import { reactive, computed, onUpdated, toRefs } from 'vue';
+import { reactive, computed, toRefs } from 'vue';
 import EaseIM from '@/IM/initwebsdk'
 import BenzAMRRecorder from 'benz-amr-recorder'
+import fileSizeFormat from '@/utils/fileSizeFormat'
 import dateFormat from '@/utils/dateFormat'
 import { messageType } from '@/constant'
 /* 默认头像 */
@@ -59,12 +60,6 @@ const startplayAudio = (msgBody, index) => {
     })
 }
 
-
-
-
-
-
-
 </script>
 <template>
 
@@ -96,6 +91,15 @@ const startplayAudio = (msgBody, index) => {
                 </div>
                 <div v-if="msgBody.type === ALL_MESSAGE_TYPE.LOCAL">
                     <p style="padding: 10px">[暂不支持位置消息展示]</p>
+                </div>
+                <!-- 文件类型消息 -->
+                <div v-if="msgBody.type === ALL_MESSAGE_TYPE.FILE" class="message_box_content_file">
+                    <div class="file_text_box">
+                        <div class="file_name">{{ msgBody.filename }}</div>
+                        <div class="file_size">{{ fileSizeFormat(msgBody.file_length) }}</div>
+                        <a class="file_download" :href="msgBody.url" download>点击下载</a>
+                    </div>
+                    <span class="iconfont icon-wenjian"></span>
                 </div>
             </div>
         </div>
@@ -230,6 +234,56 @@ const startplayAudio = (msgBody, index) => {
                 .start_play_audio {
                     animation: mine_play_icon 2s;
                     animation-iteration-count: infinite;
+                }
+            }
+
+            /* 文件消息样式 */
+            .message_box_content_file {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                width: 200px;
+                min-height: 60px;
+                max-height: 120px;
+                padding: 10px;
+
+                .file_text_box {
+                    width: 75%;
+                    height: 80%;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-around;
+
+                    .file_name {
+                        width: 120px;
+                        white-space: wrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        font-size: 15px;
+                        font-weight: bold;
+                    }
+
+                    .file_size {
+                        font-size: 13px;
+                    }
+
+                    .file_download {
+                        width: 100%;
+                        color: #333333;
+                        font-size: 13px;
+                        cursor: pointer;
+                        transition: all .3s ease;
+
+                        &:hover {
+                            transform: scale(0.9);
+                        }
+                    }
+                }
+
+                .icon-wenjian {
+                    font-size: 50px;
+                    color: #8d8a8a;
                 }
             }
         }

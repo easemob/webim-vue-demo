@@ -34,6 +34,30 @@ const createOptions = ({ msgType, msgOptions }) => {
         console.log('onFileUploadComplete', res);
       },
     },
+    [ALL_MESSAGE_TYPE.FILE]: {
+      chatType: msgOptions.chatType, // 会话类型，设置为单聊。
+      type: msgType, // 消息类型，设置为文件。
+      to: msgOptions.id, // 消息接收方（用户 ID)。
+      file: msgOptions.file,
+      filename: msgOptions.file && msgOptions.file.filename,
+      ext:
+        {
+          file_length: msgOptions.file && msgOptions.file.size,
+          ...msgOptions.ext,
+        } || {},
+      onFileUploadError: function () {
+        // 消息上传失败。
+        console.log('onFileUploadError');
+      },
+      onFileUploadProgress: function (progress) {
+        // 上传进度的回调。
+        console.log(progress);
+      },
+      onFileUploadComplete: function () {
+        // 消息上传成功。
+        console.log('onFileUploadComplete');
+      },
+    },
   };
   let backMsgOptions = theMessageOptions[msgType];
   return backMsgOptions;
@@ -64,6 +88,18 @@ const createMsgBody = (msg) => {
       height: msg.height,
       width: msg.width,
       time: msg.time,
+    },
+    [ALL_MESSAGE_TYPE.FILE]: {
+      chatType: msg.chatType,
+      type: msg.type,
+      ext: msg.ext || {},
+      from: msg.from || '',
+      id: msg.id,
+      time: msg.time,
+      to: msg.to,
+      url: msg.url,
+      filename: msg.filename,
+      file_length: msg.ext && msg.ext.file_length,
     },
   };
   return pakerMsgBody[msg.type];

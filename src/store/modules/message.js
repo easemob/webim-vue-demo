@@ -33,6 +33,11 @@ const Message = {
       state.messageList = toUpdateMsgList;
       console.log('>>>>>>更新历史消息至messageList', payload);
     },
+    //清除某条会话消息
+    CLEAR_SOMEONE_MESSAGE: (state, payload) => {
+      console.log('>>>>>执行清屏', payload);
+      state.messageList[payload] = [];
+    },
   },
   actions: {
     //添加新消息
@@ -66,18 +71,20 @@ const Message = {
     },
     //发送展示类型消息
     sendShowTypeMessage: async ({ dispatch, commit }, params) => {
+      console.log('params', params);
       let options = useCreateMessage.createOptions(params);
+      console.log('>>>>>>sendShowTypeMessage,options', options);
       return new Promise(async (resolve, reject) => {
         let msg = WebIM.message.create(options);
         try {
           let { serverMsgId } = await EaseIM.conn.send(msg);
-          console.log('>>>>发送成功', serverMsgId);
+          console.log('>>>>发送成功', msg);
           msg.id = serverMsgId;
           msg.from = EaseIM.conn.user;
           let msgBody = useCreateMessage.createMsgBody(msg);
-          console.log(msgBody);
+          console.log('>>>>>>返回的msgBody', msgBody);
           commit('UPDATE_MESSAGE_LIST', msgBody);
-          //提示会话列表更新
+          // 提示会话列表更新
           dispatch('gatherConversation', msgBody.to);
           resolve('OK');
         } catch (error) {

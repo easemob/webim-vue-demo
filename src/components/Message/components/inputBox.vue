@@ -66,7 +66,21 @@ const chooseFiles = () => {
     uploadFiles.value.click()
 }
 const sendFilesMessages = () => {
-
+    let commonFile = uploadFiles.value.files[0];
+    let file = {
+        data: commonFile,           // file 对象。
+        filename: commonFile.name, //文件名称。
+        filetype: commonFile.type, //文件类型。
+        size: commonFile.size
+    }
+    console.log('>>>>>调用发送文件', file)
+    let msgOptions = {
+        id: nowPickInfo.value.id,
+        chatType: nowPickInfo.value.chatType,
+        file: file,
+    }
+    store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.FILE, msgOptions: _.cloneDeep(msgOptions) })
+    uploadFiles.value.value = null;
 }
 //展示录音对话框
 const isShowRecordBox = ref(false)
@@ -78,7 +92,8 @@ const showRecordBox = () => {
 
 //清除屏幕
 const clearScreen = () => {
-
+    const key = nowPickInfo.value.id
+    store.commit('CLEAR_SOMEONE_MESSAGE', key)
 }
 //func 对应事件 icon class样式等
 const all_func = [
@@ -86,7 +101,7 @@ const all_func = [
     { 'className': 'icon-tuku', 'style': 'font-size: 26px;', 'title': '发送图片', 'methodName': chooseImages },
     { 'className': 'icon-wenjian', 'style': 'font-size: 20px;', 'title': '发送文件', 'methodName': chooseFiles },
     { 'className': 'icon-01', 'style': 'font-size: 20px;', 'title': '发送语音', 'methodName': showRecordBox },
-    { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen },
+    // { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen },
 ]
 
 //发送文本内容
@@ -124,7 +139,7 @@ const addOneEmoji = (emoji) => {
         <!-- 图片附件choose -->
         <input ref="uploadImgs" type="file" style="display:none" @change="sendImagesMessage" single accept="image/*">
         <!-- 文件附件choose -->
-        <input ref="uploadFiles" type="file" style="display:none">
+        <input ref="uploadFiles" type="file" style="display:none" @change="sendFilesMessages" single>
         <!-- 录音采集框 -->
         <el-card ref="recordBox" v-if="isShowRecordBox" class="record_box" shadow="always">
             录音采集框
