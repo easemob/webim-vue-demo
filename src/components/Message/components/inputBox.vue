@@ -126,6 +126,9 @@ const addOneEmoji = (emoji) => {
 
 }
 
+defineExpose({
+    textContent
+})
 </script>
 <template>
     <div class="chat_func_box">

@@ -97,6 +97,9 @@ watch(top, async (isTop) => {
   }
 })
 
+//消息重新编辑
+const inputBox = ref(null)
+const reEditMessage = (msg) => inputBox.value.textContent = msg;
 
 </script>
 <template>
@@ -123,13 +126,13 @@ watch(top, async (isTop) => {
           </div>
 
         </div>
-        <MessageList :messageData="messageData" @scrollMessageList="scrollMessageList" />
+        <MessageList :messageData="messageData" @scrollMessageList="scrollMessageList" @reEditMessage="reEditMessage" />
       </div>
 
 
     </el-main>
     <el-footer class="chat_message_inputbar">
-      <InputBox :nowPickInfo="nowPickInfo" />
+      <InputBox ref="inputBox" :nowPickInfo="nowPickInfo" />
     </el-footer>
 
   </el-container>

@@ -116,6 +116,7 @@ const otherRecallMessage = (message) => {
   let key = to === EaseIM.conn.user ? from : to;
   console.log('>>>>>收到他人撤回', key);
   store.commit('CHANGE_MESSAGE_BODAY', { type: 'recall', key, mid });
+  store.dispatch('gatherConversation', key)
 }
 /* 好友关系相关监听 */
 const { INFORM_FROM } = informType

@@ -83,9 +83,12 @@ export default function (corresMessage) {
           fromName: '',
         },
         targetId: to,
-        unreadMessageNum: from === loginUserId ? 0 : 1,
+        unreadMessageNum: from === loginUserId || msgBody.isRecall ? 0 : 1,
         latestMessage: {
-          msg: SESSION_MESSAGE_TYPE[type] || msg,
+          msg:
+            SESSION_MESSAGE_TYPE[type] ||
+            (msgBody.isRecall && '撤回了一条消息') ||
+            msg,
           type: type,
           ext: { ...ext },
         },
@@ -110,7 +113,10 @@ export default function (corresMessage) {
           fromName: '',
         },
         latestMessage: {
-          msg: SESSION_MESSAGE_TYPE[type] || msg,
+          msg:
+            SESSION_MESSAGE_TYPE[type] ||
+            (msgBody.isRecall && '撤回了一条消息') ||
+            msg,
           type: type,
           ext: { ...ext },
         },
@@ -118,7 +124,8 @@ export default function (corresMessage) {
         latestMessageId: id,
         latestSendTime: time,
         unreadMessageNum:
-          from === loginUserId || (msgBody.read && msgBody.read === true)
+          /* 这里的逻辑为如果from为自己，更新的消息已读，更新的消息为撤回，不计入unreadMessageNum的累加 */
+          from === loginUserId || msgBody.read || msgBody.isRecall
             ? 0
             : theData.unreadMessageNum + 1,
       };

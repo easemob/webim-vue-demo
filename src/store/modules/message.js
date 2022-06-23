@@ -87,7 +87,6 @@ const Message = {
           resolve(historyMessage);
           commit('UPDATE_HISTORY_MESSAGE', { listKey: id, historyMessage });
           //提示会话列表更新
-          //todo 漫游调用之后也需要更新会话列表，但是目前还没有想到如何拉取历史消息再更新会话列表，后续再完善。
           dispatch('gatherConversation', id);
         } catch (error) {
           reject(error);
@@ -119,12 +118,13 @@ const Message = {
       });
     },
     //撤回消息
-    recallMessage: async ({ commit }, params) => {
+    recallMessage: async ({ dispatch, commit }, params) => {
       const { mid, to, chatType } = params;
       return new Promise(async (resolve, reject) => {
         try {
           await EaseIM.conn.recallMessage({ mid, to, chatType });
           commit('CHANGE_MESSAGE_BODAY', { type: 'recall', key: to, mid });
+          dispatch('gatherConversation', to);
           resolve('OK');
         } catch (error) {
           reject(error);

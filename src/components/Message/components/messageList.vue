@@ -27,7 +27,7 @@ const props = defineProps({
 
 });
 /* emits */
-const emit = defineEmits(['scrollMessageList'])
+const emit = defineEmits(['scrollMessageList', 'reEditMessage'])
 const { messageData } = toRefs(props);
 /* constant */
 const { ALL_MESSAGE_TYPE } = messageType
@@ -106,6 +106,8 @@ const deleteMessage = ({ from, to, id: mid }) => {
     let key = to === EaseIM.conn.user ? from : to
     store.commit('CHANGE_MESSAGE_BODAY', { type: 'deleteMsg', key, mid })
 }
+//父组件重新编辑方法
+const reEdit = (msg) => emit('reEditMessage', msg)
 
 </script>
 <template>
@@ -167,7 +169,9 @@ const deleteMessage = ({ from, to, id: mid }) => {
             </el-tooltip>
 
         </div>
-        <div v-if="msgBody.isRecall" class="recall_style">{{ isMyself(msgBody) ? "你" : `${msgBody.from}` }}撤回了一条消息</div>
+        <div v-if="msgBody.isRecall" class="recall_style">{{ isMyself(msgBody) ? "你" : `${msgBody.from}` }}撤回了一条消息<span
+                class="reEdit" v-show="isMyself(msgBody) && msgBody.type === ALL_MESSAGE_TYPE.TEXT"
+                @click="reEdit(msgBody.msg)">重新编辑</span></div>
     </div>
 </template>
 
@@ -368,6 +372,13 @@ const deleteMessage = ({ from, to, id: mid }) => {
         text-align: center;
         color: #aaaaaa;
         font-size: 9px;
+        margin: 5px 0;
+
+        .reEdit {
+            color: #3E91FA;
+            margin-left: 3px;
+            cursor: pointer;
+        }
     }
 
 }
