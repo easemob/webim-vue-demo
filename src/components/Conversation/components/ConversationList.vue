@@ -37,14 +37,19 @@ const toChatMessage = (item, itemKey, index) => {
   //跳转至对应的消息界面
   emit('toChatMessage', itemKey, item.conversationType)
 };
+//删除某条会话
+const deleteConversation = (itemKey) => {
+  console.log('选中的会话key', itemKey)
+  store.commit('DELETE_ONE_CONVERSATION', itemKey)
+}
 //加载到底拉取新数据
-const load = () => {
-  console.log('>>>>>加载到底');
-};
+// const load = () => {
+//   console.log('>>>>>加载到底');
+// };
 
 </script>
 <template>
-  <ul v-infinite-scroll="load" class="session_list" style="overflow: auto" @click="getItem">
+  <ul class="session_list" style="overflow: auto" @click="getItem">
     <li class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</li>
     <!-- 系统通知会话 -->
     <li v-if="informDetail.lastInformDeatail" class="session_list_item" @click="$emit('toInformDetails')">
@@ -68,28 +73,36 @@ const load = () => {
     </li>
 
     <!-- 普通会话 -->
-
-    <li v-if="conversationList" class="session_list_item" v-for="( item, itemKey, index) in conversationList"
-      :key="index" @click="toChatMessage(item, itemKey, index)"
+    <li v-if="conversationList" v-for="( item, itemKey, index) in conversationList" :key="itemKey"
+      @click="toChatMessage(item, itemKey, index)"
       :style="{ background: (checkedConverItemIndex === index ? '#E5E5E5' : '') }">
-      <div class="item_body item_left">
-        <div class="session_other_avatar">
-          <el-avatar :src="item.conversationInfo.avatarUrl"></el-avatar>
-        </div>
+      <el-popover popper-class="conversation_popover" placement="right-end" trigger="contextmenu" :show-arrow="false"
+        :offset="-10">
+        <template #reference>
+          <div class="session_list_item">
+            <div class="item_body item_left">
+              <div class="session_other_avatar">
+                <el-avatar :src="item.conversationInfo.avatarUrl"></el-avatar>
+              </div>
+            </div>
+            <div class="item_body item_main">
+              <div class="name">{{ item.conversationInfo.name }}</div>
+              <div class="last_msg_body">{{ item.fromInfo.fromId }}：{{ item.latestMessage.msg }}
+              </div>
+            </div>
+            <div class="item_body item_right">
+              <span class="time">{{ dateFormater('MM/DD/HH:mm', item.latestSendTime) }}</span>
+              <span class="unReadNum_box" v-if="item.unreadMessageNum >= 1">
+                <sup class="unReadNum_count" v-text="item.unreadMessageNum >= 99 ? '99+' : item.unreadMessageNum"></sup>
+              </span>
+            </div>
+          </div>
 
-      </div>
-      <div class="item_body item_main">
-        <div class="name">{{ item.conversationInfo.name }}</div>
-        <div class="last_msg_body">{{ item.fromInfo.fromId }}：{{ item.latestMessage.msg }}
-        </div>
-      </div>
-      <div class="item_body item_right">
-        <span class="time">{{ dateFormater('MM/DD/HH:mm', item.latestSendTime) }}</span>
-        <span class="unReadNum_box" v-if="item.unreadMessageNum >= 1">
-          <sup class="unReadNum_count" v-text="item.unreadMessageNum >= 99 ? '99+' : item.unreadMessageNum"></sup>
-        </span>
-      </div>
-
+        </template>
+        <template #default>
+          <div class="session_list_delete" @click="deleteConversation(itemKey)">删除会话</div>
+        </template>
+      </el-popover>
     </li>
     <el-empty v-else description="暂无会话..." />
   </ul>
@@ -224,5 +237,14 @@ const load = () => {
 
 .session_list .session_list_item+.list_item {
   margin-top: 10px;
+}
+
+.session_list_delete {
+  cursor: pointer;
+  transition: all .5s;
+
+  &:hover {
+    background: #E1E1E1;
+  }
 }
 </style>

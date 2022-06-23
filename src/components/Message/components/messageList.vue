@@ -1,5 +1,8 @@
 <script setup>
 import { reactive, computed, toRefs } from 'vue';
+import { useStore } from 'vuex'
+import { useClipboard, usePermission } from '@vueuse/core'
+import { ElMessage } from 'element-plus'
 import EaseIM from '@/IM/initwebsdk'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import fileSizeFormat from '@/utils/fileSizeFormat'
@@ -9,12 +12,18 @@ import { messageType } from '@/constant'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 import myAvatar from '@/assets/images/loginIcon.png'
 
+/* vuex store */
+const store = useStore()
 /* props */
 const props = defineProps({
     messageData: {
         type: Array,
         default: () => [],
     },
+    nowPickInfo: {
+        type: Object,
+        default: () => ({})
+    }
 
 });
 /* emits */
@@ -60,52 +69,106 @@ const startplayAudio = (msgBody, index) => {
     })
 }
 
+
+//复制文本
+const permissionRead = usePermission('clipboard-read') //请求剪切板读的权限
+const permissionWrite = usePermission('clipboard-write') //请求剪切板写的权限
+const { copy, copied, isSupported } = useClipboard() //copy 复制方法 copied 是否已经复制 isSupported 是否支持剪切板
+console.log('permissionRead,permissionWrite', permissionRead, permissionWrite);
+const copyTextMessages = (msg) => {
+    copy(msg)
+    if (copied) {
+        ElMessage({
+            message: '成功复制到剪切板',
+            center: true,
+        })
+        console.log('>>>>>成功复制');
+    }
+}
+//撤回消息
+const recallMessage = async ({ id, to, chatType }) => {
+    console.log('>>>>>>调用了撤回', id, to, chatType)
+    let options = {
+        mid: id,
+        to: to,
+        chatType: chatType
+    }
+    try {
+        await store.dispatch('recallMessage', options)
+    } catch (error) {
+        //todo error提示待添加
+        console.log('>>>>>>撤回失败', error);
+    }
+
+}
+//删除消息（非从服务器删除）
+const deleteMessage = ({ from, to, id: mid }) => {
+    let key = to === EaseIM.conn.user ? from : to
+    store.commit('CHANGE_MESSAGE_BODAY', { type: 'deleteMsg', key, mid })
+}
+
 </script>
 <template>
 
     <div class="messageList_box" v-for="(msgBody, index) in messageData" :key="msgBody.id">
-        <div class="message_box_item" :style="{ flexDirection: (isMyself(msgBody) ? 'row-reverse' : 'row') }">
+        <div v-if="!msgBody.isRecall" class="message_box_item"
+            :style="{ flexDirection: (isMyself(msgBody) ? 'row-reverse' : 'row') }">
             <div class="message_item_time">{{ dateFormat('MM/DD/HH:mm', msgBody.time) }}</div>
             <el-avatar class="message_item_avator" :src="isMyself(msgBody) ? myAvatar : defaultAvatar">
             </el-avatar>
-            <div class="message_box_content"
-                :class="[isMyself(msgBody) ? 'message_box_content_mine' : 'message_box_content_other']">
-                <!-- 文本类型消息 -->
-                <p style="padding: 10px" v-if="msgBody.type === ALL_MESSAGE_TYPE.TEXT">
-                    {{ msgBody.msg }}
-                </p>
-                <!-- 图片类型消息 -->
-                <div v-if="msgBody.type === ALL_MESSAGE_TYPE.IMAGE">
-                    <el-image :src="msgBody.thumb" :preview-src-list="[msgBody.url]" :initial-index="1" fit="cover" />
-                </div>
-                <!-- 语音类型消息 -->
-                <div :class="['message_box_content_audio', isMyself(msgBody) ? 'message_box_content_audio_mine' : 'message_box_content_audio_other']"
-                    v-if="msgBody.type === ALL_MESSAGE_TYPE.AUDIO" @click="startplayAudio(msgBody, index)"
-                    :style="`width:${msgBody.length * 10}px`">
-                    <span class="audio_length_text">
-                        {{ msgBody.length }}′′
+            <el-tooltip trigger="contextmenu">
+                <template #content>
+                    <span v-if="msgBody.type === ALL_MESSAGE_TYPE.TEXT && isSupported">
+                        <span style="cursor: pointer" @click.stop="copyTextMessages(msgBody.msg)">复制</span>
+                        <el-divider direction="vertical" />
                     </span>
-                    <div :class="[isMyself(msgBody) ? 'play_audio_icon_mine' : 'play_audio_icon_other', audioPlayStatus.playIndex === index && 'start_play_audio']"
-                        style=" background-size: 100% 100%;">
+                    <span v-if="isMyself(msgBody)">
+                        <span style="cursor: pointer" @click="recallMessage(msgBody)">撤回</span>
+                        <el-divider direction="vertical" />
+                    </span>
+                    <span style="cursor: pointer" @click="deleteMessage(msgBody)">删除</span>
+                </template>
+                <div class="message_box_content"
+                    :class="[isMyself(msgBody) ? 'message_box_content_mine' : 'message_box_content_other']">
+                    <!-- 文本类型消息 -->
+                    <p style="padding: 10px" v-if="msgBody.type === ALL_MESSAGE_TYPE.TEXT">
+                        {{ msgBody.msg }}
+                    </p>
+                    <!-- 图片类型消息 -->
+                    <div v-if="msgBody.type === ALL_MESSAGE_TYPE.IMAGE">
+                        <el-image :src="msgBody.thumb" :preview-src-list="[msgBody.url]" :initial-index="1"
+                            fit="cover" />
+                    </div>
+                    <!-- 语音类型消息 -->
+                    <div :class="['message_box_content_audio', isMyself(msgBody) ? 'message_box_content_audio_mine' : 'message_box_content_audio_other']"
+                        v-if="msgBody.type === ALL_MESSAGE_TYPE.AUDIO" @click="startplayAudio(msgBody, index)"
+                        :style="`width:${msgBody.length * 10}px`">
+                        <span class="audio_length_text">
+                            {{ msgBody.length }}′′
+                        </span>
+                        <div :class="[isMyself(msgBody) ? 'play_audio_icon_mine' : 'play_audio_icon_other', audioPlayStatus.playIndex === index && 'start_play_audio']"
+                            style=" background-size: 100% 100%;">
+                        </div>
+                    </div>
+                    <div v-if="msgBody.type === ALL_MESSAGE_TYPE.LOCAL">
+                        <p style="padding: 10px">[暂不支持位置消息展示]</p>
+                    </div>
+                    <!-- 文件类型消息 -->
+                    <div v-if="msgBody.type === ALL_MESSAGE_TYPE.FILE" class="message_box_content_file">
+                        <div class="file_text_box">
+                            <div class="file_name">{{ msgBody.filename }}</div>
+                            <div class="file_size">{{ fileSizeFormat(msgBody.file_length) }}</div>
+                            <a class="file_download" :href="msgBody.url" download>点击下载</a>
+                        </div>
+                        <span class="iconfont icon-wenjian"></span>
                     </div>
                 </div>
-                <div v-if="msgBody.type === ALL_MESSAGE_TYPE.LOCAL">
-                    <p style="padding: 10px">[暂不支持位置消息展示]</p>
-                </div>
-                <!-- 文件类型消息 -->
-                <div v-if="msgBody.type === ALL_MESSAGE_TYPE.FILE" class="message_box_content_file">
-                    <div class="file_text_box">
-                        <div class="file_name">{{ msgBody.filename }}</div>
-                        <div class="file_size">{{ fileSizeFormat(msgBody.file_length) }}</div>
-                        <a class="file_download" :href="msgBody.url" download>点击下载</a>
-                    </div>
-                    <span class="iconfont icon-wenjian"></span>
-                </div>
-            </div>
+
+            </el-tooltip>
+
         </div>
+        <div v-if="msgBody.isRecall" class="recall_style">{{ isMyself(msgBody) ? "你" : `${msgBody.from}` }}撤回了一条消息</div>
     </div>
-
-
 </template>
 
 <style lang="scss" scoped>
@@ -300,6 +363,12 @@ const startplayAudio = (msgBody, index) => {
 
     }
 
+    .recall_style {
+        height: 60px;
+        text-align: center;
+        color: #aaaaaa;
+        font-size: 9px;
+    }
 
 }
 </style>

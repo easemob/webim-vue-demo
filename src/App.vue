@@ -100,13 +100,23 @@ EaseIM.conn.addEventHandler('messageListen', {
   onVideoMessage: function (message) {
     pushNewMessage(message)
   },     // 收到视频消息。
-  onRecallMessage: function (message) { },    // 收到消息撤回回执。
+  onRecallMessage: function (message) {
+    otherRecallMessage(message)
+  },    // 收到消息撤回回执。
 })
 //接收的消息往store中push
 const pushNewMessage = (message) => {
   store.dispatch('createNewMessage', message)
 }
-
+//收到他人的撤回指令
+const otherRecallMessage = (message) => {
+  console.log('>>>>>收到他人撤回', message);
+  const { from, to, mid } = message;
+  //单对单的撤回to必然为登陆的用户id，群组发起撤回to必然为群组id 所以key可以这样来区分群组或者单人。
+  let key = to === EaseIM.conn.user ? from : to;
+  console.log('>>>>>收到他人撤回', key);
+  store.commit('CHANGE_MESSAGE_BODAY', { type: 'recall', key, mid });
+}
 /* 好友关系相关监听 */
 const { INFORM_FROM } = informType
 EaseIM.conn.addEventHandler('friendListen', {

@@ -48,20 +48,21 @@ const loadingHistoryMsg = ref(false); //是否正在加载中
 const isMoreHistoryMsg = ref(true) //加载文案展示为加载更多还是已无更多。
 const notScrollBottom = ref(false); //是否滚动置底
 //获取历史记录
-const fechHistoryMessage = async () => {
+const fechHistoryMessage = () => {
   if (nowPickInfo.value) {
     loadingHistoryMsg.value = true;
     notScrollBottom.value = true;
-    let res = await store.dispatch('getHistoryMessage', nowPickInfo.value)
-    if (res.length > 0) {
-      //返回数组有数据显示加载更多
-      isMoreHistoryMsg.value = true;
-    } else {
-      //否则已无更多。
-      isMoreHistoryMsg.value = false;
-    }
-    loadingHistoryMsg.value = false
-    notScrollBottom.value = false;
+    store.dispatch('getHistoryMessage', nowPickInfo.value).then((res) => {
+      if (res.length > 0) {
+        //返回数组有数据显示加载更多
+        isMoreHistoryMsg.value = true;
+      } else {
+        //否则已无更多。
+        isMoreHistoryMsg.value = false;
+      }
+      loadingHistoryMsg.value = false
+      notScrollBottom.value = false;
+    })
   }
   return []
 }
@@ -116,7 +117,8 @@ watch(top, async (isTop) => {
       <div class="main_container" ref="messageContainer">
         <div class="chat_message_tips">
           <div class="load_more_msg">
-            <span v-if="!loadingHistoryMsg" v-text="isMoreHistoryMsg ? '加载更多' : '已无更多'"></span>
+            <span v-if="!loadingHistoryMsg" v-text="isMoreHistoryMsg ? '加载更多' : '已无更多'"
+              @click="fechHistoryMessage"></span>
             <span v-else>消息加载中...</span>
           </div>
 
@@ -200,8 +202,10 @@ watch(top, async (isTop) => {
         height: 30px;
         border-radius: 20px;
         margin: 0 auto;
-        background: #FFF;
-        box-shadow: 1px 1px 1px 1px rgba(128, 128, 128, 0.193);
+        background: rgba(114, 112, 112, 0.143);
+        font-size: 13px;
+        letter-spacing: .5px;
+        // box-shadow: 1px 1px 1px 1px rgba(128, 128, 128, 0.193);
       }
     }
   }

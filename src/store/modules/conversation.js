@@ -8,6 +8,7 @@ const Conversation = {
     conversationListData: useLocalStorage('conversationList', {}),
   },
   mutations: {
+    //更新系统通知
     UPDATE_INFOEM_LIST: (state, informBody) => {
       const toBeUpdateInform = _.assign([], state.informDetail);
       let _index = toBeUpdateInform.findIndex(
@@ -28,11 +29,12 @@ const Conversation = {
         _.assign(_.cloneDeep(state.conversationListData), payload)
       );
       state.conversationListData = sortedData;
-      // console.log('>>>>>>待更新的数据', toBeUpdateData);
-      // state.conversationListData = _.assign(
-      //   _.cloneDeep(state.conversationListData),
-      //   payload
-      // );
+    },
+    //删除某条会话
+    DELETE_ONE_CONVERSATION: (state, key) => {
+      if (state.conversationListData[key]) {
+        delete state.conversationListData[key];
+      }
     },
     //清除会话未读状态
     CLEAR_UNREAD_NUM: (state, key) => {

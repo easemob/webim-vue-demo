@@ -55,10 +55,10 @@ const resetTheModalStatus = () => {
     <div class="app_container">
         <el-form label-position="top" label-width="100px">
             <el-form-item label="好友ID">
-                <el-input style="height:40px" v-model.trim="applyAddFriendsForm.username" />
+                <el-input class="addFriends_input" v-model.trim="applyAddFriendsForm.username" />
             </el-form-item>
             <el-form-item label="申请信息">
-                <el-input style="height:40px" v-model="applyAddFriendsForm.applyFriendMessage" maxlength="300"
+                <el-input class="addFriends_input" v-model="applyAddFriendsForm.applyFriendMessage" maxlength="300"
                     show-word-limit />
             </el-form-item>
             <el-form-item>
@@ -75,6 +75,17 @@ const resetTheModalStatus = () => {
 
 
 <style lang="scss" scoped>
+// .el-input>.el-input__wrapper {
+//     border-radius: 5px !important;
+// }
+.addFriends_input {
+    height: 40px;
+}
+
+.addFriends_input> :v-deep.el-input__wrapper {
+    border-radius: 5px;
+}
+
 .apply_goups_btn_box {
     width: 100%;
     height: 50px;
