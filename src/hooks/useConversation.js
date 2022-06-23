@@ -66,6 +66,7 @@ export default function (corresMessage) {
     const loginUserId = EaseIM.conn.user;
     const listKey = useSetMessageKey(msgBody);
     const { chatType, from, ext, id, msg, time, to, type } = msgBody;
+    //操作类型为新建
     if (operateType === 'create') {
       let state = {
         conversationType: chatType,
@@ -101,6 +102,7 @@ export default function (corresMessage) {
       }
       return state;
     }
+    //操作类型为更新
     if (operateType === 'update') {
       let updatedState = {
         fromInfo: {
@@ -116,7 +118,9 @@ export default function (corresMessage) {
         latestMessageId: id,
         latestSendTime: time,
         unreadMessageNum:
-          from === loginUserId ? 0 : theData.unreadMessageNum + 1,
+          from === loginUserId || (msgBody.read && msgBody.read === true)
+            ? 0
+            : theData.unreadMessageNum + 1,
       };
       return _.assign(theData, updatedState);
     }

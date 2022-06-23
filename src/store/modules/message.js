@@ -80,11 +80,15 @@ const Message = {
         };
         try {
           let historyMessage = await EaseIM.conn.fetchHistoryMessages(options);
+          historyMessage.length > 0 &&
+            historyMessage.forEach((item) => {
+              item.read = true;
+            });
           resolve(historyMessage);
           commit('UPDATE_HISTORY_MESSAGE', { listKey: id, historyMessage });
           //提示会话列表更新
           //todo 漫游调用之后也需要更新会话列表，但是目前还没有想到如何拉取历史消息再更新会话列表，后续再完善。
-          // dispatch('gatherConversation', id);
+          dispatch('gatherConversation', id);
         } catch (error) {
           reject(error);
         }

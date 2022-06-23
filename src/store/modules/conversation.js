@@ -28,6 +28,7 @@ const Conversation = {
       let sortedData = useSortConversation(
         _.assign(_.cloneDeep(state.conversationListData), payload)
       );
+      console.log('?????????sortedData', sortedData);
       state.conversationListData = sortedData;
     },
     //删除某条会话
