@@ -101,7 +101,7 @@ const all_func = [
     { 'className': 'icon-tuku', 'style': 'font-size: 26px;', 'title': '发送图片', 'methodName': chooseImages },
     { 'className': 'icon-wenjian', 'style': 'font-size: 20px;', 'title': '发送文件', 'methodName': chooseFiles },
     { 'className': 'icon-01', 'style': 'font-size: 20px;', 'title': '发送语音', 'methodName': showRecordBox },
-    // { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen },
+    { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen },
 ]
 
 //发送文本内容

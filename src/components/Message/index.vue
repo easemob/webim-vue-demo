@@ -105,7 +105,8 @@ const scrollMessageList = (direction) => {
     console.log('fistMsgElement', fistMsgElement);
     //直接滚动置底
     if (direction === 'bottom') {
-      lastMsgElement.scrollIntoView(false);
+      // lastMsgElement.scrollIntoView(false);
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
     }
     //保持当前的消息位于当前可视窗口
     if (direction === 'normal') {
@@ -118,6 +119,7 @@ const scrollMessageList = (direction) => {
 watch(() => store.state.Message.messageList[nowPickInfo.value.id], (messageData) => {
   console.log('>>>>监听到的messageData', messageData, notScrollBottom.value)
   scrollMessageList('bottom')
+
 }, {
   deep: true
 })
