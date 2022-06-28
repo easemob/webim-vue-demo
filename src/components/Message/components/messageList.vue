@@ -17,7 +17,7 @@ const store = useStore()
 /* props */
 const props = defineProps({
     messageData: {
-        type: Array,
+        type: [Array, Object],
         default: () => [],
     },
     nowPickInfo: {

@@ -48,11 +48,15 @@ const loadingHistoryMsg = ref(false); //是否正在加载中
 const isMoreHistoryMsg = ref(true) //加载文案展示为加载更多还是已无更多。
 const notScrollBottom = ref(false); //是否滚动置底
 //获取历史记录
-const fechHistoryMessage = () => {
-  if (nowPickInfo.value) {
+const fechHistoryMessage = (loadType) => {
+  if (!nowPickInfo.value) return []
+  console.log('>>>>>>开始拉取漫游');
+  return async () => {
     loadingHistoryMsg.value = true;
     notScrollBottom.value = true;
-    store.dispatch('getHistoryMessage', nowPickInfo.value).then((res) => {
+    if (loadType == 'fistLoad') {
+      console.log('》》》》》》》本次请求为首次加载历史消息')
+      let res = await store.dispatch('getHistoryMessage', nowPickInfo.value)
       if (res.length > 0) {
         //返回数组有数据显示加载更多
         isMoreHistoryMsg.value = true;
@@ -60,42 +64,74 @@ const fechHistoryMessage = () => {
         //否则已无更多。
         isMoreHistoryMsg.value = false;
       }
-      loadingHistoryMsg.value = false
-      notScrollBottom.value = false;
-    })
+      console.log('>>>>>首次加载漫游消息拉取完成')
+      scrollMessageList('bottom')
+    }
+    else {
+      let res = await store.dispatch('getHistoryMessage', nowPickInfo.value)
+      if (res.length > 0) {
+        //返回数组有数据显示加载更多
+        isMoreHistoryMsg.value = true;
+      } else {
+        //否则已无更多。
+        isMoreHistoryMsg.value = false;
+      }
+      scrollMessageList('normal')
+    }
+    loadingHistoryMsg.value = false
+    notScrollBottom.value = false;
   }
-  return []
+
+
+  // return []
 }
 //获取其id对应的消息内容
 const messageData = computed(() => {
   //如果Message.messageList中不存在的话调用拉取漫游取一下历史消息
-  return nowPickInfo.value.id && store.state.Message.messageList[nowPickInfo.value.id] || fechHistoryMessage()
+  return nowPickInfo.value.id && store.state.Message.messageList[nowPickInfo.value.id] || fechHistoryMessage('fistLoad')()
 })
 
 const messageContainer = ref(null);
-//滚动置底
-const scrollMessageList = () => {
+const { arrivedState, } = useScroll(messageContainer)
+const { top } = toRefs(arrivedState)
+//控制消息滚动
+const scrollMessageList = (direction) => {
+  //direction滚动方向 bottom向下滚动 normal向上滚动 
   nextTick(() => {
-    if (!notScrollBottom.value) {
-      messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+    const messageNodeList = messageContainer.value.childNodes
+    const fistMsgElement = messageNodeList[2];
+    const lastMsgElement = messageNodeList[messageNodeList.length - 2];
+    console.log('lastMsgElement', lastMsgElement);
+    console.log('fistMsgElement', fistMsgElement);
+    //直接滚动置底
+    if (direction === 'bottom') {
+      lastMsgElement.scrollIntoView(false);
+    }
+    //保持当前的消息位于当前可视窗口
+    if (direction === 'normal') {
+      fistMsgElement.scrollIntoView(true)
+      console.log('>>>>>开始保持当前位置并滚动');
     }
   })
 }
 //监听到消息内容改变 置底滚动。
 watch(() => store.state.Message.messageList[nowPickInfo.value.id], (messageData) => {
-  console.log('>>>>监听到的messageData', messageData)
-  scrollMessageList()
+  console.log('>>>>监听到的messageData', messageData, notScrollBottom.value)
+  scrollMessageList('bottom')
 }, {
   deep: true
 })
+
+//监听到nowPickInfo改变 让消息直接置底
+watch(nowPickInfo, () => nextTick(() => { messageContainer.value.scrollTop = messageContainer.value.scrollHeight; }))
 // 滚动置顶拉取历史消息
-const { arrivedState, } = useScroll(messageContainer)
-const { top } = toRefs(arrivedState)
-watch(top, async (isTop) => {
-  if (isTop && !loadingHistoryMsg.value) {
-    fechHistoryMessage()
-  }
-})
+// const { arrivedState, } = useScroll(messageContainer)
+// const { top } = toRefs(arrivedState)
+// watch(top, async (isTop) => {
+//   if (isTop && !loadingHistoryMsg.value) {
+//     fechHistoryMessage()
+//   }
+// })
 
 //消息重新编辑
 const inputBox = ref(null)
@@ -120,9 +156,10 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
       <div class="main_container" ref="messageContainer">
         <div class="chat_message_tips">
           <div class="load_more_msg">
-            <span v-if="!loadingHistoryMsg" v-text="isMoreHistoryMsg ? '加载更多' : '已无更多'"
-              @click="fechHistoryMessage"></span>
-            <span v-else>消息加载中...</span>
+            <el-link v-if="!loadingHistoryMsg" :disabled="!isMoreHistoryMsg" :underline="false"
+              v-text="isMoreHistoryMsg ? '加载更多' : '已无更多'" @click="fechHistoryMessage()()">
+            </el-link>
+            <el-link v-else disabled>消息加载中...</el-link>
           </div>
 
         </div>
