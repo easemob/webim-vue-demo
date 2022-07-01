@@ -41,6 +41,15 @@ const Conversation = {
     CLEAR_UNREAD_NUM: (state, key) => {
       state.conversationListData[key].unreadMessageNum = 0;
     },
+    //清除信息卡片未读
+    CLEAR_UNTREATED_STATUS: (state, index) => {
+      console.log('>>>>>执行清除卡片未读', index);
+      state.informDetail[index].untreated = 0;
+    },
+    //更改卡片消息的按钮状态
+    UPDATE_INFORM_BTNSTATUS: (state, { index: index, status }) => {
+      state.informDetail[index].operationStatus = status;
+    },
   },
   actions: {
     //添加新系统通知

@@ -157,87 +157,21 @@ EaseIM.conn.addEventHandler('friendListen', {
     submitInformData(INFORM_FROM.FRIEND, data)
   }
 })
+/* 群组相关监听 */
+EaseIM.conn.addEventHandler('groupEvent', {
+  onGroupEvent: (groupevent) => {
+    console.log('>>>>>>>收到群组事件', groupevent);
+    submitInformData(INFORM_FROM.GROUP, groupevent)
+  }
+})
+
 const submitInformData = (fromType, informContent) => {
   console.log('>>>submitInformData>>>', fromType, informContent)
   store.dispatch('createNewInform', { fromType, informContent })
 
 }
 
-/* 群组相关监听 */
-EaseIM.conn.addEventHandler('groupEvent', {
-  onGroupChange: (msg) => {
-    switch (msg.type) {
-      case 'rmGroupMute':
-        // 解除群组一键禁言。
-        break;
-      case 'muteGroup':
-        // 设置群组一键禁言。
-        break;
-      case 'deleteAnnouncement':
-        // 删除群公告。
-        break;
-      case 'updateAnnouncement':
-        // 更新群公告。
-        break;
-      case 'removeMute':
-        // 解除禁言。
-        break;
-      case 'addMute':
-        // 禁言用户。
-        break;
-      case 'removeAdmin':
-        // 移除管理员。
-        break;
-      case 'addAdmin':
-        // 添加管理员。
-        break;
-      case 'changeOwner':
-        // 转让群组。
-        break;
-      case 'direct_joined':
-        // 用户直接被拉进群。
-        break;
-      case 'leaveGroup':
-        // 退群。
-        break;
-      case 'memberJoinPublicGroupSuccess':
-        // 加入公开群成功。
-        break;
-      case 'removedFromGroup':
-        // 从群组移除。
-        break;
-      case 'invite_decline':
-        // 拒绝加群邀请。
-        break;
-      case 'invite_accept':
-        // 接收加群邀请（群含权限情况）。
-        break;
-      case 'invite':
-        // 加群邀请。
-        break;
-      case 'joinPublicGroupDeclined':
-        // 拒绝入群申请。
-        break;
-      case 'joinPublicGroupSuccess':
-        // 同意入群申请。
-        break;
-      case 'joinGroupNotifications':
-        // 申请入群。
-        break;
-      case 'leave':
-        // 退出群。
-        break;
-      case 'join':
-        // 加入群。
-        break;
-      case 'deleteGroupChat':
-        // 解散群。
-        break;
-      default:
-        break;
-    }
-  }
-})
+
 
 
 </script>

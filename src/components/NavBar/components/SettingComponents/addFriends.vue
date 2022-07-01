@@ -82,7 +82,7 @@ const resetTheModalStatus = () => {
     height: 40px;
 }
 
-.addFriends_input> :v-deep.el-input__wrapper {
+::v-deep .addFriends_input>.el-input__wrapper {
     border-radius: 5px;
 }
 

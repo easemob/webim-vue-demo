@@ -82,8 +82,6 @@ const fechHistoryMessage = (loadType) => {
     notScrollBottom.value = false;
   }
 
-
-  // return []
 }
 //获取其id对应的消息内容
 const messageData = computed(() => {
@@ -123,17 +121,14 @@ watch(() => store.state.Message.messageList[nowPickInfo.value.id], (messageData)
 }, {
   deep: true
 })
-
 //监听到nowPickInfo改变 让消息直接置底
-watch(nowPickInfo, () => nextTick(() => { messageContainer.value.scrollTop = messageContainer.value.scrollHeight; }))
-// 滚动置顶拉取历史消息
-// const { arrivedState, } = useScroll(messageContainer)
-// const { top } = toRefs(arrivedState)
-// watch(top, async (isTop) => {
-//   if (isTop && !loadingHistoryMsg.value) {
-//     fechHistoryMessage()
-//   }
-// })
+watch(nowPickInfo, () => nextTick(() => {
+  if (Object.keys(nowPickInfo.value).length > 0) {
+    console.log('>>>>>触发nowPickInfo让消息置底', Object.keys(nowPickInfo.value))
+    messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+  }
+}))
+
 
 //消息重新编辑
 const inputBox = ref(null)
@@ -194,9 +189,9 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   align-items: center;
   flex-direction: row;
   justify-content: space-between;
-  height: 61px;
+  height: 60px;
   background: #F9F9F9;
-  border-bottom: 1px solid #E6E6E6;
+  // border-bottom: 1px solid #E6E6E6;
 
   .chat_user_name {
     font-family: 'PingFang SC';
