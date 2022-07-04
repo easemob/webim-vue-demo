@@ -8,7 +8,6 @@ const Contacts = {
   },
   mutations: {
     SET_FRIEND_LIST: (state, payload) => {
-      //todo 后续添加用户属性字段 userInfo到friendList中
       state.friendList = _.assign({}, payload);
     },
     SET_GROUP_LIST: (state, payload) => {
@@ -35,20 +34,50 @@ const Contacts = {
   },
   actions: {
     //获取好友列表
-    fetchFriendList: async ({ commit }, params) => {
+    fetchFriendList: async ({ dispatch, commit }, params) => {
       let friendListData = {};
-      let { data } = await EaseIM.conn.getContacts();
-      data.length > 0 &&
-        data.map((item) => (friendListData[item] = { hxId: item }));
-      commit('SET_FRIEND_LIST', friendListData);
+      try {
+        //获取好友列表
+        let { data } = await EaseIM.conn.getContacts();
+        data.length > 0 &&
+          data.map((item) => (friendListData[item] = { hxId: item }));
+        //获取好友列表对应的用户属性
+        let friendListWithInfos = await dispatch('getOtherUserInfo', data);
+        //合并两对象
+        let mergedFriendList = _.merge(friendListData, friendListWithInfos);
+        commit('SET_FRIEND_LIST', mergedFriendList);
+      } catch (error) {
+        //异常一般为获取会话异常，直接提交好友列表
+        commit('SET_FRIEND_LIST', friendListData);
+      }
     },
     //获取他人用户属性
     getOtherUserInfo: async ({ commit }, users) => {
       /**
        * @param {String|Array} users - 用户id
        */
-      let result = await EaseIM.conn.fetchUserInfoById(users);
-      console.log('>>>>>成功获取到用户属性', result);
+
+      return new Promise(async (resolve, reject) => {
+        let usersInfosObj = {};
+        let requestTask = [];
+        let usersArr = _.chunk([...users], 99); //分拆users 用户属性获取一次不能超过100个
+        try {
+          usersArr.length > 0 &&
+            usersArr.map((userItem) =>
+              requestTask.push(EaseIM.conn.fetchUserInfoById(userItem))
+            );
+          let result = await Promise.all(requestTask);
+          let usersInfos = _.map(result, 'data');
+          usersInfos.length > 0 &&
+            usersInfos.map(
+              (item) => (usersInfosObj = Object.assign(usersInfosObj, item))
+            );
+          console.log('usersInfosObj', usersInfosObj);
+          resolve(usersInfosObj);
+        } catch (error) {
+          reject(error);
+        }
+      });
     },
     //获取群组列表
     fetchGroupList: async ({ commit }, params) => {

@@ -7,8 +7,8 @@ import dateFormater from '@/utils/dateFormat'
 
 /* 头像相关 */
 import informIcon from '@/assets/images/avatar/inform.png'
+/* store */
 const store = useStore();
-
 //取系统通知数据
 const informDetail = computed(() => {
   let informDetailArr = store.state.Conversation.informDetail;
@@ -17,7 +17,13 @@ const informDetail = computed(() => {
   console.log('>>>>>lastInformDeatail', lastInformDeatail)
   return { untreated, lastInformDeatail };
 });
-console.log('>>>>>informDetail', informDetail.lastInformDeatail)
+// console.log('>>>>>informDetail', informDetail.lastInformDeatail)
+//取好友列表(主要使用好友下的用户属性相关)
+const friendList = computed(() => store.state.Contacts.friendList
+)
+
+
+console.log('friendList>>>>>', friendList.value)
 //取会话数据
 const conversationList = computed(() => {
   return store.state.Conversation.conversationListData;
@@ -52,7 +58,8 @@ const deleteConversation = (itemKey) => {
   <ul class="session_list" style="overflow: auto" @click="getItem">
     <li class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</li>
     <!-- 系统通知会话 -->
-    <li v-if="informDetail.lastInformDeatail" class="session_list_item" @click="$emit('toInformDetails')">
+    <li v-if="JSON.stringify(informDetail.lastInformDeatail) !== '{}'" class="session_list_item"
+      @click="$emit('toInformDetails')">
       <div class="item_body item_left">
         <!-- 通知头像 -->
         <div class="session_other_avatar">
@@ -82,11 +89,16 @@ const deleteConversation = (itemKey) => {
           <div class="session_list_item">
             <div class="item_body item_left">
               <div class="session_other_avatar">
-                <el-avatar :src="item.conversationInfo.avatarUrl"></el-avatar>
+
+                <el-avatar
+                  :src="friendList[item.conversationKey] && friendList[item.conversationKey].avatarurl ? friendList[item.conversationKey].avatarurl : item.conversationInfo.avatarUrl">
+                </el-avatar>
               </div>
             </div>
             <div class="item_body item_main">
-              <div class="name">{{ item.conversationInfo.name }}</div>
+              <div class="name">{{ friendList[item.conversationKey] && friendList[item.conversationKey].nickname
+                  ? friendList[item.conversationKey].nickname : item.conversationInfo.name
+              }}</div>
               <div class="last_msg_body">{{ item.fromInfo.fromId }}：{{ item.latestMessage.msg }}
               </div>
             </div>

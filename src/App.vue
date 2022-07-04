@@ -39,7 +39,7 @@ const fetchLoginUsersInitData = () => {
 //获取登陆用户属性
 const getMyUserInfos = () => {
   const userId = EaseIM.conn.user;
-  // store.dispatch('getMyUserInfo', userId);
+  store.dispatch('getMyUserInfo', userId);
 };
 //获取好友列表
 const fetchFriendList = () => {

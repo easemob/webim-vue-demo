@@ -10,7 +10,6 @@ import dateFormat from '@/utils/dateFormat'
 import { messageType } from '@/constant'
 /* 默认头像 */
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
-import myAvatar from '@/assets/images/loginIcon.png'
 
 /* vuex store */
 const store = useStore()
@@ -40,6 +39,17 @@ const isMyself = computed(() => {
         return (msgBody.from === loginUserId)
     }
 })
+/* 获取自己的用户信息 */
+const loginUserInfo = computed(() => store.state.loginUserInfo)
+
+/* 获取他人的用户信息 */
+const otherUserInfo = computed(() => {
+    return (otherId) => {
+        let otherInfos = store.state.Contacts.friendList[otherId] || { avatarurl: defaultAvatar }
+        return otherInfos
+    }
+}
+)
 //音频播放状态
 const audioPlayStatus = reactive({
     isPlaying: false,//是否在播放中
@@ -116,7 +126,8 @@ const reEdit = (msg) => emit('reEditMessage', msg)
         <div v-if="!msgBody.isRecall" class="message_box_item"
             :style="{ flexDirection: (isMyself(msgBody) ? 'row-reverse' : 'row') }">
             <div class="message_item_time">{{ dateFormat('MM/DD/HH:mm', msgBody.time) }}</div>
-            <el-avatar class="message_item_avator" :src="isMyself(msgBody) ? myAvatar : defaultAvatar">
+            <el-avatar class="message_item_avator"
+                :src="isMyself(msgBody) ? loginUserInfo.avatarurl : otherUserInfo(msgBody.from).avatarurl || defaultAvatar">
             </el-avatar>
             <el-tooltip trigger="contextmenu">
                 <template #content>

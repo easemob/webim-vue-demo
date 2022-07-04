@@ -18,8 +18,8 @@ const groupList = computed(() => store.state.Contacts.groupList)
 const getIdInfo = async ({ id, chatType }) => {
   //类型为单聊
   if (chatType === CHAT_TYPE.SINGLE) {
-    if (friendList.value[id].userInfo) {
-      nowPickInfo.value.userInfo = friendList[id].userInfo
+    if (friendList.value[id]) {
+      nowPickInfo.value.userInfo = friendList.value[id]
     } else {
       return
     }
@@ -138,7 +138,11 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
 <template>
   <el-container class="app_container">
     <el-header class="chat_message_header">
-      <div v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE" class="chat_user_name">{{ nowPickInfo.id }}</div>
+      <div v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE" class="chat_user_name">
+        {{ nowPickInfo.userInfo && nowPickInfo.userInfo.nickname ? nowPickInfo.userInfo.nickname : nowPickInfo.id }}
+      </div>
+      <!-- 预留一对一在线状态 -->
+
       <div v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP" class="chat_user_name">
         {{ nowPickInfo.groupDetail && nowPickInfo.groupDetail.name || '' }} {{ `(${nowPickInfo.groupDetail &&
             nowPickInfo.groupDetail.affiliations_count || ''})`
