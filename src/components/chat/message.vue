@@ -41,6 +41,9 @@
             <a-menu-item @click="menuClick('2')">
               <a href="javascript:;">删除好友</a>
             </a-menu-item>
+			 <a-menu-item @click="menuClick('3')">
+              <a href="javascript:;">免打扰配置</a>
+            </a-menu-item>
           </a-menu>
         </a-dropdown>
       </div>
@@ -175,6 +178,7 @@
       </div>
     </div>
     <GetGroupInfo ref="groupInfoModel" @closeGroupMessage="closeGroupMessage" />
+	<DisturbConfig ref="disturbConfigModel" /> 
 
     <!-- fix 移动到全局 -->
     <!-- <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" @start="start_multi"/> -->
@@ -197,6 +201,7 @@ import _ from 'lodash';
 // import MultiAVModal from "../emediaModal/multiAVModal";
 // import EmediaModal from "../emediaModal/index";
 import GetGroupInfo from '../group/groupInfo.vue';
+import DisturbConfig from './disturbConfig.vue'
 
 export default{
 	data(){
@@ -435,6 +440,7 @@ export default{
 			'onGetGroupinfo',
 			'recallMessage',
 			'onGetGroupBlack',
+			'onGetSilentConfig',
 		]),
 		getKey(item, type){
 			let key = '';
@@ -584,6 +590,7 @@ export default{
 		},
 
 		changeMenus(){
+			this.onGetSilentConfig();
 			if(this.type === 'contact'){
 			}
 			else if(this.type === 'group'){
@@ -613,6 +620,8 @@ export default{
 					},
 				});
 				break;
+			case '3': 
+				this.$refs.disturbConfigModel.changeModal()
 			default:
 				break;
 			}
@@ -765,6 +774,7 @@ export default{
 		// AddAVMemberModal,
 		// MultiAVModal,
 		// EmediaModal,
+		DisturbConfig,
 	}
 };
 </script>

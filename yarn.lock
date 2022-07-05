@@ -83,11 +83,6 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@popperjs/core@^2.9.2":
-  version "2.11.5"
-  resolved "https://registry.npmmirror.com/@popperjs/core/-/core-2.11.5.tgz#db5a11bf66bdab39569719555b0f76e138d7bd64"
-  integrity sha512-9X2obfABZuDVLCgPK9aX0a/x4jaOEweTTWE2+9sr0Qqqevj2Uv5XorvusThmc9XGYpS9yI+fhh8RTafBtGposw==
-
 "@simonwep/pickr@~1.7.0":
   version "1.7.4"
   resolved "https://registry.yarnpkg.com/@simonwep/pickr/-/pickr-1.7.4.tgz#b14fcd945890388b870cd6db4d6c78d531f25141"
@@ -158,10 +153,17 @@ add-dom-event-listener@^1.0.2:
   dependencies:
     object-assign "4.x"
 
-agora-rtc-sdk-ng@^4.4.0:
-  version "4.8.1"
-  resolved "https://registry.yarnpkg.com/agora-rtc-sdk-ng/-/agora-rtc-sdk-ng-4.8.1.tgz#1228c92ee0ab500629cf7dbd4c6213eec7303ffd"
-  integrity sha512-hAYb7quX2cUoURnCobYBXtdfjbuec3zuZupkfmroh5IXLihRRNPzEhT51QUuiSxgsAJG2Yr4XB6g6BR0aRGxrg==
+agora-rtc-sdk-ng@^4.7.3:
+  version "4.12.1"
+  resolved "https://registry.yarnpkg.com/agora-rtc-sdk-ng/-/agora-rtc-sdk-ng-4.12.1.tgz#6e0629a40febd68b95448b45f636a518a20dd333"
+  integrity sha512-kmc+ZyKDdnY/BN3iAwBs+MSgTX8Zkc6THFSIAXN9WebjZ/F+N/JXItoNEcgQe3MdTABUli6w3pZ+iObnDqVkBw==
+  dependencies:
+    agora-rte-extension "^1.0.22"
+
+agora-rte-extension@^1.0.22:
+  version "1.0.23"
+  resolved "https://registry.yarnpkg.com/agora-rte-extension/-/agora-rte-extension-1.0.23.tgz#54a7215fd2cdcf2553d83570530950054f1e59a6"
+  integrity sha512-X2cGBg+L5ZJIFU91qvMASvRsBfg1HXTktVG3YROw9wxHsILSI7jgF9R9XraLc3fNX/UjovaYAlUW+hiJe0v6Xw==
 
 ajv-keywords@^3.1.0:
   version "3.5.2"
@@ -2665,10 +2667,10 @@ easemob-webrtc@^3.2.2:
   resolved "https://registry.yarnpkg.com/easemob-webrtc/-/easemob-webrtc-3.2.2.tgz#03e46093cb0ce4168bddf23e61069ed6bfe221af"
   integrity sha512-uScTb2kLKH3pST/eDpjuSFGL+EYpEnogWaRw7Tsyl7b+kEQQZ2xtleIoIunCCZqSCattPBnZ1evDY+7J/wiYfw==
 
-easemob-websdk@^4.0.3:
-  version "4.0.3"
-  resolved "https://registry.npmmirror.com/easemob-websdk/-/easemob-websdk-4.0.3.tgz#b8dfede7664b7bc0662c80514587d95b6693ec13"
-  integrity sha512-M7dN5lXt7di7EA+7WQ/A7fe+uxeUALufouTnEttVgx3cpPlGj2BTL+4JntxJHIu716W5j8jXlXNh9ZOOTQigUA==
+easemob-websdk@^4.0.8:
+  version "4.0.8"
+  resolved "https://registry.yarnpkg.com/easemob-websdk/-/easemob-websdk-4.0.8.tgz#e5564e97fcbc1d0642e40697365b88ef10a6e29d"
+  integrity sha512-LjJJMoCJkRYpgB+Sqd/aht82eDaPNCt7X+DEU4MdiX6k8OsRsE5fWOn/GC8M/rGHP0NaiN0CWJ4n08vJ9P3CpA==
 
 ee-first@1.1.1:
   version "1.1.1"
