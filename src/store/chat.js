@@ -34,7 +34,8 @@ const Chat = {
 		},
 		currentMsgs: [],
 
-		noticeCallMsg: {}
+		noticeCallMsg: {},
+		pushConfig: false,
 	},
 	mutations: {
 		updateUserList(state, payload){
@@ -193,6 +194,10 @@ const Chat = {
 		noticeCall(state, payload){
 			console.log('store noticeCall msg', payload);
 			state.noticeCallMsg = payload;
+		},
+		// 更新推送免打扰配置
+		updatePushConfig(state, payload) {
+			state.pushConfig = payload
 		}
 	},
 	actions: {
@@ -643,6 +648,46 @@ const Chat = {
 		},
 		initChatState: function(context, payload){
 			context.commit('initChatState');
+		},
+		// 开启推送免打扰
+		onSetSilent: function (context, payload) {
+			const { params, name } = Vue.$route;
+			const option = {
+				conversationId: params.id,
+				type: name,
+				options: {
+					paramType: 0,
+					remindType: 'ALL'
+				}
+			}
+			WebIM.conn.setSilentModeForConversation(option).then(res => {
+				context.commit('updatePushConfig', true)
+				payload && payload()
+			})
+		},
+		// 清除推送免打扰
+		onClearSilent: function (context, payload) {
+			const { params, name } = Vue.$route;
+			const option = {
+				conversationId: params.id,
+				type: name,
+			}
+			WebIM.conn.clearRemindTypeForConversation(option).then(res => {
+				context.commit('updatePushConfig', false)
+				payload && payload();
+			})
+		},
+		// 获取当前会话推送免打扰
+		onGetSilentConfig: function (context, payload) {
+			const { params, name } = Vue.$route;
+			const option = {
+				conversationId: params.id,
+				type: name,
+			}
+			WebIM.conn.getSilentModeForConversation(option).then(res => {
+				let dataLength = Object.keys(res.data).length
+				context.commit('updatePushConfig', dataLength ? true : false)
+			})
 		}
 	},
 	getters: {
@@ -661,6 +706,9 @@ const Chat = {
 		},
 		fetchHistoryMessages(state){
 			return state.currentMsgs;
+		},
+		onPushConfig(state) {
+			return state.pushConfig;
 		}
 	}
 
