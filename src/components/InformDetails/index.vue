@@ -158,7 +158,7 @@ const handleClickBtn = ({ informData, index, type }) => {
       }
     }
 
-    :v-deep.inforom_details_card {
+    ::v-deep .inforom_details_card {
       overflow: auto
     }
   }

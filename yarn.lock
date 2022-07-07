@@ -4682,6 +4682,11 @@ picomatch@^2.0.4, picomatch@^2.2.1, picomatch@^2.3.1:
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.3.1.tgz#3ba3833733646d9d3e4995946c1365a67fb07a42"
   integrity sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==
 
+pinyin-pro@^3.10.2:
+  version "3.10.2"
+  resolved "https://registry.yarnpkg.com/pinyin-pro/-/pinyin-pro-3.10.2.tgz#e7ce8a5cb6a743c4a43559673c75e41c90c8f991"
+  integrity sha512-e3Mvx5KnUcoYdU8aphOjApFtlQY1X8W1pzav6ARwTkuU8bYHcMQegSbwbvyX4OxM6NK/PlY8oMSxYHHlieur5w==
+
 pkg-dir@^4.1.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/pkg-dir/-/pkg-dir-4.2.0.tgz#f099133df7ede422e81d1d8448270eeb3e4261f3"

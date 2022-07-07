@@ -35,6 +35,7 @@ const routes = [
         name: 'Conversation',
         meta: {
           title: '会话',
+          keepAlive: false,
         },
         component: () => import('../components/Conversation'),
         children: [
@@ -57,6 +58,7 @@ const routes = [
         name: 'Contacts',
         meta: {
           title: '联系页',
+          keepAlive: true,
         },
         component: () => import('../components/Contacts'),
         children: [
@@ -64,6 +66,11 @@ const routes = [
             path: 'message',
 
             component: () => import('../components/Message'),
+          },
+          {
+            path: 'contactInfo',
+            component: () =>
+              import('../components/Contacts/components/contactInfo.vue'),
           },
         ],
       },

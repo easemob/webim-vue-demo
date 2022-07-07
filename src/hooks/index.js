@@ -4,6 +4,7 @@ import useSetMessageKey from './useSetMessageKey';
 import useSortConversation from './useSortConversation';
 import useInform from './useInform';
 import useCreateMessage from './useCreateMessage';
+import useSortFriendItem from './useSortFriendItem';
 export {
   useSDKErrorNotifi,
   useConversation,
@@ -11,4 +12,5 @@ export {
   useSortConversation,
   useInform,
   useCreateMessage,
+  useSortFriendItem,
 };

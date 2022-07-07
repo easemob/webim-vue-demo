@@ -1,14 +1,19 @@
 import EaseIM from '@/IM/initwebsdk';
 import { useLocalStorage } from '@vueuse/core';
+import { useSortFriendItem } from '@/hooks';
 import _ from 'lodash';
 const Contacts = {
   state: {
     friendList: useLocalStorage('friendList', {}),
     groupList: useLocalStorage('groupList', {}),
+    sortedFriendList: useLocalStorage('sortedFriendList', {}),
   },
   mutations: {
     SET_FRIEND_LIST: (state, payload) => {
       state.friendList = _.assign({}, payload);
+    },
+    SET_SORDED_FRIEND_LIST: (state, payload) => {
+      state.sortedFriendList = _.assign({}, payload);
     },
     SET_GROUP_LIST: (state, payload) => {
       //init 为初始化获取 replenish 补充群列表（包括补充群详情）
@@ -45,10 +50,14 @@ const Contacts = {
         let friendListWithInfos = await dispatch('getOtherUserInfo', data);
         //合并两对象
         let mergedFriendList = _.merge(friendListData, friendListWithInfos);
+        //合并后的好友列表数据进行排序并单独提交处理
+        let sortFriendList = useSortFriendItem(mergedFriendList);
+        commit('SET_SORDED_FRIEND_LIST', sortFriendList);
         commit('SET_FRIEND_LIST', mergedFriendList);
       } catch (error) {
         //异常一般为获取会话异常，直接提交好友列表
         commit('SET_FRIEND_LIST', friendListData);
+        commit('SET_SORDED_FRIEND_LIST', sortFriendList);
       }
     },
     //获取他人用户属性

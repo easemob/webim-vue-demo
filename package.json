@@ -14,6 +14,7 @@
     "easemob-websdk": "^4.0.8",
     "element-plus": "^2.2.5",
     "nprogress": "^0.2.0",
+    "pinyin-pro": "^3.10.2",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3",
     "vuex": "^4.0.0"

@@ -1,12 +1,22 @@
 <script setup>
 import NavBar from '@/components/NavBar';
+import { useRoute } from 'vue-router'
+const route = useRoute()
+console.log('>>>>>route', route.name, route.meta.keepAlive);
 </script>
 <template>
   <div class="app-container">
     <el-container class="chat_container">
-      <el-aside class="chat_nav_bar" width="80px"> <NavBar /> </el-aside>
+      <el-aside class="chat_nav_bar" width="80px">
+        <NavBar />
+      </el-aside>
       <el-main class="chat_main_box">
-        <router-view></router-view>
+        <router-view v-slot="{ Component }">
+          <keep-alive>
+            <component :is="Component" :key="$route.name" v-if="$route.meta.keepAlive" />
+          </keep-alive>
+          <component :is="Component" v-if="!$route.meta.keepAlive" />
+        </router-view>
       </el-main>
     </el-container>
   </div>
@@ -34,6 +44,7 @@ import NavBar from '@/components/NavBar';
     transform: translateY(-50%);
     margin: auto auto;
     border-radius: 5px;
+
     .chat_nav_bar {
       display: flex;
       flex-direction: column;
@@ -43,6 +54,7 @@ import NavBar from '@/components/NavBar';
       background: #262626;
       overflow: hidden;
     }
+
     .chat_main_box {
       // height: 100%;
       // overflow: hidden;
