@@ -68,7 +68,8 @@ export default{
 			},
 			isCollapse: true,
 			unRead: '',
-			dataFlag: false
+			dataFlag: false,
+			pushConfigObj: this.$store.state.chat.pushConfigObj,
 			// selectedKeys: [ this.getKey(this.activedKey[this.type]) ]
 		};
 	},
@@ -257,7 +258,9 @@ export default{
 			const currentMsgs = chatList[userId] || [];
 			let unReadNum = 0;
 			currentMsgs.forEach(msg => {
-				if(msg.status !== 'read' && msg.status !== 'recall' && !msg.bySelf){
+				if (this.pushConfigObj[item.name].type === 'ALL') {
+					return
+				}else if(msg.status !== 'read' && msg.status !== 'recall' && !msg.bySelf){
 					unReadNum++;
 				}
 			});

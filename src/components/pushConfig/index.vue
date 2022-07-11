@@ -6,7 +6,7 @@
         @ok="handleOk"   
 	>
 		<div class="push-config">
-            <H3>是否设置免打扰</H3><a-switch v-model="isPush" @change="handleChangeChecked" />
+            <H3>是否设置免打扰</H3><a-switch v-model="pushNotify" @change="handleChangeChecked" />
         </div>
 	</a-modal>
 </template>
@@ -16,20 +16,21 @@ import { mapActions,mapGetters } from 'vuex';
 export default{
     data(){
         return {
-            isPush: this.$store.state.chat.pushConfig,
+            pushConfig: this.$store.state.chat.pushConfig,
             showConfigModal: false,
+            pushNotify:this.$store.state.chat.pushConfig.length > 0 && this.$store.state.chat.pushConfig[Vue.$route.params.id][type] === 'ALL'
         }
     },
     watch: {
-        pushConfig: {
+        pushConfigObj: {
             handler(newVal, oldVal){
-                this.isPush = newVal;
+                this.pushNotify = Object.keys(newVal).length > 0 && newVal[Vue.$route.params.id].type === 'ALL'
             }
         }
     },
     computed: {
 		...mapGetters({
-			pushConfig: 'onPushConfig'
+			pushConfigObj: 'onPushConfig'
 		}),
     },
     methods: {
@@ -38,13 +39,13 @@ export default{
             'onClearSilent',
         ]),
         handleChangeChecked(val){
-            this.isPush = val;
+            this.pushNotify = val;
         },
         changeModal(){
 			this.$data.showConfigModal = !this.$data.showConfigModal;
 		},
         handleOk() {
-            if (this.isPush) {
+            if (this.pushNotify) {
                 this.onSetSilent(this.handlerClose)
             }else {
                 this.onClearSilent(this.handlerClose)
