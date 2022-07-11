@@ -1,5 +1,5 @@
 import WebIM from '../utils/WebIM';
-
+import _ from 'lodash'
 // import WebIM from "../utils/WebIM";
 
 // TODO 处理页面刷新无法获取到音频url
@@ -32,6 +32,7 @@ const Chat = {
 			group: {},
 			chatroom: {},
 		},
+		searchMsgList:[],
 		currentMsgs: [],
 
 		noticeCallMsg: {},
@@ -111,6 +112,19 @@ const Chat = {
 				state.currentMsgs = Object.assign({}, state.msgList[chatType][params.id || chatId]); // 这里params.id在路由跳转的时候会undefind，取chatId兼容
 			}
 			state.msgList = Object.assign({}, state.msgList);
+		},
+		updateSearchMsgList(state,payload){
+			if (state.searchMsgList.length) {
+				state.searchMsgList.forEach(item => {
+					if (!(item.mid === payload.mid)) {
+						state.searchMsgList.push(payload)
+					}
+				})
+			}else {
+				state.searchMsgList.push(payload)
+			}
+			var newHistory = _.uniqBy(state.searchMsgList, 'mid') // 根据id 去重
+			state.searchMsgList = newHistory;
 		},
 		updateCurrentMsgList(state, messages){
 			console.log(messages, 'updateCurrentMsgList');
@@ -501,11 +515,12 @@ const Chat = {
 		},
 
 		getHistoryMessage: function(context, payload){
-			console.log(context, payload, 'getHistoryMessage');
+			console.log(payload, 'getHistoryMessage');
+			const { isSearch } = payload;
 			const options = {
 				queue: payload.name,
 				isGroup: payload.isGroup,
-				count: 10, // 每次获取消息条数
+				count: isSearch ? 200 : 10, // 每次获取消息条数
 				success: function(msgs){
 					try{
 						console.log(msgs, 'msgs=getHistoryMessage');
@@ -530,9 +545,9 @@ const Chat = {
 									if(payload.isGroup){
 										msg.chatId = item.to;
 									}
-									else{
-										msg.chatId = bySelf ? item.to : item.from;
-									}
+									// else{
+									// 	msg.chatId = bySelf ? item.to : item.from;
+									// }
 								}
 								else if(!item.ext.file_length && item.filename !== 'audio' && item.filename.substring(item.filename.length - 3) !== 'mp4' && item.filename.substring(item.filename.length - 3) !== 'mp3' && item.filename.substring(item.filename.length - 3) !== 'amr'){ // 为图片的情况
 									msg = {
@@ -548,9 +563,9 @@ const Chat = {
 									if(payload.isGroup){
 										msg.chatId = item.to;
 									}
-									else{
-										msg.chatId = bySelf ? item.to : item.from;
-									}
+									// else{
+									// 	msg.chatId = bySelf ? item.to : item.from;
+									// }
 								}
 								else if(item.filename === 'audio' || item.filename.substring(item.filename.length - 3) === 'mp3' || item.filename.substring(item.filename.length - 3) === 'amr'){
 									msg = {
@@ -566,9 +581,9 @@ const Chat = {
 									if(payload.isGroup){
 										msg.chatId = item.to;
 									}
-									else{
-										msg.chatId = bySelf ? item.to : item.from;
-									}
+									// else{
+									// 	msg.chatId = bySelf ? item.to : item.from;
+									// }
 								}
 								else if(item.filename.substring(item.filename.length - 3) === 'mp4'){
 									msg = {
@@ -581,9 +596,9 @@ const Chat = {
 									if(payload.isGroup){
 										msg.chatId = item.to;
 									}
-									else{
-										msg.chatId = bySelf ? item.to : item.from;
-									}
+									// else{
+									// 	msg.chatId = bySelf ? item.to : item.from;
+									// }
 								}
 								else{
 									msg = {
@@ -601,12 +616,12 @@ const Chat = {
 									if(payload.isGroup){
 										msg.chatId = item.to;
 									}
-									else{
-										msg.chatId = bySelf ? item.to : item.from;
-									}
+									// else{
+									// 	msg.chatId = bySelf ? item.to : item.from;
+									// }
 								}
 								msg.isHistory = true;
-								context.commit('updateMsgList', msg);
+								isSearch ? context.commit('updateSearchMsgList', msg) : context.commit('updateMsgList', msg);
 							});
 							context.commit('updateMessageStatus', { action: 'readMsgs' });
 						}
@@ -705,10 +720,7 @@ const Chat = {
 			return state.currentMsgs;
 		},
 		fetchHistoryMessages(state){
-			return state.currentMsgs;
-		},
-		onPushConfig(state) {
-			return state.pushConfig;
+			return state.searchMsgList;
 		}
 	}
 
