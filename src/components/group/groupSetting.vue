@@ -23,6 +23,10 @@
               <a-icon type="exclamation-circle" theme="filled" />
               群组黑名单
             </p>
+			 <p @click="changeDisturbModel">
+              <a-icon type="sound" theme="filled" />
+              免打扰配置
+            </p>
             <p @click="dissolution">
               <a-icon type="poweroff" />
               解散群组
@@ -39,6 +43,8 @@
       <a-icon type="setting" class="set-icon" :style="{fontSize: '16px'}"/>
     </a-popover>
     <GroupBlack ref="groupBlackModel" />
+	<DisturbConfig ref="disturbConfigModel" /> 
+
     <a-modal
       :title="title"
       :visible="modalVisible"
@@ -58,6 +64,8 @@
 import { mapActions } from 'vuex';
 import './group.less';
 import GroupBlack from './groupBlack.vue';
+import DisturbConfig from '../pushConfig/index.vue'
+
 export default{
 	data(){
 		return {
@@ -90,12 +98,14 @@ export default{
 			'onUpdataGroupInfo',
 			'onGetGroupBlack',
 			'onDissolveGroup',
-			'onQuitGroup'
+			'onQuitGroup',
+			'onGetSilentConfig'
 		]),
 		changeSettingModel(){
 			this.showGroupSetting = !this.showGroupSetting;
 		},
 		changeSetInfo(val){
+			this.onGetSilentConfig();
 			this.popoverVisible = true
 			if(this.loginName == this.groupAdmin){
 				this.showAdminIcon = true
@@ -184,10 +194,14 @@ export default{
 			if(!val){
 				this.changeSetModel()
 			}
+		},
+		changeDisturbModel() {
+			this.$refs.disturbConfigModel.changeModal()
 		}
 	},
 	components: {
-		GroupBlack
+		GroupBlack,
+		DisturbConfig
 	}
 };
 </script>
