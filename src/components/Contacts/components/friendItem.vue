@@ -23,7 +23,8 @@ const toContacts = ({ id, chatType }) => {
             <el-collapse class="friendItem_container_list" accordion>
                 <el-collapse-item :title="friendItemKey === ' ' ? '#' : friendItemKey.toUpperCase()">
                     <el-row>
-                        <el-col class="friendItem_box" :span="24" v-for="item in friendName" :key="item.hxId">
+                        <el-col class="friendItem_box" :span="24" v-for="item in friendName" :key="item.hxId"
+                            @click="toContacts({ id: item.hxId, chatType: CHAT_TYPE.SINGLE })">
                             <el-avatar style="margin-right: 10px;"
                                 :src="item.avatarurl ? item.avatarurl : defaultAvatar"></el-avatar>
                             {{ item.nickname ? item.nickname : item.hxId }}

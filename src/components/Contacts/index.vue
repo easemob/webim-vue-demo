@@ -6,6 +6,7 @@ import router from '@/router';
 import SearchInput from '@/components/searchInput'
 import InformDetails from '@/components/InformDetails'
 import FriendItem from './components/friendItem.vue'
+import GroupItem from './components/joinedGroupItem.vue'
 
 /* store */
 const store = useStore()
@@ -34,7 +35,9 @@ const toInformDetails = () => {
           <el-collapse-item :title="`联系人 ( ${Object.keys(friendList).length} )`">
             <FriendItem />
           </el-collapse-item>
-          <el-collapse-item :title="`群聊 ( ${Object.keys(joinedGroupList).length} )`"></el-collapse-item>
+          <el-collapse-item :title="`群聊 ( ${Object.keys(joinedGroupList).length} )`">
+            <GroupItem />
+          </el-collapse-item>
         </el-collapse>
       </div>
     </el-aside>
