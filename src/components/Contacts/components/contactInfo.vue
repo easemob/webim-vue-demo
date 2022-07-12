@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useStore } from 'vuex'
+import router from '@/router'
 import { useRoute } from "vue-router"
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { messageType } from '@/constant'
@@ -9,6 +10,8 @@ import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
 /* store */
 const store = useStore()
+/* router */
+
 /* route */
 const route = useRoute()
 
@@ -29,7 +32,7 @@ console.log('>>>>nowContactInfo', nowContactInfo.value)
 <template>
     <div class="app_container">
         <el-header class="contactInfo_header">
-            <el-page-header style="margin-top: 12px;" :icon="ArrowLeft" />
+            <el-page-header style="margin-top: 12px;" :icon="ArrowLeft" @click="$router.back(-1)" />
             <el-divider />
         </el-header>
         <el-main class="contactInfo_main">
