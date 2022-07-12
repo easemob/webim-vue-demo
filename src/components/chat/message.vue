@@ -143,7 +143,8 @@
         <UpLoadImage :type="this.type" :chatId="activedKey[type]" />
         <!-- 上传文件组件 -->
         <UpLoadFile :type="this.type" :chatId="activedKey[type]" />
-
+		<!-- 历史记录 -->
+		<SearchModal :type="this.type" :chatId="activedKey[type]"/>
         <!-- 发送语音 -->
         <RecordAudio v-show="isHttps" />
         <!-- 发视频通话 -->
@@ -202,6 +203,8 @@ import _ from 'lodash';
 // import EmediaModal from "../emediaModal/index";
 import GetGroupInfo from '../group/groupInfo.vue';
 import DisturbConfig from '../pushConfig/index.vue'
+import SearchModal from '../search/index.vue'
+import {readablizeBytes, renderTime} from '../../utils/index'
 export default{
 	data(){
 		return {
@@ -242,7 +245,9 @@ export default{
 			},
 			globalHistoryMsg: {},
 			conversationId: '',
-			userId: ''
+			userId: '',
+			readablizeBytes, 
+			renderTime
 		};
 	},
 	beforeMount(){
@@ -694,24 +699,6 @@ export default{
 			this.$emit('EmediaModalFun', [val], 0);
 		},
 
-		readablizeBytes(value){
-			let s = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
-			let e = Math.floor(Math.log(value) / Math.log(1024));
-			return (value / Math.pow(1024, Math.floor(e))).toFixed(2) + ' ' + s[e];
-		},
-
-		// TODO 可以抽离到utils
-		renderTime(time){
-			var t = new Date(parseInt(time));
-			var Y = t.getFullYear();
-			var M =
-        t.getMonth() + 1 < 10 ? '0' + (t.getMonth() + 1) : t.getMonth() + 1;
-			var D = t.getDate() < 10 ? '0' + t.getDate() : t.getDate();
-			var H = t.getHours() < 10 ? '0' + t.getHours() : t.getHours();
-			var F = t.getMinutes() < 10 ? '0' + t.getMinutes() : t.getMinutes();
-			var S = t.getSeconds() < 10 ? '0' + t.getSeconds() : t.getSeconds();
-			return `${M}-${D} ${H}:${F}`;
-		},
 		getLastMsg(item){
 			const { name, params } = this.$route;
 			const chatList = this.$store.state.chat.msgList[name];
@@ -776,6 +763,7 @@ export default{
 		// MultiAVModal,
 		// EmediaModal,
 		DisturbConfig,
+		SearchModal
 	}
 };
 </script>
