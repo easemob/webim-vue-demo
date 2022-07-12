@@ -179,7 +179,7 @@
       </div>
     </div>
     <GetGroupInfo ref="groupInfoModel" @closeGroupMessage="closeGroupMessage" />
-	<DisturbConfig ref="disturbConfigModel" /> 
+	<DisturbConfig ref="disturbConfigModel" :userId="this.userId"/> 
 
     <!-- fix 移动到全局 -->
     <!-- <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" @start="start_multi"/> -->

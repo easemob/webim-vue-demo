@@ -16,14 +16,17 @@ import { mapActions,mapGetters } from 'vuex';
 export default{
     data(){
         return {
-            isPush: this.$store.state.chat.pushConfig,
+            isPush: false,
             showConfigModal: false,
         }
     },
     watch: {
         pushConfig: {
             handler(newVal, oldVal){
-                this.isPush = newVal;
+                const { params } = Vue.$route;
+                if (newVal.length) {
+                    this.isPush = newVal.includes(params.id)
+                }
             }
         }
     },
@@ -32,6 +35,9 @@ export default{
 			pushConfig: 'onPushConfig'
 		}),
     },
+    props:[
+        'userId'
+    ],
     methods: {
         ...mapActions([
 			'onSetSilent',
