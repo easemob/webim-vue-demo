@@ -1,5 +1,5 @@
 import WebIM from '../utils/WebIM';
-
+import _ from 'lodash'
 // import WebIM from "../utils/WebIM";
 
 // TODO 处理页面刷新无法获取到音频url
@@ -33,7 +33,7 @@ const Chat = {
 			chatroom: {},
 		},
 		currentMsgs: [],
-
+		searchMsgList: [],
 		noticeCallMsg: {},
 		pushConfig: false,
 	},
@@ -111,6 +111,19 @@ const Chat = {
 				state.currentMsgs = Object.assign({}, state.msgList[chatType][params.id || chatId]); // 这里params.id在路由跳转的时候会undefind，取chatId兼容
 			}
 			state.msgList = Object.assign({}, state.msgList);
+		},
+		updateSearchMsgList(state, payload) {
+			if (state.searchMsgList.length) {
+				state.searchMsgList.forEach(item => {
+					if (!(item.mid === payload.mid)) {
+						state.searchMsgList.push(payload)
+					}
+				})
+			} else {
+				state.searchMsgList.push(payload)
+			}
+			var newHistory = _.uniqBy(state.searchMsgList, 'mid') // 根据id 去重
+			state.searchMsgList = newHistory;
 		},
 		updateCurrentMsgList(state, messages){
 			console.log(messages, 'updateCurrentMsgList');
@@ -502,10 +515,11 @@ const Chat = {
 
 		getHistoryMessage: function(context, payload){
 			console.log(context, payload, 'getHistoryMessage');
+			const { isSearch } = payload;
 			const options = {
 				queue: payload.name,
 				isGroup: payload.isGroup,
-				count: 10, // 每次获取消息条数
+				count: isSearch ? 200 : 10, // 每次获取消息条数
 				success: function(msgs){
 					try{
 						console.log(msgs, 'msgs=getHistoryMessage');
@@ -606,7 +620,7 @@ const Chat = {
 									}
 								}
 								msg.isHistory = true;
-								context.commit('updateMsgList', msg);
+								isSearch ? context.commit('updateSearchMsgList', msg) : context.commit('updateMsgList', msg);
 							});
 							context.commit('updateMessageStatus', { action: 'readMsgs' });
 						}
@@ -705,7 +719,8 @@ const Chat = {
 			return state.currentMsgs;
 		},
 		fetchHistoryMessages(state){
-			return state.currentMsgs;
+			return state.searchMsgList;
+;
 		},
 		onPushConfig(state) {
 			return state.pushConfig;
