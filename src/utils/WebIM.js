@@ -27,6 +27,18 @@ const rtc = {
 	localVideoTrack: null,
 };
 
+function onGetPushConfig(message) {
+	const { from, type, to } = message;
+	const option = {
+		conversationId: type === 'chat' ? from : to,
+		type: type === 'chat' ? 'contact' : 'group'
+	}
+	WebIM.conn.getSilentModeForConversation(option).then(res => {
+		let dataLength = Object.keys(res.data).length
+		Vue.$store.commit('updatePushConfig', { user: option.conversationId, type: dataLength ? 'add' : 'remove' })
+	})
+}
+
 // 初始化IM SDK
 let WebIM = {};
 WebIM = window.WebIM = websdk;
@@ -106,7 +118,7 @@ WebIM.conn.listen({
 		});
 
 		Vue.$store.commit('noticeCall', message);// 通知给通话组件，是否别人邀请通话
-
+		onGetPushConfig(message);
 		type === 'chat' && ack(message);
 		if(message.ext && message.ext.action === 'invite'){
 			console.log('收到邀请消息', message);
@@ -147,6 +159,7 @@ WebIM.conn.listen({
 		console.log('onEmojiMessage', message);
 		const { type } = message;
 		type === 'chat' && ack(message);
+		onGetPushConfig(message);
 	}, // 收到表情消息
 	onPictureMessage: function(message){
 		const { from, to, type, time } = message;
@@ -166,6 +179,7 @@ WebIM.conn.listen({
 			time: time
 		});
 		type === 'chat' && ack(message);
+		onGetPushConfig(message);
 	}, // 收到图片消息
 	onCmdMessage: function(msg){
 		console.log('onCmdMessage', msg);
@@ -267,6 +281,7 @@ WebIM.conn.listen({
 				break;
 			}
 		}
+		onGetPushConfig(message);
 	},
 	// 收到命令消息
 	onAudioMessage: function(message){
@@ -297,10 +312,12 @@ WebIM.conn.listen({
 		};
 		WebIM.utils.download.call(WebIM.conn, options);
 		message.type === 'chat' && ack(message);
+		onGetPushConfig(message);
 	}, // 收到音频消息
 	onLocationMessage: function(message){
 		console.log('onLocationMessage', message);
 		message.type === 'chat' && ack(message);
+		onGetPushConfig(message);
 	}, // 收到位置消息
 	onFileMessage: function(message){
 		const { from, to, type, time } = message;
@@ -322,6 +339,7 @@ WebIM.conn.listen({
 			time: time
 		});
 		type === 'chat' && ack(message);
+		onGetPushConfig(message);
 	}, // 收到文件消息
 	onVideoMessage: function(message){
 		console.log('onVideoMessage', message);
@@ -357,6 +375,7 @@ WebIM.conn.listen({
 		};
 		WebIM.utils.download.call(WebIM.conn, options);
 		type === 'chat' && ack(message);
+		onGetPushConfig(message);
 	}, // 收到视频消息
 	onPresence: function(message){
 		console.log('onPresence', message);

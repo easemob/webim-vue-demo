@@ -68,7 +68,8 @@ export default{
 			},
 			isCollapse: true,
 			unRead: '',
-			dataFlag: false
+			dataFlag: false,
+			isDisturb: false 
 			// selectedKeys: [ this.getKey(this.activedKey[this.type]) ]
 		};
 	},
@@ -153,14 +154,24 @@ export default{
 				console.log(val)
 			},
 			deep: true
-		}
+		},
+		pushConfig: {
+            handler(newVal, oldVal){
+                const { params } = Vue.$route;
+                if (newVal.length) {
+                    this.isDisturb = newVal.includes(params.id)
+                }
+            },
+			deep: true
+        }
 	},
 	computed: {
 		...mapGetters({
 			contact: 'onGetContactUserList',
 			group: 'onGetGroupUserList',
 			chatroom: 'onGetChatroomUserList',
-			msgList: 'onGetCurrentChatObjMsg'
+			msgList: 'onGetCurrentChatObjMsg',
+			pushConfig: 'onPushConfig'
 		}),
 		userList(){
 			return {
@@ -257,7 +268,7 @@ export default{
 			const currentMsgs = chatList[userId] || [];
 			let unReadNum = 0;
 			currentMsgs.forEach(msg => {
-				if(msg.status !== 'read' && msg.status !== 'recall' && !msg.bySelf){
+				if(msg.status !== 'read' && msg.status !== 'recall' && !msg.bySelf && this.isDisturb){
 					unReadNum++;
 				}
 			});
