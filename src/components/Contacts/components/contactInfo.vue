@@ -24,6 +24,7 @@ const nowContactInfo = computed(() => {
     if (route.query.chatType === CHAT_TYPE.GROUP) {
         return store.state.Contacts.groupList[route.query.id]
     }
+    return
 })
 
 /* 单人黑名单状态的处理 */
@@ -71,6 +72,15 @@ const delTheFriend = () => {
     router.push('/chat/contacts');
     store.dispatch('fetchFriendList')
 }
+
+/* 进入会话 */
+const toChatMessage = () => {
+    router.push({
+        path: '/chat/conversation/message', query: {
+            ...route.query
+        }
+    });
+}
 </script>
 
 <template>
@@ -86,15 +96,20 @@ const delTheFriend = () => {
                         <el-avatar class="avatar_img" v-if="$route.query.chatType === CHAT_TYPE.SINGLE"
                             :src="nowContactInfo.avatarurl ? nowContactInfo.avatarurl : defaultSingleAvatar">
                         </el-avatar>
-                        <el-avatar v-if="$route.query.chatType === CHAT_TYPE.GROUP" :src="defaultGroupAvatarUrl">
+                        <el-avatar class="avatar_img" v-if="$route.query.chatType === CHAT_TYPE.GROUP"
+                            :src="defaultGroupAvatarUrl">
                         </el-avatar>
                     </div>
                     <div class="name">
                         <p v-if="$route.query.chatType === CHAT_TYPE.SINGLE">
                             {{ nowContactInfo.nickname ? nowContactInfo.nickname : nowContactInfo.hxId }}</p>
+                        <p v-if="$route.query.chatType === CHAT_TYPE.GROUP">
+                            {{ nowContactInfo.groupname ? `${nowContactInfo.groupname}(${nowContactInfo.groupid})` :
+                                    nowContactInfo.groupid
+                            }}</p>
                     </div>
                     <div class="func_box">
-                        <div class="single_func">
+                        <div class="single_func" v-if="$route.query.chatType === CHAT_TYPE.SINGLE">
                             <div class="add_black_list">
                                 <p>加入黑名单</p>
                                 <el-switch v-model="blackStatus" :loading="switchStatus"
@@ -110,12 +125,16 @@ const delTheFriend = () => {
 
                             </div>
                         </div>
-
                     </div>
 
                 </div>
                 <div class="contaactInfo_btn">
-                    <el-button type="primary" size="large">发起会话</el-button>
+                    <el-button v-if="$route.query.chatType === CHAT_TYPE.SINGLE" type="primary" size="large"
+                        @click="toChatMessage">发起会话
+                    </el-button>
+                    <el-button v-if="$route.query.chatType === CHAT_TYPE.GROUP" type="primary" size="large"
+                        @click="toChatMessage">进入群聊
+                    </el-button>
                 </div>
             </div>
         </el-main>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRaw, toRefs, computed } from 'vue'
+import { computed } from 'vue'
 import { useStore } from "vuex"
 import router from '@/router'
 import { messageType } from '@/constant'
@@ -12,19 +12,17 @@ const store = useStore()
 const classifyFriendList = computed(() => store.state.Contacts.sortedFriendList)
 //点击对应联系人跳转至用户详情页
 const { CHAT_TYPE } = messageType
-const toContacts = ({ id, chatType }) => {
-    router.push({ path: '/chat/contacts/contactInfo', query: { id: id, chatType: chatType } })
-}
+const emit = defineEmits(['toContacts'])
 </script>
 
 <template>
     <div class="friendItem_container">
-        <div v-for="(friendName, friendItemKey, index) in  classifyFriendList" :key="friendItemKey">
+        <div v-for="(friendName, friendItemKey) in  classifyFriendList" :key="friendItemKey">
             <el-collapse class="friendItem_container_list" accordion>
                 <el-collapse-item :title="friendItemKey === ' ' ? '#' : friendItemKey.toUpperCase()">
                     <el-row>
                         <el-col class="friendItem_box" :span="24" v-for="item in friendName" :key="item.hxId"
-                            @click="toContacts({ id: item.hxId, chatType: CHAT_TYPE.SINGLE })">
+                            @click="$emit('toContacts', { id: item.hxId, chatType: CHAT_TYPE.SINGLE })">
                             <el-avatar style="margin-right: 10px;"
                                 :src="item.avatarurl ? item.avatarurl : defaultAvatar"></el-avatar>
                             {{ item.nickname ? item.nickname : item.hxId }}

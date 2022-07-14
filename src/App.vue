@@ -89,6 +89,7 @@ EaseIM.conn.addEventHandler('messageListen', {
     pushNewMessage(message)
   },   // 收到图片消息。
   onCmdMessage: function (message) {
+    console.log('>>>>>收到命令消息', message)
   },     // 收到命令消息。
   onAudioMessage: function (message) {
     pushNewMessage(message)

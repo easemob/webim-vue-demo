@@ -20,7 +20,11 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
 const toInformDetails = () => {
   router.push('/chat/conversation/informdetails');
 }
-//跳转至
+//跳转至 contactInfo
+const toContacts = ({ id, chatType }) => {
+  console.log('>>>>>>触发跳转')
+  router.push({ path: '/chat/contacts/contactInfo', query: { id: id, chatType: chatType } })
+}
 </script>
 
 
@@ -33,10 +37,10 @@ const toInformDetails = () => {
           <el-collapse-item title="系统通知">
           </el-collapse-item>
           <el-collapse-item :title="`联系人 ( ${Object.keys(friendList).length} )`">
-            <FriendItem />
+            <FriendItem @toContacts="toContacts" />
           </el-collapse-item>
           <el-collapse-item :title="`群聊 ( ${Object.keys(joinedGroupList).length} )`">
-            <GroupItem />
+            <GroupItem @toContacts="toContacts" />
           </el-collapse-item>
         </el-collapse>
       </div>
