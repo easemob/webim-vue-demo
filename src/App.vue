@@ -34,6 +34,7 @@ EaseIM.conn.addEventHandler('connection', {
 const fetchLoginUsersInitData = () => {
   getMyUserInfos()
   fetchFriendList()
+  fetchTheLoginUserBlickList()
   fetchGroupList()
 }
 //获取登陆用户属性
@@ -47,6 +48,9 @@ const fetchFriendList = () => {
   if (Object.values(JSON.parse(value)).length > 0) return
   store.dispatch('fetchFriendList')
 }
+//获取黑名单列表
+
+const fetchTheLoginUserBlickList = () => store.dispatch('fetchBlackList')
 //获取加入的群组列表
 const fetchGroupList = () => {
   //如果本地存储里不存在群组列表则调用获取群组列表
@@ -58,6 +62,7 @@ const fetchGroupList = () => {
   }
   store.dispatch('fetchGroupList', pageParams)
 }
+
 /* presence 相关监听 */
 EaseIM.conn.addEventHandler('presenceStatusChange', {
 

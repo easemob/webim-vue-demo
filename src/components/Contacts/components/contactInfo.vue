@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import EaseIM from '@/IM/initwebsdk'
 import { useStore } from 'vuex'
 import router from '@/router'
 import { useRoute } from "vue-router"
@@ -10,14 +11,12 @@ import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
 /* store */
 const store = useStore()
-/* router */
 
 /* route */
 const route = useRoute()
-
 const { CHAT_TYPE } = messageType
 console.log('route', route.query)
-
+//当前选中id的info
 const nowContactInfo = computed(() => {
     if (route.query.chatType === CHAT_TYPE.SINGLE) {
         return store.state.Contacts.friendList[route.query.id]
@@ -26,7 +25,52 @@ const nowContactInfo = computed(() => {
         return store.state.Contacts.groupList[route.query.id]
     }
 })
-console.log('>>>>nowContactInfo', nowContactInfo.value)
+
+/* 单人黑名单状态的处理 */
+let blackStatus = ref(false)
+let switchStatus = ref(false)
+//判断单聊联系人是否在黑名单
+const isInBlackList = computed(() => {
+    let result = Array.from(store.state.Contacts.friendBlackList).includes(route.query.id)
+    return result
+})
+//监听route变化重新赋值switch状态
+watch(() => route.query.id, () => {
+    if (route.query.chatType === CHAT_TYPE.SINGLE) {
+        console.log('>>>>>监听变化赋值黑名单状态', isInBlackList.value);
+        blackStatus.value = isInBlackList.value;
+    }
+})
+//执行加入或移出黑名单
+const changeBlackStatus = async () => {
+    switchStatus.value = true;
+    if (blackStatus.value && route.query.id) {
+        // 当前 removeUserFromBlackList 以及 addUsersToBlacklist 暂不支持promise 返回所以暂时获取不到其请求状态。
+        EaseIM.conn.removeUserFromBlackList({
+            name: [route.query.id]
+        });
+        blackStatus.value = false;
+        switchStatus.value = false;
+    } else {
+        EaseIM.conn.addUsersToBlacklist({
+            name: [route.query.id]
+        });
+        blackStatus.value = true;
+        switchStatus.value = false;
+    }
+    store.dispatch('fetchBlackList')
+
+}
+
+/* 单人删除好友 */
+const delTheFriend = () => {
+    console.log('>>>>>>>删除好友');
+    if (!route.query.id) return;
+    const targetId = route.query.id
+    EaseIM.conn.deleteContact(targetId);
+    router.push('/chat/contacts');
+    store.dispatch('fetchFriendList')
+}
 </script>
 
 <template>
@@ -53,11 +97,17 @@ console.log('>>>>nowContactInfo', nowContactInfo.value)
                         <div class="single_func">
                             <div class="add_black_list">
                                 <p>加入黑名单</p>
-                                <el-switch />
+                                <el-switch v-model="blackStatus" :loading="switchStatus"
+                                    :before-change="changeBlackStatus" />
                             </div>
                             <el-divider />
                             <div class="del_friend">
-                                <span>删除好友</span>
+                                <el-popconfirm title="确认删除此好友?" @confirm="delTheFriend">
+                                    <template #reference>
+                                        <span>删除好友</span>
+                                    </template>
+                                </el-popconfirm>
+
                             </div>
                         </div>
 
@@ -146,16 +196,9 @@ console.log('>>>>nowContactInfo', nowContactInfo.value)
                         }
 
                         .del_friend {
-
+                            width: 100%;
                             color: red;
                             transition: all 0.3s;
-
-                            p {
-                                font-size: 16px;
-
-                            }
-
-
                         }
                     }
                 }

@@ -7,10 +7,14 @@ const Contacts = {
     friendList: useLocalStorage('friendList', {}),
     groupList: useLocalStorage('groupList', {}),
     sortedFriendList: useLocalStorage('sortedFriendList', {}),
+    friendBlackList: [],
   },
   mutations: {
     SET_FRIEND_LIST: (state, payload) => {
       state.friendList = _.assign({}, payload);
+    },
+    SET_BLACK_LIST: (state, payload) => {
+      state.friendBlackList = _.assign([], payload);
     },
     SET_SORDED_FRIEND_LIST: (state, payload) => {
       state.sortedFriendList = _.assign({}, payload);
@@ -59,6 +63,12 @@ const Contacts = {
         commit('SET_FRIEND_LIST', friendListData);
         commit('SET_SORDED_FRIEND_LIST', sortFriendList);
       }
+    },
+    //获取黑名单列表
+    fetchBlackList: async ({ dispatch, commit }, params) => {
+      let { data } = await EaseIM.conn.getBlacklist();
+      data.length > 0 && commit('SET_BLACK_LIST', data);
+      console.log('>>>>>获取到黑名单列表', data);
     },
     //获取他人用户属性
     getOtherUserInfo: async ({ commit }, users) => {
