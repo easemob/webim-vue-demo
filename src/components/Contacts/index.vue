@@ -25,6 +25,11 @@ const toContacts = ({ id, chatType }) => {
   console.log('>>>>>>触发跳转')
   router.push({ path: '/chat/contacts/contactInfo', query: { id: id, chatType: chatType } })
 }
+
+//取网络状态
+const networkStatus = computed(() => {
+  return store.state.networkStatus
+})
 </script>
 
 
@@ -33,6 +38,7 @@ const toContacts = ({ id, chatType }) => {
     <el-aside class="contacts_box">
       <SearchInput :searchType="'conversation'" :searchData="[]" />
       <div class="contacts_collapse">
+        <div class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</div>
         <el-collapse>
           <el-collapse-item title="系统通知">
           </el-collapse-item>
@@ -70,5 +76,28 @@ const toContacts = ({ id, chatType }) => {
   width: 100%;
   height: 100%;
   padding: 0;
+}
+
+.offline_hint {
+  width: 100%;
+  height: 30px;
+  text-align: center;
+  line-height: 30px;
+  color: #F35F81;
+  background: #FCE7E8;
+  font-size: 7px;
+
+  .plaint_icon {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    color: #E5E5E5;
+    text-align: center;
+    line-height: 15px;
+    font-size: 7px;
+    font-weight: bold;
+    background: #E6686E;
+    border-radius: 50%;
+  }
 }
 </style>
