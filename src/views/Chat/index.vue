@@ -31,6 +31,7 @@ console.log('>>>>>route', route.name, route.meta.keepAlive);
   height: 100vh;
   background: url('@/assets/images/web-demo-base.png');
   background-size: cover;
+  backdrop-filter: blur(5px);
 
   .chat_container {
     width: 85%;

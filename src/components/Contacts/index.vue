@@ -16,6 +16,12 @@ const friendList = computed(() => store.state.Contacts.friendList)
 //群组列表
 const joinedGroupList = computed(() => store.state.Contacts.groupList)
 
+//搜索部分的总数据
+const searchData = computed(() => {
+  let totalsearchData = Object.assign(friendList.value, joinedGroupList.value)
+  return Object.values(totalsearchData)
+})
+// console.log('searchDatasearchData', searchData.value)
 /* 路由跳转 */
 //跳转至inform
 const toInformDetails = () => {
@@ -46,12 +52,12 @@ const informDetail = computed(() => {
 <template>
   <el-container style="height: 100%;">
     <el-aside class="contacts_box">
-      <SearchInput :searchType="'conversation'" :searchData="[]" />
+      <SearchInput :searchType="'contacts'" :searchData="searchData" @toContacts="toContacts" />
 
       <div class="contacts_collapse">
         <div class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</div>
         <el-collapse>
-          <el-collapse-item title="新消息">
+          <el-collapse-item title="系统通知">
             <div class="informDetail_box" @click="toInformDetails">
               <div class="item_body item_left">
                 <!-- 通知头像 -->

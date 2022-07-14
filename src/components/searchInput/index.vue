@@ -7,6 +7,9 @@ import _ from "lodash"
 import { onClickOutside } from '@vueuse/core';
 import { messageType } from '@/constant'
 import dateFormater from '@/utils/dateFormat'
+/* 单人头像 */
+import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
+import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
 const store = useStore();
 const { CHAT_TYPE } = messageType
 const props = defineProps({
@@ -20,7 +23,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['toChatMessage'])
+const emit = defineEmits(['toChatMessage', 'toContacts'])
 //搜索框value
 const inputValue = ref('');
 //控制搜索结果展示
@@ -43,7 +46,11 @@ const querySearch = () => {
       searchSuggest.value = resultList
     }
     //搜索联系人 contacts
-
+    if (props.searchType === 'contacts') {
+      const resultList = _.filter(props.searchData, (o) => o.hxId && o.hxId.includes(inputValue.value) || (o.nickname && o.nickname.includes(inputValue.value)) || (o.groupid && o.groupid.includes(inputValue.value)) || (o.groupname && o.groupname.includes(inputValue.value)))
+      console.log('>>>>>>搜索给出结果', resultList)
+      searchSuggest.value = resultList
+    }
   }
   //监听输入框为空字符串的时候置空搜索建议
   watch(inputValue, (newVal) => {
@@ -52,6 +59,7 @@ const querySearch = () => {
 }
 //点击历史记录通知对应类型的不同的组件跳转 例如 通知会话部分 通知联系人部分
 const clickHistoryItem = (historyItem) => {
+  console.log('>>>>>>>>>触发跳转', historyItem)
   if (props.searchType === 'conversation') {
     emitConversation(0, historyItem)
   }
@@ -93,7 +101,6 @@ const emitConversation = (fromType, item) => {
         searchHistory.value.unshift(searchItem)
       }
 
-      console.log(_index)
 
     }
     emit('toChatMessage', item.conversationKey, item.conversationType)
@@ -101,6 +108,17 @@ const emitConversation = (fromType, item) => {
   inputValue.value = ''
   searchSuggest.value = []
   isShowResultContent.value = false
+}
+
+//选中通知联系人跳转 联系人搜索暂不写入本地存储
+const emitContacts = (item) => {
+  console.log('>>>>>>联系人触发', item)
+  if (item.hxId) {
+    emit('toContacts', { id: item.hxId, chatType: CHAT_TYPE.SINGLE })
+  }
+  if (item.groupid) {
+    emit('toContacts', { id: item.groupid, chatType: CHAT_TYPE.GROUP })
+  }
 }
 
 </script>
@@ -148,7 +166,28 @@ const emitConversation = (fromType, item) => {
           </div>
         </div>
       </div>
-
+      <div v-if="searchType === 'contacts'">
+        <div v-for="(item, index) in searchSuggest" :key="index">
+          <div class="title" v-if="item.hxId">
+            联系人
+          </div>
+          <div class="title" v-if="item.groupid">
+            群组
+          </div>
+          <div class="search_result_item" @click="emitContacts(item)">
+            <div class="item_body item_left">
+              <div class="session_other_avatar">
+                <el-avatar
+                  :src="item.hxId && item.avatarurl ? item.avatarurl : item.groupid ? defaultGroupAvatarUrl : defaultSingleAvatar">
+                </el-avatar>
+              </div>
+            </div>
+            <div class="item_body item_main">
+              <div class="name">{{ item.nickname ? item.nickname : item.groupname ? item.groupname : item.hxId }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <el-empty v-if="inputValue.length > 0 && searchSuggest.length <= 0" :image-size="200" description="没有找到匹配结果" />
     </div>
   </div>
