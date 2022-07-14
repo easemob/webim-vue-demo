@@ -40,7 +40,6 @@ const routes = [
         component: () => import('../components/Conversation'),
         children: [
           //系统通知详情框
-
           {
             path: 'informdetails',
             component: () => import('../components/InformDetails'),
@@ -66,6 +65,11 @@ const routes = [
             path: 'message',
 
             component: () => import('../components/Message'),
+          },
+          //系统通知详情框
+          {
+            path: 'informdetails',
+            component: () => import('../components/InformDetails'),
           },
           {
             path: 'contactInfo',
