@@ -46,6 +46,7 @@ watch(() => route.query.id, () => {
 const changeBlackStatus = async () => {
     switchStatus.value = true;
     if (blackStatus.value && route.query.id) {
+        console.log('>>>>>移除黑明单')
         // 当前 removeUserFromBlackList 以及 addUsersToBlacklist 暂不支持promise 返回所以暂时获取不到其请求状态。
         EaseIM.conn.removeUserFromBlackList({
             name: [route.query.id]
@@ -53,6 +54,7 @@ const changeBlackStatus = async () => {
         blackStatus.value = false;
         switchStatus.value = false;
     } else {
+        console.log('>>>>加入黑名单')
         EaseIM.conn.addUsersToBlacklist({
             name: [route.query.id]
         });

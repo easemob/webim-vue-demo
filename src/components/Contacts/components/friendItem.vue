@@ -18,18 +18,17 @@ const emit = defineEmits(['toContacts'])
 <template>
     <div class="friendItem_container">
         <div v-for="(friendName, friendItemKey) in  classifyFriendList" :key="friendItemKey">
-            <el-collapse class="friendItem_container_list" accordion>
-                <el-collapse-item :title="friendItemKey === ' ' ? '#' : friendItemKey.toUpperCase()">
-                    <el-row>
-                        <el-col class="friendItem_box" :span="24" v-for="item in friendName" :key="item.hxId"
-                            @click="$emit('toContacts', { id: item.hxId, chatType: CHAT_TYPE.SINGLE })">
-                            <el-avatar style="margin-right: 10px;"
-                                :src="item.avatarurl ? item.avatarurl : defaultAvatar"></el-avatar>
-                            {{ item.nickname ? item.nickname : item.hxId }}
-                        </el-col>
-                    </el-row>
-                </el-collapse-item>
-            </el-collapse>
+            <div class="friend_main">
+                <div class="friend_title">{{ friendItemKey === ' ' ? '#' : friendItemKey.toUpperCase() }}</div>
+                <el-row>
+                    <el-col class="friendItem_box" :span="24" v-for="item in friendName" :key="item.hxId"
+                        @click="$emit('toContacts', { id: item.hxId, chatType: CHAT_TYPE.SINGLE })">
+                        <el-avatar style="margin-right: 10px;" :src="item.avatarurl ? item.avatarurl : defaultAvatar">
+                        </el-avatar>
+                        {{ item.nickname ? item.nickname : item.hxId }}
+                    </el-col>
+                </el-row>
+            </div>
         </div>
     </div>
 </template>
@@ -37,11 +36,6 @@ const emit = defineEmits(['toContacts'])
 
 
 <style lang="scss" scoped>
-::v-deep .el-collapse {
-    border: none;
-    padding: 0 15px;
-}
-
 .friendItem_box {
     height: 80px;
     width: 100%;
@@ -55,6 +49,15 @@ const emit = defineEmits(['toContacts'])
 
     &:active {
         background: #DCDCDC;
+    }
+}
+
+.friend_main {
+    width: 100%;
+
+    .friend_title {
+        font-size: 14px;
+        padding: 0 15px;
     }
 }
 </style>
