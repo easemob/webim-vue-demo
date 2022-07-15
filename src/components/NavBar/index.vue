@@ -78,7 +78,7 @@ const showInputModal = (type) => {
   <div class="chat_avatar">
     <el-avatar :src="loginUserAvatar" @click="isShowUserInfoCard = true">
     </el-avatar>
-    <el-popover :width="10" v-if="loginUserOnlineStatusIcon" trigger="click" placement="right-start"
+    <el-popover popper-class="user_status_popover" :width="10" trigger="click" placement="right-start"
       :show-arrow="false">
       <template #reference>
         <div class="online_status" :style="loginUserOnlineStatusIcon"></div>
@@ -107,7 +107,8 @@ const showInputModal = (type) => {
   </div>
   <!-- 设置添加部分 -->
   <div class="chat_settings">
-    <el-popover ref="settingPopover" v-model:visible="isShowPopover" placement="right-end" trigger="click">
+    <el-popover popper-class="setting_popover" ref="settingPopover" v-model:visible="isShowPopover"
+      placement="right-end" trigger="click">
       <template #reference>
         <el-icon @click="isShowPopover = true">
           <Plus />
@@ -179,7 +180,6 @@ const showInputModal = (type) => {
     }
   }
 }
-
 
 .chat_icon_box {
 
@@ -264,7 +264,6 @@ const showInputModal = (type) => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 0 15px;
 
 
   .func_item {

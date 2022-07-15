@@ -75,9 +75,6 @@ const resetTheModalStatus = () => {
 
 
 <style lang="scss" scoped>
-// .el-input>.el-input__wrapper {
-//     border-radius: 5px !important;
-// }
 .addFriends_input {
     height: 40px;
 }

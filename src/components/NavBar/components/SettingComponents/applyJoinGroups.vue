@@ -64,11 +64,12 @@ const resetTheModalStatus = () => {
     <div class="app_container">
         <el-form label-position="top" label-width="100px">
             <el-form-item label="群组ID">
-                <el-input style="height:40px" v-model.number="applyJoinGroupsForm.groupId" />
+                <el-input class="applyJoinGoups_input" style="height:40px"
+                    v-model.number="applyJoinGroupsForm.groupId" />
             </el-form-item>
             <el-form-item label="验证信息">
-                <el-input style="height:40px" v-model="applyJoinGroupsForm.applyJoinMessage" maxlength="300"
-                    show-word-limit />
+                <el-input class="applyJoinGoups_input" style="height:40px"
+                    v-model="applyJoinGroupsForm.applyJoinMessage" maxlength="300" show-word-limit />
             </el-form-item>
             <el-form-item>
                 <div class="apply_goups_btn_box">
@@ -93,5 +94,13 @@ const resetTheModalStatus = () => {
         width: 212px;
         height: 40px;
     }
+}
+
+.applyJoinGoups_input {
+    height: 40px;
+}
+
+::v-deep .applyJoinGoups_input>.el-input__wrapper {
+    border-radius: 5px;
 }
 </style>

@@ -38,8 +38,6 @@ const selectOnlineMode = async (statusType) => {
               fill="#333333" />
           </svg>
         </span>
-
-
       </li>
     </ul>
   </div>

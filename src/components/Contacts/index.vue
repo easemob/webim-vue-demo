@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useStore } from 'vuex'
-import router from '@/router';
+import router from '@/router'
+import _ from 'lodash'
 import dateFormater from '@/utils/dateFormat'
 /* 相关组件 */
 import SearchInput from '@/components/searchInput'
@@ -18,7 +19,7 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
 
 //搜索部分的总数据
 const searchData = computed(() => {
-  let totalsearchData = Object.assign(friendList.value, joinedGroupList.value)
+  let totalsearchData = Object.assign(_.cloneDeep(friendList.value), _.cloneDeep(joinedGroupList.value))
   return Object.values(totalsearchData)
 })
 // console.log('searchDatasearchData', searchData.value)

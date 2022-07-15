@@ -33,7 +33,7 @@ defineExpose({
 
 </script>
 <template>
-    <el-dialog v-model="dialogVisible" :title="modalTitle[modalType]" width="40%">
+    <el-dialog v-model="dialogVisible" :title="modalTitle[modalType]" width="500px">
         <!-- 动态组件 -->
         <component :is="showComponent[modalType]" @closeDialogVisible="closeDialogVisible"
             :dialogVisible="dialogVisible">

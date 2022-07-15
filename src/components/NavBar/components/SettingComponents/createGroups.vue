@@ -29,7 +29,7 @@ const checkedCount = computed(() => {
 //选中人id数组
 const checkedUserArr = computed(() => {
     let filtered = _.filter(renderFriendList.value, 'isChecked') //过滤后为选中的user list
-    return _.map(filtered, 'name')
+    return _.map(filtered, 'hxId')
 })
 onMounted(() => {
     handleRenderFiendList()
@@ -42,7 +42,7 @@ const handleRenderFiendList = () => {
     for (const key in friendList.value) {
         if (Object.hasOwnProperty.call(friendList.value, key)) {
             const v = friendList.value[key];
-            newFriendList.push({ name: v.hxId, isChecked: false, keywords: v.hxId })
+            newFriendList.push({ name: v.nickname && v.nickname ? v.nickname : v.hxId, hxId: v.hxId, isChecked: false, keywords: `${v.hxId && v.hxId}${v.nickname && v.nickname}` })
         }
     }
     return renderFriendList.value = newFriendList
@@ -54,7 +54,6 @@ let isShowSearchContent = ref(false) //控制检索内容显隐
 let searchResultList = ref([])
 const searchFriend = () => {
     console.log('>>>>>serachInputValue.value ', serachInputValue.value === '')
-    // if (serachInputValue.value === '') isShowSearchContent.value = false
     if (serachInputValue.value) {
         isShowSearchContent.value = true
         let resultArr = _.filter(renderFriendList.value, (v) => v.keywords.includes(serachInputValue.value))
@@ -188,31 +187,33 @@ const resetTheModalStatus = () => {
             </el-col>
         </el-row>
         <el-row v-else>
-            <el-form ref="groupCreate" :mode="groupCreateForm" label-width="100px" label-position="left"
-                style="width:100%">
+            <el-form ref="groupCreate" :mode="groupCreateForm" label-position="left" style="width:100%">
                 <el-form-item label="群名称">
-                    <el-input v-model="groupCreateForm.groupname" input-style="border-radius: 2px;" size="large" />
+                    <el-input class="create_groups" v-model="groupCreateForm.groupname" size="large" />
                 </el-form-item>
                 <el-form-item label="群详情">
-                    <el-input v-model="groupCreateForm.desc" maxlength="300" :autosize="{ minRows: 1, maxRows: 4 }"
-                        resize="none" placeholder="Please input" show-word-limit type="textarea" />
+                    <el-input class="create_groups" v-model="groupCreateForm.desc" maxlength="300" placeholder="请输入群组详情"
+                        show-word-limit type="text" />
                 </el-form-item>
                 <el-form-item label="群人数">
-                    <el-input v-model="groupCreateForm.maxusers" type="number" min="200" size="large" />
+                    <el-input class="create_groups" v-model="groupCreateForm.maxusers" type="number" min="200"
+                        size="large" />
                 </el-form-item>
-                <el-form-item label="是否为公开群">
-                    <el-switch v-model="groupCreateForm.public" active-color="#13ce66" inactive-color="#DCDFE5" />
+                <el-form-item label="公开群">
+                    <el-switch v-model="groupCreateForm.public" inactive-color="#DCDFE5" inline-prompt active-text="是"
+                        inactive-text="否" />
                 </el-form-item>
-                <el-form-item label="加群是否需要审批">
-                    <el-switch v-model="groupCreateForm.approval" active-color="#13ce66" inactive-color="#DCDFE5" />
+                <el-form-item label="需要审批">
+                    <el-switch v-model="groupCreateForm.approval" inactive-color="#DCDFE5" inline-prompt active-text="是"
+                        inactive-text="否" />
                 </el-form-item>
                 <el-form-item v-if="!groupCreateForm.public" label="成员邀请他人入群">
                     <el-switch :disabled="groupCreateForm.public" v-model="groupCreateForm.allowinvites"
-                        active-color="#13ce66" inactive-color="#DCDFE5" active-text="允许群成员邀请" inactive-text="仅限群主" />
+                        inactive-color="#DCDFE5" active-text="允许群成员邀请" inactive-text="仅限群主" />
                 </el-form-item>
-                <el-form-item label="被邀请人是否需要同意">
-                    <el-switch v-model="groupCreateForm.inviteNeedConfirm" active-color="#13ce66"
-                        inactive-color="#DCDFE5" inline-prompt active-text="是" inactive-text="否" />
+                <el-form-item label="被邀请需要同意">
+                    <el-switch v-model="groupCreateForm.inviteNeedConfirm" inactive-color="#DCDFE5" inline-prompt
+                        active-text="是" inactive-text="否" />
                 </el-form-item>
             </el-form>
             <el-row class="create_groups_btn" justify="space-around" align="middle">
@@ -313,5 +314,15 @@ const resetTheModalStatus = () => {
     flex-direction: row;
     justify-content: space-between;
 
+}
+
+/* 改掉当前组件 el-form-item的部分默认样式 */
+::v-deep .el-form-item__content {
+    justify-content: flex-end;
+}
+
+::v-deep .create_groups>.el-input__wrapper {
+    border-radius: 5px;
+    height: 40px;
 }
 </style>
