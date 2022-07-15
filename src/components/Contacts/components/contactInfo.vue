@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import EaseIM from '@/IM/initwebsdk'
 import { useStore } from 'vuex'
 import router from '@/router'
@@ -34,6 +34,10 @@ let switchStatus = ref(false)
 const isInBlackList = computed(() => {
     let result = Array.from(store.state.Contacts.friendBlackList).includes(route.query.id)
     return result
+})
+//首次onMounted进行黑名单状态的初始赋值
+onMounted(() => {
+    blackStatus.value = isInBlackList.value
 })
 //监听route变化重新赋值switch状态
 watch(() => route.query.id, () => {
