@@ -1,3 +1,4 @@
+/* 好友列表按照拼音排序 */
 import _ from 'lodash';
 import { pinyin } from 'pinyin-pro';
 export default function (friendItemData) {

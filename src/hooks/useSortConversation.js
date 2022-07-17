@@ -1,3 +1,4 @@
+/* 会话列表排序 */
 import EaseIM from '@/IM/initwebsdk';
 import _ from 'lodash';
 import { messageType } from '@/constant';

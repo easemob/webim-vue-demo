@@ -48,6 +48,10 @@ export default createStore({
           'SET_LOGIN_USER_ONLINE_STATUS',
           statusType ? statusType : 'Unset'
         );
+      } else {
+        console.log('>>>>>>不是自己的状态');
+
+        commit('SET_FRIEND_PRESENCE', [{ ...status }]);
       }
     },
   },

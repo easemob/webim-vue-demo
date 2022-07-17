@@ -44,8 +44,8 @@ const getMyUserInfos = () => {
 };
 //获取好友列表
 const fetchFriendList = () => {
-  const { value = {} } = useLocalStorage('friendList')
-  if (Object.values(JSON.parse(value)).length > 0) return
+  // const { value = {} } = useLocalStorage('friendList')
+  // if (Object.values(JSON.parse(value)).length > 0) return
   store.dispatch('fetchFriendList')
 }
 //获取黑名单列表
@@ -70,6 +70,7 @@ EaseIM.conn.addEventHandler('presenceStatusChange', {
     console.log('>>>>>presenceStatusChange', status)
     getUserPresence(...status);
   },
+
 });
 //处理登陆用户状态的变更
 const getUserPresence = (status) => {

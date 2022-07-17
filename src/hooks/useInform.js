@@ -1,3 +1,4 @@
+/* 构建inform通知 */
 import { informType } from '@/constant';
 import EaseIM from '@/IM/initwebsdk';
 const { INFORM_FROM, INFORM_TYPE } = informType;

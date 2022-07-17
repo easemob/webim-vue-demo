@@ -6,6 +6,8 @@ import router from '@/router'
 import { useRoute } from "vue-router"
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { messageType } from '@/constant'
+/* 组件 */
+import UserStatus from '@/components/UserStatus'
 /* 单人头像 */
 import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
@@ -102,6 +104,7 @@ const toChatMessage = () => {
                         <el-avatar class="avatar_img" v-if="$route.query.chatType === CHAT_TYPE.SINGLE"
                             :src="nowContactInfo.avatarurl ? nowContactInfo.avatarurl : defaultSingleAvatar">
                         </el-avatar>
+                        <!-- <UserStatus :userStatus="nowContactInfo.userStatus && nowContactInfo.userStatus" /> -->
                         <el-avatar class="avatar_img" v-if="$route.query.chatType === CHAT_TYPE.GROUP"
                             :src="defaultGroupAvatarUrl">
                         </el-avatar>

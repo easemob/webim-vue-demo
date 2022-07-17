@@ -1,6 +1,6 @@
 import EaseIM from '@/IM/initwebsdk';
 import { useLocalStorage } from '@vueuse/core';
-import { useSortFriendItem } from '@/hooks';
+import { useSortFriendItem, usePresence } from '@/hooks';
 import _ from 'lodash';
 const Contacts = {
   state: {
@@ -15,6 +15,18 @@ const Contacts = {
     },
     SET_BLACK_LIST: (state, payload) => {
       state.friendBlackList = _.assign([], payload);
+    },
+    SET_FRIEND_PRESENCE: (state, status) => {
+      console.log('>>>>>>>成功触发SET_FRIEND_PRESENCE', status);
+      const friendList = state.friendList;
+      status.length > 0 &&
+        status.forEach((item) => {
+          let commonStatus = usePresence(item);
+          console.log('>>>>>>>presence commonStatus', commonStatus);
+          if (friendList[commonStatus.uid]) {
+            friendList[commonStatus.uid].userStatus = commonStatus;
+          }
+        });
     },
     SET_SORDED_FRIEND_LIST: (state, payload) => {
       state.sortedFriendList = _.assign({}, payload);
@@ -58,10 +70,14 @@ const Contacts = {
         let sortFriendList = useSortFriendItem(mergedFriendList);
         commit('SET_SORDED_FRIEND_LIST', sortFriendList);
         commit('SET_FRIEND_LIST', mergedFriendList);
+        //提交之后订阅好友状态
+        dispatch('subFriendsPresence', data);
       } catch (error) {
         //异常一般为获取会话异常，直接提交好友列表
         commit('SET_FRIEND_LIST', friendListData);
         commit('SET_SORDED_FRIEND_LIST', sortFriendList);
+        //提交之后订阅好友状态
+        dispatch('subFriendsPresence', data);
       }
     },
     //获取黑名单列表
@@ -97,6 +113,31 @@ const Contacts = {
           reject(error);
         }
       });
+    },
+    //订阅好友的在线状态
+    subFriendsPresence: async ({ commit }, users) => {
+      console.log('>>>>>>>>订阅好友状态触发', users);
+      let requestTask = [];
+      let usersArr = _.chunk([...users], 5); //分拆users 订阅好友状态一次不能超过100个
+      try {
+        usersArr.length > 0 &&
+          usersArr.map((userItem) =>
+            requestTask.push(
+              EaseIM.conn.subscribePresence({
+                usernames: userItem,
+                expiry: 30 * 24 * 3600,
+              })
+            )
+          );
+        let resultData = await Promise.all(requestTask);
+        let usersPresenceList = _.flattenDeep(_.map(resultData, 'result')); //返回值是个二维数组，flattenDeep处理为一维数组
+        let tobeCommitRes =
+          usersPresenceList.length > 0 &&
+          usersPresenceList.filter((p) => p.uid !== '');
+        commit('SET_FRIEND_PRESENCE', tobeCommitRes);
+      } catch (error) {
+        console.log('>>>>>>订阅失败', error);
+      }
     },
     //获取群组列表
     fetchGroupList: async ({ commit }, params) => {

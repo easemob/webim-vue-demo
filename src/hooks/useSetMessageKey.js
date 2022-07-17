@@ -1,3 +1,4 @@
+/* 用作根据消息类型处理对象中的key */
 import EaseIM from '@/IM/initwebsdk';
 import { messageType } from '@/constant';
 const { CHAT_TYPE } = messageType;

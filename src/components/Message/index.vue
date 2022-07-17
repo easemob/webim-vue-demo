@@ -1,19 +1,24 @@
 <script setup>
-import { ref, watch, toRaw, toRefs, nextTick, computed } from 'vue'
+import { ref, watch, toRefs, nextTick, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import { messageType } from '@/constant'
 import { useScroll } from '@vueuse/core'
-//组件
+/* 组件 */
 import MessageList from './components/messageList.vue'
 import InputBox from './components/inputBox.vue'
+import UserStatus from '@/components/UserStatus'
+/* store */
 const store = useStore()
+/* route */
 const route = useRoute()
 const drawer = ref(false) //抽屉显隐
 const { CHAT_TYPE } = messageType
 const nowPickInfo = ref({});
 const friendList = computed(() => store.state.Contacts.friendList)
 const groupList = computed(() => store.state.Contacts.groupList)
+
+/* userInfo */
 //获取路由ID对应的信息
 const getIdInfo = async ({ id, chatType }) => {
   //类型为单聊
@@ -44,6 +49,7 @@ watch(() => route.query, (routeVal) => {
   immediate: true
 })
 
+/* 消息相关 */
 const loadingHistoryMsg = ref(false); //是否正在加载中
 const isMoreHistoryMsg = ref(true) //加载文案展示为加载更多还是已无更多。
 const notScrollBottom = ref(false); //是否滚动置底
@@ -129,7 +135,6 @@ watch(nowPickInfo, () => nextTick(() => {
   }
 }))
 
-
 //消息重新编辑
 const inputBox = ref(null)
 const reEditMessage = (msg) => inputBox.value.textContent = msg;
@@ -140,9 +145,8 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     <el-header class="chat_message_header">
       <div v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE" class="chat_user_name">
         {{ nowPickInfo.userInfo && nowPickInfo.userInfo.nickname ? nowPickInfo.userInfo.nickname : nowPickInfo.id }}
+        <UserStatus :userStatus="nowPickInfo.userInfo.userStatus && nowPickInfo.userInfo.userStatus" />
       </div>
-      <!-- 预留一对一在线状态 -->
-
       <div v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP" class="chat_user_name">
         {{ nowPickInfo.groupDetail && nowPickInfo.groupDetail.name || '' }} {{ `(${nowPickInfo.groupDetail &&
             nowPickInfo.groupDetail.affiliations_count || ''})`
@@ -205,6 +209,24 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     line-height: 24px;
     letter-spacing: 0.3px;
     color: #333333;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-end;
+
+    .user_status_box {
+      width: 100px;
+      height: 20px;
+      font-size: 7px;
+
+      .status_icon {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin: 0 3px;
+      }
+    }
   }
 
   .more {

@@ -5,6 +5,7 @@ import useSortConversation from './useSortConversation';
 import useInform from './useInform';
 import useCreateMessage from './useCreateMessage';
 import useSortFriendItem from './useSortFriendItem';
+import usePresence from './usePresence';
 export {
   useSDKErrorNotifi,
   useConversation,
@@ -13,4 +14,5 @@ export {
   useInform,
   useCreateMessage,
   useSortFriendItem,
+  usePresence,
 };

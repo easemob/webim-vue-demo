@@ -1,3 +1,4 @@
+/* 构建消息体 */
 import { messageType } from '@/constant';
 const { ALL_MESSAGE_TYPE } = messageType;
 const createOptions = ({ msgType, msgOptions }) => {

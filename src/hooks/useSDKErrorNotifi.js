@@ -1,3 +1,4 @@
+/* 构建error弹出 */
 import { handleErrorCode } from '@/constant';
 import { ElNotification } from 'element-plus';
 
