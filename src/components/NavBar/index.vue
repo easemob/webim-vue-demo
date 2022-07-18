@@ -4,6 +4,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 /* router */
 import router from '@/router';
+
 /* icon */
 import { Plus } from '@element-plus/icons-vue';
 /* 组件 */
@@ -14,6 +15,8 @@ import SettingComponents from './components/SettingComponents'
 import { onLineStatus } from '@/constant';
 /* vueUse */
 import { onClickOutside } from '@vueuse/core';
+
+
 
 const store = useStore();
 /* 取用户头像 */
@@ -32,7 +35,7 @@ let loginUserOnlineStatusIcon = computed(() => {
 });
 
 /* tabbar icon 路由跳转 */
-let skipRouterName = ref('conversation');
+let skipRouterName = ref('Conversation');
 let highligthConversation = require('@/assets/images/tabbar/sessionhighlight2x.png');
 let grayConversation = require('@/assets/images/tabbar/session2x.png');
 let highligthContacts = require('@/assets/images/tabbar/comtactshighlight2x.png');
@@ -93,7 +96,7 @@ const showInputModal = (type) => {
   <div class="chat_converation chat_icon_box" @click="changeSkipRouterName('conversation')">
     <div class="img_box">
       <img :src="
-        skipRouterName === 'conversation'
+        $route.name === 'Conversation'
           ? highligthConversation
           : grayConversation
       " alt="">
@@ -103,7 +106,7 @@ const showInputModal = (type) => {
   </div>
   <!-- 去往联系人 -->
   <div class="chat_contacts chat_icon_box" @click="changeSkipRouterName('contacts')">
-    <img class="chat_contacts_icon" :src="skipRouterName === 'contacts' ? highligthContacts : grayContacts" alt="" />
+    <img class="chat_contacts_icon" :src="$route.name === 'Contacts' ? highligthContacts : grayContacts" alt="" />
   </div>
   <!-- 设置添加部分 -->
   <div class="chat_settings">
