@@ -145,7 +145,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     <el-header class="chat_message_header">
       <div v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE" class="chat_user_name">
         {{ nowPickInfo.userInfo && nowPickInfo.userInfo.nickname ? nowPickInfo.userInfo.nickname : nowPickInfo.id }}
-        <UserStatus :userStatus="nowPickInfo.userInfo.userStatus && nowPickInfo.userInfo.userStatus" />
+        <UserStatus :userStatus="nowPickInfo.userInfo && nowPickInfo.userInfo.userStatus" />
       </div>
       <div v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP" class="chat_user_name">
         {{ nowPickInfo.groupDetail && nowPickInfo.groupDetail.name || '' }} {{ `(${nowPickInfo.groupDetail &&

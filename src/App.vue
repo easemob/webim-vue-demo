@@ -36,6 +36,8 @@ const fetchLoginUsersInitData = () => {
   fetchFriendList()
   fetchTheLoginUserBlickList()
   fetchGroupList()
+  //初始化vuex中的会话列表相关数据
+  store.commit('INIT_CONVERSATION_STATE')
 }
 //获取登陆用户属性
 const getMyUserInfos = () => {
@@ -49,18 +51,22 @@ const fetchFriendList = () => {
   store.dispatch('fetchFriendList')
 }
 //获取黑名单列表
-
 const fetchTheLoginUserBlickList = () => store.dispatch('fetchBlackList')
 //获取加入的群组列表
 const fetchGroupList = () => {
   //如果本地存储里不存在群组列表则调用获取群组列表
-  const { value = {} } = useLocalStorage('groupList')
-  if (Object.values(JSON.parse(value)).length > 0) return
+  // const { value = {} } = useLocalStorage('groupList')
+  // if (Object.values(JSON.parse(value)).length > 0) return
   const pageParams = {
     pageNum: 1,
     pageSize: 500,
   }
   store.dispatch('fetchGroupList', pageParams)
+}
+//在线状态订阅相关
+const presenceStatus = (type, user) => {
+  type === 'sub' && store.dispatch('subFriendsPresence', [user])
+  type === 'unsub' && store.dispatch('unsubFriendsPresence', [user])
 }
 
 /* presence 相关监听 */
@@ -139,6 +145,10 @@ EaseIM.conn.addEventHandler('friendListen', {
     //写入INFORM
     console.log('>>>>收到好友关系解散', data)
     submitInformData(INFORM_FROM.FRIEND, data)
+    //取消针对好友的在线状态订阅
+    presenceStatus('unsub', data.from)
+    //好友关系解除重新获取好友列表
+    fetchFriendList()
   },
   // 新增联系人会触发此方法。
   onContactAdded: (data) => {
@@ -158,10 +168,12 @@ EaseIM.conn.addEventHandler('friendListen', {
   // 好友请求被同意时触发此方法。
   onContactAgreed: (data) => {
     //写入INFORM
-    console.log('>>>>>对方统一了好友申请', data)
+    console.log('>>>>>对方同意了好友申请', data)
     //改掉data中的type
     data.type = 'other_person_agree'
     submitInformData(INFORM_FROM.FRIEND, data)
+    //对方同意后重新获取好友列表
+    fetchFriendList()
   }
 })
 /* 群组相关监听 */

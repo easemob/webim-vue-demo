@@ -45,6 +45,10 @@ const handleClickBtn = ({ informData, index, type }) => {
       agree: () => {
         EaseIM.conn.acceptGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
         store.commit('UPDATE_INFORM_BTNSTATUS', { index, status: 1 })
+        store.dispatch('fetchGroupList', {
+          pageNum: 1,
+          pageSize: 500
+        })
       },
       refuse: () => {
         EaseIM.conn.rejectGroupInvite({ invitee: loginUserId, groupId: informData.groupId })

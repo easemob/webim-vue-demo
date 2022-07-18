@@ -78,7 +78,8 @@ const delTheFriend = () => {
     const targetId = route.query.id
     EaseIM.conn.deleteContact(targetId);
     router.push('/chat/contacts');
-    store.dispatch('fetchFriendList')
+    //删除好友后会触发，好友关系解除信息
+    // store.dispatch('fetchFriendList')
 }
 
 /* 进入会话 */

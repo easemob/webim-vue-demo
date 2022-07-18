@@ -4,9 +4,12 @@ import { useSortFriendItem, usePresence } from '@/hooks';
 import _ from 'lodash';
 const Contacts = {
   state: {
-    friendList: useLocalStorage('friendList', {}),
-    groupList: useLocalStorage('groupList', {}),
-    sortedFriendList: useLocalStorage('sortedFriendList', {}),
+    // friendList: useLocalStorage('friendList', {}),
+    friendList: {},
+    // groupList: useLocalStorage('groupList', {}),
+    groupList: {},
+    // sortedFriendList: useLocalStorage('sortedFriendList', {}),
+    sortedFriendList: {},
     friendBlackList: [],
   },
   mutations: {
@@ -138,6 +141,16 @@ const Contacts = {
       } catch (error) {
         console.log('>>>>>>订阅失败', error);
       }
+    },
+    //取消订阅
+    unsubFriendsPresence: async ({ commit }, user) => {
+      let option = {
+        usernames: [...user],
+      };
+      debugger;
+      EaseIM.conn.unsubscribePresence(option).then((res) => {
+        console.log('>>>>>>>成功取消订阅', res);
+      });
     },
     //获取群组列表
     fetchGroupList: async ({ commit }, params) => {

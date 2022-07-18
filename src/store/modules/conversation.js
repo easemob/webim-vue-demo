@@ -2,12 +2,22 @@ import _ from 'lodash';
 import { useLocalStorage } from '@vueuse/core';
 import { useConversation, useSortConversation, useInform } from '@/hooks';
 import Message from './message';
+import EaseIM from '@/IM/initwebsdk';
 const Conversation = {
   state: {
-    informDetail: useLocalStorage('INFORM', []),
-    conversationListData: useLocalStorage('conversationList', {}),
+    informDetail: [],
+    conversationListData: {},
   },
   mutations: {
+    //初始化会话列表的数据（根据登陆的id取其对应的会话数据）
+    INIT_CONVERSATION_STATE: (state) => {
+      const storageId = EaseIM.conn.user;
+      state.informDetail = useLocalStorage(`EASEIM_${storageId}_INFORM`, []);
+      state.conversationListData = useLocalStorage(
+        `EASEIM_${storageId}_conversationList`,
+        {}
+      );
+    },
     //更新系统通知
     UPDATE_INFOEM_LIST: (state, informBody) => {
       const toBeUpdateInform = _.assign([], state.informDetail);
@@ -28,7 +38,6 @@ const Conversation = {
       let sortedData = useSortConversation(
         _.assign(_.cloneDeep(state.conversationListData), payload)
       );
-      console.log('?????????sortedData', sortedData);
       state.conversationListData = sortedData;
     },
     //删除某条会话

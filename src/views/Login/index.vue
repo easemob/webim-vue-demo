@@ -19,10 +19,11 @@ const loginIM = async () => {
   let resultStatus = checkParams({ username, password });
   if (resultStatus) {
     try {
-      await Ease.conn.open({
+      let { accessToken } = await Ease.conn.open({
         user: username.value,
         pwd: password.value,
       });
+      window.localStorage.setItem('loginUser', JSON.stringify({ user: username.value, accessToken: accessToken }))
     } catch (error) {
       console.log('>>>>登陆失败', error);
       useSDKErrorNotifi(error.type, error.message);
