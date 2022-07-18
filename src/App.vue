@@ -1,6 +1,5 @@
 <script setup>
 import { useStore } from 'vuex';
-import { useLocalStorage } from '@vueuse/core';
 import router from '@/router';
 import EaseIM from '@/IM/initwebsdk';
 import { useSDKErrorNotifi, useSetMessageKey } from '@/hooks';

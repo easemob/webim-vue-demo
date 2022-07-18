@@ -66,7 +66,7 @@ const handleClickBtn = ({ informData, index, type }) => {
     <el-row class="inforom_details_box">
       <el-col v-for="(item, index) in informList" :key="item.time">
         <div class="inforom_details_time"><span class="time"> {{ dateFormater('MM-DD HH:mm', item.time) }}</span></div>
-        <el-card class="inforom_details_card" @click="clearUnread(item, index)">
+        <el-card class="inforom_details_card" @click="clearUnread(item, index)" shadow="never">
           <template #header>
             <div class="card-header">
               <span>{{ item.title }} {{ item.fromType === INFORM_FROM.GROUP &&

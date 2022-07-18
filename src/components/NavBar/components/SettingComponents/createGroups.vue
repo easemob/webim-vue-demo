@@ -5,11 +5,15 @@ import _ from 'lodash'
 import { ElNotification } from 'element-plus'
 import { useSDKErrorNotifi } from '@/hooks'
 import EaseIM from '@/IM/initwebsdk'
+import { messageType } from '@/constant'
 import {
     Search,
     CircleCheckFilled
 } from '@element-plus/icons-vue';
+/* 路由 */
+import router from '@/router'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
+const { CHAT_TYPE } = messageType
 const emit = defineEmits(['closeDialogVisible'])
 const props = defineProps({
     dialogVisible: {
@@ -102,7 +106,8 @@ const createNewGroups = async () => {
     console.log('checkedUserArrcheckedUserArr', checkedUserArr)
     groupCreateForm.members = checkedUserArr.value
     try {
-        await EaseIM.conn.createGroup({ data: { ...groupCreateForm } })
+        let { data } = await EaseIM.conn.createGroup({ data: { ...groupCreateForm } })
+
         //更新群组列表
         await store.dispatch('fetchGroupList', {
             pageNum: 1,
@@ -113,6 +118,7 @@ const createNewGroups = async () => {
             message: `${groupCreateForm.groupname}创建成功！`,
             type: 'success',
         })
+        router.push({ path: '/chat/conversation/message', query: { id: data.groupid, chatType: CHAT_TYPE.GROUP } })
         resetTheModalStatus()
     }
     catch (error) {
