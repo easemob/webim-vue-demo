@@ -1,5 +1,5 @@
 import EaseIM from '@/IM/initwebsdk';
-import { useSetMessageKey, useCreateMessage } from '@/hooks';
+import { useSetMessageKey, useCreateMessage, useSDKErrorNotifi } from '@/hooks';
 import _ from 'lodash';
 import { ref, toRaw } from 'vue';
 import { messageType } from '@/constant';
@@ -112,6 +112,7 @@ const Message = {
           dispatch('gatherConversation', msgBody.to);
           resolve('OK');
         } catch (error) {
+          useSDKErrorNotifi(error.type, error.message);
           reject(error);
           console.log('>>>>>>发送失败', error);
         }
@@ -127,6 +128,8 @@ const Message = {
           dispatch('gatherConversation', to);
           resolve('OK');
         } catch (error) {
+          useSDKErrorNotifi(error.type, error.message);
+          console.log('>>>>>>撤回消息error', error);
           reject(error);
         }
       });

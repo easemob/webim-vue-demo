@@ -43,8 +43,8 @@ const userInfoStatus = computed(() => {
     if (onlineStatus.length > 0) {
         console.log('>>>>>>进入值修改阶段')
         //如果ext有自己定义的就尝试匹配自定义的状态，否则就直接判定在线,label同样。
-        statusObj.style = userStatus.value.ext ? onLineStatus[userStatus.value.ext].style : onLineStatus['Online'].style
-        statusObj.label = userStatus.value.ext ? onLineStatus[userStatus.value.ext].label : onLineStatus['Online'].label
+        statusObj.style = (userStatus.value.ext && onLineStatus[userStatus.value.ext] && onLineStatus[userStatus.value.ext].style) || onLineStatus['Online'].style
+        statusObj.label = (userStatus.value.ext && onLineStatus[userStatus.value.ext] && onLineStatus[userStatus.value.ext].label) || onLineStatus['Online'].label
         //赋值在线设备数
         statusObj.onlineDeviceCount = onlineStatus.length
         //如果在线设备为1则赋予设备类型

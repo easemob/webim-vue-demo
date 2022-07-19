@@ -147,7 +147,6 @@ const Contacts = {
       let option = {
         usernames: [...user],
       };
-      debugger;
       EaseIM.conn.unsubscribePresence(option).then((res) => {
         console.log('>>>>>>>成功取消订阅', res);
       });

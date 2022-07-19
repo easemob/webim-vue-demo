@@ -26,7 +26,8 @@ const loginIM = async () => {
       window.localStorage.setItem('loginUser', JSON.stringify({ user: username.value, accessToken: accessToken }))
     } catch (error) {
       console.log('>>>>登陆失败', error);
-      useSDKErrorNotifi(error.type, error.message);
+      const { data: { extraInfo } } = error
+      useSDKErrorNotifi(error.type, extraInfo.errDesc);
       username.value = '';
       password.value = '';
     }
@@ -66,7 +67,8 @@ const registerIM = async () => {
       console.log(first);
     } catch (error) {
       console.log('注册error', error);
-      const errorMsg = error.message && JSON.parse(error.message);
+      const errorMsg = error.data && JSON.parse(error.data);
+      console.log('>>>>>>>>>errorMsg', errorMsg);
       useSDKErrorNotifi(error.type, errorMsg.error);
       username.value = '';
       password.value = '';
