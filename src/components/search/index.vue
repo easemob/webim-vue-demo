@@ -31,7 +31,7 @@
         <div v-for="(item, i) in msgObj" :key="i + item.mid">
           <li>
             <div class="info-style">
-              <h2 class="name-style">{{ item.chatId }}</h2>
+              <h2 class="name-style">{{ item.from }}</h2>
               <div class="time-style" :style="{ 'text-align': 'left' }">
                 {{ renderTime(item.time) }}
               </div>

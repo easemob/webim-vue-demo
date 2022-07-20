@@ -552,7 +552,9 @@ const Chat = {
 										time: time,
 										mid: item.id,
 										status: 'read',
-										type:'txt'
+										type:'txt',
+										from: item.from,
+										to: item.to,
 									};
 									if (payload.isGroup) {
 										msg.chatId = item.to;
@@ -570,7 +572,9 @@ const Chat = {
 										type: 'img',
 										time: time,
 										mid: item.id,
-										status: 'read'
+										status: 'read',
+										from: item.from,
+										to: item.to,
 									};
 									if (payload.isGroup) {
 										msg.chatId = item.to;
@@ -588,7 +592,9 @@ const Chat = {
 										type: 'audio',
 										time: time,
 										mid: item.id,
-										status: 'read'
+										status: 'read',
+										from: item.from,
+										to: item.to,
 									};
 									if (payload.isGroup) {
 										msg.chatId = item.to;
@@ -605,6 +611,8 @@ const Chat = {
 										bySelf: bySelf,
 										type: 'video',
 										time: time,
+										from: item.from,
+										to: item.to,
 									};
 									if (payload.isGroup) {
 										msg.chatId = item.to;
@@ -624,7 +632,9 @@ const Chat = {
 										file_length: item.file_length,
 										time: time,
 										mid: item.id,
-										status: 'read'
+										status: 'read',
+										from: item.from,
+										to: item.to,
 									};
 									if (payload.isGroup) {
 										msg.chatId = item.to;

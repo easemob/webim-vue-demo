@@ -157,7 +157,6 @@ export default{
 		},
 		pushConfig: {
             handler(newVal, oldVal){
-                const { params } = Vue.$route;
                 if (newVal.length) {
                     this.isDisturb = newVal
                 }
@@ -268,6 +267,7 @@ export default{
 			const currentMsgs = chatList[userId] || [];
 			let unReadNum = 0;
 			currentMsgs.forEach(msg => {
+				console.log('message>>>',msg);
 				let isRenderNum = msg.chatType === 'group' ? !this.isDisturb.includes(msg.chatId) : !this.isDisturb.includes(msg.from)
 				if(msg.status !== 'read' && msg.status !== 'recall' && !msg.bySelf && isRenderNum){
 					unReadNum++;
