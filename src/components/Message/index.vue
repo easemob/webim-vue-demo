@@ -189,7 +189,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     <el-footer class="chat_message_inputbar">
       <InputBox ref="inputBox" :nowPickInfo="nowPickInfo" />
     </el-footer>
-    <el-drawer v-model="drawer" :show-close="false" :close-on-click-modal="true" direction="rtl" :modal="false"
+    <el-drawer v-model="drawer" :show-close="false" :close-on-click-modal="true" direction="rtl" :modal="true"
       size="280px">
       <GroupsDetails :groupDetail="groupDetail" />
     </el-drawer>

@@ -54,8 +54,9 @@ const alertManagementModal = (type, groupType) => {
 const editGroupNameInput = ref(null)
 let isEdit = ref(false)
 let groupName = ref('')
-const editGroupName = async (oldGroupName) => {
-    if (isEdit.value) {
+const editGroupName = async (type, oldGroupName) => {
+    if (type === 'save') {
+        if (groupName.value === oldGroupName) return isEdit.value = false
         let params = {
             groupid: groupDetail.value.id,
             modifyType: 0,
@@ -69,8 +70,8 @@ const editGroupName = async (oldGroupName) => {
             center: true,
         })
         isEdit.value = false
-
-    } else {
+    }
+    if (type === 'edit') {
         isEdit.value = true
         console.log('>>>>>>oldGroupName', oldGroupName)
         nextTick(() => {
@@ -88,8 +89,10 @@ const editGroupName = async (oldGroupName) => {
             <div class="title">群名称</div>
             <div class="content">
                 <div v-if="!isEdit">{{ groupDetail.name }}</div>
-                <el-input v-else ref="editGroupNameInput" v-model="groupName" size="small"></el-input>
-                <el-icon class="icon" v-if="memberRole" @click=editGroupName(groupDetail.name)>
+                <el-input v-else class="group_name_input" ref="editGroupNameInput" v-model="groupName" size="small"
+                    @blur="editGroupName('save', groupDetail.name)">
+                </el-input>
+                <el-icon class="icon" v-if="memberRole" @click="editGroupName('edit', groupDetail.name)">
                     <Edit />
                 </el-icon>
             </div>
@@ -273,6 +276,10 @@ const editGroupName = async (oldGroupName) => {
         }
 
     }
+}
+
+::v-deep .group_name_input>.el-input__wrapper {
+    border-radius: 5px;
 }
 
 ::v-deep .el-dialog__header {
