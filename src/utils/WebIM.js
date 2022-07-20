@@ -30,8 +30,8 @@ const rtc = {
 function onGetPushConfig(message) {
 	const { from, type, to } = message;
 	const option = {
-		conversationId: type === 'chat' ? from : to,
-		type: type === 'chat' ? 'contact' : 'group'
+		conversationId: type === 'groupchat' ? to : from,
+		type: type === 'groupchat' ? 'groupChat' : 'singleChat'
 	}
 	WebIM.conn.getSilentModeForConversation(option).then(res => {
 		let dataLength = Object.keys(res.data).length
@@ -57,6 +57,8 @@ WebIM.conn = new WebIM.connection({
 
 	// 公有云 isHttpDNS 默认配置为true
 	isHttpDNS: WebIM.config.isHttpDNS,
+	// url: WebIM.config.url,
+	// apiUrl: WebIM.config.apiUrl,
 
 	// 私有云设置，详细文档：http://docs-im.easemob.com/im/web/other/privatedeploy
 	// isHttpDNS: false,

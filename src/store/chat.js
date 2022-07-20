@@ -113,9 +113,11 @@ const Chat = {
 		},
 
 		updateSearchMsgList(state, payload) {
-			if (state.searchMsgList.length) {
+			if (payload.isSearch) {
+				state.searchMsgList = []
+			} else if (state.searchMsgList.length) {
 				state.searchMsgList.forEach(item => {
-					if (!(item.mid === payload.mid)) {
+					if (!(item.mid === payload.mid )) {
 						state.searchMsgList.push(payload)
 					}
 				})
@@ -525,6 +527,7 @@ const Chat = {
 		getHistoryMessage: function(context, payload){
 			console.log(context, payload, 'getHistoryMessage');
 			const { isSearch } = payload;
+			isSearch && context.commit('updateSearchMsgList', {isSearch})
 			const options = {
 				queue: payload.name,
 				isGroup: payload.isGroup,
@@ -548,7 +551,8 @@ const Chat = {
 										bySelf: bySelf,
 										time: time,
 										mid: item.id,
-										status: 'read'
+										status: 'read',
+										type:'txt'
 									};
 									if (payload.isGroup) {
 										msg.chatId = item.to;
@@ -599,7 +603,8 @@ const Chat = {
 										chatType: payload.isGroup ? 'group' : 'contact',
 										chatId: bySelf ? item.to : item.from,
 										bySelf: bySelf,
-										type: 'video'
+										type: 'video',
+										time: time,
 									};
 									if (payload.isGroup) {
 										msg.chatId = item.to;
@@ -677,14 +682,14 @@ const Chat = {
 			const { params, name } = Vue.$route;
 			const option = {
 				conversationId: params.id,
-				type: name,
+				type: name === 'contact' ? 'singleChat' : 'groupChat',
 				options: {
 					paramType: 0,
-					remindType: 'ALL'
+					remindType: 'NONE'
 				}
 			}
 			WebIM.conn.setSilentModeForConversation(option).then(res => {
-				if (res.data.type === 'ALL') {
+				if (res.data.type === 'NONE') {
 					context.commit('updatePushConfig', { user: params.id, type: 'add' })
 				}
 				payload && payload()
@@ -695,7 +700,7 @@ const Chat = {
 			const { params, name } = Vue.$route;
 			const option = {
 				conversationId: params.id,
-				type: name,
+				type: name === 'contact' ? 'singleChat' : 'groupChat',
 			}
 			WebIM.conn.clearRemindTypeForConversation(option).then(res => {
 				context.commit('updatePushConfig', {user: params.id, type: 'remove'})
@@ -707,7 +712,7 @@ const Chat = {
 			const { params, name } = Vue.$route;
 			const option = {
 				conversationId: params.id,
-				type: name,
+				type: name === 'contact' ? 'singleChat' : 'groupChat'
 			}
 			WebIM.conn.getSilentModeForConversation(option).then(res => {
 				let dataLength = Object.keys(res.data).length

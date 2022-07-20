@@ -69,7 +69,7 @@ export default{
 			isCollapse: true,
 			unRead: '',
 			dataFlag: false,
-			isDisturb: false 
+			isDisturb: [] 
 			// selectedKeys: [ this.getKey(this.activedKey[this.type]) ]
 		};
 	},
@@ -159,7 +159,7 @@ export default{
             handler(newVal, oldVal){
                 const { params } = Vue.$route;
                 if (newVal.length) {
-                    this.isDisturb = newVal.includes(params.id)
+                    this.isDisturb = newVal
                 }
             },
 			deep: true
@@ -268,7 +268,8 @@ export default{
 			const currentMsgs = chatList[userId] || [];
 			let unReadNum = 0;
 			currentMsgs.forEach(msg => {
-				if(msg.status !== 'read' && msg.status !== 'recall' && !msg.bySelf && this.isDisturb){
+				let isRenderNum = msg.chatType === 'group' ? !this.isDisturb.includes(msg.chatId) : !this.isDisturb.includes(msg.from)
+				if(msg.status !== 'read' && msg.status !== 'recall' && !msg.bySelf && isRenderNum){
 					unReadNum++;
 				}
 			});
