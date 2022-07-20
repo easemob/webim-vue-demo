@@ -17,7 +17,6 @@ const store = useStore()
 /* route */
 const route = useRoute()
 const { CHAT_TYPE } = messageType
-console.log('route', route.query)
 //当前选中id的info
 const nowContactInfo = computed(() => {
     if (route.query.chatType === CHAT_TYPE.SINGLE) {
@@ -78,15 +77,15 @@ const delTheFriend = () => {
     const targetId = route.query.id
     EaseIM.conn.deleteContact(targetId);
     router.push('/chat/contacts');
-    //删除好友后会触发，好友关系解除信息
-    // store.dispatch('fetchFriendList')
 }
 
 /* 进入会话 */
 const toChatMessage = () => {
+    console.log('>>>>>>>...route.query');
     router.push({
         path: '/chat/contacts/message', query: {
-            ...route.query
+            id: route.query.id,
+            chatType: route.query.chatType
         }
     });
 }

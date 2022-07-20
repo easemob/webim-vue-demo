@@ -4,17 +4,17 @@ import { useStore } from 'vuex';
 import router from '@/router';
 import EaseIM from '@/IM/initwebsdk'
 import dateFormater from '@/utils/dateFormat'
-
+import { messageType } from '@/constant'
 /* 头像相关 */
 import informIcon from '@/assets/images/avatar/inform.png'
 /* store */
 const store = useStore();
+const { CHAT_TYPE } = messageType
 //取系统通知数据
 const informDetail = computed(() => {
   let informDetailArr = store.state.Conversation.informDetail;
   let lastInformDeatail = informDetailArr[0] || {}
   let untreated = _.sumBy(informDetailArr, 'untreated') || 0;
-  console.log('>>>>>lastInformDeatail', lastInformDeatail)
   return { untreated, lastInformDeatail };
 });
 // console.log('>>>>>informDetail', informDetail.lastInformDeatail)
@@ -22,13 +22,27 @@ const informDetail = computed(() => {
 const friendList = computed(() => store.state.Contacts.friendList
 )
 
+//取群组列表（展示群组名称）
+const joinedGroupList = computed(() => store.state.Contacts.groupList)
+console.log('conversationList joinedGroupList ', joinedGroupList.value);
 
-console.log('friendList>>>>>', friendList.value)
 //取会话数据
 const conversationList = computed(() => {
   return store.state.Conversation.conversationListData;
 });
 
+//处理会话name 
+const handleConversationName = computed(() => {
+  return (item) => {
+    if (item.conversationType === CHAT_TYPE.SINGLE) {
+      return friendList.value[item.conversationKey] && friendList.value[item.conversationKey].nickname || item.conversationInfo.name
+    }
+    if (item.conversationType === CHAT_TYPE.GROUP) {
+      return joinedGroupList.value[item.conversationKey] && joinedGroupList.value[item.conversationKey].groupDetail && joinedGroupList.value[item.conversationKey].groupDetail.name || joinedGroupList.value[item.conversationKey].groupname
+    }
+    // return console.log('会话 item', item)
+  }
+})
 //取网络状态
 const networkStatus = computed(() => {
   return store.state.networkStatus
@@ -96,9 +110,7 @@ const deleteConversation = (itemKey) => {
               </div>
             </div>
             <div class="item_body item_main">
-              <div class="name">{{ friendList[item.conversationKey] && friendList[item.conversationKey].nickname
-                  ? friendList[item.conversationKey].nickname : item.conversationInfo.name
-              }}</div>
+              <div class="name">{{ handleConversationName(item) }}</div>
               <div class="last_msg_body">{{ item.fromInfo.fromId }}：{{ item.latestMessage.msg }}
               </div>
             </div>

@@ -44,7 +44,6 @@ const informDetail = computed(() => {
   let informDetailArr = store.state.Conversation.informDetail;
   let lastInformDeatail = informDetailArr[0] || {}
   let untreated = _.sumBy(informDetailArr, 'untreated') || 0;
-  console.log('>>>>>lastInformDeatail', lastInformDeatail)
   return { untreated, lastInformDeatail };
 });
 </script>

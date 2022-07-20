@@ -30,7 +30,7 @@ let loginUserOnlineStatusIcon = computed(() => {
   if (loginUserOnlineStatus === 'Unset' || loginUserOnlineStatus === '') {
     return '';
   } else {
-    return onLineStatus[loginUserOnlineStatus].style;
+    return onLineStatus[loginUserOnlineStatus] && onLineStatus[loginUserOnlineStatus].style || '';
   }
 });
 

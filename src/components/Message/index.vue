@@ -1,13 +1,14 @@
 <script setup>
-import { ref, watch, toRefs, nextTick, computed } from 'vue'
+import { ref, watch, toRaw, toRefs, nextTick, computed } from 'vue'
 import { useStore } from 'vuex'
-import { useRoute } from 'vue-router'
+import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { messageType } from '@/constant'
 import { useScroll } from '@vueuse/core'
 /* 组件 */
 import MessageList from './components/messageList.vue'
 import InputBox from './components/inputBox.vue'
 import UserStatus from '@/components/UserStatus'
+import GroupsDetails from '@/components/AboutGroups/GroupsDetails'
 /* store */
 const store = useStore()
 /* route */
@@ -31,16 +32,20 @@ const getIdInfo = async ({ id, chatType }) => {
   }
   //类型为群组
   if (chatType === CHAT_TYPE.GROUP) {
+    let goupid = groupList.value[id].groupid
+    goupid && store.dispatch('fetchMultiGoupsInfos', goupid)
     if (groupList.value[id].groupDetail) {
       return nowPickInfo.value.groupDetail = groupList.value[id].groupDetail
     } else {
+      //如果不存在用户属性则请求获取该群群详情。
       await store.dispatch('getAssignGroupDetail', id)
       return nowPickInfo.value.groupDetail = groupList.value[id].groupDetail
     }
   }
 }
+
 //监听路由改变获取对应的getIdInfo
-watch(() => route.query, (routeVal) => {
+const stopWatchRoute = watch(() => route.query, (routeVal) => {
   if (routeVal) {
     nowPickInfo.value = { ...routeVal }
     getIdInfo(routeVal)
@@ -48,7 +53,12 @@ watch(() => route.query, (routeVal) => {
 }, {
   immediate: true
 })
-
+//获取群组详情
+const groupDetail = computed(() => groupList.value[nowPickInfo.value.id] && groupList.value[nowPickInfo.value.id].groupDetail || {})
+//离开该路由销毁route监听
+onBeforeRouteLeave(() => {
+  stopWatchRoute()
+})
 /* 消息相关 */
 const loadingHistoryMsg = ref(false); //是否正在加载中
 const isMoreHistoryMsg = ref(true) //加载文案展示为加载更多还是已无更多。
@@ -148,12 +158,15 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
         <UserStatus :userStatus="nowPickInfo.userInfo && nowPickInfo.userInfo.userStatus" />
       </div>
       <div v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP" class="chat_user_name">
-        {{ nowPickInfo.groupDetail && nowPickInfo.groupDetail.name || '' }} {{ `(${nowPickInfo.groupDetail &&
-            nowPickInfo.groupDetail.affiliations_count || ''})`
+        {{ groupDetail && groupDetail.name || '' }} {{ `(${groupDetail &&
+            groupDetail.affiliations_count || ''})`
         }}
       </div>
       <span class="more" @click="drawer = !drawer">
         ...
+        <!-- 单人展示删除拉黑 -->
+        <!-- 群组展示抽屉 -->
+
       </span>
     </el-header>
 
@@ -176,11 +189,12 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     <el-footer class="chat_message_inputbar">
       <InputBox ref="inputBox" :nowPickInfo="nowPickInfo" />
     </el-footer>
-
+    <el-drawer v-model="drawer" :show-close="false" :close-on-click-modal="true" direction="rtl" :modal="false"
+      size="280px">
+      <GroupsDetails :groupDetail="groupDetail" />
+    </el-drawer>
   </el-container>
-  <el-drawer v-model="drawer" title="I am the title" direction="rtl" :modal="false" size="20%">
-    <span>Hi, there!</span>
-  </el-drawer>
+
 </template>
 
 
@@ -282,5 +296,22 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   background-color: #F9F9F9;
 
 
+}
+
+::v-deep .el-drawer {
+  margin-top: 60px;
+  width: 150px;
+  height: calc(100% - 60px);
+  border-radius: 0 5px 5px 0;
+
+  .el-drawer__header {
+    margin-bottom: 0;
+    padding-top: 0;
+  }
+
+  .el-drawer__body {
+    padding: 0;
+    // padding-left: 16px;
+  }
 }
 </style>

@@ -20,12 +20,10 @@ const Contacts = {
       state.friendBlackList = _.assign([], payload);
     },
     SET_FRIEND_PRESENCE: (state, status) => {
-      console.log('>>>>>>>成功触发SET_FRIEND_PRESENCE', status);
       const friendList = state.friendList;
       status.length > 0 &&
         status.forEach((item) => {
           let commonStatus = usePresence(item);
-          console.log('>>>>>>>presence commonStatus', commonStatus);
           if (friendList[commonStatus.uid]) {
             friendList[commonStatus.uid].userStatus = commonStatus;
           }
@@ -87,7 +85,6 @@ const Contacts = {
     fetchBlackList: async ({ dispatch, commit }, params) => {
       let { data } = await EaseIM.conn.getBlacklist();
       data.length > 0 && commit('SET_BLACK_LIST', data);
-      console.log('>>>>>获取到黑名单列表', data);
     },
     //获取他人用户属性
     getOtherUserInfo: async ({ commit }, users) => {
@@ -110,7 +107,6 @@ const Contacts = {
             usersInfos.map(
               (item) => (usersInfosObj = Object.assign(usersInfosObj, item))
             );
-          console.log('usersInfosObj', usersInfosObj);
           resolve(usersInfosObj);
         } catch (error) {
           reject(error);
@@ -119,7 +115,6 @@ const Contacts = {
     },
     //订阅好友的在线状态
     subFriendsPresence: async ({ commit }, users) => {
-      console.log('>>>>>>>>订阅好友状态触发', users);
       let requestTask = [];
       let usersArr = _.chunk([...users], 5); //分拆users 订阅好友状态一次不能超过100个
       try {
@@ -157,11 +152,11 @@ const Contacts = {
         ...params,
       });
       let goupListData = _.keyBy(res.data, 'groupid');
-      console.log('>>>>>>处理后的数据', goupListData);
+
       commit('SET_GROUP_LIST', { setType: 'init', data: goupListData });
     },
     //获取指定群详情
-    getAssignGroupDetail: async ({ commit }, goupsId) => {
+    getAssignGroupDetail: async ({ dispatch, commit }, goupsId) => {
       let options = {
         groupId: goupsId, // 群组id
       };

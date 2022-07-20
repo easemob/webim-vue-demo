@@ -2,7 +2,7 @@
 import NavBar from '@/components/NavBar';
 import { useRoute } from 'vue-router'
 const route = useRoute()
-console.log('>>>>>route', route.name, route.meta.keepAlive);
+
 </script>
 <template>
   <div class="app-container">
@@ -11,11 +11,7 @@ console.log('>>>>>route', route.name, route.meta.keepAlive);
         <NavBar />
       </el-aside>
       <el-main class="chat_main_box">
-        <router-view v-slot="{ Component }">
-          <keep-alive>
-            <component :is="Component" :key="$route.name" v-if="$route.meta.keepAlive" />
-          </keep-alive>
-          <component :is="Component" v-if="!$route.meta.keepAlive" />
+        <router-view>
         </router-view>
       </el-main>
     </el-container>

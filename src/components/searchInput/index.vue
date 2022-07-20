@@ -30,7 +30,6 @@ const inputValue = ref('');
 const isShowResultContent = ref(false)
 //搜索本地记录
 const searchHistory = useLocalStorage('search_hisory', [])
-console.log('searchHistorysearchHistorysearchHistory', toRaw(searchHistory.value))
 //点击非搜索部分关闭页面
 const searchBox = ref(null)
 onClickOutside(searchBox, () => (isShowResultContent.value = false));

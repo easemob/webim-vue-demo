@@ -17,7 +17,6 @@ const handleStatusDetails = (params) => {
   return resultArr;
 };
 export default function (statusBody) {
-  console.log('statusBody', statusBody);
   return {
     uid: statusBody.uid || statusBody.userId,
     expiry: statusBody.expiry || statusBody.expire,

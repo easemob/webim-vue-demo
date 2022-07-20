@@ -3,6 +3,7 @@ import EaseIM from '@/IM/initwebsdk';
 import Conversation from './modules/conversation';
 import Contacts from './modules/contacts';
 import Message from './modules/message';
+import Groups from './modules/goups';
 export default createStore({
   state: {
     loginState: false,
@@ -59,5 +60,6 @@ export default createStore({
     Conversation,
     Contacts,
     Message,
+    Groups,
   },
 });

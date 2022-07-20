@@ -12,7 +12,6 @@ export default function (conversationList) {
   });
 
   sortedArr.forEach((item) => {
-    console.log(item);
     const key = item.conversationKey;
 
     return (newConversationObj[key] = item);
