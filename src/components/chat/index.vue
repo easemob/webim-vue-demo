@@ -101,7 +101,8 @@ export default{
 			handler(val){
 				// this.getAllFriendsStatus()
 				this.dataFlag = false
-				console.log('%c contact', 'color:red;font-size:20px;')
+				
+        ('%c contact', 'color:red;font-size:20px;')
 				const params = {
 					usernames: []
 				}
@@ -267,7 +268,6 @@ export default{
 			const currentMsgs = chatList[userId] || [];
 			let unReadNum = 0;
 			currentMsgs.forEach(msg => {
-				console.log('message>>>',msg);
 				let isRenderNum = msg.chatType === 'group' ? !this.isDisturb.includes(msg.chatId) : !this.isDisturb.includes(msg.from)
 				if(msg.status !== 'read' && msg.status !== 'recall' && !msg.bySelf && isRenderNum){
 					unReadNum++;
