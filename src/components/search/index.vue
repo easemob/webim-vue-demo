@@ -5,7 +5,8 @@
       :style="{
         fontSize: '20px',
         color: 'rgba(0, 0, 0, 0.65)',
-        marginLeft: '8px'
+        marginLeft: '8px',
+        cursor: 'pointer'
       }"
       @click="handleHistory"
     />
@@ -35,7 +36,7 @@
                 {{ renderTime(item.time) }}
               </div>
             </div>
-            <div>
+            <div :style="{height: item.type === 'file' ? '105px': '100%' }">
               <img
                 :key="item.msg"
                 :src="item.msg ? item.msg : ''"
@@ -86,6 +87,7 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
+import _ from 'lodash'
 import WebIM from "../../utils/WebIM";
 import { renderTime,readablizeBytes } from "../../utils/index";
 export default {
@@ -102,7 +104,7 @@ export default {
   watch: {
     historyList: {
       handler(msgNewVal, msgOldVal) {
-        this.msgObj = msgNewVal;
+        this.msgObj = _.reverse(msgNewVal);
       }
     }
   },
@@ -126,7 +128,13 @@ export default {
       this.showModal = false;
     },
     onSearch (e) {
-      this.msgObj = this.historyList.filter(item => item.msg.includes(e));
+      let newMsgs = [];
+      this.historyList.length && this.historyList.forEach(item => {
+          if (item.type === 'txt') {
+            newMsgs.push(item)
+          }
+      });
+      this.msgObj = newMsgs.filter(item => item.msg.includes(e));
     },
     onChangeInput(e) {
       const {value} = e.target
