@@ -14,6 +14,10 @@
               <a-icon type="user" />邀请群成员
             </span>
           </li>
+		 <li @click="changeDisturbModel">
+              <a-icon type="sound" theme="filled" />
+              <span>免打扰配置</span>
+          </li>
           <li v-if="showAdminIcon">
             <p @click="updatedGroupInfo">
               <a-icon type="form" />
@@ -22,10 +26,6 @@
             <p @click="changeBlackModel">
               <a-icon type="exclamation-circle" theme="filled" />
               群组黑名单
-            </p>
-			 <p @click="changeDisturbModel">
-              <a-icon type="sound" theme="filled" />
-              免打扰配置
             </p>
             <p @click="dissolution">
               <a-icon type="poweroff" />
