@@ -7,16 +7,7 @@ import ElementPlus from 'element-plus';
 import './styles/element/index.scss';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
-/* 自定义指令 */
-import textOverflow from '@/directives/textOverflow';
-
 const app = createApp(App)
-  .directive('textOverflow', {
-    mounted(el) {
-      // 聚焦元素
-      textOverflow(el);
-    },
-  })
   .use(store)
   .use(router)
   .use(ElementPlus, { locale: zhCn })

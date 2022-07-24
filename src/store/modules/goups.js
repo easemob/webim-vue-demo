@@ -58,7 +58,7 @@ const Groups = {
       dispatch('fetchAnnounment', groupid);
       dispatch('fetchGoupsBlackList', groupid);
       dispatch('fetchGoupsMuteList', groupid);
-      // dispatch('fetchGoupsMember', groupid);
+      dispatch('fetchGoupsMember', groupid);
     },
     //群管理员
     fetchGoupsAdmin: async ({ commit }, params) => {
@@ -109,7 +109,6 @@ const Groups = {
           groupName: content,
         };
         await EaseIM.conn.modifyGroup(option);
-        dispatch('getAssignGroupDetail', groupid);
         console.log('>>>>>>修改群组名称成功');
       }
       //1 是修改群详情
@@ -120,6 +119,31 @@ const Groups = {
         };
         await EaseIM.conn.modifyGroup(option);
       }
+      //通知更新群详情
+      dispatch('getAssignGroupDetail', groupid);
+    },
+    // 设置/修改群组公告
+    modifyGroupAnnouncement: async ({ dispatch, commit }, params) => {
+      await EaseIM.conn.updateGroupAnnouncement(params);
+      dispatch('fetchAnnounment', params.groupId);
+    },
+    //邀请群成员
+    inviteUserJoinTheGroup: async ({ dispatch, commit }, params) => {
+      const { users, groupId } = params;
+      await EaseIM.conn.inviteUsersToGroup({ users, groupId });
+      //通知更新群详情
+      dispatch('getAssignGroupDetail', groupId);
+      //更新群成员
+      dispatch('fetchGoupsMember', groupId);
+    },
+    //移出群成员
+    removeTheGroupMember: async ({ dispatch, commit }, params) => {
+      const { username, groupId } = params;
+      await EaseIM.conn.removeGroupMember({ username, groupId });
+      //通知更新群详情
+      dispatch('getAssignGroupDetail', groupId);
+      //更新群成员
+      dispatch('fetchGoupsMember', groupId);
     },
   },
   getters: {},

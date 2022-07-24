@@ -38,9 +38,15 @@ const handleConversationName = computed(() => {
       return friendList.value[item.conversationKey] && friendList.value[item.conversationKey].nickname || item.conversationInfo.name
     }
     if (item.conversationType === CHAT_TYPE.GROUP) {
-      return joinedGroupList.value[item.conversationKey] && joinedGroupList.value[item.conversationKey].groupDetail && joinedGroupList.value[item.conversationKey].groupDetail.name || joinedGroupList.value[item.conversationKey].groupname
+      if (joinedGroupList.value[item.conversationKey] && joinedGroupList.value[item.conversationKey].groupDetail) {
+        return joinedGroupList.value[item.conversationKey].groupDetail.name
+      } else if (joinedGroupList.value[item.conversationKey] && joinedGroupList.value[item.conversationKey].groupname) {
+        return joinedGroupList.value[item.conversationKey].groupname
+      } else {
+        return item.conversationKey
+      }
+
     }
-    // return console.log('会话 item', item)
   }
 })
 //取网络状态

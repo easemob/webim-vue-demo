@@ -6,12 +6,16 @@ import EaseIM from '@/IM/initwebsdk';
 /* components */
 import GroupsManagement from '../GroupsManagement'
 /* icons */
-import { ArrowRight, Edit } from '@element-plus/icons-vue';
+import { ArrowRight, Edit, View } from '@element-plus/icons-vue';
 import store from '@/store';
 /* porps */
 const props = defineProps({
     groupDetail: { type: Object, required: true, default: () => ({}) }
 })
+/* 
+    * groupDetail（群详情接口返回的数据）
+    * 主要包含群名称，群主id，群组desc，群组人数，群组禁言状态是否容许邀请...。
+**/
 const { groupDetail } = toRefs(props)
 /* 群组展示相关核心数据获取 */
 const goupsInfos = computed(() => {
@@ -37,7 +41,6 @@ let groupModalTitle = ref({ title: '', type: 0 })
 //弹出群管理相关modal框
 const alertManagementModal = (type, groupType) => {
     let titleType = {
-        0: '群组成员',
         1: '黑名单',
         2: '禁言'
     }
@@ -63,13 +66,23 @@ const editGroupName = async (type, oldGroupName) => {
             content: groupName.value
         }
         console.log('>>>>>保存编辑')
-        await store.dispatch('modifyGroupInfo', params)
-        ElMessage({
-            message: '群组名称修改成功~',
-            type: 'success',
-            center: true,
-        })
-        isEdit.value = false
+        try {
+            await store.dispatch('modifyGroupInfo', params)
+            ElMessage({
+                message: '群组名称修改成功~',
+                type: 'success',
+                center: true,
+            })
+            isEdit.value = false
+        } catch (error) {
+            ElMessage({
+                message: '群组名称修改失败~',
+                type: 'error',
+                center: true,
+            })
+            isEdit.value = false
+        }
+
     }
     if (type === 'edit') {
         isEdit.value = true
@@ -86,34 +99,42 @@ const editGroupName = async (type, oldGroupName) => {
     <div class="app_container" v-if="groupDetail">
         <!-- 群名称 -->
         <div class="group_func_card group_name">
-            <div class="title">群名称</div>
-            <div class="content">
-                <div v-if="!isEdit">{{ groupDetail.name }}</div>
-                <el-input v-else class="group_name_input" ref="editGroupNameInput" v-model="groupName" size="small"
-                    @blur="editGroupName('save', groupDetail.name)">
-                </el-input>
+            <div class="title">群名称
                 <el-icon class="icon" v-if="memberRole" @click="editGroupName('edit', groupDetail.name)">
                     <Edit />
                 </el-icon>
+            </div>
+            <div class="content">
+                <div v-if="!isEdit">{{ groupDetail.name || '' }}</div>
+                <el-input v-else class="group_name_input" ref="editGroupNameInput" v-model="groupName" size="small"
+                    @blur="editGroupName('save', groupDetail.name)">
+                </el-input>
+
             </div>
         </div>
         <el-divider style="margin: 0;" />
         <!-- 群描述 -->
         <div class="group_func_card group_description">
-            <div class="title">群描述</div>
-            <div class="content">
-                <span>{{ groupDetail.description }}</span>
+            <div class="title">群描述
                 <el-icon class="icon" v-if="memberRole" @click="alertManagementModal('groupDesc')">
                     <Edit />
                 </el-icon>
             </div>
+            <div class="content">
+                {{ groupDetail.description || '暂无群描述~' }}
+            </div>
         </div>
         <el-divider style="margin: 0;" />
         <!-- 群公告 -->
-        <div class="group_announcements">
-            <div class="title">群公告</div>
-            <div class="content" v-text-overflow title="查看更多" @click="alertManagementModal('announcements')">
-                {{ goupsInfos.announcement ? goupsInfos.announcement : '暂无群公告~' }}
+        <div class="group_func_card group_announcements">
+            <div class="title">群公告
+                <el-icon class="icon" @click="alertManagementModal('announcements')">
+                    <Edit v-if="memberRole" />
+                    <View v-else />
+                </el-icon>
+            </div>
+            <div class="content" title="查看更多">
+                {{ goupsInfos.announcement || '暂无群公告~' }}
             </div>
         </div>
         <el-divider style="margin: 0;" />
@@ -122,8 +143,8 @@ const editGroupName = async (type, oldGroupName) => {
             <div class="label">群成员</div>
             <div class="main">
                 <div class="member_count">
-                    {{ `${groupDetail.affiliations_count}/${groupDetail.maxusers}` }}</div>
-                <div class="more_list" @click="alertManagementModal('groupsomelist', 0)">
+                    {{ `${groupDetail.affiliations_count || '0'}/${groupDetail.maxusers || '500'}` }}</div>
+                <div class="more_list" @click="alertManagementModal('groupmembers')">
                     <ArrowRight />
                 </div>
             </div>
@@ -133,7 +154,7 @@ const editGroupName = async (type, oldGroupName) => {
         <div class="group_list_card group_blacklist" v-if="goupsInfos.blacklist">
             <div class="label">黑名单</div>
             <div class="main">
-                <div class="member_count">{{ goupsInfos.blacklist.length > 0 ? goupsInfos.blacklist.length : '暂无' }}
+                <div class="member_count">{{ goupsInfos.blacklist.length || '暂无' }}
                 </div>
                 <div class="more_list" @click="alertManagementModal('groupsomelist', 1)">
                     <ArrowRight />
@@ -145,13 +166,14 @@ const editGroupName = async (type, oldGroupName) => {
         <div class="group_list_card group_mutelist" v-if="goupsInfos.mutelist">
             <div class="label">禁言名单</div>
             <div class="main">
-                <div class="member_count">{{ goupsInfos.mutelist.length > 0 ? goupsInfos.mutelist.length : '暂无' }}</div>
+                <div class="member_count">{{ goupsInfos.mutelist.length || '暂无' }}</div>
                 <div class="more_list" @click="alertManagementModal('groupsomelist', 2)">
                     <ArrowRight />
                 </div>
             </div>
         </div>
-        <GroupsManagement ref="groupmanagement" :modalType="modalType" :groupModalTitle="groupModalTitle" />
+        <GroupsManagement ref="groupmanagement" :modalType="modalType" :groupModalTitle="groupModalTitle"
+            :memberRole="memberRole" :groupDetail="groupDetail" />
     </div>
 </template>
 <style lang="scss" scoped>
@@ -175,6 +197,19 @@ const editGroupName = async (type, oldGroupName) => {
             font-weight: 500;
             font-size: 12px;
             line-height: 18px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+
+            .icon {
+                cursor: pointer;
+                margin-left: 5px;
+                transition: all 0.3s;
+
+                &:hover {
+                    transform: scale(1.5)
+                }
+            }
         }
 
         .content {
@@ -183,13 +218,12 @@ const editGroupName = async (type, oldGroupName) => {
             font-weight: 400;
             font-size: 12px;
             line-height: 18px;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
+            /* or 150% */
+            text-align: justify;
             color: #A3A3A3;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            // height: 72px;
             overflow: hidden;
+            cursor: pointer;
         }
     }
 

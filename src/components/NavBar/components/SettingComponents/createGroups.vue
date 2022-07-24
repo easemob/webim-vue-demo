@@ -28,7 +28,7 @@ let nextStep = ref(0) //下一步
 let renderFriendList = ref([])
 //选中人数统计
 const checkedCount = computed(() => {
-    return _.sumBy(renderFriendList.value, 'isChecked')
+    return _.sumBy(renderFriendList.value, 'isChecked') * 1
 })
 //选中人id数组
 const checkedUserArr = computed(() => {

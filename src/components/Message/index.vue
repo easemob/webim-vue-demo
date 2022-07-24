@@ -162,7 +162,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
             groupDetail.affiliations_count || ''})`
         }}
       </div>
-      <span class="more" @click="drawer = !drawer">
+      <span class="more" v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP" @click="drawer = !drawer">
         ...
         <!-- 单人展示删除拉黑 -->
         <!-- 群组展示抽屉 -->
@@ -189,8 +189,8 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     <el-footer class="chat_message_inputbar">
       <InputBox ref="inputBox" :nowPickInfo="nowPickInfo" />
     </el-footer>
-    <el-drawer v-model="drawer" :show-close="false" :close-on-click-modal="true" direction="rtl" :modal="true"
-      size="280px">
+    <el-drawer v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP" v-model="drawer" :show-close="false"
+      :close-on-click-modal="true" direction="rtl" :modal="true" size="280px">
       <GroupsDetails :groupDetail="groupDetail" />
     </el-drawer>
   </el-container>
