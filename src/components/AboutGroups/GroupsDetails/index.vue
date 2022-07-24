@@ -23,16 +23,17 @@ const goupsInfos = computed(() => {
 })
 //权限判断（禁言列表的获取只有群主管理员）
 const memberRole = computed(() => {
+    let allGroupAdmin = []
     //群主
-    const owner = groupDetail.value && groupDetail.value.owner;
+    let owner = groupDetail.value && groupDetail.value.owner;
     //管理员列表
-    let admin = toRaw(goupsInfos.value.admin);
+    let groupAdmin = goupsInfos.value && toRaw(goupsInfos.value.admin) || [];
     //登陆人id
     let loginUser = EaseIM.conn.user;
     //合并两者名单
-    admin = [...admin, owner]
+    allGroupAdmin = [...groupAdmin, owner]
     //判断是否在权限名单内
-    return admin.includes(loginUser)
+    return allGroupAdmin.includes(loginUser)
 })
 /* 群组管理 */
 const groupmanagement = ref(null);
@@ -126,7 +127,7 @@ const editGroupName = async (type, oldGroupName) => {
         </div>
         <el-divider style="margin: 0;" />
         <!-- 群公告 -->
-        <div class="group_func_card group_announcements">
+        <div v-if="goupsInfos" class="group_func_card group_announcements">
             <div class="title">群公告
                 <el-icon class="icon" @click="alertManagementModal('announcements')">
                     <Edit v-if="memberRole" />

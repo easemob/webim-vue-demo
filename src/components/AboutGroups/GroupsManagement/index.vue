@@ -67,7 +67,7 @@ const save = () => {
 }
 </script>
 <template>
-    <el-dialog v-model="dialogVisible"
+    <el-dialog v-model="dialogVisible" :destroy-on-close="true"
         :title="diffModal[modalType] && diffModal[modalType].title || groupModalTitle.title"
         :width="diffModal[modalType] && diffModal[modalType].width">
         <component ref="groupModalComp" :is="diffModal[modalType] && diffModal[modalType].components"

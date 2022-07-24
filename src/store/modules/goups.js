@@ -1,3 +1,4 @@
+import { ElMessage } from 'element-plus';
 import EaseIM from '@/IM/initwebsdk';
 const Groups = {
   state: {
@@ -57,8 +58,9 @@ const Groups = {
       dispatch('fetchGoupsAdmin', groupid);
       dispatch('fetchAnnounment', groupid);
       dispatch('fetchGoupsBlackList', groupid);
-      dispatch('fetchGoupsMuteList', groupid);
       dispatch('fetchGoupsMember', groupid);
+      //普通群成员无权调用禁言列表
+      // dispatch('fetchGoupsMuteList', groupid);
     },
     //群管理员
     fetchGoupsAdmin: async ({ commit }, params) => {
@@ -130,20 +132,44 @@ const Groups = {
     //邀请群成员
     inviteUserJoinTheGroup: async ({ dispatch, commit }, params) => {
       const { users, groupId } = params;
-      await EaseIM.conn.inviteUsersToGroup({ users, groupId });
-      //通知更新群详情
-      dispatch('getAssignGroupDetail', groupId);
-      //更新群成员
-      dispatch('fetchGoupsMember', groupId);
+      try {
+        await EaseIM.conn.inviteUsersToGroup({ users, groupId });
+        ElMessage({
+          message: '群组邀请成功送出~',
+          type: 'success',
+        });
+        //通知更新群详情
+        dispatch('getAssignGroupDetail', groupId);
+        //更新群成员
+        dispatch('fetchGoupsMember', groupId);
+      } catch (error) {
+        console.log('>>>>群组邀请失败', error);
+        ElMessage({
+          message: '群组邀请失败，请稍后重试~',
+          type: 'error',
+        });
+      }
     },
     //移出群成员
     removeTheGroupMember: async ({ dispatch, commit }, params) => {
       const { username, groupId } = params;
-      await EaseIM.conn.removeGroupMember({ username, groupId });
-      //通知更新群详情
-      dispatch('getAssignGroupDetail', groupId);
-      //更新群成员
-      dispatch('fetchGoupsMember', groupId);
+      try {
+        await EaseIM.conn.removeGroupMember({ username, groupId });
+        ElMessage({
+          message: `已将${username}移出群组!`,
+          type: 'success',
+        });
+        //通知更新群详情
+        dispatch('getAssignGroupDetail', groupId);
+        //更新群成员
+        dispatch('fetchGoupsMember', groupId);
+      } catch (error) {
+        ElMessage({
+          message: `该群成员移出失败，请稍后重试！`,
+          type: 'error',
+        });
+        console.log('<<>>>>>>>>移出失败', error);
+      }
     },
   },
   getters: {},

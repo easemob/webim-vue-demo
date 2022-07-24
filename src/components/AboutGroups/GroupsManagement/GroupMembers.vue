@@ -1,15 +1,18 @@
 <script setup>
-import { ref, toRefs, toRaw, computed, onMounted, watch } from 'vue'
+import { ref, toRefs, toRaw, computed, watch } from 'vue'
+import EaseIM from '@/IM/initwebsdk'
 import {
     CircleClose,
     Search,
     CircleCheckFilled,
     Select
 } from '@element-plus/icons-vue';
+/* 拼音排序好友列表 */
 import { useSortFriendItem } from '@/hooks'
+/* store */
 import store from '@/store'
 import _ from 'lodash';
-import EaseIM from '@/IM/initwebsdk';
+
 import defaultAvatar from '@/assets/images/avatar/theme2x.png';
 /* props */
 const props = defineProps({
@@ -17,22 +20,41 @@ const props = defineProps({
         type: Object,
         required: true,
         default: () => ({})
+    },
+    memberRole: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 })
 const { groupDetail } = toRefs(props)
-
+/*
+    * 此组件主要功能为邀请好友入群，
+    * 以及简单的管理群成员（移出群成员）。
+    * 中间涉及到一些权限判断，大量使用了 v-if 后续建议挪到计算属性中处理。
+ **/
+/* 当前登陆的id */
+const loginUserId = computed(() => EaseIM.conn.user)
 /* 数据获取 */
 //群组成员
 const groupMembers = computed(() => {
     return store.state.Groups.groupsInfos[groupDetail.value.id].members;
 })
-//黑名单列表
-//禁言列表
-
 
 /* 群成员操作相关 */
+const showGroupsMembersName = computed(() => {
+    return (item) => {
+        if (item.member) {
+            return item.member === loginUserId.value ? '我' : item.member
+        }
+        if (item.owner) {
+            return item.owner === loginUserId.value ? '我【群主】' : item.owner + '【群主】'
+        }
+    }
+})
+
+//待渲染的群成员
 let renderGroupMembers = ref(null);
-let insideGroupMembers = ref([])
 //选中要邀请的成员list
 const checkedInviteMembers = computed(() => {
     let list = _.values(renderGroupMembers.value)
@@ -41,9 +63,7 @@ const checkedInviteMembers = computed(() => {
 })
 //将原数据重新组建
 const sortedFriendList = computed(() => {
-    console.log('groupMembers.value', toRaw(groupMembers.value));
     const sourceData = _.cloneDeep(store.state.Contacts.friendList);
-    console.log('sourceData', sourceData)
     for (const key in sourceData) {
         if (Object.hasOwnProperty.call(sourceData, key)) {
             const v = sourceData[key];
@@ -58,54 +78,40 @@ const sortedFriendList = computed(() => {
 })
 //监听到选择群id变化重新进行赋值
 watch(() => groupDetail.value.id, (newVal) => {
-    console.log('>>>>>>监听到groupDetail的变化', newVal)
     renderGroupMembers.value = sortedFriendList.value;
-    insideGroupMembers.value = groupMembers.value;
 }, {
     immediate: true
 })
+
 //取消邀请
 const cancelCheck = (params) => {
-    console.log(params)
     renderGroupMembers.value[params].isChecked = false;
 }
 //移出群成员
-const removeTheMember = (params) => {
-    console.log('>>>>>>>>>移出该群成员', params)
+const removeTheMember = async (params) => {
     const { member } = params;
     let groupId = groupDetail.value && groupDetail.value.id
     store.dispatch('removeTheGroupMember', { username: member, groupId })
 }
 /* 完成操作 */
 const saveHandleMembers = async (params) => {
-    console.log('>>>>>>checkedInviteMembers')
     if (checkedInviteMembers.value && checkedInviteMembers.value.length) {
         let users = _.map(checkedInviteMembers.value, 'hxId')
         let groupId = groupDetail.value && groupDetail.value.id
         await store.dispatch('inviteUserJoinTheGroup', { users, groupId })
-
     }
-    // resetHandleMembers()
 }
-/* 取消操作 */
-const resetHandleMembers = (params) => {
-    console.log('>>>>>触发重置')
-    renderGroupMembers.value = null;
-    insideGroupMembers.value = []
 
-}
 /* 搜索逻辑 */
 //创建用户搜索部分
 let serachInputValue = ref('')
 let isShowSearchContent = ref(false) //控制检索内容显隐
 let searchResultList = ref([])
 const searchUsers = () => {
-    console.log('>>>>>serachInputValue.value ', serachInputValue.value === '')
     if (serachInputValue.value) {
         isShowSearchContent.value = true
         let resultArr = _.filter(sortedFriendList.value, (v) => v.keywords.includes(serachInputValue.value))
         searchResultList.value = resultArr
-        console.log('>>>>>>>执行搜索', resultArr)
     } else {
         return isShowSearchContent.value = false
     }
@@ -116,6 +122,7 @@ const searchUsers = () => {
 defineExpose({ saveHandleMembers })
 </script>
 <template>
+
     <div class="taboo_box">
         <div class="taboo_left">
             <!-- 搜索栏 -->
@@ -130,8 +137,8 @@ defineExpose({ saveHandleMembers })
                                 <el-avatar :src="defaultAvatar"></el-avatar>
                                 <b class="friend_list_username">{{ item.name }}</b>
                             </div>
-                            <el-icon class="checked_btn">
-
+                            <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
+                            <el-icon v-if="!groupDetail.public || memberRole" class="checked_btn">
                                 <template v-if="!item.exitTheGroup">
                                     <div
                                         @click="searchResultList[index].isChecked = !searchResultList[index].isChecked">
@@ -160,8 +167,8 @@ defineExpose({ saveHandleMembers })
                                         <el-avatar :src="defaultAvatar"></el-avatar>
                                         <b class="friend_list_username">{{ item.name }}</b>
                                     </div>
-
-                                    <el-icon class="checked_btn">
+                                    <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
+                                    <el-icon v-if="!groupDetail.public || memberRole" class="checked_btn">
                                         <template v-if="!item.exitTheGroup">
                                             <div @click="sortedItem[index].isChecked = !sortedItem[index].isChecked">
                                                 <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
@@ -181,16 +188,16 @@ defineExpose({ saveHandleMembers })
             </el-row>
         </div>
         <div class="taboo_right">
-            <el-row class="group_members_handle_box" v-if="insideGroupMembers.length">
-                <p class="title">群成员 {{ `${insideGroupMembers.length}/${groupDetail.maxusers || '500'}` }}</p>
+            <el-row class="group_members_handle_box" v-if="groupMembers.length">
+                <p class="title">群成员 {{ `${groupMembers.length}/${groupDetail.maxusers || '500'}` }}</p>
                 <el-col :span="24" class="now_exit_group_members">
-                    <div v-for="(item, index) in insideGroupMembers" :key="item.member">
+                    <div v-for="(item, index) in groupMembers" :key="item.member">
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
                                 <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{ item.member || item.owner + '【群主】' }}</b>
+                                <b class="friend_list_username">{{ showGroupsMembersName(item) }}</b>
                             </div>
-                            <el-icon class="checked_btn" @click="removeTheMember(item)">
+                            <el-icon v-if="memberRole" class="checked_btn" @click="removeTheMember(item)">
                                 <CircleClose />
                             </el-icon>
                         </div>
