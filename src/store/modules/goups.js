@@ -60,7 +60,7 @@ const Groups = {
       dispatch('fetchGoupsBlackList', groupid);
       dispatch('fetchGoupsMember', groupid);
       //普通群成员无权调用禁言列表
-      // dispatch('fetchGoupsMuteList', groupid);
+      dispatch('fetchGoupsMuteList', groupid);
     },
     //群管理员
     fetchGoupsAdmin: async ({ commit }, params) => {
@@ -98,6 +98,7 @@ const Groups = {
     },
     //群禁言列表
     fetchGoupsMuteList: async ({ dispatch, commit }, params) => {
+      console.log('>>>>>>>成功触发拉取禁言列表', params);
       let { data } = await EaseIM.conn.getGroupMuteList({ groupId: params });
       commit('SET_GOUPS_MUTE_LIST', { groupId: params, mutelist: data });
     },
@@ -123,14 +124,18 @@ const Groups = {
       }
       //通知更新群详情
       dispatch('getAssignGroupDetail', groupid);
+      //同步重新获取群组列表
+      dispatch('fetchGroupList', { pageNum: 1, pageSize: 500 });
     },
     // 设置/修改群组公告
     modifyGroupAnnouncement: async ({ dispatch, commit }, params) => {
+      //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
       await EaseIM.conn.updateGroupAnnouncement(params);
       dispatch('fetchAnnounment', params.groupId);
     },
     //邀请群成员
     inviteUserJoinTheGroup: async ({ dispatch, commit }, params) => {
+      //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
       const { users, groupId } = params;
       try {
         await EaseIM.conn.inviteUsersToGroup({ users, groupId });
@@ -152,6 +157,7 @@ const Groups = {
     },
     //移出群成员
     removeTheGroupMember: async ({ dispatch, commit }, params) => {
+      //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
       const { username, groupId } = params;
       try {
         await EaseIM.conn.removeGroupMember({ username, groupId });
@@ -170,6 +176,120 @@ const Groups = {
         });
         console.log('<<>>>>>>>>移出失败', error);
       }
+    },
+    //添加用户到黑名单
+    addMemberToBlackList: async ({ dispatch, commit }, params) => {
+      const { groupId, usernames } = params;
+      try {
+        //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
+        //   let option = {
+        //     groupId: "groupId",
+        //     usernames: ["user1", "user2"]
+        // };
+        await EaseIM.conn.blockGroupMembers({ groupId, usernames });
+        ElMessage({
+          message: `黑名单添加成功~`,
+          type: 'success',
+        });
+        //移出黑名单，还要调用拉取群组列表，原因为将群成员加入黑名单还会将其踢出群组。
+        dispatch('fetchGoupsMember', groupId);
+        //重新获取黑名单列表
+        dispatch('fetchGoupsBlackList', groupId);
+        //通知更新群详情
+        dispatch('getAssignGroupDetail', groupId);
+      } catch (error) {
+        console.log('>>>>>error', error);
+        ElMessage({
+          message: `黑名单添加失败，请稍后重试~`,
+          type: 'error',
+        });
+      }
+    },
+    //从黑名单中移出
+    removeTheMemberFromBlackList: async ({ dispatch, commit }, params) => {
+      const { groupId, usernames } = params;
+      try {
+        await EaseIM.conn.unblockGroupMembers({ groupId, usernames });
+        ElMessage({
+          message: `黑名单移除成功~`,
+          type: 'success',
+        });
+        //重新获取黑名单列表
+        dispatch('fetchGoupsBlackList', groupId);
+      } catch (error) {
+        console.log('>>>>>>黑名单移除失败');
+        ElMessage({
+          message: `黑名单移除失败，请稍后重试~`,
+          type: 'error',
+        });
+      }
+    },
+    //添加用户到禁言列表
+    addMemberToMuteList: async ({ dispatch, commit }, params) => {
+      console.log('>>>>>>调用了禁言操作', params);
+      const { groupId, usernames } = params;
+      //todo 此处处理方式为并发请求多次，后续SDK将支持传入数组形式，实现禁言多人
+      let requestTrack = [];
+
+      try {
+        usernames.length > 0 &&
+          usernames.map((userId) => {
+            requestTrack.push = EaseIM.conn.muteGroupMember({
+              groupId,
+              username: userId,
+              muteDuration: 886400000,
+            });
+          });
+        await Promise.all(requestTrack);
+        ElMessage({
+          message: '禁言成功~',
+          type: 'success',
+        });
+        setTimeout(() => {
+          dispatch('fetchGoupsMuteList', groupId);
+        }, 800);
+      } catch (error) {
+        ElMessage({
+          message: '禁言失败，请稍后重试~',
+          type: 'error',
+        });
+      }
+
+      // let option = {
+      //   groupId: 'groupId',
+      //   username: 'user',
+      //   muteDuration: 886400000, // 禁言时长，单位为毫秒。
+      // };
+      // await EaseIM.conn.muteGroupMember(option);
+    },
+    //从禁言列表中移出
+    removeTheMemberFromMuteList: async ({ dispatch, commit }, params) => {
+      const { groupId, usernames } = params;
+      //todo 此处处理方式为并发请求多次，后续SDK将支持传入数组形式，实现移出禁言多人
+      let requestTrack = [];
+      try {
+        usernames.length > 0 &&
+          usernames.map((userId) => {
+            requestTrack.push = EaseIM.conn.unmuteGroupMember({
+              groupId,
+              username: userId,
+            });
+          });
+        await Promise.all(requestTrack);
+        ElMessage({
+          message: '移除禁言成功~',
+          type: 'success',
+        });
+        setTimeout(() => {
+          dispatch('fetchGoupsMuteList', groupId);
+        }, 800);
+      } catch (error) {
+        ElMessage({
+          message: '移除禁言失败，请稍后重试~',
+          type: 'error',
+        });
+      }
+      console.log('>>>>>>调用了移出禁言操作', params);
     },
   },
   getters: {},

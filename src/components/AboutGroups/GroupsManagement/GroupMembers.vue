@@ -27,7 +27,7 @@ const props = defineProps({
         default: false
     }
 })
-const { groupDetail } = toRefs(props)
+const { groupDetail, memberRole } = toRefs(props)
 /*
     * 此组件主要功能为邀请好友入群，
     * 以及简单的管理群成员（移出群成员）。
@@ -198,7 +198,7 @@ defineExpose({ saveHandleMembers })
                                 <b class="friend_list_username">{{ showGroupsMembersName(item) }}</b>
                             </div>
                             <el-icon v-if="memberRole" class="checked_btn" @click="removeTheMember(item)">
-                                <CircleClose />
+                                <CircleClose class="checked_btn" />
                             </el-icon>
                         </div>
                     </div>
@@ -213,7 +213,7 @@ defineExpose({ saveHandleMembers })
                                     <b class="friend_list_username">{{ item.hxId }}</b>
                                 </div>
                                 <el-icon class="checked_btn" @click="cancelCheck(item.hxId)">
-                                    <CircleClose />
+                                    <CircleClose class="checked_btn" />
                                 </el-icon>
                             </div>
                         </div>
@@ -228,7 +228,6 @@ defineExpose({ saveHandleMembers })
 
 
 <style lang="scss" scoped>
-// 禁言
 .taboo_box {
     position: relative;
     display: flex;
