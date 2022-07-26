@@ -191,7 +191,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     </el-footer>
     <el-drawer v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP" v-model="drawer" :show-close="false"
       :close-on-click-modal="true" direction="rtl" :modal="true" size="280px">
-      <GroupsDetails :groupDetail="groupDetail" />
+      <GroupsDetails :nowGroupId="nowPickInfo.id" :groupDetail="groupDetail" />
     </el-drawer>
   </el-container>
 

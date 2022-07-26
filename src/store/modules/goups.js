@@ -112,7 +112,13 @@ const Groups = {
           groupName: content,
         };
         await EaseIM.conn.modifyGroup(option);
-        console.log('>>>>>>修改群组名称成功');
+        //更新本地缓存数据
+        commit('UPDATE_GROUP_INFOS', {
+          groupId: groupid,
+          type: 'groupName',
+          params: content,
+        });
+        commit('UPDATE_GROUP_LIST', { groupId: groupid, groupName: content });
       }
       //1 是修改群详情
       if (modifyType === 1) {
@@ -121,20 +127,22 @@ const Groups = {
           description: content,
         };
         await EaseIM.conn.modifyGroup(option);
+        //更新本地缓存数据
+        commit('UPDATE_GROUP_INFOS', {
+          groupId: groupid,
+          type: 'groupDescription',
+          params: content,
+        });
       }
-      //通知更新群详情
-      dispatch('getAssignGroupDetail', groupid);
-      //同步重新获取群组列表
-      dispatch('fetchGroupList', { pageNum: 1, pageSize: 500 });
     },
     // 设置/修改群组公告
-    modifyGroupAnnouncement: async ({ dispatch, commit }, params) => {
+    modifyGroupAnnouncement: async ({ dispatch }, params) => {
       //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
       await EaseIM.conn.updateGroupAnnouncement(params);
       dispatch('fetchAnnounment', params.groupId);
     },
     //邀请群成员
-    inviteUserJoinTheGroup: async ({ dispatch, commit }, params) => {
+    inviteUserJoinTheGroup: async ({ dispatch }, params) => {
       //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
       const { users, groupId } = params;
       try {
@@ -156,7 +164,7 @@ const Groups = {
       }
     },
     //移出群成员
-    removeTheGroupMember: async ({ dispatch, commit }, params) => {
+    removeTheGroupMember: async ({ dispatch }, params) => {
       //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
       const { username, groupId } = params;
       try {
@@ -178,7 +186,7 @@ const Groups = {
       }
     },
     //添加用户到黑名单
-    addMemberToBlackList: async ({ dispatch, commit }, params) => {
+    addMemberToBlackList: async ({ dispatch }, params) => {
       const { groupId, usernames } = params;
       try {
         //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
@@ -206,7 +214,7 @@ const Groups = {
       }
     },
     //从黑名单中移出
-    removeTheMemberFromBlackList: async ({ dispatch, commit }, params) => {
+    removeTheMemberFromBlackList: async ({ dispatch }, params) => {
       const { groupId, usernames } = params;
       try {
         await EaseIM.conn.unblockGroupMembers({ groupId, usernames });
@@ -225,7 +233,7 @@ const Groups = {
       }
     },
     //添加用户到禁言列表
-    addMemberToMuteList: async ({ dispatch, commit }, params) => {
+    addMemberToMuteList: async ({ dispatch }, params) => {
       console.log('>>>>>>调用了禁言操作', params);
       const { groupId, usernames } = params;
       //todo 此处处理方式为并发请求多次，后续SDK将支持传入数组形式，实现禁言多人
@@ -263,7 +271,7 @@ const Groups = {
       // await EaseIM.conn.muteGroupMember(option);
     },
     //从禁言列表中移出
-    removeTheMemberFromMuteList: async ({ dispatch, commit }, params) => {
+    removeTheMemberFromMuteList: async ({ dispatch }, params) => {
       const { groupId, usernames } = params;
       //todo 此处处理方式为并发请求多次，后续SDK将支持传入数组形式，实现移出禁言多人
       let requestTrack = [];

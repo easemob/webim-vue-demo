@@ -53,6 +53,36 @@ const Contacts = {
         console.log('>>>>>补充群详情', data);
       }
     },
+    //示例优化方向--减少群组详情的调用，转为更新本地群组详情数据
+    UPDATE_GROUP_INFOS: (state, payload) => {
+      console.log('>>>>>>开始修改', payload);
+      const { groupId, type, params } = payload;
+      //key(群id)，type（群详情对应要修改的字段）
+      if (state.groupList[groupId] && state.groupList[groupId].groupDetail) {
+        switch (type) {
+          //修改群名
+          case 'groupName':
+            {
+              console.log('>>>>>>进入群组名称修改');
+              state.groupList[groupId].groupDetail.name = params;
+            }
+            break;
+          case 'groupDescription':
+            {
+              state.groupList[groupId].groupDetail.description = params;
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    },
+    //示例优化方向--更改本地群组列表群名(或其他状态)
+    UPDATE_GROUP_LIST: (state, payload) => {
+      console.log('>>>>>更新本地群组列表群名');
+      const { groupId, groupName } = payload;
+      state.groupList[groupId].groupname = groupName;
+    },
   },
   actions: {
     //获取好友列表

@@ -10,18 +10,28 @@ import { ArrowRight, Edit, View } from '@element-plus/icons-vue';
 import store from '@/store';
 /* porps */
 const props = defineProps({
-    groupDetail: { type: Object, required: true, default: () => ({}) }
+    groupDetail: { type: Object, required: true, default: () => ({}) },
+    nowGroupId: {
+        type: String,
+        required: true,
+        default: ""
+    }
 })
 /* 
     * groupDetail（群详情接口返回的数据）
     * 主要包含群名称，群主id，群组desc，群组人数，群组禁言状态是否容许邀请...。
 **/
-const { groupDetail } = toRefs(props)
+const { nowGroupId } = toRefs(props)
+
+const groupDetail = computed(() => {
+    return store.state.Contacts.groupList[nowGroupId.value] && store.state.Contacts.groupList[nowGroupId.value].groupDetail
+})
+console.log('groupDetail', groupDetail.value)
 /* 群组展示相关核心数据获取 */
 const goupsInfos = computed(() => {
     return groupDetail.value.id && store.state.Groups.groupsInfos[groupDetail.value.id]
 })
-//权限判断（禁言列表的获取只有群主管理员）
+//权限判断（黑名单以及禁言列表的获取，只有群主管理员）
 const memberRole = computed(() => {
     let allGroupAdmin = []
     //群主
@@ -151,28 +161,31 @@ const editGroupName = async (type, oldGroupName) => {
             </div>
         </div>
         <el-divider style="margin: 0;" />
-        <!-- 黑名单 -->
-        <div class="group_list_card group_blacklist" v-if="goupsInfos.blacklist">
-            <div class="label">黑名单</div>
-            <div class="main">
-                <div class="member_count">{{ goupsInfos.blacklist.length || '暂无' }}
-                </div>
-                <div class="more_list" @click="alertManagementModal('groupsomelist', 1)">
-                    <ArrowRight />
-                </div>
-            </div>
-        </div>
-        <el-divider style="margin: 0;" />
-        <!-- 禁言名单 -->
-        <div class="group_list_card group_mutelist" v-if="goupsInfos.mutelist">
-            <div class="label">禁言名单</div>
-            <div class="main">
-                <div class="member_count">{{ goupsInfos.mutelist.length || '暂无' }}</div>
-                <div class="more_list" @click="alertManagementModal('groupsomelist', 2)">
-                    <ArrowRight />
+        <template v-if="memberRole">
+            <!-- 黑名单 -->
+            <div class="group_list_card group_blacklist" v-if="goupsInfos.blacklist">
+                <div class="label">黑名单</div>
+                <div class="main">
+                    <div class="member_count">{{ goupsInfos.blacklist.length || '暂无' }}
+                    </div>
+                    <div class="more_list" @click="alertManagementModal('groupsomelist', 1)">
+                        <ArrowRight />
+                    </div>
                 </div>
             </div>
-        </div>
+            <el-divider style="margin: 0;" />
+            <!-- 禁言名单 -->
+            <div class="group_list_card group_mutelist" v-if="goupsInfos.mutelist">
+                <div class="label">禁言名单</div>
+                <div class="main">
+                    <div class="member_count">{{ goupsInfos.mutelist.length || '暂无' }}</div>
+                    <div class="more_list" @click="alertManagementModal('groupsomelist', 2)">
+                        <ArrowRight />
+                    </div>
+                </div>
+            </div>
+        </template>
+
         <GroupsManagement ref="groupmanagement" :modalType="modalType" :groupModalTitle="groupModalTitle"
             :memberRole="memberRole" :groupDetail="groupDetail" />
     </div>
