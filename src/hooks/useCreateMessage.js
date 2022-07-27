@@ -1,6 +1,7 @@
 /* 构建消息体 */
 import { messageType } from '@/constant';
 const { ALL_MESSAGE_TYPE } = messageType;
+//创建消息options
 const createOptions = ({ msgType, msgOptions }) => {
   console.log('>>>msgType, msgOptions', msgType, msgOptions);
   let theMessageOptions = {
@@ -59,10 +60,35 @@ const createOptions = ({ msgType, msgOptions }) => {
         console.log('onFileUploadComplete');
       },
     },
+    [ALL_MESSAGE_TYPE.AUDIO]: {
+      chatType: msgOptions.chatType, // 会话类型，设置为单聊。
+      type: msgType, // 消息类型，设置语音。
+      to: msgOptions.id, // 消息接收方（用户 ID)。
+      file: msgOptions.file,
+      filename: msgOptions.file && msgOptions.file.filename,
+      length: msgOptions.length || 0,
+      ext:
+        {
+          ...msgOptions.ext,
+        } || {},
+      onFileUploadError: function () {
+        // 消息上传失败。
+        console.log('onFileUploadError');
+      },
+      onFileUploadProgress: function (progress) {
+        // 上传进度的回调。
+        console.log(progress);
+      },
+      onFileUploadComplete: function () {
+        // 消息上传成功。
+        console.log('onFileUploadComplete');
+      },
+    },
   };
   let backMsgOptions = theMessageOptions[msgType];
   return backMsgOptions;
 };
+//构建消息发送后的body体
 const createMsgBody = (msg) => {
   let pakerMsgBody = {
     [ALL_MESSAGE_TYPE.TEXT]: {
@@ -101,6 +127,18 @@ const createMsgBody = (msg) => {
       url: msg.url,
       filename: msg.filename,
       file_length: msg.ext && msg.ext.file_length,
+    },
+    [ALL_MESSAGE_TYPE.AUDIO]: {
+      chatType: msg.chatType,
+      type: msg.type,
+      ext: msg.ext || {},
+      from: msg.from || '',
+      id: msg.id,
+      time: msg.time,
+      to: msg.to,
+      url: msg.url,
+      length: msg.length,
+      filename: msg.filename,
     },
   };
   return pakerMsgBody[msg.type];

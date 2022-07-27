@@ -5,6 +5,8 @@ import { onClickOutside } from '@vueuse/core';
 import { emojis } from '@/constant';
 import { messageType } from '@/constant'
 import _ from 'lodash'
+/* 组件 */
+import CollectAudio from './suit/audio.vue'
 const store = useStore();
 const props = defineProps({
     nowPickInfo: {
@@ -15,6 +17,9 @@ const props = defineProps({
 })
 const { ALL_MESSAGE_TYPE } = messageType;
 const { nowPickInfo } = toRefs(props)
+
+
+/* 文本消息相关 */
 //emojis框展开
 const isShowEmojisBox = ref(false)
 const emojisBox = ref(null)
@@ -23,7 +28,29 @@ const showEmojisBox = () => {
     console.log('>>>>>展开模态框')
     isShowEmojisBox.value = true
 }
+//发送文本内容
+const textContent = ref('')
+const sendTextMessage = async () => {
+    let msgOptions = {
+        id: nowPickInfo.value.id,
+        chatType: nowPickInfo.value.chatType,
+        msg: textContent.value,
+    }
+    try {
+        await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.TEXT, msgOptions })
+        textContent.value = ""
+    } catch (error) {
+        console.log('>>>>>>>发送失败+++++++', error)
+    }
 
+}
+const addOneEmoji = (emoji) => {
+    console.log('>>>>>>emoji', emoji);
+    textContent.value = textContent.value + emoji
+
+}
+
+/* 图片消息相关 */
 //选择图片
 const uploadImgs = ref(null)
 const chooseImages = () => {
@@ -60,11 +87,13 @@ const sendImagesMessage = async () => {
 
 
 }
+/* 文件消息相关 */
 //选择文件
 const uploadFiles = ref(null);
 const chooseFiles = () => {
     uploadFiles.value.click()
 }
+//发送文件
 const sendFilesMessages = () => {
     let commonFile = uploadFiles.value.files[0];
     let file = {
@@ -82,14 +111,31 @@ const sendFilesMessages = () => {
     store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.FILE, msgOptions: _.cloneDeep(msgOptions) })
     uploadFiles.value.value = null;
 }
+/* 语音消息相关 */
 //展示录音对话框
+const isHttps = window.location.protocol === 'https' || window.location.hostname === 'localhost'
 const isShowRecordBox = ref(false)
 const recordBox = ref(null)
 onClickOutside(recordBox, () => { isShowRecordBox.value = false; })
 const showRecordBox = () => {
     isShowRecordBox.value = true
 }
-
+const sendAudioMessages = (audioData) => {
+    let file = {
+        url: EaseIM.utils.parseDownloadResponse(audioData.src),
+        filename: "录音",
+        filetype: ".amr",
+        data: audioData.src
+    };
+    console.log('>>>>>audioData', audioData, file)
+    let msgOptions = {
+        id: nowPickInfo.value.id,
+        chatType: nowPickInfo.value.chatType,
+        file: file,
+        length: audioData.length
+    }
+    store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.AUDIO, msgOptions: _.cloneDeep(msgOptions) })
+}
 //清除屏幕
 const clearScreen = () => {
     const key = nowPickInfo.value.id
@@ -104,27 +150,6 @@ const all_func = [
     { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen },
 ]
 
-//发送文本内容
-const textContent = ref('')
-const sendTextMessage = async () => {
-    let msgOptions = {
-        id: nowPickInfo.value.id,
-        chatType: nowPickInfo.value.chatType,
-        msg: textContent.value,
-    }
-    try {
-        await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.TEXT, msgOptions })
-        textContent.value = ""
-    } catch (error) {
-        console.log('>>>>>>>发送失败+++++++', error)
-    }
-
-}
-const addOneEmoji = (emoji) => {
-    console.log('>>>>>>emoji', emoji);
-    textContent.value = textContent.value + emoji
-
-}
 
 defineExpose({
     textContent
@@ -145,7 +170,8 @@ defineExpose({
         <input ref="uploadFiles" type="file" style="display:none" @change="sendFilesMessages" single>
         <!-- 录音采集框 -->
         <el-card ref="recordBox" v-if="isShowRecordBox" class="record_box" shadow="always">
-            录音采集框
+            <p v-if="!isHttps">由于浏览器限制,录音功能必须为https环境或者为localhost环境下使用！</p>
+            <CollectAudio v-else @sendAudioMessages="sendAudioMessages" />
         </el-card>
 
     </div>
@@ -233,5 +259,9 @@ defineExpose({
         transform: scale(1.2);
         color: #1B83F9;
     }
+}
+
+.record_box {
+    min-width: 100px;
 }
 </style>
