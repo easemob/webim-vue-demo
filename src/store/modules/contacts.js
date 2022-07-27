@@ -1,5 +1,5 @@
 import EaseIM from '@/IM/initwebsdk';
-import { useLocalStorage } from '@vueuse/core';
+// import { useLocalStorage } from '@vueuse/core';
 import { useSortFriendItem, usePresence } from '@/hooks';
 import _ from 'lodash';
 const Contacts = {
@@ -86,7 +86,7 @@ const Contacts = {
   },
   actions: {
     //获取好友列表
-    fetchFriendList: async ({ dispatch, commit }, params) => {
+    fetchFriendList: async ({ dispatch, commit }) => {
       let friendListData = {};
       try {
         //获取好友列表

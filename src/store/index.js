@@ -42,7 +42,7 @@ export default createStore({
       data[userId].hxId = userId;
       commit('SET_LOGIN_USER_INFO', data[userId]);
     },
-    handlePresenceChanges: ({ commit, dispatch }, status) => {
+    handlePresenceChanges: ({ commit }, status) => {
       const { userId, ext: statusType } = status || {};
       if (userId === EaseIM.conn.user) {
         commit(

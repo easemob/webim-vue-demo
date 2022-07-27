@@ -27,7 +27,6 @@ const props = defineProps({
     }
 })
 const dialogVisible = ref(false);
-const closeDialogVisible = () => dialogVisible.value = false
 defineExpose({
     dialogVisible
 })
