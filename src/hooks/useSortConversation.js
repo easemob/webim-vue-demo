@@ -1,10 +1,7 @@
 /* 会话列表排序 */
-import EaseIM from '@/IM/initwebsdk';
 import _ from 'lodash';
-import { messageType } from '@/constant';
-const { CHAT_TYPE } = messageType;
+
 export default function (conversationList) {
-  const loginUserId = EaseIM.conn.user;
   let newConversationObj = {};
   let toBeUpdateData = _.values(conversationList);
   let sortedArr = _.sortBy(toBeUpdateData, function (o) {
@@ -17,5 +14,4 @@ export default function (conversationList) {
     return (newConversationObj[key] = item);
   });
   return newConversationObj;
-  console.log('>>>newConversationObj>>', newConversationObj);
 }

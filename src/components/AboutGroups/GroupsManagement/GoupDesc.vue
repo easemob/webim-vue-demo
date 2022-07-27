@@ -14,7 +14,7 @@ const props = defineProps({
         default: () => ({})
     }
 })
-const { memberRole, groupDetail } = toRefs(props)
+const { groupDetail } = toRefs(props)
 const introduceRef = ref(null)
 const isEdit = ref(false)
 let groupDescValue = ref('');

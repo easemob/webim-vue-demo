@@ -2,8 +2,7 @@
 import { toRefs, computed } from 'vue'
 import { onLineStatus } from '@/constant'
 import { useStore } from 'vuex'
-/* store */
-const store = useStore()
+
 /* props */
 const props = defineProps({
     userStatus: {

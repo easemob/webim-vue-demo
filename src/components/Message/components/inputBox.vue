@@ -5,6 +5,7 @@ import { onClickOutside } from '@vueuse/core';
 import { emojis } from '@/constant';
 import { messageType } from '@/constant'
 import _ from 'lodash'
+import EaseIM from '@/IM/initwebsdk'
 /* 组件 */
 import CollectAudio from './suit/audio.vue'
 const store = useStore();

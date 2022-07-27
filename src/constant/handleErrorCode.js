@@ -1,6 +1,6 @@
-const ERROR_TYPE = {
-  login: 1,
-};
+// const ERROR_TYPE = {
+//   login: 1,
+// };
 
 export default {
   1: {

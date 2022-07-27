@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 import EaseIM from '@/IM/initwebsdk'
-import store from '@/store'
 let dialogVisible = ref(false)
 let isClearStorage = ref(false)
 

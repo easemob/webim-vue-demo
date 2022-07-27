@@ -7,7 +7,7 @@ import { useRoute } from "vue-router"
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { messageType } from '@/constant'
 /* 组件 */
-import UserStatus from '@/components/UserStatus'
+// import UserStatus from '@/components/UserStatus'
 /* 单人头像 */
 import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
@@ -25,7 +25,6 @@ const nowContactInfo = computed(() => {
     if (route.query.chatType === CHAT_TYPE.GROUP) {
         return store.state.Contacts.groupList[route.query.id]
     }
-    return
 })
 
 /* 单人黑名单状态的处理 */

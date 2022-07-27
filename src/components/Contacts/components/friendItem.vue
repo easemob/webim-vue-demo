@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useStore } from "vuex"
-import router from '@/router'
+// import router from '@/router'
 import { messageType } from '@/constant'
 /* 默认头像 */
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
@@ -12,7 +12,6 @@ const store = useStore()
 const classifyFriendList = computed(() => store.state.Contacts.sortedFriendList)
 //点击对应联系人跳转至用户详情页
 const { CHAT_TYPE } = messageType
-const emit = defineEmits(['toContacts'])
 </script>
 
 <template>

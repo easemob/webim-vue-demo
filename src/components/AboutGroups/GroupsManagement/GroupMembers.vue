@@ -73,11 +73,10 @@ const sortedFriendList = computed(() => {
             v.keywords = `${v.hxId && v.hxId}${v.nickname && v.nickname || ''}`
         }
     }
-    renderGroupMembers.value = sourceData
     return sourceData
 })
 //监听到选择群id变化重新进行赋值
-watch(() => groupDetail.value.id, (newVal) => {
+watch(() => groupDetail.value.id, () => {
     renderGroupMembers.value = sortedFriendList.value;
 }, {
     immediate: true
@@ -94,7 +93,7 @@ const removeTheMember = async (params) => {
     store.dispatch('removeTheGroupMember', { username: member, groupId })
 }
 /* 完成操作 */
-const saveHandleMembers = async (params) => {
+const saveHandleMembers = async () => {
     if (checkedInviteMembers.value && checkedInviteMembers.value.length) {
         let users = _.map(checkedInviteMembers.value, 'hxId')
         let groupId = groupDetail.value && groupDetail.value.id
@@ -131,7 +130,7 @@ defineExpose({ saveHandleMembers })
                     :prefix-icon="Search">
                 </el-input>
                 <div v-if="isShowSearchContent" class="search_friend_box_content">
-                    <div v-for="(item, index) in searchResultList">
+                    <div v-for="(item, index) in searchResultList" :key="item.name">
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
                                 <el-avatar :src="defaultAvatar"></el-avatar>
@@ -158,7 +157,8 @@ defineExpose({ saveHandleMembers })
             </div>
             <el-row style="height: 100%;margin-top: 5px;" v-if="renderGroupMembers">
                 <el-col :span="24" class="friend_user_list_box">
-                    <div v-for="(sortedItem, key, index) in useSortFriendItem(renderGroupMembers) ">
+                    <div v-for="(sortedItem, key, index) in useSortFriendItem(renderGroupMembers) "
+                        :key="sortedItem + index">
                         <div class="title">{{ key === ' ' ? '#' : key.toUpperCase() }}</div>
                         <template v-for="(item, index) in sortedItem" :key="item.name + index">
                             <div>

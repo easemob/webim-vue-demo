@@ -1,10 +1,9 @@
 <script setup>
 import { ref, computed, defineEmits } from 'vue';
 import { useStore } from 'vuex';
-import router from '@/router';
-import EaseIM from '@/IM/initwebsdk'
 import dateFormater from '@/utils/dateFormat'
 import { messageType } from '@/constant'
+import _ from 'lodash';
 /* 头像相关 */
 import informIcon from '@/assets/images/avatar/inform.png'
 /* store */
@@ -100,40 +99,43 @@ const deleteConversation = (itemKey) => {
     </li>
 
     <!-- 普通会话 -->
-    <li v-if="conversationList" v-for="( item, itemKey, index) in conversationList" :key="itemKey"
-      @click="toChatMessage(item, itemKey, index)"
-      :style="{ background: (checkedConverItemIndex === index ? '#E5E5E5' : '') }">
-      <el-popover popper-class="conversation_popover" placement="right-end" trigger="contextmenu" :show-arrow="false"
-        :offset="-10">
-        <template #reference>
-          <div class="session_list_item">
-            <div class="item_body item_left">
-              <div class="session_other_avatar">
+    <template v-if="conversationList">
+      <li v-for="( item, itemKey, index) in conversationList" :key="itemKey"
+        @click="toChatMessage(item, itemKey, index)"
+        :style="{ background: (checkedConverItemIndex === index ? '#E5E5E5' : '') }">
+        <el-popover popper-class="conversation_popover" placement="right-end" trigger="contextmenu" :show-arrow="false"
+          :offset="-10">
+          <template #reference>
+            <div class="session_list_item">
+              <div class="item_body item_left">
+                <div class="session_other_avatar">
 
-                <el-avatar
-                  :src="friendList[item.conversationKey] && friendList[item.conversationKey].avatarurl ? friendList[item.conversationKey].avatarurl : item.conversationInfo.avatarUrl">
-                </el-avatar>
+                  <el-avatar
+                    :src="friendList[item.conversationKey] && friendList[item.conversationKey].avatarurl ? friendList[item.conversationKey].avatarurl : item.conversationInfo.avatarUrl">
+                  </el-avatar>
+                </div>
+              </div>
+              <div class="item_body item_main">
+                <div class="name">{{ handleConversationName(item) }}</div>
+                <div class="last_msg_body">{{ item.fromInfo.fromId }}：{{ item.latestMessage.msg }}
+                </div>
+              </div>
+              <div class="item_body item_right">
+                <span class="time">{{ dateFormater('MM/DD/HH:mm', item.latestSendTime) }}</span>
+                <span class="unReadNum_box" v-if="item.unreadMessageNum >= 1">
+                  <sup class="unReadNum_count"
+                    v-text="item.unreadMessageNum >= 99 ? '99+' : item.unreadMessageNum"></sup>
+                </span>
               </div>
             </div>
-            <div class="item_body item_main">
-              <div class="name">{{ handleConversationName(item) }}</div>
-              <div class="last_msg_body">{{ item.fromInfo.fromId }}：{{ item.latestMessage.msg }}
-              </div>
-            </div>
-            <div class="item_body item_right">
-              <span class="time">{{ dateFormater('MM/DD/HH:mm', item.latestSendTime) }}</span>
-              <span class="unReadNum_box" v-if="item.unreadMessageNum >= 1">
-                <sup class="unReadNum_count" v-text="item.unreadMessageNum >= 99 ? '99+' : item.unreadMessageNum"></sup>
-              </span>
-            </div>
-          </div>
 
-        </template>
-        <template #default>
-          <div class="session_list_delete" @click="deleteConversation(itemKey)">删除会话</div>
-        </template>
-      </el-popover>
-    </li>
+          </template>
+          <template #default>
+            <div class="session_list_delete" @click="deleteConversation(itemKey)">删除会话</div>
+          </template>
+        </el-popover>
+      </li>
+    </template>
     <el-empty v-else description="暂无会话..." />
   </ul>
 </template>

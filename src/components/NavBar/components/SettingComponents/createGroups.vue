@@ -153,7 +153,7 @@ const resetTheModalStatus = () => {
                 </el-input>
                 <el-divider style="margin:12px 0;" />
                 <div v-if="isShowSearchContent" class="search_friend_box_content">
-                    <div v-for="(item, index) in searchResultList">
+                    <div v-for="(item, index) in searchResultList" :key="item.name">
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
                                 <el-avatar :src="defaultAvatar"></el-avatar>

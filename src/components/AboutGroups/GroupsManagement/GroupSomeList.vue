@@ -5,12 +5,10 @@ import {
     Search,
     Star,
     CircleCheckFilled,
-    Select
 } from '@element-plus/icons-vue';
 import getArrDifference from '@/utils/getArrdifference'
 import store from '@/store'
 import _ from 'lodash';
-import EaseIM from '@/IM/initwebsdk';
 import dateFormater from '@/utils/dateFormat'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png';
 const props = defineProps({
@@ -61,7 +59,6 @@ const sortedMembersList = computed(() => {
             v.isChecked = false;
         }
     }
-    renderBlackMembers.value = sourceData
     return sourceData
 })
 //操作群成员在黑名单中的状态变更
@@ -120,7 +117,6 @@ const sortedMuteMembersList = computed(() => {
             v.isChecked = false;
         }
     }
-    renderMuteMembers.value = sourceData
     return sourceData
 })
 //操作群成员在禁言列表中的状态变更
@@ -202,7 +198,6 @@ const searchUsers = () => {
             let resultArr = _.filter(sortedMuteMembersList.value, (v) => v.keywords.includes(serachInputValue.value))
             return searchResultList.value = resultArr
         }
-        console.log('>>>>>>>执行搜索', resultArr)
     } else {
         return isShowSearchContent.value = false
     }
@@ -211,7 +206,7 @@ const searchUsers = () => {
 
 //保存修改
 /* 完成操作 */
-const saveHandleMembers = async (params) => {
+const saveHandleMembers = async () => {
     if (groupModalTitle.value.type === 1) {
         //返回比对后的数组
         let difArr = getArrDifference(insideTheBlackList.value, blackMemberList.value)
@@ -246,7 +241,7 @@ defineExpose({ saveHandleMembers })
                     :prefix-icon="Search">
                 </el-input>
                 <div v-if="isShowSearchContent" class="search_friend_box_content">
-                    <div v-for="(item, index) in searchResultList">
+                    <div v-for="(item, index) in searchResultList" :key="item + index">
                         <!-- item.owner 代表是群主 列表中不展示群主只展示群成员 -->
                         <template v-if="!item.owner">
                             <div class="friend_user_list">

@@ -11,7 +11,6 @@ import dateFormater from '@/utils/dateFormat'
 /* 单人头像 */
 import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
-const store = useStore();
 const { CHAT_TYPE } = messageType
 const props = defineProps({
   searchType: {
