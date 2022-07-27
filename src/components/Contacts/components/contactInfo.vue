@@ -144,6 +144,11 @@ const toChatMessage = () => {
                     <el-button v-if="$route.query.chatType === CHAT_TYPE.GROUP" type="primary" size="large"
                         @click="toChatMessage">进入群聊
                     </el-button>
+                    <!-- todo 待调整为新的获取群组列表接口，直接可以获取当前登陆id所在群组的权限然后添加上该功能 -->
+                    <!--   <el-button v-if="$route.query.chatType === CHAT_TYPE.GROUP" type="danger" size="large">解散群组
+                    </el-button>
+                    <el-button v-if="$route.query.chatType === CHAT_TYPE.GROUP" type="danger" size="large">退出群组
+                    </el-button> -->
                 </div>
             </div>
         </el-main>

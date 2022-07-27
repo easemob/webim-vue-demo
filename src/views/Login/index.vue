@@ -20,10 +20,10 @@ const loginIM = async () => {
   if (resultStatus) {
     try {
       let { accessToken } = await Ease.conn.open({
-        user: username.value,
-        pwd: password.value,
+        user: username.value.toLowerCase(),
+        pwd: password.value.toLowerCase(),
       });
-      window.localStorage.setItem('loginUser', JSON.stringify({ user: username.value, accessToken: accessToken }))
+      window.localStorage.setItem(`EASEIM_${username.value}_loginUser`, JSON.stringify({ user: username.value, accessToken: accessToken }))
     } catch (error) {
       console.log('>>>>登陆失败', error);
       const { data: { extraInfo } } = error
