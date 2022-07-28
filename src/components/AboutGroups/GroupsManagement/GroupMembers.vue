@@ -129,7 +129,8 @@ defineExpose({ saveHandleMembers })
                 <el-input style="height: 36px;" v-model="serachInputValue" placeholder="搜索" @input="searchUsers"
                     :prefix-icon="Search">
                 </el-input>
-                <div v-if="isShowSearchContent" class="search_friend_box_content">
+
+                <el-scrollbar v-if="isShowSearchContent" class="search_friend_box_content" tag="div">
                     <div v-for="(item, index) in searchResultList" :key="item.name">
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
@@ -152,37 +153,40 @@ defineExpose({ saveHandleMembers })
                         </div>
                         <el-divider style="margin:12px 0;" />
                     </div>
-
-                </div>
+                </el-scrollbar>
             </div>
             <el-row style="height: 100%;margin-top: 5px;" v-if="renderGroupMembers">
                 <el-col :span="24" class="friend_user_list_box">
-                    <div v-for="(sortedItem, key, index) in useSortFriendItem(renderGroupMembers) "
-                        :key="sortedItem + index">
-                        <div class="title">{{ key === ' ' ? '#' : key.toUpperCase() }}</div>
-                        <template v-for="(item, index) in sortedItem" :key="item.name + index">
-                            <div>
-                                <div class="friend_user_list">
-                                    <div class="friend_user_list_left">
-                                        <el-avatar :src="defaultAvatar"></el-avatar>
-                                        <b class="friend_list_username">{{ item.name }}</b>
+                    <el-scrollbar>
+                        <div v-for="(sortedItem, key, index) in useSortFriendItem(renderGroupMembers) "
+                            :key="sortedItem + index">
+                            <div class="title">{{ key === ' ' ? '#' : key.toUpperCase() }}</div>
+                            <template v-for="(item, index) in sortedItem" :key="item.name + index">
+                                <div>
+                                    <div class="friend_user_list">
+                                        <div class="friend_user_list_left">
+                                            <el-avatar :src="defaultAvatar"></el-avatar>
+                                            <b class="friend_list_username">{{ item.name }}</b>
+                                        </div>
+                                        <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
+                                        <el-icon v-if="!groupDetail.public || memberRole" class="checked_btn">
+                                            <template v-if="!item.exitTheGroup">
+                                                <div
+                                                    @click="sortedItem[index].isChecked = !sortedItem[index].isChecked">
+                                                    <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
+                                                    <span v-else class="unChecked_icon"></span>
+                                                </div>
+                                            </template>
+                                            <template v-if="item.exitTheGroup">
+                                                <Select />
+                                            </template>
+                                        </el-icon>
                                     </div>
-                                    <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
-                                    <el-icon v-if="!groupDetail.public || memberRole" class="checked_btn">
-                                        <template v-if="!item.exitTheGroup">
-                                            <div @click="sortedItem[index].isChecked = !sortedItem[index].isChecked">
-                                                <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
-                                                <span v-else class="unChecked_icon"></span>
-                                            </div>
-                                        </template>
-                                        <template v-if="item.exitTheGroup">
-                                            <Select />
-                                        </template>
-                                    </el-icon>
                                 </div>
-                            </div>
-                        </template>
-                    </div>
+                            </template>
+                        </div>
+
+                    </el-scrollbar>
                 </el-col>
 
             </el-row>
@@ -191,32 +195,39 @@ defineExpose({ saveHandleMembers })
             <el-row class="group_members_handle_box" v-if="groupMembers.length">
                 <p class="title">群成员 {{ `${groupMembers.length}/${groupDetail.maxusers || '500'}` }}</p>
                 <el-col :span="24" class="now_exit_group_members">
-                    <div v-for="(item, index) in groupMembers" :key="item.member">
-                        <div class="friend_user_list">
-                            <div class="friend_user_list_left">
-                                <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{ showGroupsMembersName(item) }}</b>
-                            </div>
-                            <el-icon v-if="memberRole" class="checked_btn" @click="removeTheMember(item)">
-                                <CircleClose class="checked_btn" />
-                            </el-icon>
-                        </div>
-                    </div>
-                </el-col>
-                <template v-if="checkedInviteMembers.length > 0">
-                    <p class="title">邀请 {{ checkedInviteMembers.length }}</p>
-                    <el-col :span="24" class="checked_invite_members">
-                        <div v-for="(item, index) in checkedInviteMembers" :key="item.hxId">
+                    <el-scrollbar>
+                        <div v-for="(item, index) in groupMembers" :key="item.member">
                             <div class="friend_user_list">
                                 <div class="friend_user_list_left">
                                     <el-avatar :src="defaultAvatar"></el-avatar>
-                                    <b class="friend_list_username">{{ item.hxId }}</b>
+                                    <b class="friend_list_username">{{ showGroupsMembersName(item) }}</b>
                                 </div>
-                                <el-icon class="checked_btn" @click="cancelCheck(item.hxId)">
+                                <el-icon v-if="memberRole" class="checked_btn" @click="removeTheMember(item)">
                                     <CircleClose class="checked_btn" />
                                 </el-icon>
                             </div>
                         </div>
+                    </el-scrollbar>
+
+                </el-col>
+                <template v-if="checkedInviteMembers.length > 0">
+                    <p class="title">邀请 {{ checkedInviteMembers.length }}</p>
+
+                    <el-col :span="24" class="checked_invite_members">
+                        <el-scrollbar>
+                            <div v-for="(item, index) in checkedInviteMembers" :key="item.hxId">
+                                <div class="friend_user_list">
+                                    <div class="friend_user_list_left">
+                                        <el-avatar :src="defaultAvatar"></el-avatar>
+                                        <b class="friend_list_username">{{ item.hxId }}</b>
+                                    </div>
+                                    <el-icon class="checked_btn" @click="cancelCheck(item.hxId)">
+                                        <CircleClose class="checked_btn" />
+                                    </el-icon>
+                                </div>
+                            </div>
+                        </el-scrollbar>
+
                     </el-col>
                 </template>
             </el-row>

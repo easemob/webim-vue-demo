@@ -63,38 +63,42 @@ const handleClickBtn = ({ informData, index, type }) => {
 </script>
 <template>
   <el-container class="app_container">
-    <el-row class="inforom_details_box">
-      <el-col v-for="(item, index) in informList" :key="item.time">
-        <div class="inforom_details_time"><span class="time"> {{ dateFormater('MM-DD HH:mm', item.time) }}</span></div>
-        <el-card class="inforom_details_card" @click="clearUnread(item, index)" shadow="never">
-          <template #header>
-            <div class="card-header">
-              <span>{{ item.title }} {{ item.fromType === INFORM_FROM.GROUP &&
-                  `(${item.groupId})` || ''
-              }}</span>
-            </div>
-          </template>
-          <span v-if="item.untreated" class="badge"></span>
-          <div class="card-main">
-            <div class="text item">{{ item.from }}：{{ item.desc }} </div>
-            <el-dropdown v-if="item.isOpearationBtn && item.operationStatus < 1" trigger="click" split-button
-              type="primary" @command="handleClickBtn">
-              同意
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item :command="{ informData: item, index, type: 'agree' }">同意</el-dropdown-item>
-                  <el-dropdown-item :command="{ informData: item, index, type: 'refuse' }">拒绝</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-            <div v-if="item.operationStatus">
-              <span>{{ item.operationStatus === 1 ? '已同意' : item.operationStatus === 2 ? '已拒绝' : '' }}</span>
-            </div>
+    <div class="inforom_details_box">
+      <el-scrollbar tag="div">
+        <div v-for="(item, index) in informList" :key="item.time">
+          <div class="inforom_details_time"><span class="time"> {{ dateFormater('MM-DD HH:mm', item.time) }}</span>
           </div>
+          <el-card class="inforom_details_card" @click="clearUnread(item, index)" shadow="never">
+            <template #header>
+              <div class="card-header">
+                <span>{{ item.title }} {{ item.fromType === INFORM_FROM.GROUP &&
+                    `(${item.groupId})` || ''
+                }}</span>
+              </div>
+            </template>
+            <span v-if="item.untreated" class="badge"></span>
+            <div class="card-main">
+              <div class="text item">{{ item.from }}：{{ item.desc }} </div>
+              <el-dropdown v-if="item.isOpearationBtn && item.operationStatus < 1" trigger="click" split-button
+                type="primary" @command="handleClickBtn">
+                同意
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item :command="{ informData: item, index, type: 'agree' }">同意</el-dropdown-item>
+                    <el-dropdown-item :command="{ informData: item, index, type: 'refuse' }">拒绝</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+              <div v-if="item.operationStatus">
+                <span>{{ item.operationStatus === 1 ? '已同意' : item.operationStatus === 2 ? '已拒绝' : '' }}</span>
+              </div>
+            </div>
 
-        </el-card>
-      </el-col>
-    </el-row>
+          </el-card>
+        </div>
+      </el-scrollbar>
+
+    </div>
 
   </el-container>
 </template>
@@ -107,8 +111,9 @@ const handleClickBtn = ({ informData, index, type }) => {
   border-radius: 0 5px 5px 0;
 
   .inforom_details_box {
-    height: 100%;
+    margin-top: 60px;
     width: 100%;
+    height: calc(100% - 60px);
     overflow: auto;
 
     .inforom_details_time {

@@ -106,21 +106,24 @@ const messageData = computed(() => {
 })
 
 const messageContainer = ref(null);
+const innerRef = ref(null);
 const { arrivedState, } = useScroll(messageContainer)
 const { top } = toRefs(arrivedState)
 //控制消息滚动
 const scrollMessageList = (direction) => {
   //direction滚动方向 bottom向下滚动 normal向上滚动 
   nextTick(() => {
-    const messageNodeList = messageContainer.value.childNodes
-    const fistMsgElement = messageNodeList[2];
-    const lastMsgElement = messageNodeList[messageNodeList.length - 2];
+    // const messageNodeList = messageContainer.value
+    const messageNodeList = document.querySelectorAll('.messageList_box')
+    console.log('>>>>>>messageNodeList', messageNodeList)
+    const fistMsgElement = messageNodeList[0];
+    const lastMsgElement = messageNodeList[messageNodeList.length - 1];
     console.log('lastMsgElement', lastMsgElement);
     console.log('fistMsgElement', fistMsgElement);
     //直接滚动置底
     if (direction === 'bottom') {
-      // lastMsgElement.scrollIntoView(false);
-      messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+      lastMsgElement && lastMsgElement.scrollIntoView(true);
+      // messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
     }
     //保持当前的消息位于当前可视窗口
     if (direction === 'normal') {
@@ -128,6 +131,9 @@ const scrollMessageList = (direction) => {
       console.log('>>>>>开始保持当前位置并滚动');
     }
   })
+}
+const scroll = ({ scrollTop }) => {
+  console.log('scrollscrollscroll', scrollTop)
 }
 //监听到消息内容改变 置底滚动。
 watch(() => store.state.Message.messageList[nowPickInfo.value.id], (messageData) => {
@@ -141,9 +147,12 @@ watch(() => store.state.Message.messageList[nowPickInfo.value.id], (messageData)
 watch(nowPickInfo, () => nextTick(() => {
   if (Object.keys(nowPickInfo.value).length > 0) {
     console.log('>>>>>触发nowPickInfo让消息置底', Object.keys(nowPickInfo.value))
-    messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+    nextTick(() => {
+      messageContainer.value.setScrollTop(100000)
+    })
   }
 }))
+
 
 //消息重新编辑
 const inputBox = ref(null)
@@ -171,18 +180,21 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     </el-header>
 
     <el-main class="chat_message_main">
-      <div class="main_container" ref="messageContainer">
-        <div class="chat_message_tips">
-          <div class="load_more_msg">
-            <el-link v-if="!loadingHistoryMsg" :disabled="!isMoreHistoryMsg" :underline="false"
-              v-text="isMoreHistoryMsg ? '加载更多' : '已无更多'" @click="fechHistoryMessage()()">
-            </el-link>
-            <el-link v-else disabled>消息加载中...</el-link>
+      <el-scrollbar class="main_container" ref="messageContainer" @scroll="scroll">
+        <div class="innerRef">
+          <div class="chat_message_tips">
+            <div class="load_more_msg">
+              <el-link v-if="!loadingHistoryMsg" :disabled="!isMoreHistoryMsg" :underline="false"
+                v-text="isMoreHistoryMsg ? '加载更多' : '已无更多'" @click="fechHistoryMessage()()">
+              </el-link>
+              <el-link v-else disabled>消息加载中...</el-link>
+            </div>
           </div>
-
+          <MessageList :messageData="messageData" @scrollMessageList="scrollMessageList"
+            @reEditMessage="reEditMessage" />
         </div>
-        <MessageList :messageData="messageData" @scrollMessageList="scrollMessageList" @reEditMessage="reEditMessage" />
-      </div>
+      </el-scrollbar>
+
 
 
     </el-main>

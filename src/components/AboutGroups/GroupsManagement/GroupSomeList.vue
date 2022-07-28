@@ -241,25 +241,28 @@ defineExpose({ saveHandleMembers })
                     :prefix-icon="Search">
                 </el-input>
                 <div v-if="isShowSearchContent" class="search_friend_box_content">
-                    <div v-for="(item, index) in searchResultList" :key="item + index">
-                        <!-- item.owner 代表是群主 列表中不展示群主只展示群成员 -->
-                        <template v-if="!item.owner">
-                            <div class="friend_user_list">
-                                <div class="friend_user_list_left">
-                                    <el-avatar :src="defaultAvatar"></el-avatar>
-                                    <b class="friend_list_username">{{ item.member }}</b>
+                    <el-scrollbar>
+                        <div v-for="(item, index) in searchResultList" :key="item + index">
+                            <!-- item.owner 代表是群主 列表中不展示群主只展示群成员 -->
+                            <template v-if="!item.owner">
+                                <div class="friend_user_list">
+                                    <div class="friend_user_list_left">
+                                        <el-avatar :src="defaultAvatar"></el-avatar>
+                                        <b class="friend_list_username">{{ item.member }}</b>
+                                    </div>
+                                    <template v-if="memberRole">
+                                        <el-icon class="checked_btn"
+                                            @click="searchResultList[index].isChecked = !searchResultList[index].isChecked">
+                                            <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
+                                            <span v-else class="unChecked_icon"></span>
+                                        </el-icon>
+                                    </template>
                                 </div>
-                                <template v-if="memberRole">
-                                    <el-icon class="checked_btn"
-                                        @click="searchResultList[index].isChecked = !searchResultList[index].isChecked">
-                                        <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
-                                        <span v-else class="unChecked_icon"></span>
-                                    </el-icon>
-                                </template>
-                            </div>
-                            <el-divider style="margin:12px 0;" />
-                        </template>
-                    </div>
+                                <el-divider style="margin:12px 0;" />
+                            </template>
+                        </div>
+                    </el-scrollbar>
+
 
                 </div>
             </div>
@@ -275,25 +278,27 @@ defineExpose({ saveHandleMembers })
             <template v-if="groupModalTitle.type === 1">
                 <el-row style="height: 100%;margin-top: 5px;" v-if="renderBlackMembers">
                     <el-col :span="24" class="friend_user_list_box">
-                        <div v-for="(item, index) in renderBlackMembers" :key="item.member">
-                            <template v-if="!item.owner">
-                                <div class="friend_user_list">
-                                    <div class="friend_user_list_left">
-                                        <el-avatar :src="defaultAvatar"></el-avatar>
-                                        <b class="friend_list_username">{{ item.member }}</b>
-                                    </div>
-                                    <!-- 群主管理员级别才可操作邀请加入群组 -->
-                                    <template v-if="memberRole">
-                                        <el-icon class="checked_btn" @click="handleMembersToBlack(item)">
-                                            <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
-                                            <span v-else class="unChecked_icon"></span>
-                                        </el-icon>
-                                    </template>
+                        <el-scrollbar>
+                            <div v-for="(item, index) in renderBlackMembers" :key="item.member">
+                                <template v-if="!item.owner">
+                                    <div class="friend_user_list">
+                                        <div class="friend_user_list_left">
+                                            <el-avatar :src="defaultAvatar"></el-avatar>
+                                            <b class="friend_list_username">{{ item.member }}</b>
+                                        </div>
+                                        <!-- 群主管理员级别才可操作邀请加入群组 -->
+                                        <template v-if="memberRole">
+                                            <el-icon class="checked_btn" @click="handleMembersToBlack(item)">
+                                                <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
+                                                <span v-else class="unChecked_icon"></span>
+                                            </el-icon>
+                                        </template>
 
-                                </div>
-                                <el-divider style="margin:12px 0;" />
-                            </template>
-                        </div>
+                                    </div>
+                                    <el-divider style="margin:12px 0;" />
+                                </template>
+                            </div>
+                        </el-scrollbar>
                     </el-col>
                 </el-row>
             </template>
@@ -301,25 +306,27 @@ defineExpose({ saveHandleMembers })
             <template v-if="groupModalTitle.type === 2">
                 <el-row style="height: 100%;margin-top: 5px;" v-if="renderMuteMembers">
                     <el-col :span="24" class="friend_user_list_box">
-                        <div v-for="(item, index) in renderMuteMembers" :key="item.member">
-                            <template v-if="!item.owner">
-                                <div class="friend_user_list">
-                                    <div class="friend_user_list_left">
-                                        <el-avatar :src="defaultAvatar"></el-avatar>
-                                        <b class="friend_list_username">{{ item.member }}</b>
-                                    </div>
-                                    <!-- 群主管理员级别才可操作邀请加入群组 -->
-                                    <template v-if="memberRole">
-                                        <el-icon class="checked_btn" @click="handleMembersToMute(item)">
-                                            <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
-                                            <span v-else class="unChecked_icon"></span>
-                                        </el-icon>
-                                    </template>
+                        <el-scrollbar>
+                            <div v-for="(item, index) in renderMuteMembers" :key="item.member">
+                                <template v-if="!item.owner">
+                                    <div class="friend_user_list">
+                                        <div class="friend_user_list_left">
+                                            <el-avatar :src="defaultAvatar"></el-avatar>
+                                            <b class="friend_list_username">{{ item.member }}</b>
+                                        </div>
+                                        <!-- 群主管理员级别才可操作邀请加入群组 -->
+                                        <template v-if="memberRole">
+                                            <el-icon class="checked_btn" @click="handleMembersToMute(item)">
+                                                <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
+                                                <span v-else class="unChecked_icon"></span>
+                                            </el-icon>
+                                        </template>
 
-                                </div>
-                                <el-divider style="margin:12px 0;" />
-                            </template>
-                        </div>
+                                    </div>
+                                    <el-divider style="margin:12px 0;" />
+                                </template>
+                            </div>
+                        </el-scrollbar>
                     </el-col>
                 </el-row>
             </template>
@@ -330,18 +337,21 @@ defineExpose({ saveHandleMembers })
                 <el-row style="height: 100%;margin-top: 5px;overflow: auto">
                     <el-col :span="24" class="friend_user_list_box">
                         <template v-if="insideTheBlackList.length > 0">
-                            <div v-for="(item, index) in insideTheBlackList" :key="item">
-                                <div class="friend_user_list">
-                                    <div class="friend_user_list_left">
-                                        <el-avatar :src="defaultAvatar"></el-avatar>
-                                        <b class="friend_list_username">{{ item }}</b>
+                            <el-scrollbar>
+                                <div v-for="(item, index) in insideTheBlackList" :key="item">
+                                    <div class="friend_user_list">
+                                        <div class="friend_user_list_left">
+                                            <el-avatar :src="defaultAvatar"></el-avatar>
+                                            <b class="friend_list_username">{{ item }}</b>
+                                        </div>
+                                        <el-icon class="checked_btn" @click="deleteMembersFromBlack(item, index)">
+                                            <CircleClose class="checked_icon" />
+                                        </el-icon>
                                     </div>
-                                    <el-icon class="checked_btn" @click="deleteMembersFromBlack(item, index)">
-                                        <CircleClose class="checked_icon" />
-                                    </el-icon>
+                                    <el-divider style="margin:12px 0;" />
                                 </div>
-                                <el-divider style="margin:12px 0;" />
-                            </div>
+                            </el-scrollbar>
+
                         </template>
                         <template v-else>
                             <el-empty :image-size="200" description="暂无黑名单成员~" />
@@ -354,21 +364,24 @@ defineExpose({ saveHandleMembers })
                 <el-row style="height: 100%;margin-top: 5px;overflow: auto">
                     <el-col :span="24" class="friend_user_list_box">
                         <template v-if="insideTheMuteList.length > 0">
-                            <div v-for="(item, index) in insideTheMuteList" :key="item">
-                                <div class="friend_user_list">
-                                    <div class="friend_user_list_left">
-                                        <el-avatar :src="defaultAvatar"></el-avatar>
-                                        <b class="friend_list_username">{{ item.user }}</b>
-                                        <sup v-if="item.expire" style="font: size 7px;">【失效时间：{{
-                                                dateFormater('MM-DD-HH:mm', item.expire)
-                                        }}】</sup>
+                            <el-scrollbar>
+                                <div v-for="(item, index) in insideTheMuteList" :key="item">
+                                    <div class="friend_user_list">
+                                        <div class="friend_user_list_left">
+                                            <el-avatar :src="defaultAvatar"></el-avatar>
+                                            <b class="friend_list_username">{{ item.user }}</b>
+                                            <sup v-if="item.expire" style="font: size 7px;">【失效时间：{{
+                                                    dateFormater('MM-DD-HH:mm', item.expire)
+                                            }}】</sup>
+                                        </div>
+                                        <el-icon class="checked_btn" @click="deleteMembersFromMute(item, index)">
+                                            <CircleClose class="checked_icon" />
+                                        </el-icon>
                                     </div>
-                                    <el-icon class="checked_btn" @click="deleteMembersFromMute(item, index)">
-                                        <CircleClose class="checked_icon" />
-                                    </el-icon>
+                                    <el-divider style="margin:12px 0;" />
                                 </div>
-                                <el-divider style="margin:12px 0;" />
-                            </div>
+                            </el-scrollbar>
+
                         </template>
                         <template v-else>
                             <el-empty :image-size="200" description="暂无禁言成员~" />

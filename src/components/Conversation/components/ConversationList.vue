@@ -74,7 +74,8 @@ const deleteConversation = (itemKey) => {
 
 </script>
 <template>
-  <ul class="session_list" style="overflow: auto" @click="getItem">
+
+  <el-scrollbar class="session_list" style="overflow: auto" tag="ul">
     <li class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</li>
     <!-- 系统通知会话 -->
     <li v-if="JSON.stringify(informDetail.lastInformDeatail) !== '{}'" class="session_list_item"
@@ -137,7 +138,7 @@ const deleteConversation = (itemKey) => {
       </li>
     </template>
     <el-empty v-else description="暂无会话..." />
-  </ul>
+  </el-scrollbar>
 </template>
 
 <style lang="scss" scoped>

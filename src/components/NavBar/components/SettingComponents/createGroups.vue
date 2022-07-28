@@ -152,7 +152,7 @@ const resetTheModalStatus = () => {
                     :prefix-icon="Search">
                 </el-input>
                 <el-divider style="margin:12px 0;" />
-                <div v-if="isShowSearchContent" class="search_friend_box_content">
+                <el-scrollbar v-if="isShowSearchContent" class="search_friend_box_content" tag="div">
                     <div v-for="(item, index) in searchResultList" :key="item.name">
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
@@ -167,24 +167,25 @@ const resetTheModalStatus = () => {
                         </div>
                         <el-divider style="margin:12px 0;" />
                     </div>
-
-                </div>
+                </el-scrollbar>
             </el-col>
             <el-col class="create_modal_main">
-                <div v-for="(item, index) in renderFriendList" :key="item.name + index">
-                    <div class="friend_user_list">
-                        <div class="friend_user_list_left">
-                            <el-avatar :src="defaultAvatar"></el-avatar>
-                            <b class="friend_list_username">{{ item.name }}</b>
+                <el-scrollbar>
+                    <div v-for="(item, index) in renderFriendList" :key="item.name + index">
+                        <div class="friend_user_list">
+                            <div class="friend_user_list_left">
+                                <el-avatar :src="defaultAvatar"></el-avatar>
+                                <b class="friend_list_username">{{ item.name }}</b>
+                            </div>
+                            <el-icon class="checked_btn"
+                                @click="renderFriendList[index].isChecked = !renderFriendList[index].isChecked">
+                                <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
+                                <span v-else class="unChecked_icon"></span>
+                            </el-icon>
                         </div>
-                        <el-icon class="checked_btn"
-                            @click="renderFriendList[index].isChecked = !renderFriendList[index].isChecked">
-                            <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
-                            <span v-else class="unChecked_icon"></span>
-                        </el-icon>
+                        <el-divider style="margin:12px 0;" />
                     </div>
-                    <el-divider style="margin:12px 0;" />
-                </div>
+                </el-scrollbar>
 
             </el-col>
             <el-col class="create_friend_footer">
@@ -193,7 +194,7 @@ const resetTheModalStatus = () => {
             </el-col>
         </el-row>
         <el-row v-else>
-            <el-form ref="groupCreate" :mode="groupCreateForm" label-position="left" style="width:100%">
+            <el-form class="create_groups__main" ref="groupCreate" :mode="groupCreateForm" label-position="left">
                 <el-form-item label="群名称">
                     <el-input class="create_groups" v-model="groupCreateForm.groupname" size="large" />
                 </el-form-item>
@@ -310,6 +311,11 @@ const resetTheModalStatus = () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.create_groups__main {
+    width: 100%;
+    padding: 0 59px;
 }
 
 .create_groups_btn {

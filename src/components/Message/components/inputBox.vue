@@ -161,10 +161,10 @@ defineExpose({
         <span v-for="iconItem in all_func" :class="['iconfont', iconItem.className]" :key="iconItem.className"
             :style="iconItem.style" :title="iconItem.title" @click.stop="iconItem.methodName"></span>
         <!-- 表情框 -->
-        <el-card ref="emojisBox" v-if="isShowEmojisBox" class="emojis_box" shadow="always">
+        <el-scrollbar ref="emojisBox" v-if="isShowEmojisBox" class="emojis_box" tag="div">
             <span class="emoji" v-for="(emoji, index) in emojis" :key="index" @click="addOneEmoji(emoji)">{{ emoji
             }}</span>
-        </el-card>
+        </el-scrollbar>
         <!-- 图片附件choose -->
         <input ref="uploadImgs" type="file" style="display:none" @change="sendImagesMessage" single accept="image/*">
         <!-- 文件附件choose -->
@@ -202,20 +202,18 @@ defineExpose({
 
     .emojis_box {
         position: absolute;
-        left: 0;
-        top: -160px;
-        width: 300px;
+        left: 15px;
+        top: -180px;
+        width: 330px;
         height: 150px;
+        border-radius: 5px;
         overflow-y: scroll;
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: space-between;
-        overflow: -moz-scrollbars-none;
-
-        &::-webkit-scrollbar {
-            width: 0 !important
-        }
+        background: #FFF;
+        padding: 10px;
 
         .emoji {
             display: inline-block;
