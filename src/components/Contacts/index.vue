@@ -51,10 +51,11 @@ const informDetail = computed(() => {
 
 <template>
   <el-container style="height: 100%;">
+
     <el-aside class="contacts_box">
       <SearchInput :searchType="'contacts'" :searchData="searchData" @toContacts="toContacts" />
+      <el-scrollbar class="contacts_collapse" tag="div" :always="false">
 
-      <div class="contacts_collapse">
         <div class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</div>
         <el-collapse>
           <el-collapse-item title="系统通知">
@@ -89,7 +90,9 @@ const informDetail = computed(() => {
             <GroupItem @toContacts="toContacts" />
           </el-collapse-item>
         </el-collapse>
-      </div>
+
+      </el-scrollbar>
+
     </el-aside>
     <el-main class="contacts_infors_main_box">
       <router-view></router-view>

@@ -110,7 +110,9 @@ const toChatMessage = () => {
                     </div>
                     <div class="name">
                         <p v-if="$route.query.chatType === CHAT_TYPE.SINGLE">
-                            {{ nowContactInfo.nickname ? nowContactInfo.nickname : nowContactInfo.hxId }}</p>
+                            {{ nowContactInfo.nickname ? `${nowContactInfo.nickname}(${nowContactInfo.hxId})` :
+                                    nowContactInfo.hxId
+                            }}</p>
                         <p v-if="$route.query.chatType === CHAT_TYPE.GROUP">
                             {{ nowContactInfo.groupname ? `${nowContactInfo.groupname}(${nowContactInfo.groupid})` :
                                     nowContactInfo.groupid

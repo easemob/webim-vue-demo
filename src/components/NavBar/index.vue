@@ -13,6 +13,7 @@ import UserInfoCard from './components/UserInfoCard.vue';
 import UserOnlineStatusCard from './components/UserOnlineStatusCard.vue';
 import SettingComponents from './components/SettingComponents'
 import Logout from './components/Logout.vue';
+import EditUserInfoCard from './components/EditUserInfoCard.vue'
 /* constants */
 import { onLineStatus } from '@/constant';
 /* vueUse */
@@ -76,6 +77,7 @@ const showInputModal = (type) => {
 }
 
 /* 更多操作部分more_settings */
+const edituserinfo = ref(null)
 const logout = ref(null)
 
 
@@ -165,7 +167,7 @@ const logout = ref(null)
       <template #default>
         <div class="setting_fun_list">
           <!-- 用户信息查看编辑 -->
-          <div class="func_item">
+          <div class="func_item" @click="edituserinfo.dialogVisible = true">
             <span class="settting_fun_icon">
               <img :src="applyAddFriendIcon" alt="">
             </span>
@@ -186,10 +188,15 @@ const logout = ref(null)
 
 
   </div>
-  <!-- 群组新建 申请入群 添加好友模块 -->
-  <SettingComponents ref="settingComp" :modalType="modalType" />
-  <!-- 退出登陆模块 -->
-  <Logout ref="logout" />
+  <div class="components">
+    <!-- 群组新建 申请入群 添加好友模块 -->
+    <SettingComponents ref="settingComp" :modalType="modalType" />
+    <!-- 用户属性编辑 -->
+    <EditUserInfoCard ref="edituserinfo" />
+    <!-- 退出登陆模块 -->
+    <Logout ref="logout" />
+  </div>
+
 </template>
 
 <style lang="scss" scoped>
@@ -374,5 +381,23 @@ const logout = ref(null)
   width: 100%;
   height: 1px;
   background: #000;
+}
+
+.components {
+  ::v-deep .edit_userinfo_diglog {
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  ::v-deep .edit_userinfo_diglog>.el-dialog__header {
+    padding: 0;
+    margin-right: 0px;
+  }
+
+  ::v-deep .edit_userinfo_diglog>.el-dialog__body {
+    padding: 0;
+    border-radius: 4px;
+  }
+
 }
 </style>

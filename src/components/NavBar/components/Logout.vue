@@ -30,7 +30,7 @@ defineExpose({
 })
 </script>
 <template>
-    <el-dialog v-model="dialogVisible" title="退出登陆" width="30%" :destroy-on-close="true">
+    <el-dialog v-model="dialogVisible" title="退出登陆" width="480px" :destroy-on-close="true">
         <span class="logout_title">确认退出当前账号？</span>
         <br />
         <span class="logout_clear">
@@ -38,8 +38,8 @@ defineExpose({
         </span>
         <template #footer>
             <span class="dialog-footer">
-                <el-button @click="dialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="logoutTheUser">确认退出</el-button>
+                <el-button style="width:113.6px;" @click="dialogVisible = false">取消</el-button>
+                <el-button style="width:113.6px;" type="primary" @click="logoutTheUser">确认退出</el-button>
             </span>
         </template>
     </el-dialog>
