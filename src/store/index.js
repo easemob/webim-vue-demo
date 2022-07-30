@@ -8,6 +8,7 @@ export default createStore({
   state: {
     loginState: false,
     networkStatus: true,
+    isShowWarningTips: true,
     loginUserInfo: {
       hxId: '',
       nickname: '',
@@ -21,6 +22,7 @@ export default createStore({
     loginUserOnlineStatus: (state) => state.loginUserOnlineStatus,
   },
   mutations: {
+    CLOSE_WARNING_TIPS: (state) => (state.isShowWarningTips = false),
     CHANGE_LOGIN_STATUS: (state, status) => {
       state.loginState = status;
     },

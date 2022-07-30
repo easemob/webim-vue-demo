@@ -7,7 +7,7 @@ import router from '@/router';
 /* lodash */
 import _ from 'lodash';
 /* icon */
-import { Plus, SwitchButton } from '@element-plus/icons-vue';
+import { Plus } from '@element-plus/icons-vue';
 /* 组件 */
 import MiniInfoCard from './components/AboutUserInfoCard/MiniInfoCard.vue';
 import UserOnlineStatusCard from './components/UserOnlineStatusCard.vue';

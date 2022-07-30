@@ -1,9 +1,11 @@
 <script setup>
 import { ref, watch, toRefs, nextTick, computed } from 'vue'
+import _ from 'lodash';
 import { useStore } from 'vuex'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
-import { messageType } from '@/constant'
+import { messageType, wannigText } from '@/constant'
 import { useScroll } from '@vueuse/core'
+import { Close } from '@element-plus/icons-vue';
 /* 组件 */
 import MessageList from './components/messageList.vue'
 import InputBox from './components/inputBox.vue'
@@ -15,10 +17,17 @@ const store = useStore()
 const route = useRoute()
 const drawer = ref(false) //抽屉显隐
 const { CHAT_TYPE } = messageType
+const { EASEIM_HINT, SWINDLER_GO_DIE } = wannigText
 const nowPickInfo = ref({});
 const friendList = computed(() => store.state.Contacts.friendList)
 const groupList = computed(() => store.state.Contacts.groupList)
 
+/* warningTips */
+const isShowWarningTips = computed(() => store.state.isShowWarningTips)
+const randomTips = computed(() => {
+  return _.toString(_.sampleSize(SWINDLER_GO_DIE, 1))
+})
+const closeWarningTips = () => store.commit('CLOSE_WARNING_TIPS')
 /* userInfo */
 //获取路由ID对应的信息
 const getIdInfo = async ({ id, chatType }) => {
@@ -178,8 +187,18 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
 
       </span>
     </el-header>
+    <div v-if="isShowWarningTips" class="easeim_save_tips">
+      <p>{{ EASEIM_HINT }}</p>
+      <p>【防骗提示】：{{ randomTips }}</p>
+      <span class="easeim_close_tips" @click="closeWarningTips">
+        <el-icon>
+          <Close />
+        </el-icon>
+      </span>
 
+    </div>
     <el-main class="chat_message_main">
+
       <el-scrollbar class="main_container" ref="messageContainer" @scroll="scroll">
         <div class="innerRef">
           <div class="chat_message_tips">
@@ -267,6 +286,26 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     &:hover {
       transform: scale(1.1);
     }
+  }
+}
+
+.easeim_save_tips {
+  position: relative;
+  padding: 12px 20px;
+  background-color: #FFF4E6;
+  color: #ff8c39;
+  line-height: 18px;
+  font-family: PingFang SC;
+  font-style: normal;
+  font-weight: 400;
+  text-align: justify;
+  font-size: 12px;
+  border: none;
+
+  .easeim_close_tips {
+    position: absolute;
+    right: 10px;
+    top: 10px;
   }
 }
 
