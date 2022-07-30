@@ -18,8 +18,12 @@ const Conversation = {
         {}
       );
     },
+    //清空系统通知
+    CLEAR_INFORM_LIST: (state) => {
+      state.informDetail = [];
+    },
     //更新系统通知
-    UPDATE_INFOEM_LIST: (state, informBody) => {
+    UPDATE_INFORM_LIST: (state, informBody) => {
       const toBeUpdateInform = _.assign([], state.informDetail);
       let _index = toBeUpdateInform.findIndex(
         (v) => v.from === informBody.from
@@ -65,7 +69,7 @@ const Conversation = {
     createNewInform: ({ commit }, params) => {
       const { fromType, informContent } = params;
       let result = useInform(fromType, informContent);
-      commit('UPDATE_INFOEM_LIST', result);
+      commit('UPDATE_INFORM_LIST', result);
     },
 
     //收集会话依赖数据

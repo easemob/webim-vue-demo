@@ -4,6 +4,7 @@ import { useStore } from 'vuex';
 import EaseIM from '@/IM/initwebsdk';
 import dateFormater from '@/utils/dateFormat';
 import { informType } from '@/constant';
+import { Delete } from '@element-plus/icons-vue';
 const store = useStore()
 const { INFORM_FROM } = informType
 const informList = computed(() => store.state.Conversation.informDetail)
@@ -13,11 +14,11 @@ const clearUnread = (inform, index) => {
   if (inform.untreated) {
     store.commit('CLEAR_UNTREATED_STATUS', index)
   }
-
 }
+//清空所有通知
+const clearAllInform = () => store.commit('CLEAR_INFORM_LIST')
 
-
-
+//处理申请
 const handleClickBtn = ({ informData, index, type }) => {
   console.log('handleClick', informData)
   const loginUserId = EaseIM.conn.user;
@@ -64,6 +65,18 @@ const handleClickBtn = ({ informData, index, type }) => {
 <template>
   <el-container class="app_container">
     <div class="inforom_details_box">
+      <div class="inforom_details_box_header">
+        <div class="clear_inforom">
+          <el-popconfirm title="清空当前所有通知?" @confirm="clearAllInform">
+            <template #reference>
+              <el-icon>
+                <Delete />
+              </el-icon>
+            </template>
+          </el-popconfirm>
+        </div>
+
+      </div>
       <el-scrollbar tag="div">
         <div v-for="(item, index) in informList" :key="item.time">
           <div class="inforom_details_time"><span class="time"> {{ dateFormater('MM-DD HH:mm', item.time) }}</span>
@@ -111,10 +124,24 @@ const handleClickBtn = ({ informData, index, type }) => {
   border-radius: 0 5px 5px 0;
 
   .inforom_details_box {
-    margin-top: 60px;
     width: 100%;
     height: calc(100% - 60px);
-    overflow: auto;
+
+    .inforom_details_box_header {
+      height: 60px;
+      width: 100%;
+      font-size: 20px;
+
+      .clear_inforom {
+        float: right;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 80px;
+        height: 100%;
+
+      }
+    }
 
     .inforom_details_time {
       width: 100%;
