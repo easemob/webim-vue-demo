@@ -9,11 +9,11 @@ import _ from 'lodash';
 /* icon */
 import { Plus, SwitchButton } from '@element-plus/icons-vue';
 /* 组件 */
-import UserInfoCard from './components/UserInfoCard.vue';
+import MiniInfoCard from './components/AboutUserInfoCard/MiniInfoCard.vue';
 import UserOnlineStatusCard from './components/UserOnlineStatusCard.vue';
 import SettingComponents from './components/SettingComponents'
 import Logout from './components/Logout.vue';
-import EditUserInfoCard from './components/EditUserInfoCard.vue'
+import EditUserInfoCard from './components/AboutUserInfoCard/EditUserInfoCard.vue'
 /* constants */
 import { onLineStatus } from '@/constant';
 /* vueUse */
@@ -98,7 +98,7 @@ const logout = ref(null)
     </el-popover>
   </div>
   <!-- 用户个人信息卡片 -->
-  <UserInfoCard ref="changeUserInfoCard" v-show="isShowUserInfoCard" />
+  <MiniInfoCard ref="changeUserInfoCard" v-show="isShowUserInfoCard" />
   <!-- 去往会话 -->
   <div class="chat_converation chat_icon_box" @click="changeSkipRouterName('conversation')">
     <div class="img_box">
@@ -169,16 +169,48 @@ const logout = ref(null)
           <!-- 用户信息查看编辑 -->
           <div class="func_item" @click="edituserinfo.dialogVisible = true">
             <span class="settting_fun_icon">
-              <img :src="applyAddFriendIcon" alt="">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <mask id="mask0_358_22978" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="1" y="13" width="18"
+                  height="7">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M1.66693 13.9138H18.2035V19.1663H1.66693V13.9138Z"
+                    fill="white" />
+                </mask>
+                <g mask="url(#mask0_358_22978)">
+                  <path fill-rule="evenodd" clip-rule="evenodd"
+                    d="M3.9029 15.1638C3.395 15.1638 2.98272 15.5563 2.98272 16.038V17.0422C2.98272 17.5247 3.395 17.9163 3.9029 17.9163H15.9669C16.4748 17.9163 16.888 17.5247 16.888 17.0422V16.038C16.888 15.5563 16.4748 15.1638 15.9669 15.1638H3.9029ZM15.9669 19.1663H3.9029C2.66956 19.1663 1.66693 18.2138 1.66693 17.0422V16.038C1.66693 14.8672 2.66956 13.9138 3.9029 13.9138H15.9669C17.2003 13.9138 18.2038 14.8672 18.2038 16.038V17.0422C18.2038 18.2138 17.2003 19.1663 15.9669 19.1663V19.1663Z"
+                    fill="#333333" />
+                </g>
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M17.247 11.5199H13.5864C13.4466 11.5199 13.3334 11.3991 13.3334 11.2499C13.3334 11.1008 13.4466 10.9799 13.5864 10.9799H17.247C17.3868 10.9799 17.5 11.1008 17.5 11.2499C17.5 11.3991 17.3868 11.5199 17.247 11.5199"
+                  fill="#333333" />
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M13.6838 11.0833C13.6128 11.0833 13.5552 11.1483 13.5552 11.2283C13.5552 11.3091 13.6128 11.3741 13.6838 11.3741H17.1496C17.2206 11.3741 17.2783 11.3091 17.2783 11.2283C17.2783 11.1483 17.2206 11.0833 17.1496 11.0833H13.6838ZM17.1496 11.6233H13.6838C13.4901 11.6233 13.3334 11.4466 13.3334 11.2283C13.3334 11.0108 13.4901 10.8333 13.6838 10.8333H17.1496C17.3433 10.8333 17.5 11.0108 17.5 11.2283C17.5 11.4466 17.3433 11.6233 17.1496 11.6233V11.6233Z"
+                  fill="#333333" />
+                <mask id="mask1_358_22978" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="1" y="1" width="13"
+                  height="13">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M1.66669 1.54346H13.109V13.2855H1.66669V1.54346Z"
+                    fill="white" />
+                </mask>
+                <g mask="url(#mask1_358_22978)">
+                  <path fill-rule="evenodd" clip-rule="evenodd"
+                    d="M7.38784 2.87655C4.97553 2.87655 3.01284 4.9121 3.01284 7.41432C3.01284 9.91655 4.97553 11.9521 7.38784 11.9521C9.80015 11.9521 11.7628 9.91655 11.7628 7.41432C11.7628 4.9121 9.80015 2.87655 7.38784 2.87655M7.38784 13.2854C4.23335 13.2854 1.66669 10.6517 1.66669 7.41432C1.66669 4.17699 4.23335 1.54321 7.38784 1.54321C10.5432 1.54321 13.109 4.17699 13.109 7.41432C13.109 10.6517 10.5432 13.2854 7.38784 13.2854"
+                    fill="#333333" />
+                </g>
+              </svg>
             </span>
             <span class="setting_fun_text">用户信息</span>
           </div>
           <!-- 退出登陆 -->
           <div class="func_item" @click="logout.dialogVisible = true">
             <span class="settting_fun_icon">
-              <el-icon>
-                <SwitchButton />
-              </el-icon>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M6.02125 4.18042C3.90653 5.49657 2.5 7.84403 2.5 10.5156C2.5 14.6507 5.85404 18 9.99496 18C14.1359 18 17.4899 14.6507 17.4899 10.5156C17.4899 7.85386 16.0932 5.51621 13.9982 4.19024"
+                  stroke="#333333" stroke-width="1.4" stroke-miterlimit="10" stroke-linecap="round" />
+                <path d="M10.054 2V8.87542" stroke="#333333" stroke-width="1.4" stroke-miterlimit="10"
+                  stroke-linecap="round" />
+              </svg>
+
             </span>
             <span class="setting_fun_text">退出登陆</span>
           </div>

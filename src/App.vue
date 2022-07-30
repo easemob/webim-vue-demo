@@ -58,7 +58,7 @@ const fetchGroupList = () => {
   // if (Object.values(JSON.parse(value)).length > 0) return
   const pageParams = {
     pageNum: 1,
-    pageSize: 500,
+    pageSize: 20,
   }
   store.dispatch('fetchGroupList', pageParams)
 }

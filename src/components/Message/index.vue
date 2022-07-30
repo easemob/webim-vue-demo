@@ -133,7 +133,7 @@ const scrollMessageList = (direction) => {
   })
 }
 const scroll = ({ scrollTop }) => {
-  console.log('scrollscrollscroll', scrollTop)
+  // console.log('scrollscrollscroll', scrollTop)
 }
 //监听到消息内容改变 置底滚动。
 watch(() => store.state.Message.messageList[nowPickInfo.value.id], (messageData) => {
@@ -277,7 +277,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   .main_container {
     padding: 0 20px;
     height: 100%;
-    overflow-y: scroll;
+    // overflow-y: scroll;
 
     .chat_message_tips {
       margin-top: 5px;

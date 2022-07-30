@@ -29,7 +29,7 @@ const props = defineProps({
 const emit = defineEmits(['scrollMessageList', 'reEditMessage'])
 const { messageData } = toRefs(props);
 /* constant */
-const { ALL_MESSAGE_TYPE } = messageType
+const { ALL_MESSAGE_TYPE, CUSTOM_TYPE } = messageType
 /* login hxId */
 const loginUserId = EaseIM.conn.user;
 
@@ -174,6 +174,25 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                             <a class="file_download" :href="msgBody.url" download>点击下载</a>
                         </div>
                         <span class="iconfont icon-wenjian"></span>
+                    </div>
+                    <!-- 自定义类型消息 -->
+                    <div v-if="msgBody.type === ALL_MESSAGE_TYPE.CUSTOM" class="message_box_content_custom">
+                        <template v-if="msgBody.customEvent && CUSTOM_TYPE[msgBody.customEvent]">
+                            <div class="user_card">
+                                <div class="user_card_main">
+                                    <!-- 头像 -->
+                                    <el-avatar shape="circle" :size="50"
+                                        :src="msgBody.customExts && msgBody.customExts.avatarurl || msgBody.customExts.avatar || defaultAvatar"
+                                        fit="cover" />
+                                    <!-- 昵称 -->
+                                    <span class="nickname">{{ msgBody.customExts && msgBody.customExts.nickname ||
+                                            msgBody.customExts.uid
+                                    }}</span>
+                                </div>
+                                <el-divider style="margin:5px 0;  border-top:1px solid black;" />
+                                <p style="font-size: 8px;">个人名片</p>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
@@ -364,6 +383,37 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                     color: #8d8a8a;
                 }
             }
+
+            /* 自定义消息 */
+            .message_box_content_custom {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                width: 200px;
+                min-height: 60px;
+                max-height: 120px;
+                padding: 10px;
+                overflow: hidden;
+
+                .user_card_main {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: flex-start;
+                    align-items: center;
+                    color: #333333;
+                    font-size: 17px;
+
+                    .nickname {
+                        display: inline-block;
+                        // width: 100%;
+                        margin-left: 10px;
+                        height: 35px;
+                        line-height: 35px;
+                    }
+                }
+            }
+
+            /* 个人名片 */
         }
 
         .message_box_content_other {

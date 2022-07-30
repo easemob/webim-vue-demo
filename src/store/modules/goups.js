@@ -99,8 +99,12 @@ const Groups = {
     //群禁言列表
     fetchGoupsMuteList: async ({ dispatch, commit }, params) => {
       console.log('>>>>>>>成功触发拉取禁言列表', params);
-      let { data } = await EaseIM.conn.getGroupMuteList({ groupId: params });
-      commit('SET_GOUPS_MUTE_LIST', { groupId: params, mutelist: data });
+      try {
+        let { data } = await EaseIM.conn.getGroupMuteList({ groupId: params });
+        commit('SET_GOUPS_MUTE_LIST', { groupId: params, mutelist: data });
+      } catch (error) {
+        console.log('>>>>禁言接口获取失败', error);
+      }
     },
     // 修改群名或者群详情
     modifyGroupInfo: async ({ dispatch, commit }, params) => {

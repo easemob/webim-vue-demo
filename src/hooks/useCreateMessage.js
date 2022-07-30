@@ -84,6 +84,14 @@ const createOptions = ({ msgType, msgOptions }) => {
         console.log('onFileUploadComplete');
       },
     },
+    [ALL_MESSAGE_TYPE.CUSTOM]: {
+      chatType: msgOptions.chatType,
+      type: msgType,
+      to: msgOptions.id, // 接收消息对象（用户 ID）
+      customEvent: msgOptions.customEvent, // 自定义事件。
+      customExts: msgOptions.customExts, // 消息内容，key/value 需要 string 类型。
+      ext: msgOptions.ext, // 消息扩展。
+    },
   };
   let backMsgOptions = theMessageOptions[msgType];
   return backMsgOptions;
@@ -139,6 +147,28 @@ const createMsgBody = (msg) => {
       url: msg.url,
       length: msg.length,
       filename: msg.filename,
+    },
+    [ALL_MESSAGE_TYPE.IMAGE]: {
+      chatType: msg.chatType,
+      type: msg.type,
+      ext: msg.ext || {},
+      from: msg.from || '',
+      id: msg.id,
+      customEvent: msg.customEvent || '',
+      customExts: msg.customExts || {},
+      time: msg.time,
+      to: msg.to,
+    },
+    [ALL_MESSAGE_TYPE.CUSTOM]: {
+      chatType: msg.chatType,
+      type: msg.type,
+      ext: msg.ext || {},
+      from: msg.from || '',
+      id: msg.id,
+      customEvent: msg.customEvent,
+      customExts: { ...msg.customExts },
+      time: msg.time,
+      to: msg.to,
     },
   };
   return pakerMsgBody[msg.type];

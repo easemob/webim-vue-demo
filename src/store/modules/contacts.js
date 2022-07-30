@@ -113,7 +113,7 @@ const Contacts = {
     },
     //获取黑名单列表
     fetchBlackList: async ({ dispatch, commit }, params) => {
-      let { data } = await EaseIM.conn.getBlacklist();
+      let { data } = await EaseIM.conn.getBlocklist();
       data.length > 0 && commit('SET_BLACK_LIST', data);
     },
     //获取他人用户属性
@@ -179,6 +179,8 @@ const Contacts = {
     //获取群组列表
     fetchGroupList: async ({ commit }, params) => {
       let res = await EaseIM.conn.getJoinedGroups({
+        // needAffiliations: true,
+        // needRole: true,
         ...params,
       });
       let goupListData = _.keyBy(res.data, 'groupid');

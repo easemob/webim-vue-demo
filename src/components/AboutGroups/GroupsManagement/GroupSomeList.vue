@@ -437,9 +437,9 @@ defineExpose({ saveHandleMembers })
     overflow: hidden;
     padding-left: 16px;
 
-    .group_members_handle_box {
-        // height: 100%;
-    }
+    // .group_members_handle_box {
+    //     // height: 100%;
+    // }
 }
 
 .search_friend_box {

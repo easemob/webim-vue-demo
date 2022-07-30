@@ -7,10 +7,32 @@ import EaseIM from '@/IM/initwebsdk';
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
 import defaultSingleAvatarUrl from '@/assets/images/avatar/theme2x.png';
 import { useSetMessageKey } from '@/hooks';
-const { SESSION_MESSAGE_TYPE, CHAT_TYPE } = messageType;
+const { SESSION_MESSAGE_TYPE, CHAT_TYPE, ALL_MESSAGE_TYPE, CUSTOM_TYPE } =
+  messageType;
 
+//处理最后一条消息预览
+const handleLastMsgContent = (msgBody) => {
+  const { type, msg } = msgBody;
+  let resultContent = '';
+  //如果消息类型，在预设非展示文本类型中，就返回预设值
+  if (SESSION_MESSAGE_TYPE[type]) {
+    resultContent = SESSION_MESSAGE_TYPE[type];
+  } else if (type === ALL_MESSAGE_TYPE.CUSTOM) {
+    //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
+    if (msgBody.customEvent) {
+      (CUSTOM_TYPE[msgBody.customEvent] &&
+        (resultContent = CUSTOM_TYPE[msgBody.customEvent])) ||
+        '';
+    }
+  } else if (msgBody.isRecall) {
+    //如果是撤回消息，则展示撤回消息类型文本
+    resultContent = '撤回了一条消息';
+  } else {
+    resultContent = msg;
+  }
+  return resultContent;
+};
 //当前登陆ID
-
 export default function (corresMessage) {
   /*
    * 1、取到messageList更新后的最后一套消息
@@ -85,10 +107,10 @@ export default function (corresMessage) {
         targetId: to,
         unreadMessageNum: from === loginUserId || msgBody.isRecall ? 0 : 1,
         latestMessage: {
-          msg:
-            SESSION_MESSAGE_TYPE[type] ||
-            (msgBody.isRecall && '撤回了一条消息') ||
-            msg,
+          msg: handleLastMsgContent(msgBody),
+          // SESSION_MESSAGE_TYPE[type] ||
+          // (msgBody.isRecall && '撤回了一条消息') ||
+          // msg,
           type: type,
           ext: { ...ext },
         },
@@ -113,10 +135,10 @@ export default function (corresMessage) {
           fromName: '',
         },
         latestMessage: {
-          msg:
-            SESSION_MESSAGE_TYPE[type] ||
-            (msgBody.isRecall && '撤回了一条消息') ||
-            msg,
+          msg: handleLastMsgContent(msgBody),
+          // SESSION_MESSAGE_TYPE[type] ||
+          // (msgBody.isRecall && '撤回了一条消息') ||
+          // msg,
           type: type,
           ext: { ...ext },
         },
