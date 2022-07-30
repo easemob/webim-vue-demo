@@ -151,7 +151,9 @@ const all_func = [
     { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen },
 ]
 
-
+const test = ($event) => {
+    console.log('>>>>>>>+++++', $event)
+}
 defineExpose({
     textContent
 })
@@ -177,7 +179,7 @@ defineExpose({
 
     </div>
     <textarea ref="editable" v-model="textContent" class="chat_content_editable" spellcheck="false"
-        contenteditable="true" placeholder="请输入消息内容...">
+        contenteditable="true" placeholder="请输入消息内容..." @keyup.enter="sendTextMessage">
     </textarea>
     <el-button class="chat_send_btn" type="primary" @click="sendTextMessage">发送</el-button>
 </template>
