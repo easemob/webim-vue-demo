@@ -4,11 +4,11 @@ import { ElNotification } from 'element-plus';
 import Ease from '@/IM/initwebsdk';
 import { useSDKErrorNotifi } from '@/hooks';
 import { useStore } from 'vuex';
+import CustomImConfig from '@/components/CustomImConfig';
 const store = useStore();
 //login图
 const logo = require('@/assets/images/loginIcon.png');
 // 登陆注册所用
-
 const isRegister = ref(false);
 const username = ref('hfp');
 const password = ref('1');
@@ -39,7 +39,7 @@ const loginIM = async () => {
 };
 //根据登陆初始化一部分状态
 const loginState = computed(() => store.state.loginState);
-watch(loginState, (newVal, oldVal) => {
+watch(loginState, (newVal) => {
   if (newVal) {
     buttonLoding.value = false;
     username.value = '';
@@ -118,6 +118,12 @@ const toEasemob = () => {
   const linkUrl = 'https://www.easemob.com/?utm_source=baidu-ppwx';
   window.open(linkUrl, 'Easemob');
 };
+
+//服务配置
+const customImConfig = ref(null);
+const showCustomImConfigModal = () => {
+  customImConfig.value.centerDialogVisible = true
+}
 </script>
 <template>
   <el-container class="app_container">
@@ -147,10 +153,14 @@ const toEasemob = () => {
             </div>
           </el-col>
           <el-col>
-            <p class="login_text">
-              <span class="login_text_isuserid" v-text="isRegister ? '没有账号?' : '已有账号？'"></span><span
-                class="login_text_tologin" v-text="isRegister ? '登陆' : '注册'" @click="isRegister = !isRegister"></span>
-            </p>
+            <div class="function_button_extra">
+              <el-link class="custom_config" @click="showCustomImConfigModal">服务器配置</el-link>
+              <p class="login_text">
+                <span class="login_text_isuserid" v-text="isRegister ? '没有账号?' : '已有账号？'"></span><span
+                  class="login_text_tologin" v-text="isRegister ? '登陆' : '注册'" @click="isRegister = !isRegister"></span>
+              </p>
+            </div>
+
           </el-col>
         </el-row>
       </div>
@@ -158,6 +168,7 @@ const toEasemob = () => {
     <el-footer>
       <div class="copyright">Copyright © easemob Web IM 版本号：4.x</div>
     </el-footer>
+    <CustomImConfig ref="customImConfig" />
   </el-container>
 </template>
 
@@ -208,11 +219,12 @@ const toEasemob = () => {
         button {
           margin: 10px;
           width: 380px;
-          height: 40px;
+          height: 50px;
           background: linear-gradient(90deg, #04aef0 0%, #5a5dd0 100%);
           border: none;
           font-weight: 300;
           font-size: 17px;
+          border-radius: 57px;
 
           &:active {
             background: linear-gradient(90deg, #0b83b2 0%, #363df4 100%);
@@ -224,22 +236,45 @@ const toEasemob = () => {
         }
       }
 
-      .login_text {
-        display: inline-block;
+      .function_button_extra {
         width: 400px;
+        height: 35px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 10px;
+      }
+
+      .custom_config {
+        margin-left: 20px;
+        font-family: 'PingFang SC';
+        font-style: normal;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 17px;
+        text-align: right;
+        color: #FFF;
+        cursor: pointer;
+      }
+
+      .login_text {
+        font-family: 'PingFang SC';
+        font-style: normal;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 17px;
         text-align: right;
 
         .login_text_isuserid {
           display: inline-block;
-          width: 100px;
-          text-align: center;
-          color: #fff;
+          // width: 100px;
+          color: #F9F9F9;
         }
 
         .login_text_tologin {
           margin-right: 20px;
           width: 80px;
-          color: #00a9d9;
+          color: #05B5F1;
           cursor: pointer;
 
           &:hover {
