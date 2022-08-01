@@ -4,8 +4,13 @@ import { useStore } from 'vuex';
 import dateFormater from '@/utils/dateFormat'
 import { messageType } from '@/constant'
 import _ from 'lodash';
+import { useRouter, useRoute } from 'vue-router'
 /* 头像相关 */
 import informIcon from '@/assets/images/avatar/inform.png'
+/* route */
+const route = useRoute()
+/* router */
+const router = useRouter()
 /* store */
 const store = useStore();
 const { CHAT_TYPE } = messageType
@@ -64,8 +69,12 @@ const toChatMessage = (item, itemKey, index) => {
 };
 //删除某条会话
 const deleteConversation = (itemKey) => {
-  console.log('选中的会话key', itemKey)
+  console.log('选中的会话key', itemKey, route.query)
   store.commit('DELETE_ONE_CONVERSATION', itemKey)
+  //如果删除的itemKey与当前的message会话页的id一致则跳转至会话默认页。
+  if (route?.query?.id && route.query.id === itemKey) {
+    router.push('/chat/conversation')
+  }
 }
 //加载到底拉取新数据
 // const load = () => {
