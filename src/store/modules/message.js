@@ -70,22 +70,36 @@ const Message = {
     //获取历史消息
     getHistoryMessage: async ({ dispatch, commit }, params) => {
       console.log('>>>>>>>>>>params', params);
-      const { id, chatType } = params;
+      const { id, chatType, cursor } = params;
+      console.log('>>>>>>拉取漫游的params', params);
       return new Promise(async (resolve, reject) => {
         let options = {
-          queue: id, //需特别注意：如果 queue 属性值为大小写字母混合输入或全部大写会导致拉取漫游为空数组，因此需将属性值转换为全部小写。
-          isGroup: chatType === CHAT_TYPE.GROUP,
-          format: true,
-          count: 10,
+          targetId: id,
+          pageSize: 10,
+          cursor: cursor,
+          chatType: chatType,
+          searchDirection: 'up',
         };
         try {
-          let historyMessage = await EaseIM.conn.fetchHistoryMessages(options);
-          historyMessage.length > 0 &&
-            historyMessage.forEach((item) => {
+          let { cursor, messages } = await EaseIM.conn.getHistoryMessages(
+            options
+          );
+          console.log(
+            '>>>>>>>拉取历史消息成功',
+            'messages',
+            messages,
+            'cursor',
+            cursor
+          );
+          messages.length > 0 &&
+            messages.forEach((item) => {
               item.read = true;
             });
-          resolve(historyMessage);
-          commit('UPDATE_HISTORY_MESSAGE', { listKey: id, historyMessage });
+          resolve(messages);
+          commit('UPDATE_HISTORY_MESSAGE', {
+            listKey: id,
+            historyMessage: _.reverse(messages),
+          });
           //提示会话列表更新
           dispatch('gatherConversation', id);
         } catch (error) {

@@ -81,7 +81,7 @@ const fechHistoryMessage = (loadType) => {
     notScrollBottom.value = true;
     if (loadType == 'fistLoad') {
       console.log('》》》》》》》本次请求为首次加载历史消息')
-      let res = await store.dispatch('getHistoryMessage', nowPickInfo.value)
+      let res = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: -1 })
       if (res.length > 0) {
         //返回数组有数据显示加载更多
         isMoreHistoryMsg.value = true;
@@ -93,7 +93,9 @@ const fechHistoryMessage = (loadType) => {
       scrollMessageList('bottom')
     }
     else {
-      let res = await store.dispatch('getHistoryMessage', nowPickInfo.value)
+      const fistMessageId = messageData.value[0] && messageData.value[0].id;
+      console.log('>>>>>通过点击加载更多的调用', messageData.value[0].id)
+      let res = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: fistMessageId })
       if (res.length > 0) {
         //返回数组有数据显示加载更多
         isMoreHistoryMsg.value = true;
