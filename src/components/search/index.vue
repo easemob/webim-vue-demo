@@ -90,6 +90,8 @@ import { mapActions, mapGetters } from "vuex";
 import _ from 'lodash'
 import WebIM from "../../utils/WebIM";
 import { renderTime,readablizeBytes } from "../../utils/index";
+import emoji from '../../config/emoji';
+
 export default {
   data() {
     return {
@@ -130,7 +132,7 @@ export default {
     onSearch (e) {
       let newMsgs = [];
       this.historyList.length && this.historyList.forEach(item => {
-          if (item.type === 'txt') {
+          if (item.type === 'txt' || item.contentsType === 'TEXT') {
             newMsgs.push(item)
           }
       });
@@ -142,6 +144,11 @@ export default {
         this.msgObj = this.historyList;
       }
     },
+    
+    customEmoji(value){
+			return `<img src="../../../static/faces/${value}" style="width:20px"/>`;
+		},
+
     renderTxt(txt = "") {
       let rnTxt = [];
       let match = null;
