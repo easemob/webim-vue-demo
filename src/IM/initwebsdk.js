@@ -20,7 +20,7 @@ window.EaseIM = EaseIM = Easemob_SDK;
 EaseIM.conn = new Easemob_SDK.connection({
   appKey: CUSTOM_CONFIG.appKey ? CUSTOM_CONFIG.appKey : DEFAULT_APPKEY,
   isHttpDNS: !CUSTOM_CONFIG.isPrivate, //取反isPrivate
-  url: CUSTOM_CONFIG.url ? CUSTOM_CONFIG.url : DEFAULT_URL,
+  url: CUSTOM_CONFIG.imServer ? CUSTOM_CONFIG.imServer : DEFAULT_URL,
   apiUrl: CUSTOM_CONFIG.restServer
     ? `${CUSTOM_CONFIG.restServer}:${CUSTOM_CONFIG.port}`
     : DEFAULT_APIURL,

@@ -64,12 +64,12 @@ const registerIM = async () => {
       password.value = '';
       confirmPwd.value = '';
       isRegister.value = false;
-      console.log(first);
     } catch (error) {
       console.log('注册error', error);
       const errorMsg = error.data && JSON.parse(error.data);
       console.log('>>>>>>>>>errorMsg', errorMsg);
-      useSDKErrorNotifi(error.type, errorMsg.error);
+
+      errorMsg && useSDKErrorNotifi(error.type, errorMsg.error);
       username.value = '';
       password.value = '';
       confirmPwd.value = '';

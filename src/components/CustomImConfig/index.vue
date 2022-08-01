@@ -69,13 +69,13 @@ defineExpose({ centerDialogVisible })
                 <el-switch v-model="configForm.isPrivate" />
             </el-form-item>
             <el-form-item v-if="configForm.isPrivate" prop="imServer" label="IM服务器地址">
-                <el-input v-model="configForm.imServer" />
+                <el-input v-model="configForm.imServer" placeholder="//im-api-v2.easemob.com/ws" />
             </el-form-item>
             <el-form-item v-if="configForm.isPrivate" prop="port" label="端口号">
-                <el-input v-model="configForm.port" />
+                <el-input v-model="configForm.port" placeholder="8080" />
             </el-form-item>
             <el-form-item v-if="configForm.isPrivate" prop="restServer" label="Rest服务器地址">
-                <el-input v-model="configForm.restServer" />
+                <el-input v-model="configForm.restServer" placeholder="//a1.easemob.com" />
             </el-form-item>
         </el-form>
         <template #footer>
