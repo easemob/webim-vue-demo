@@ -148,17 +148,6 @@ const createMsgBody = (msg) => {
       length: msg.length,
       filename: msg.filename,
     },
-    [ALL_MESSAGE_TYPE.IMAGE]: {
-      chatType: msg.chatType,
-      type: msg.type,
-      ext: msg.ext || {},
-      from: msg.from || '',
-      id: msg.id,
-      customEvent: msg.customEvent || '',
-      customExts: msg.customExts || {},
-      time: msg.time,
-      to: msg.to,
-    },
     [ALL_MESSAGE_TYPE.CUSTOM]: {
       chatType: msg.chatType,
       type: msg.type,

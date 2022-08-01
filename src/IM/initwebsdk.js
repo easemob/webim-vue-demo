@@ -3,7 +3,7 @@ import Easemob_SDK from 'easemob-websdk';
 // 读取自定义配置（因demo需要自定义配置，非必须）
 
 const webimConfig = window.localStorage.getItem('webimConfig');
-const CUSTOM_CONFIG = webimConfig && JSON.parse(webimConfig);
+const CUSTOM_CONFIG = (webimConfig && JSON.parse(webimConfig)) || {};
 console.log('>>>>>>webimConfig', CUSTOM_CONFIG);
 //环信appKey默认配置项
 const DEFAULT_APPKEY = 'easemob-demo#support';

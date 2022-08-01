@@ -6,4 +6,12 @@ module.exports = defineConfig({
     host: 'localhost',
     port: 9001,
   },
+  chainWebpack: (config) => {
+    //最小化代码
+    config.optimization.minimize(true);
+    //分割代码
+    config.optimization.splitChunks({
+      chunks: 'all',
+    });
+  },
 });
