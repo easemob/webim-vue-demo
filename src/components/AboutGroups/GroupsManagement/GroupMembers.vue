@@ -192,10 +192,10 @@ defineExpose({ saveHandleMembers })
             </el-row>
         </div>
         <div class="taboo_right">
-            <el-row class="group_members_handle_box" v-if="groupMembers.length">
-                <p class="title">群成员 {{ `${groupMembers.length}/${groupDetail.maxusers || '500'}` }}</p>
-                <el-col :span="24" class="now_exit_group_members">
-                    <el-scrollbar>
+            <el-scrollbar>
+                <div class="group_members_handle_box" v-if="groupMembers.length">
+                    <p class="title">群成员 {{ `${groupMembers.length}/${groupDetail.maxusers || '500'}` }}</p>
+                    <div class="now_exit_group_members">
                         <div v-for="(item, index) in groupMembers" :key="item.member">
                             <div class="friend_user_list">
                                 <div class="friend_user_list_left">
@@ -207,14 +207,10 @@ defineExpose({ saveHandleMembers })
                                 </el-icon>
                             </div>
                         </div>
-                    </el-scrollbar>
-
-                </el-col>
-                <template v-if="checkedInviteMembers.length > 0">
-                    <p class="title">邀请 {{ checkedInviteMembers.length }}</p>
-
-                    <el-col :span="24" class="checked_invite_members">
-                        <el-scrollbar>
+                    </div>
+                    <template v-if="checkedInviteMembers.length > 0">
+                        <p class="title">邀请 {{ checkedInviteMembers.length }}</p>
+                        <div class="checked_invite_members">
                             <div v-for="(item, index) in checkedInviteMembers" :key="item.hxId">
                                 <div class="friend_user_list">
                                     <div class="friend_user_list_left">
@@ -226,12 +222,10 @@ defineExpose({ saveHandleMembers })
                                     </el-icon>
                                 </div>
                             </div>
-                        </el-scrollbar>
-
-                    </el-col>
-                </template>
-            </el-row>
-
+                        </div>
+                    </template>
+                </div>
+            </el-scrollbar>
 
         </div>
     </div>
@@ -264,12 +258,14 @@ defineExpose({ saveHandleMembers })
     overflow: hidden;
     border-right: 1px solid #DCDFE6;
     padding: 0 24px;
+    box-sizing: border-box;
 
     .friend_user_list_box {
         height: calc(100% - 36px);
         width: 100%;
         overflow: auto;
         padding: 15px 0;
+
     }
 }
 
@@ -278,26 +274,23 @@ defineExpose({ saveHandleMembers })
     max-height: 466px;
     min-height: 266px;
     overflow: hidden;
-    padding-left: 16px;
-
-
 }
 
 .group_members_handle_box {
+    display: flex;
     width: 100%;
-
+    height: 100%;
+    flex-direction: column;
+    padding: 0 16px;
+    overflow: auto;
+    box-sizing: border-box;
 
     .now_exit_group_members {
         width: 100%;
-        overflow-y: auto;
-        max-height: 300px;
     }
 
     .checked_invite_members {
         width: 100%;
-        max-height: 100px;
-        overflow-y: auto;
-        padding: 15px 0;
     }
 }
 

@@ -5,7 +5,7 @@ import router from '@/router'
 import _ from 'lodash'
 import dateFormater from '@/utils/dateFormat'
 /* 相关组件 */
-import SearchInput from '@/components/searchInput'
+import SearchInput from '@/components/SearchInput'
 import FriendItem from './components/friendItem.vue'
 import GroupItem from './components/joinedGroupItem.vue'
 /* 头像相关 */

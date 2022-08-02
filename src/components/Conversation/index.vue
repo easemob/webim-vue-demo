@@ -5,7 +5,7 @@ import _ from 'lodash'
 import router from '@/router';
 
 /* 搜索框组件 */
-import SearchInput from '@/components/searchInput';
+import SearchInput from '@/components/SearchInput';
 /* 会话列表组件 */
 import ConversationList from './components/ConversationList.vue';
 
