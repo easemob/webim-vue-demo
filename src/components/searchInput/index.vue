@@ -34,26 +34,47 @@ const searchHistory = useLocalStorage(`EASEIM_${EaseIM.conn.user}_search_hisory`
 const searchBox = ref(null)
 onClickOutside(searchBox, () => (isShowResultContent.value = false));
 //筛选出来的搜索建议
-const searchSuggest = ref([])
+const searchSuggest = ref({})
 //搜索相匹配的值
 const querySearch = () => {
+  console.log('>>>>>>>>触发搜索')
   if (inputValue.value) {
     //搜索会话 conversation
     //todo 后续计划在会话数据结构中加keywords字段 通过keywords字段实现更多条件的搜索
     if (props.searchType === 'conversation') {
+      let resObj = {}
       const resultList = _.filter(props.searchData, (o) => o.conversationInfo.name.includes(inputValue.value))
-      searchSuggest.value = resultList
+      resultList.length > 0 && resultList.forEach(item => {
+        if (resObj[item.conversationType]) {
+          resObj[item.conversationType].push(item)
+        } else {
+          resObj[item.conversationType] = [];
+          resObj[item.conversationType].push(item)
+        }
+      })
+      searchSuggest.value = resObj
     }
     //搜索联系人 contacts
     if (props.searchType === 'contacts') {
+      let resObj = {}
       const resultList = _.filter(props.searchData, (o) => o.hxId && o.hxId.includes(inputValue.value) || (o.nickname && o.nickname.includes(inputValue.value)) || (o.groupid && o.groupid.includes(inputValue.value)) || (o.groupname && o.groupname.includes(inputValue.value)))
       console.log('>>>>>>搜索给出结果', resultList)
-      searchSuggest.value = resultList
+      resultList.length > 0 && resultList.forEach(item => {
+        console.log('>>>>item', item)
+        const key = item.hxId ? CHAT_TYPE.SINGLE : CHAT_TYPE.GROUP
+        if (resObj[key]) {
+          resObj[key].push(item)
+        } else {
+          resObj[key] = [];
+          resObj[key].push(item)
+        }
+      })
+      searchSuggest.value = resObj
     }
   }
   //监听输入框为空字符串的时候置空搜索建议
   watch(inputValue, (newVal) => {
-    if (newVal === '') searchSuggest.value = []
+    if (newVal === '') searchSuggest.value = {}
   })
 }
 //点击历史记录通知对应类型的不同的组件跳转 例如 通知会话部分 通知联系人部分
@@ -141,50 +162,96 @@ const emitContacts = (item) => {
         </ul>
       </div>
       <div v-if="searchType === 'conversation'">
-        <div v-for="(item, index) in searchSuggest" :key="index">
-          <div class="title" v-if="item.conversationType === CHAT_TYPE.SINGLE">
-            联系人
-          </div>
-          <div class="title" v-if="item.conversationType === CHAT_TYPE.GROUP">
-            群组
-          </div>
-          <div class="search_result_item" @click="emitConversation(1, item)">
-            <div class="item_body item_left">
-              <div class="session_other_avatar">
-                <el-avatar :src="item.conversationInfo.avatarUrl"></el-avatar>
+        <div v-for="(serchResult, SerchKey, index) in searchSuggest" :key="index">
+          <template v-if="SerchKey === CHAT_TYPE.SINGLE">
+            <div class="title">
+              联系人
+            </div>
+            <template v-for="item in serchResult" :key="item.fromInfo.fromId">
+              <div class="search_result_item" @click="emitConversation(1, item)">
+                <div class="item_body item_left">
+                  <div class="session_other_avatar">
+                    <el-avatar :src="item.conversationInfo.avatarUrl"></el-avatar>
+                  </div>
+                </div>
+                <div class="item_body item_main">
+                  <div class="name">{{ item.conversationInfo.name }}</div>
+                  <div class="last_msg_body">{{ item.fromInfo.fromId }}：{{ item.latestMessage.msg }}
+                  </div>
+                </div>
+                <div class="item_body item_right">
+                  <span class="time">{{ dateFormater('MM/DD/HH:mm', item.latestSendTime) }}</span>
+                </div>
               </div>
+            </template>
+
+          </template>
+          <template v-if="SerchKey === CHAT_TYPE.GROUP">
+            <div class="title">
+              群组
             </div>
-            <div class="item_body item_main">
-              <div class="name">{{ item.conversationInfo.name }}</div>
-              <div class="last_msg_body">{{ item.fromInfo.fromId }}：{{ item.latestMessage.msg }}
+            <template v-for="item in serchResult" :key="item.fromInfo.fromId">
+              <div class="search_result_item" @click="emitConversation(1, item)">
+                <div class="item_body item_left">
+                  <div class="session_other_avatar">
+                    <el-avatar :src="item.conversationInfo.avatarUrl"></el-avatar>
+                  </div>
+                </div>
+                <div class="item_body item_main">
+                  <div class="name">{{ item.conversationInfo.name }}</div>
+                  <div class="last_msg_body">{{ item.fromInfo.fromId }}：{{ item.latestMessage.msg }}
+                  </div>
+                </div>
+                <div class="item_body item_right">
+                  <span class="time">{{ dateFormater('MM/DD/HH:mm', item.latestSendTime) }}</span>
+                </div>
               </div>
-            </div>
-            <div class="item_body item_right">
-              <span class="time">{{ dateFormater('MM/DD/HH:mm', item.latestSendTime) }}</span>
-            </div>
-          </div>
+            </template>
+          </template>
         </div>
       </div>
       <div v-if="searchType === 'contacts'">
-        <div v-for="(item, index) in searchSuggest" :key="index">
-          <div class="title" v-if="item.hxId">
-            联系人
-          </div>
-          <div class="title" v-if="item.groupid">
-            群组
-          </div>
-          <div class="search_result_item" @click="emitContacts(item)">
-            <div class="item_body item_left">
-              <div class="session_other_avatar">
-                <el-avatar
-                  :src="item.hxId && item.avatarurl ? item.avatarurl : item.groupid ? defaultGroupAvatarUrl : defaultSingleAvatar">
-                </el-avatar>
+        <div v-for="(serchResult, SerchKey, index) in searchSuggest" :key="index">
+          <template v-if="SerchKey === CHAT_TYPE.SINGLE">
+            <div class="title">
+              联系人
+            </div>
+            <template v-for="(item, index) in serchResult" :key="index">
+              <div class="search_result_item" @click="emitContacts(item)">
+                <div class="item_body item_left">
+                  <div class="session_other_avatar">
+                    <el-avatar
+                      :src="item.hxId && item.avatarurl ? item.avatarurl : item.groupid ? defaultGroupAvatarUrl : defaultSingleAvatar">
+                    </el-avatar>
+                  </div>
+                </div>
+                <div class="item_body item_main">
+                  <div class="name">{{ item.nickname ? item.nickname : item.groupname ? item.groupname : item.hxId }}
+                  </div>
+                </div>
               </div>
+            </template>
+          </template>
+          <template v-if="SerchKey === CHAT_TYPE.GROUP">
+            <div class="title">
+              群组
             </div>
-            <div class="item_body item_main">
-              <div class="name">{{ item.nickname ? item.nickname : item.groupname ? item.groupname : item.hxId }}</div>
-            </div>
-          </div>
+            <template v-for="(item, index) in serchResult" :key="index">
+              <div class="search_result_item" @click="emitContacts(item)">
+                <div class="item_body item_left">
+                  <div class="session_other_avatar">
+                    <el-avatar
+                      :src="item.hxId && item.avatarurl ? item.avatarurl : item.groupid ? defaultGroupAvatarUrl : defaultSingleAvatar">
+                    </el-avatar>
+                  </div>
+                </div>
+                <div class="item_body item_main">
+                  <div class="name">{{ item.nickname ? item.nickname : item.groupname ? item.groupname : item.hxId }}
+                  </div>
+                </div>
+              </div>
+            </template>
+          </template>
         </div>
       </div>
       <el-empty v-if="inputValue.length > 0 && searchSuggest.length <= 0" :image-size="200" description="没有找到匹配结果" />

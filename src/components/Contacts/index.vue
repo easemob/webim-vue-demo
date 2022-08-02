@@ -106,6 +106,7 @@ const informDetail = computed(() => {
   position: relative;
   width: 25%;
   background: #cfdbf171;
+  min-width: 200px;
 
   .contacts_collapse {
     height: calc(100% - 60px);
