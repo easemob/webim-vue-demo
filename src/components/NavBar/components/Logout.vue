@@ -17,12 +17,13 @@ const logoutTheUser = () => {
 }
 
 const clearLocalStorage = () => {
-    const storageType = ['INFORM', 'conversationList', 'search_hisory', 'loginUser']
+    const storageType = ['INFORM', 'conversationList', 'search_hisory',]
     let loginUserId = EaseIM.conn.user;
     let storageKey = `EASEIM_${loginUserId}`
     storageType.map((item) => {
         return window.localStorage.removeItem(`${storageKey}_${item}`)
     })
+    window.localStorage.removeItem('EASEIM_loginUser')
     console.log('>>>>>清楚完成')
 }
 defineExpose({

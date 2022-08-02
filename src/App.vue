@@ -189,7 +189,20 @@ const submitInformData = (fromType, informContent) => {
 
 }
 
-
+/* 重新登陆 */
+//读取本地EASEIM_loginUser
+const EASEIM_loginUser = window.localStorage.getItem('EASEIM_loginUser')
+const loginUserFromStorage = JSON.parse(EASEIM_loginUser) || {}
+const handleRelogin = () => {
+  console.log('重新登陆')
+  EaseIM.conn.open({
+    user: loginUserFromStorage.user,
+    accessToken: loginUserFromStorage.accessToken
+  })
+}
+if (loginUserFromStorage?.user && loginUserFromStorage?.accessToken) {
+  handleRelogin()
+}
 
 
 </script>

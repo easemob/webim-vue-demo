@@ -88,12 +88,17 @@ const router = createRouter({
 });
 router.beforeEach((to, from, next) => {
   NProgress.start();
-  let loginState = store.state.loginState;
+  const loginState = store.state.loginState;
+  const EASEIM_loginUser = window.localStorage.getItem('EASEIM_loginUser');
+  const loginUserFromStorage = JSON.parse(EASEIM_loginUser) || {};
   if (to.path === '/login' || to.path === '/') {
     next();
     NProgress.done();
   } else {
     if (loginState) {
+      next();
+      NProgress.done();
+    } else if (loginUserFromStorage) {
       next();
       NProgress.done();
     } else {
