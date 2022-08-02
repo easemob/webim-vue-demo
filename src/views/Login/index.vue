@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { ElNotification } from 'element-plus';
-import Ease from '@/IM/initwebsdk';
+import EaseIM from '@/IM/initwebsdk';
 import { useSDKErrorNotifi } from '@/hooks';
 import { useStore } from 'vuex';
 import CustomImConfig from '@/components/CustomImConfig';
@@ -19,7 +19,7 @@ const loginIM = async () => {
   let resultStatus = checkParams({ username, password });
   if (resultStatus) {
     try {
-      let { accessToken } = await Ease.conn.open({
+      let { accessToken } = await EaseIM.conn.open({
         user: username.value.toLowerCase(),
         pwd: password.value.toLowerCase(),
       });
@@ -51,7 +51,7 @@ const registerIM = async () => {
   if (resultStatus) {
     console.log('>>>>>>开始注册');
     try {
-      await Ease.conn.registerUser({
+      await EaseIM.conn.registerUser({
         username: username.value,
         password: password.value,
       });
@@ -124,6 +124,9 @@ const customImConfig = ref(null);
 const showCustomImConfigModal = () => {
   customImConfig.value.centerDialogVisible = true
 }
+
+//SDK-Version
+const IM_SDK_VERSION = EaseIM.conn.version
 </script>
 <template>
   <el-container class="app_container">
@@ -166,7 +169,7 @@ const showCustomImConfigModal = () => {
       </div>
     </el-main>
     <el-footer>
-      <div class="copyright">Copyright © easemob Web IM 版本号：4.x</div>
+      <div class="copyright">Copyright © easemob Web IM SDK版本号：{{ IM_SDK_VERSION ? IM_SDK_VERSION : '4.x' }}</div>
     </el-footer>
     <CustomImConfig ref="customImConfig" />
   </el-container>
