@@ -82,7 +82,7 @@ const delTheFriend = () => {
 const toChatMessage = () => {
     console.log('>>>>>>>...route.query');
     router.push({
-        path: '/chat/contacts/message', query: {
+        path: '/chat/conversation/message', query: {
             id: route.query.id,
             chatType: route.query.chatType
         }

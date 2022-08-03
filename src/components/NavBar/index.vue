@@ -1,9 +1,11 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 /* vuex */
 import { useStore } from 'vuex';
 /* router */
 import router from '@/router';
+/* route */
+import { useRoute } from 'vue-router';
 /* lodash */
 import _ from 'lodash';
 /* icon */
@@ -18,7 +20,7 @@ import EditUserInfoCard from './components/AboutUserInfoCard/EditUserInfoCard.vu
 import { onLineStatus } from '@/constant';
 /* vueUse */
 import { onClickOutside } from '@vueuse/core';
-
+const route = useRoute()
 
 
 const store = useStore();
@@ -38,16 +40,23 @@ let loginUserOnlineStatusIcon = computed(() => {
 });
 
 /* tabbar icon 路由跳转 */
-let skipRouterName = ref('Conversation');
+let skipRouterName = ref('conversation');
 let highligthConversation = require('@/assets/images/tabbar/sessionhighlight2x.png');
 let grayConversation = require('@/assets/images/tabbar/session2x.png');
 let highligthContacts = require('@/assets/images/tabbar/comtactshighlight2x.png');
 let grayContacts = require('@/assets/images/tabbar/1491654067271_.pic.jpg');
 const changeSkipRouterName = (routerName) => {
-  skipRouterName.value = routerName;
   router.push(`/chat/${routerName}`);
 };
-
+watch(() => route.path, (newPath) => {
+  if (newPath.includes('/chat/conversation')) {
+    skipRouterName.value = 'conversation';
+  }
+  if (newPath.includes('/chat/contacts')) {
+    console.log('>>>>>存在赋值为联系人样式')
+    skipRouterName.value = 'contacts';
+  }
+})
 /* 取会话以及系统消息未读数控制会话icon badge显隐 */
 const conversationUnreadCount = computed(() => {
   let informCount = _.sumBy(store.state.Conversation.informDetail, 'untreated') || 0
@@ -103,7 +112,7 @@ const logout = ref(null)
   <div class="chat_converation chat_icon_box" @click="changeSkipRouterName('conversation')">
     <div class="img_box">
       <img :src="
-        $route.name === 'Conversation'
+        skipRouterName === 'conversation'
           ? highligthConversation
           : grayConversation
       " alt="">
@@ -113,7 +122,7 @@ const logout = ref(null)
   </div>
   <!-- 去往联系人 -->
   <div class="chat_contacts chat_icon_box" @click="changeSkipRouterName('contacts')">
-    <img class="chat_contacts_icon" :src="$route.name === 'Contacts' ? highligthContacts : grayContacts" alt="" />
+    <img class="chat_contacts_icon" :src="skipRouterName === 'contacts' ? highligthContacts : grayContacts" alt="" />
   </div>
   <!-- 新建添加部分 -->
   <div class="chat_settings">
