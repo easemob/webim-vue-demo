@@ -3,6 +3,8 @@
 // };
 
 export default {
+  /* 登陆相关
+   */
   1: {
     'invalid password': '密码错误！',
     'login failed': '登陆失败！',
@@ -17,6 +19,10 @@ export default {
   28: {
     'appkey or token error': '未登录！',
   },
+  217: {
+    'the user was kicked by other device': '其他端踢出了该账号！',
+  },
+  /* 群组相关 */
   602: {
     'not in group or chatroom': '已不再该群组中！',
   },
