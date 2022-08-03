@@ -9,7 +9,7 @@ import {
 import getArrDifference from '@/utils/getArrdifference'
 import store from '@/store'
 import _ from 'lodash';
-import dateFormater from '@/utils/dateFormat'
+import dateFormater from '@/utils/dateFormater'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png';
 const props = defineProps({
     groupModalTitle: {

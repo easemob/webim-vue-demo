@@ -1,5 +1,9 @@
 import EaseIM from '@/IM/initwebsdk';
-import { useSetMessageKey, useCreateMessage, useSDKErrorNotifi } from '@/hooks';
+import {
+  handleSDKErrorNotifi,
+  setMessageKey,
+  createMessage,
+} from '@/utils/handleSomeData';
 import _ from 'lodash';
 import { ref, toRaw } from 'vue';
 import { messageType } from '@/constant';
@@ -12,7 +16,7 @@ const Message = {
     UPDATE_MESSAGE_LIST: (state, msgBody) => {
       console.log('>>>UPDATE_MESSAGE_LIST>>>', msgBody);
       const toUpdateMsgList = _.assign({}, state.messageList);
-      const listKey = useSetMessageKey(msgBody);
+      const listKey = setMessageKey(msgBody);
       if (!toUpdateMsgList[listKey]) {
         toUpdateMsgList[listKey] = [];
         toUpdateMsgList[listKey].push(msgBody);
@@ -63,7 +67,7 @@ const Message = {
   actions: {
     //添加新消息
     createNewMessage: ({ dispatch, commit }, params) => {
-      let key = useSetMessageKey(params);
+      let key = setMessageKey(params);
       commit('UPDATE_MESSAGE_LIST', params);
       dispatch('gatherConversation', key);
     },
@@ -110,7 +114,7 @@ const Message = {
     //发送展示类型消息
     sendShowTypeMessage: async ({ dispatch, commit }, params) => {
       console.log('params', params);
-      let options = useCreateMessage.createOptions(params);
+      let options = createMessage.createOptions(params);
       console.log('>>>>>>sendShowTypeMessage,options', options);
       return new Promise(async (resolve, reject) => {
         let msg = WebIM.message.create(options);
@@ -119,14 +123,14 @@ const Message = {
           console.log('>>>>发送成功', msg);
           msg.id = serverMsgId;
           msg.from = EaseIM.conn.user;
-          let msgBody = useCreateMessage.createMsgBody(msg);
+          let msgBody = createMessage.createMsgBody(msg);
           console.log('>>>>>>返回的msgBody', msgBody);
           commit('UPDATE_MESSAGE_LIST', msgBody);
           // 提示会话列表更新
           dispatch('gatherConversation', msgBody.to);
           resolve('OK');
         } catch (error) {
-          useSDKErrorNotifi(error.type, error.message);
+          handleSDKErrorNotifi(error.type, error.message);
           reject(error);
           console.log('>>>>>>发送失败', error);
         }
@@ -142,7 +146,7 @@ const Message = {
           dispatch('gatherConversation', to);
           resolve('OK');
         } catch (error) {
-          useSDKErrorNotifi(error.type, error.message);
+          handleSDKErrorNotifi(error.type, error.message);
           console.log('>>>>>>撤回消息error', error);
           reject(error);
         }

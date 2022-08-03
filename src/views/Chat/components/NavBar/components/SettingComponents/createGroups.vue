@@ -3,7 +3,7 @@ import { ref, reactive, computed, toRefs, onMounted, watch, defineProps, defineE
 import { useStore } from 'vuex'
 import _ from 'lodash'
 import { ElNotification } from 'element-plus'
-import { useSDKErrorNotifi } from '@/hooks'
+import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import EaseIM from '@/IM/initwebsdk'
 import { messageType } from '@/constant'
 import {
@@ -124,11 +124,11 @@ const createNewGroups = async () => {
     catch (error) {
         if (error && error.type && error.message) {
             let errorDesc = JSON.parse(error.message)
-            useSDKErrorNotifi(error.type, errorDesc.error_description)
+            handleSDKErrorNotifi(error.type, errorDesc.error_description)
             console.log('>>>errorDesc>>>', errorDesc)
         } else {
             console.log(error)
-            useSDKErrorNotifi(null, '未知错误')
+            handleSDKErrorNotifi(null, '未知错误')
         }
     }
 

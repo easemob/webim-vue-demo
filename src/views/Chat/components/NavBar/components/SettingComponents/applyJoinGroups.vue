@@ -2,7 +2,7 @@
 import { reactive, toRefs, watch, defineProps, defineEmits } from 'vue'
 import EaseIM from '@/IM/initwebsdk'
 import { ElNotification } from 'element-plus'
-import { useSDKErrorNotifi } from '@/hooks'
+import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 const props = defineProps({
     dialogVisible: {
         type: Boolean,
@@ -36,10 +36,10 @@ const joinGroups = async () => {
     } catch (error) {
         if (error.data) {
             const { type, data } = error
-            useSDKErrorNotifi(type, JSON.parse(data).error)
+            handleSDKErrorNotifi(type, JSON.parse(data).error)
         } else {
             console.log(error)
-            useSDKErrorNotifi(null, '未知错误！')
+            handleSDKErrorNotifi(null, '未知错误！')
         }
     } finally {
         resetTheModalStatus()

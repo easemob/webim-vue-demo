@@ -7,7 +7,7 @@ import { useLocalStorage } from '@vueuse/core'
 import _ from "lodash"
 import { onClickOutside } from '@vueuse/core';
 import { messageType } from '@/constant'
-import dateFormater from '@/utils/dateFormat'
+import dateFormater from '@/utils/dateFormater'
 /* 单人头像 */
 import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';

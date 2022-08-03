@@ -6,7 +6,7 @@ import { ElMessage } from 'element-plus'
 import EaseIM from '@/IM/initwebsdk'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import fileSizeFormat from '@/utils/fileSizeFormat'
-import dateFormat from '@/utils/dateFormat'
+import dateFormat from '@/utils/dateFormater'
 import { messageType } from '@/constant'
 /* 默认头像 */
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'

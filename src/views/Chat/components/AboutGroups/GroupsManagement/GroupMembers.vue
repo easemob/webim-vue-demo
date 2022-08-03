@@ -8,7 +8,7 @@ import {
     Select
 } from '@element-plus/icons-vue';
 /* 拼音排序好友列表 */
-import { useSortFriendItem } from '@/hooks'
+import { sortPinyinFriendItem } from '@/utils/handleSomeData'
 /* store */
 import store from '@/store'
 import _ from 'lodash';
@@ -158,7 +158,7 @@ defineExpose({ saveHandleMembers })
             <el-row style="height: 100%;margin-top: 5px;" v-if="renderGroupMembers">
                 <el-col :span="24" class="friend_user_list_box">
                     <el-scrollbar>
-                        <div v-for="(sortedItem, key, index) in useSortFriendItem(renderGroupMembers) "
+                        <div v-for="(sortedItem, key, index) in sortPinyinFriendItem(renderGroupMembers) "
                             :key="sortedItem + index">
                             <div class="title">{{ key === ' ' ? '#' : key.toUpperCase() }}</div>
                             <template v-for="(item, index) in sortedItem" :key="item.name + index">

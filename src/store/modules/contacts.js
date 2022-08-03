@@ -1,6 +1,6 @@
 import EaseIM from '@/IM/initwebsdk';
 // import { useLocalStorage } from '@vueuse/core';
-import { useSortFriendItem, usePresence } from '@/hooks';
+import { sortPinyinFriendItem, handlePresence } from '@/utils/handleSomeData';
 import _ from 'lodash';
 const Contacts = {
   state: {
@@ -23,7 +23,7 @@ const Contacts = {
       const friendList = state.friendList;
       status.length > 0 &&
         status.forEach((item) => {
-          let commonStatus = usePresence(item);
+          let commonStatus = handlePresence(item);
           if (friendList[commonStatus.uid]) {
             friendList[commonStatus.uid].userStatus = commonStatus;
           }
@@ -98,7 +98,7 @@ const Contacts = {
         //合并两对象
         let mergedFriendList = _.merge(friendListData, friendListWithInfos);
         //合并后的好友列表数据进行排序并单独提交处理
-        let sortFriendList = useSortFriendItem(mergedFriendList);
+        let sortFriendList = sortPinyinFriendItem(mergedFriendList);
         commit('SET_SORDED_FRIEND_LIST', sortFriendList);
         commit('SET_FRIEND_LIST', mergedFriendList);
         //提交之后订阅好友状态

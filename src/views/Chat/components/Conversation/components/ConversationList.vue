@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, defineEmits } from 'vue';
 import { useStore } from 'vuex';
-import dateFormater from '@/utils/dateFormat'
+import dateFormater from '@/utils/dateFormater'
 import { messageType } from '@/constant'
 import _ from 'lodash';
 import { useRouter, useRoute } from 'vue-router'

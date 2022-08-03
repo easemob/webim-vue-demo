@@ -2,7 +2,6 @@
 import { reactive, toRefs, watch, defineProps, defineEmits } from 'vue'
 import EaseIM from '@/IM/initwebsdk'
 import { ElNotification } from 'element-plus'
-// import { useSDKErrorNotifi } from '@/hooks'
 const props = defineProps({
     dialogVisible: {
         type: Boolean,

@@ -2,7 +2,7 @@
 import { ref, watch, computed } from 'vue';
 import { ElNotification } from 'element-plus';
 import EaseIM from '@/IM/initwebsdk';
-import { useSDKErrorNotifi } from '@/hooks';
+import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { useStore } from 'vuex';
 import CustomImConfig from '@/views/Login/components/CustomImConfig';
 const store = useStore();
@@ -27,7 +27,7 @@ const loginIM = async () => {
     } catch (error) {
       console.log('>>>>登陆失败', error);
       const { data: { extraInfo } } = error
-      useSDKErrorNotifi(error.type, extraInfo.errDesc);
+      handleSDKErrorNotifi(error.type, extraInfo.errDesc);
       username.value = '';
       password.value = '';
     }
@@ -69,7 +69,7 @@ const registerIM = async () => {
       const errorMsg = error.data && JSON.parse(error.data);
       console.log('>>>>>>>>>errorMsg', errorMsg);
 
-      errorMsg && useSDKErrorNotifi(error.type, errorMsg.error);
+      errorMsg && handleSDKErrorNotifi(error.type, errorMsg.error);
       username.value = '';
       password.value = '';
       confirmPwd.value = '';

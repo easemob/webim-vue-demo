@@ -1,6 +1,10 @@
 import _ from 'lodash';
 import { useLocalStorage } from '@vueuse/core';
-import { useConversation, useSortConversation, useInform } from '@/hooks';
+import {
+  createConversation,
+  sortConversation,
+  createInform,
+} from '@/utils/handleSomeData';
 import Message from './message';
 import EaseIM from '@/IM/initwebsdk';
 const Conversation = {
@@ -39,7 +43,7 @@ const Conversation = {
     //更新已有会话
     UPDATE_CONVERSATION_LIST: (state, payload) => {
       console.log('>>>>>>>开始更新会话', payload);
-      let sortedData = useSortConversation(
+      let sortedData = sortConversation(
         _.assign(_.cloneDeep(state.conversationListData), payload)
       );
       state.conversationListData = sortedData;
@@ -68,14 +72,14 @@ const Conversation = {
     //添加新系统通知
     createNewInform: ({ commit }, params) => {
       const { fromType, informContent } = params;
-      let result = useInform(fromType, informContent);
+      let result = createInform(fromType, informContent);
       commit('UPDATE_INFORM_LIST', result);
     },
 
     //收集会话依赖数据
     gatherConversation: ({ commit }, key) => {
       let corresMessage = _.cloneDeep(Message.state.messageList.value[key]);
-      let res = useConversation(corresMessage);
+      let res = createConversation(corresMessage);
       commit('UPDATE_CONVERSATION_LIST', res);
     },
   },

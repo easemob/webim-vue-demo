@@ -2,7 +2,7 @@
 import { useStore } from 'vuex';
 import router from '@/router';
 import EaseIM from '@/IM/initwebsdk';
-import { useSDKErrorNotifi, useSetMessageKey } from '@/hooks';
+import { handleSDKErrorNotifi, setMessageKey } from '@/utils/handleSomeData';
 import { informType } from '@/constant'
 const store = useStore();
 EaseIM.logger.disableAll()
@@ -26,7 +26,7 @@ EaseIM.conn.addEventHandler('connection', {
   },                 // 本机网络掉线。
   onError: (error) => {
     console.log('on error', error);
-    useSDKErrorNotifi(error.type, error.message);
+    handleSDKErrorNotifi(error.type, error.message);
   },
 });
 //fetch 登陆用户的初始数据
@@ -85,7 +85,7 @@ const getUserPresence = (status) => {
 EaseIM.conn.addEventHandler('messageListen', {
   onTextMessage: function (message) {
     console.log('>>>>>>>App mesage', message)
-    console.log('useSetMessageKey', useSetMessageKey(message))
+    console.log('setMessageKey', setMessageKey(message))
     pushNewMessage(message)
   },    // 收到文本消息。
   onEmojiMessage: function (message) {

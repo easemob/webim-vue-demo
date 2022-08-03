@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useStore } from 'vuex'
 import router from '@/router'
 import _ from 'lodash'
-import dateFormater from '@/utils/dateFormat'
+import dateFormater from '@/utils/dateFormater'
 /* 相关组件 */
 import SearchInput from '@/components/SearchInput'
 import FriendItem from './components/friendItem.vue'

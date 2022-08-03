@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useStore } from 'vuex';
 import EaseIM from '@/IM/initwebsdk';
-import dateFormater from '@/utils/dateFormat';
+import dateFormater from '@/utils/dateFormater';
 import { informType } from '@/constant';
 import { Delete } from '@element-plus/icons-vue';
 const store = useStore()
