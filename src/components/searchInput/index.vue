@@ -60,7 +60,6 @@ const querySearch = () => {
       const resultList = _.filter(props.searchData, (o) => o.hxId && o.hxId.includes(inputValue.value) || (o.nickname && o.nickname.includes(inputValue.value)) || (o.groupid && o.groupid.includes(inputValue.value)) || (o.groupname && o.groupname.includes(inputValue.value)))
       console.log('>>>>>>搜索给出结果', resultList)
       resultList.length > 0 && resultList.forEach(item => {
-        console.log('>>>>item', item)
         const key = item.hxId ? CHAT_TYPE.SINGLE : CHAT_TYPE.GROUP
         if (resObj[key]) {
           resObj[key].push(item)

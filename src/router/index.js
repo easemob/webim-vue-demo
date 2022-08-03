@@ -37,17 +37,17 @@ const routes = [
           title: '会话',
           keepAlive: false,
         },
-        component: () => import('../components/Conversation'),
+        component: () => import('../views/Chat/components/Conversation'),
         children: [
           //系统通知详情框
           {
             path: 'informdetails',
-            component: () => import('../components/InformDetails'),
+            component: () => import('../views/Chat/components/InformDetails'),
           },
           //聊天对话框
           {
             path: 'message',
-            component: () => import('../components/Message'),
+            component: () => import('../views/Chat/components/Message'),
           },
         ],
       },
@@ -59,22 +59,24 @@ const routes = [
           title: '联系页',
           keepAlive: true,
         },
-        component: () => import('../components/Contacts'),
+        component: () => import('../views/Chat/components/Contacts'),
         children: [
           {
             path: 'message',
 
-            component: () => import('../components/Message'),
+            component: () => import('../views/Chat/components/Message'),
           },
           //系统通知详情框
           {
             path: 'informdetails',
-            component: () => import('../components/InformDetails'),
+            component: () => import('../views/Chat/components/InformDetails'),
           },
           {
             path: 'contactInfo',
             component: () =>
-              import('../components/Contacts/components/contactInfo.vue'),
+              import(
+                '../views/Chat/components/Contacts/components/contactInfo.vue'
+              ),
           },
         ],
       },

@@ -269,19 +269,19 @@ const reEdit = (msg) => emit('reEditMessage', msg)
 
                 @keyframes other_play_icon {
                     0% {
-                        background: url('../../../assets/images/playAudio/msg_recv_audio02@3x.png') no-repeat;
+                        background: url('@/assets/images/playAudio/msg_recv_audio02@3x.png') no-repeat;
 
                         background-size: 100% 100%;
                     }
 
                     50% {
-                        background: url('../../../assets/images/playAudio/msg_recv_audio01@3x.png') no-repeat;
+                        background: url('@/assets/images/playAudio/msg_recv_audio01@3x.png') no-repeat;
 
                         background-size: 100% 100%;
                     }
 
                     100% {
-                        background: url('../../../assets/images/playAudio/msg_recv_audio@3x.png') no-repeat;
+                        background: url('@/assets/images/playAudio/msg_recv_audio@3x.png') no-repeat;
                         background-size: 100% 100%;
                     }
                 }
@@ -289,7 +289,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                 .play_audio_icon_other {
                     width: 30px;
                     height: 30px;
-                    background: url('../../../assets/images/playAudio/msg_recv_audio@3x.png') no-repeat;
+                    background: url('@/assets/images/playAudio/msg_recv_audio@3x.png') no-repeat;
                 }
 
                 .start_play_audio {
@@ -304,19 +304,19 @@ const reEdit = (msg) => emit('reEditMessage', msg)
 
                 @keyframes mine_play_icon {
                     0% {
-                        background: url('../../../assets/images/playAudio/msg_send_audio02@3x.png') no-repeat;
+                        background: url('@/assets/images/playAudio/msg_send_audio02@3x.png') no-repeat;
 
                         background-size: 100% 100%;
                     }
 
                     50% {
-                        background: url('../../../assets/images/playAudio/msg_send_audio01@3x.png') no-repeat;
+                        background: url('@/assets/images/playAudio/msg_send_audio01@3x.png') no-repeat;
 
                         background-size: 100% 100%;
                     }
 
                     100% {
-                        background: url('../../../assets/images/playAudio/msg_send_audio@3x.png') no-repeat;
+                        background: url('@/assets/images/playAudio/msg_send_audio@3x.png') no-repeat;
                         background-size: 100% 100%;
                     }
                 }
@@ -325,7 +325,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                     width: 30px;
                     height: 30px;
                     background-size: 100% 100%;
-                    background: url('../../../assets/images/playAudio/msg_send_audio@3x.png') no-repeat;
+                    background: url('@/assets/images/playAudio/msg_send_audio@3x.png') no-repeat;
                 }
 
                 .start_play_audio {

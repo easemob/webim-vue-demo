@@ -1,7 +1,7 @@
 <script setup>
-import NavBar from '@/components/NavBar';
-import { useRoute } from 'vue-router'
-const route = useRoute()
+import NavBar from '@/views/Chat/components/NavBar';
+// import { useRoute } from 'vue-router'
+// const route = useRoute()
 
 </script>
 <template>

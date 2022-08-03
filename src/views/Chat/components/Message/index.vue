@@ -10,7 +10,7 @@ import { Close } from '@element-plus/icons-vue';
 import MessageList from './components/messageList.vue'
 import InputBox from './components/inputBox.vue'
 import UserStatus from '@/components/UserStatus'
-import GroupsDetails from '@/components/AboutGroups/GroupsDetails'
+import GroupsDetails from '@/views/Chat/components/AboutGroups/GroupsDetails'
 /* store */
 const store = useStore()
 /* route */

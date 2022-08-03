@@ -4,7 +4,7 @@ import { ElNotification } from 'element-plus';
 import EaseIM from '@/IM/initwebsdk';
 import { useSDKErrorNotifi } from '@/hooks';
 import { useStore } from 'vuex';
-import CustomImConfig from '@/components/CustomImConfig';
+import CustomImConfig from '@/views/Login/components/CustomImConfig';
 const store = useStore();
 //login图
 const logo = require('@/assets/images/loginIcon.png');

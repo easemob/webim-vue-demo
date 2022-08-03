@@ -9,7 +9,6 @@ const store = useStore();
 const { CHAT_TYPE } = messageType
 //获取当前加入的群组列表
 const joinedGroupList = computed(() => store.state.Contacts.groupList)
-console.log('>>>>>>joinGropList', joinedGroupList.value)
 </script>
 <template>
     <div class="joinedGroupItem_container">

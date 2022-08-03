@@ -28,7 +28,6 @@ const friendList = computed(() => store.state.Contacts.friendList
 
 //取群组列表（展示群组名称）
 const joinedGroupList = computed(() => store.state.Contacts.groupList)
-console.log('conversationList joinedGroupList ', joinedGroupList.value);
 
 //取会话数据
 const conversationList = computed(() => {
