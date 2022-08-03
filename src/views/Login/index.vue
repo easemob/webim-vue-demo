@@ -84,6 +84,7 @@ const checkParams = (params) => {
       message: '环信ID不可为空！',
       type: 'error',
     });
+    buttonLoding.value = false;
     return false;
   }
   if (params['password'] && params['password'].value === '') {
@@ -92,6 +93,7 @@ const checkParams = (params) => {
       message: '环信密码不可为空！',
       type: 'error',
     });
+    buttonLoding.value = false;
     return false;
   }
   if (params['confirmPwd'] && params['confirmPwd'].value === '') {
@@ -100,6 +102,7 @@ const checkParams = (params) => {
       message: '请再次确认密码！',
       type: 'error',
     });
+    buttonLoding.value = false;
     return false;
   }
   if (params['password'] && params['confirmPwd']) {
@@ -109,6 +112,7 @@ const checkParams = (params) => {
         message: '两次密码输入不一致！',
         type: 'error',
       });
+      buttonLoding.value = false;
       return false;
     }
   }

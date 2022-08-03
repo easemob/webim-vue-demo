@@ -3,7 +3,7 @@ import { ref, watch, toRefs, nextTick, computed } from 'vue'
 import _ from 'lodash';
 import { useStore } from 'vuex'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
-import { messageType, wannigText } from '@/constant'
+import { messageType, warningText } from '@/constant'
 import { useScroll } from '@vueuse/core'
 import { Close } from '@element-plus/icons-vue';
 /* 组件 */
@@ -17,7 +17,7 @@ const store = useStore()
 const route = useRoute()
 const drawer = ref(false) //抽屉显隐
 const { CHAT_TYPE } = messageType
-const { EASEIM_HINT, SWINDLER_GO_DIE } = wannigText
+const { EASEIM_HINT, SWINDLER_GO_DIE } = warningText
 const nowPickInfo = ref({});
 const friendList = computed(() => store.state.Contacts.friendList)
 const groupList = computed(() => store.state.Contacts.groupList)
