@@ -209,18 +209,20 @@ defineExpose({
         width: 330px;
         height: 150px;
         border-radius: 5px;
-        overflow-y: scroll;
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: space-between;
+        align-items: center;
         background: #FFF;
-        padding: 10px;
+        padding: 15px 5px;
 
         .emoji {
             display: inline-block;
             width: 25px;
             height: 25px;
+            text-align: center;
+            line-height: 25px;
             cursor: pointer;
             transition: all .3s ease;
 
