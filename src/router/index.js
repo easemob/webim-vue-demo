@@ -35,7 +35,7 @@ const routes = [
         name: 'Conversation',
         meta: {
           title: '会话',
-          keepAlive: false,
+          requiresAuth: true,
         },
         component: () => import('../views/Chat/components/Conversation'),
         children: [
@@ -57,7 +57,7 @@ const routes = [
         name: 'Contacts',
         meta: {
           title: '联系页',
-          keepAlive: true,
+          requiresAuth: true,
         },
         component: () => import('../views/Chat/components/Contacts'),
         children: [
@@ -89,24 +89,26 @@ const router = createRouter({
   routes,
 });
 router.beforeEach((to, from, next) => {
+  console.log('router.from', from, 'router.to', to);
   NProgress.start();
   const loginState = store.state.loginState;
   const EASEIM_loginUser = window.localStorage.getItem('EASEIM_loginUser');
   const loginUserFromStorage = JSON.parse(EASEIM_loginUser) || {};
-  if (to.path === '/login' || to.path === '/') {
-    next();
-    NProgress.done();
-  } else {
-    if (loginState) {
-      next();
-      NProgress.done();
-    } else if (loginUserFromStorage?.user && loginUserFromStorage?.token) {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    //需要登陆
+    if (loginUserFromStorage.user && loginUserFromStorage.accessToken) {
+      //token存在，放行
       next();
       NProgress.done();
     } else {
-      next('/login');
+      //token不存在，跳转登陆页面
+      //query: {redirect: to.fullPath}：标记跳转之前的路由，并设置为参数传递过去
+      next({ path: '/login', query: { redirect: to.fullPath } });
       NProgress.done();
     }
+  } else {
+    next();
+    NProgress.done();
   }
 });
 export default router;

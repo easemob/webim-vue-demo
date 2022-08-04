@@ -8,7 +8,7 @@ import store from '@/store'
 /* 头像相关 */
 import defaultAvatar from '@/assets/images/loginIcon.png'
 const avatarBaseUrl = 'https://download-sdk.oss-cn-beijing.aliyuncs.com/downloads/IMDemo/avatar/'
-const loginUserId = EaseIM.conn.user
+const loginUserId = computed(() => { return store.state.loginUserInfo.hxId })
 const SEX_TEXT = {
     '0': '保密',
     '1': '男',

@@ -9,7 +9,7 @@ const store = useStore();
 const userInfos = computed(() => {
   return store.getters.loginUserInfo;
 });
-const loginUserId = EaseIM.conn.user
+const loginUserId = computed(() => { return store.state.loginUserInfo.hxId })
 
 /* share */
 const shareInfo = ref(null);
