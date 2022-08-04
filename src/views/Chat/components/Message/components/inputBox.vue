@@ -179,7 +179,8 @@ defineExpose({
 
     </div>
     <textarea ref="editable" v-model="textContent" class="chat_content_editable" spellcheck="false"
-        contenteditable="true" placeholder="请输入消息内容..." @keyup.enter="sendTextMessage">
+        contenteditable="true" placeholder="请输入消息内容..." onkeydown="if (event.keyCode === 13) event.preventDefault();"
+        @keyup.enter="sendTextMessage">
     </textarea>
     <el-button class="chat_send_btn" type="primary" @click="sendTextMessage">发送</el-button>
 </template>
