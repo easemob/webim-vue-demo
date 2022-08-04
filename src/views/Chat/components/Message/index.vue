@@ -75,28 +75,27 @@ const notScrollBottom = ref(false); //是否滚动置底
 //获取历史记录
 const fechHistoryMessage = (loadType) => {
   if (!nowPickInfo.value) return []
-  console.log('>>>>>>开始拉取漫游');
   return async () => {
     loadingHistoryMsg.value = true;
     notScrollBottom.value = true;
     if (loadType == 'fistLoad') {
-      console.log('》》》》》》》本次请求为首次加载历史消息')
-      let res = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: -1 })
-      if (res.length > 0) {
+      let { messages, cursor } = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: -1 })
+      if (messages.length > 0) {
         //返回数组有数据显示加载更多
         isMoreHistoryMsg.value = true;
       } else {
         //否则已无更多。
         isMoreHistoryMsg.value = false;
       }
-      console.log('>>>>>首次加载漫游消息拉取完成')
-      scrollMessageList('bottom')
+      setTimeout(() => {
+        scrollMessageList('bottom')
+      }, 500)
+
     }
     else {
       const fistMessageId = messageData.value[0] && messageData.value[0].id;
-      console.log('>>>>>通过点击加载更多的调用', messageData.value[0].id)
-      let res = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: fistMessageId })
-      if (res.length > 0) {
+      let { messages, cursor } = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: fistMessageId })
+      if (messages.length > 0) {
         //返回数组有数据显示加载更多
         isMoreHistoryMsg.value = true;
       } else {
@@ -124,9 +123,7 @@ const { top } = toRefs(arrivedState)
 const scrollMessageList = (direction) => {
   //direction滚动方向 bottom向下滚动 normal向上滚动 
   nextTick(() => {
-    // const messageNodeList = messageContainer.value
     const messageNodeList = document.querySelectorAll('.messageList_box')
-    console.log('>>>>>>messageNodeList', messageNodeList)
     const fistMsgElement = messageNodeList[0];
     const lastMsgElement = messageNodeList[messageNodeList.length - 1];
     console.log('lastMsgElement', lastMsgElement);
@@ -134,12 +131,10 @@ const scrollMessageList = (direction) => {
     //直接滚动置底
     if (direction === 'bottom') {
       lastMsgElement && lastMsgElement.scrollIntoView(true);
-      // messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
     }
     //保持当前的消息位于当前可视窗口
     if (direction === 'normal') {
       fistMsgElement.scrollIntoView(true)
-      console.log('>>>>>开始保持当前位置并滚动');
     }
   })
 }
@@ -148,18 +143,17 @@ const scroll = ({ scrollTop }) => {
 }
 //监听到消息内容改变 置底滚动。
 watch(() => store.state.Message.messageList[nowPickInfo.value.id], (messageData) => {
-  console.log('>>>>监听到的messageData', messageData, notScrollBottom.value)
   scrollMessageList('bottom')
 
 }, {
   deep: true
 })
 //监听到nowPickInfo改变 让消息直接置底
-watch(nowPickInfo, () => nextTick(() => {
+watch(() => route.query, () => nextTick(() => {
   if (Object.keys(nowPickInfo.value).length > 0) {
-    console.log('>>>>>触发nowPickInfo让消息置底', Object.keys(nowPickInfo.value))
     nextTick(() => {
-      messageContainer.value.setScrollTop(100000)
+      // messageContainer.value.setScrollTop(100000)
+      scrollMessageList('bottom')
     })
   }
 }))
@@ -204,7 +198,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
       <el-scrollbar class="main_container" ref="messageContainer" @scroll="scroll">
         <div class="innerRef">
           <div class="chat_message_tips">
-            <div class="load_more_msg">
+            <div v-if="messageData.length > 0" class="load_more_msg">
               <el-link v-if="!loadingHistoryMsg" :disabled="!isMoreHistoryMsg" :underline="false"
                 v-text="isMoreHistoryMsg ? '加载更多' : '已无更多'" @click="fechHistoryMessage()()">
               </el-link>

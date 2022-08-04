@@ -14,7 +14,6 @@ const Message = {
   },
   mutations: {
     UPDATE_MESSAGE_LIST: (state, msgBody) => {
-      console.log('>>>UPDATE_MESSAGE_LIST>>>', msgBody);
       const toUpdateMsgList = _.assign({}, state.messageList);
       const listKey = setMessageKey(msgBody);
       if (!toUpdateMsgList[listKey]) {
@@ -35,20 +34,15 @@ const Message = {
         toUpdateMsgList[listKey].unshift(...historyMessage);
       }
       state.messageList = toUpdateMsgList;
-      console.log('>>>>>>更新历史消息至messageList', payload);
     },
     //清除某条会话消息
     CLEAR_SOMEONE_MESSAGE: (state, payload) => {
-      console.log('>>>>>执行清屏', payload);
       state.messageList[payload] = [];
     },
     //撤回删除消息
     CHANGE_MESSAGE_BODAY: (state, payload) => {
-      console.log('>>>>>>撤回删除消息', payload);
-
       const { type, key, mid } = payload;
       if (type === 'recall') {
-        console.log('>>>>>>>准备开始撤回', state.messageList[key]);
         if (state.messageList[key]) {
           let res = _.find(state.messageList[key], (o) => o.id === mid);
           res.isRecall = true;
@@ -73,9 +67,7 @@ const Message = {
     },
     //获取历史消息
     getHistoryMessage: async ({ dispatch, commit }, params) => {
-      console.log('>>>>>>>>>>params', params);
       const { id, chatType, cursor } = params;
-      console.log('>>>>>>拉取漫游的params', params);
       return new Promise(async (resolve, reject) => {
         let options = {
           targetId: id,
@@ -88,18 +80,11 @@ const Message = {
           let { cursor, messages } = await EaseIM.conn.getHistoryMessages(
             options
           );
-          console.log(
-            '>>>>>>>拉取历史消息成功',
-            'messages',
-            messages,
-            'cursor',
-            cursor
-          );
           messages.length > 0 &&
             messages.forEach((item) => {
               item.read = true;
             });
-          resolve(messages);
+          resolve({ messages, cursor });
           commit('UPDATE_HISTORY_MESSAGE', {
             listKey: id,
             historyMessage: _.reverse(messages),
@@ -113,9 +98,7 @@ const Message = {
     },
     //发送展示类型消息
     sendShowTypeMessage: async ({ dispatch, commit }, params) => {
-      console.log('params', params);
       let options = createMessage.createOptions(params);
-      console.log('>>>>>>sendShowTypeMessage,options', options);
       return new Promise(async (resolve, reject) => {
         let msg = WebIM.message.create(options);
         try {
@@ -124,7 +107,6 @@ const Message = {
           msg.id = serverMsgId;
           msg.from = EaseIM.conn.user;
           let msgBody = createMessage.createMsgBody(msg);
-          console.log('>>>>>>返回的msgBody', msgBody);
           commit('UPDATE_MESSAGE_LIST', msgBody);
           // 提示会话列表更新
           dispatch('gatherConversation', msgBody.to);
