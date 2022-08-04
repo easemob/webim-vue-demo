@@ -100,7 +100,7 @@ router.beforeEach((to, from, next) => {
     if (loginState) {
       next();
       NProgress.done();
-    } else if (loginUserFromStorage) {
+    } else if (loginUserFromStorage?.user && loginUserFromStorage?.token) {
       next();
       NProgress.done();
     } else {
