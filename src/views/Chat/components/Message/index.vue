@@ -165,7 +165,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
 
 </script>
 <template>
-  <el-container class="app_container">
+  <el-container class="app_container" v-if="nowPickInfo">
     <el-header class="chat_message_header">
       <div v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE" class="chat_user_name">
         {{ nowPickInfo.userInfo && nowPickInfo.userInfo.nickname ? nowPickInfo.userInfo.nickname : nowPickInfo.id }}
@@ -185,7 +185,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     </el-header>
     <div v-if="isShowWarningTips" class="easeim_save_tips">
       <p>{{ EASEIM_HINT }}</p>
-      <p>【防骗提示】：{{ randomTips }}</p>
+      <p>【防骗提示】{{ randomTips }}</p>
       <span class="easeim_close_tips" @click="closeWarningTips">
         <el-icon>
           <Close />

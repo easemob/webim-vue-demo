@@ -72,6 +72,18 @@ const Contacts = {
               state.groupList[groupId].groupDetail.description = params;
             }
             break;
+          case 'addAffiliationsCount':
+            {
+              state.groupList[groupId].groupDetail.affiliations_count =
+                state.groupList[groupId].groupDetail.affiliations_count + 1;
+            }
+            break;
+          case 'delAffiliationsCount':
+            {
+              state.groupList[groupId].groupDetail.affiliations_count =
+                state.groupList[groupId].groupDetail.affiliations_count - 1;
+            }
+            break;
           default:
             break;
         }

@@ -69,6 +69,7 @@ const Groups = {
     },
     //群组成员
     fetchGoupsMember: async ({ dispatch, commit }, params) => {
+      console.log('>>>>>>>开始拉取群组成员', params);
       //暂时定死就获取1000个
       let pageNum = 1,
         pageSize = 1000;
@@ -155,10 +156,6 @@ const Groups = {
           message: '群组邀请成功送出~',
           type: 'success',
         });
-        //通知更新群详情
-        dispatch('getAssignGroupDetail', groupId);
-        //更新群成员
-        dispatch('fetchGoupsMember', groupId);
       } catch (error) {
         console.log('>>>>群组邀请失败', error);
         ElMessage({

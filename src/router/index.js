@@ -102,8 +102,7 @@ router.beforeEach((to, from, next) => {
       NProgress.done();
     } else {
       //token不存在，跳转登陆页面
-      //query: {redirect: to.fullPath}：标记跳转之前的路由，并设置为参数传递过去
-      next({ path: '/login', query: { redirect: to.fullPath } });
+      next({ path: '/login' });
       NProgress.done();
     }
   } else {
