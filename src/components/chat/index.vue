@@ -513,7 +513,7 @@ export default{
 <style scoped lang='less'>
 .userlist {
   height: 100%;
-  overflow-y: scroll;
+  overflow-y: auto;
   border-right: 1px solid #e8e8e8;
 }
 .byself {

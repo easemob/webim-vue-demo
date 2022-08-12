@@ -105,6 +105,9 @@ const Login = {
                 const url = domain + '/inside/app/image/' + response.data.data.image_id
                 context.commit('setImageUrl', {url: url, imageId: response.data.data.image_id});
             })
+            .catch(() => {
+            	Message.error('获取图片验证码失败，请刷新重试！')
+            })
 	    },
 	    // 在 appserver 注册用户
 	    registerUser: (context, payload) => {
