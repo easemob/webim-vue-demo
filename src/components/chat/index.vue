@@ -69,7 +69,7 @@ export default{
 			isCollapse: true,
 			unRead: '',
 			dataFlag: false,
-			isDisturb: [] 
+			pushConfigData: [] 
 			// selectedKeys: [ this.getKey(this.activedKey[this.type]) ]
 		};
 	},
@@ -158,10 +158,8 @@ export default{
 		},
 		pushConfig: {
             handler(newVal, oldVal){
-                if (newVal.length) {
-                    this.isDisturb = newVal
-                }
-            },
+            	this.pushConfigData = newVal
+			},
 			deep: true
         }
 	},
@@ -268,8 +266,8 @@ export default{
 			const currentMsgs = chatList[userId] || [];
 			let unReadNum = 0;
 			currentMsgs.forEach(msg => {
-				let isRenderNum = msg.chatType === 'group' ? !this.isDisturb.includes(msg.chatId) : !this.isDisturb.includes(msg.from)
-				if(msg.status !== 'read' && msg.status !== 'recall' && !msg.bySelf && isRenderNum){
+				let isRenderNum = msg.chatType === 'group' ? this.pushConfigData.includes(msg.chatId) : this.pushConfigData.includes(msg.from)
+				if(msg.status !== 'read' && msg.status !== 'recall' && !msg.bySelf && !isRenderNum){
 					unReadNum++;
 				}
 			});
