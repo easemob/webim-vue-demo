@@ -1,6 +1,6 @@
 import { Message } from 'ant-design-vue';
 import axios from 'axios'
-const domain = 'http://a1.easemob.com'
+const domain = window.location.protocol+'//a1.easemob.com'
 const Login = {
 	state: {
 		isRegister: false,
