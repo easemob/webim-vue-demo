@@ -23,10 +23,8 @@ export default{
     watch: {
         pushConfig: {
             handler(newVal, oldVal){
-                const { params } = Vue.$route;
-                if (newVal.length) {
-                    this.isPush = newVal.includes(params.id)
-                }
+            const { params } = Vue.$route;
+            this.isPush = newVal.includes(params.id)
             }
         }
     },
