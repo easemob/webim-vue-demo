@@ -1,9 +1,14 @@
 import { Message } from 'ant-design-vue';
+import axios from 'axios'
+const domain = 'http://a1.easemob.com'
 const Login = {
 	state: {
 		isRegister: false,
 		username: '',
-		userDetail: {}
+		userDetail: {},
+		imageUrl: '',
+		imageId: '',
+		phoneNumber: '',
 	},
 	mutations: {
 		setUserName(state, username){
@@ -14,6 +19,13 @@ const Login = {
 		},
 		setUserDetaild(state, user_detail){
 			state.userDetail = user_detail;
+		},
+		setImageUrl(state, data){
+			state.imageUrl = data.url
+			state.imageId = data.imageId
+		},
+		setPhoneNumber(state, data){
+			state.phoneNumber = data.phoneNumber
 		}
 	},
 	actions: {
@@ -84,9 +96,81 @@ const Login = {
 			const path = flag ? '/register' : '/login';
 			Vue.$router.push(path);
 			context.commit('setRegisterFlag', flag);
-		}
+		},
 
+		// 发短信获取验证码
+	    getCaptcha: (context, payload) => {
+            axios.post(domain+'/inside/app/sms/send', {
+                phoneNumber: payload.phoneNumber,
+                imageId: context.rootState.login.imageId,
+                imageCode: payload.imageCode
+            })
+            .then(function (response) {
+                Message.success('短信已发送')
+            })
+            .catch(function (error) {
+                console.log('error', error.response);
+                if(error.response.status == 400){
+                    Message.error(error.response.data.errorInfo)
+                }
+            });
+	    },
+	    // 获取图片验证码
+	    getImageVerification: (context, payload) => {
+            axios.get(domain+'/inside/app/image')
+            .then(function (response) {
+                const url = domain + '/inside/app/image/' + response.data.data.image_id
+                context.commit('setImageUrl', {url: url, imageId: response.data.data.image_id});
+            })
+	    },
+	    // 在 appserver 注册用户
+	    registerUser: (context, payload) => {
+            const registerState = context.rootState.login
+            const {imageId, imageCode} = registerState
+            const {userId, userPassword, phoneNumber, smsCode} = payload
+            axios.post(domain+'/inside/app/user/register', {
+                userId,
+                userPassword,
+                phoneNumber,
+                smsCode,
+                imageId,
+                imageCode
+            })
+            .then(function (response) {
+                Message.success('注册成功');
+				context.commit('setRegisterFlag', false);
+            })
+            .catch(function (error) {
+                if(error.response.status == '400'){
+                    Message.error(error.response.data.errorInfo)
+                }
+                console.log(error.response);
+            });
+	    },
+	    // 使用 token 登录
+	    loginWithToken: (context, payload) => {
+	    	axios.post(domain+'/inside/app/user/login', {
+                userId: payload.username,
+                userPassword: payload.password
+            })
+            .then(function (response) {
+                const {phoneNumber, token} = response.data
+                context.commit('setPhoneNumber', phoneNumber)
 
+                context.commit('setUserName', payload.username);
+
+				let options = {
+					user: payload.username,
+					accessToken: token,
+                	appKey: WebIM.config.appkey
+				};
+				WebIM.conn.open(options);
+				localStorage.setItem('userInfo', JSON.stringify({ userId: payload.username, password: payload.password }));
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+	    }
 	},
 	getters: {
 

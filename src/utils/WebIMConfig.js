@@ -20,7 +20,7 @@ var config = {
 	// appkey:"gdpwq123#ceshi",
 	// appkey: '5101220107132865#test',
 	// appkey: 'easemob-demo#chatdemoui',
-	appkey: 'easemob-demo#easeim',
+	appkey: 'easemob#easeim',
 	// appkey: 'easemobpush#push1',
 	// appkey: '81446724#514456',
 	// appkey: '41117440#383391',

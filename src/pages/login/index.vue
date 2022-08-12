@@ -2,11 +2,12 @@
 <template>
   <a-layout>
 		<div class="login">
-			<div class="login-panel">
+			<!-- <div class="login-panel">
 				<div class="logo">Web IM</div>
 				<a-input v-model="username" :maxLength="64" placeholder="用户名" />
 				<a-input v-model="password" :maxLength="64" v-on:keyup.13="toLogin" type="password" placeholder="密码" />
 				<a-input v-model="nickname" :maxLength="64" placeholder="昵称" v-show="isRegister == true" />
+
 				<a-button type="primary" @click="toRegister" v-if="isRegister == true">注册</a-button>
 				<a-button type="primary" @click="toLogin" v-else>登录</a-button>
 			</div>
@@ -17,7 +18,116 @@
 			<p class="tip" v-else>
 				没有账号?
 				<span class="green" v-on:click="changeType">注册</span>
-			</p>
+			</p> -->
+
+			<div class="login-panel">
+			<div class="logo">Web IM</div>
+			<a-form :form="form" >
+				 <a-form-item has-feedback>
+			      <a-input
+			      	placeholder="用户名"
+			        v-decorator="[
+			          'username',
+			          {
+			            rules: [{ required: true, message: 'Please input your username!', whitespace: true }],
+			          },
+			        ]"
+			      />
+			    </a-form-item>
+
+				 <a-form-item has-feedback>
+			      <a-input
+			      	placeholder="密码"
+			        v-decorator="[
+			          'password',
+			          {
+			            rules: [
+			              {
+			                required: true,
+			                message: 'Please input your password!',
+			              }
+			            ],
+			          },
+			        ]"
+			        type="password"
+			      />
+			    </a-form-item>
+
+			    <a-form-item has-feedback v-if="isRegister == true">
+			      <a-input
+			      	placeholder="手机号码"
+			        v-decorator="[
+			          'phone',
+			          {
+			            rules: [{ required: true, message: 'Please input your phone number!' }],
+			          },
+			        ]"
+			        style="width: 100%"
+			      >
+			        <a-select
+			          initialValue="86"
+			          slot="addonBefore"
+			          v-decorator="['prefix', { initialValue: '86' }]"
+			          style="width: 70px"
+			        >
+			          <a-select-option value="86">
+			            +86
+			          </a-select-option>
+			        </a-select>
+			      </a-input>
+			    </a-form-item>
+
+			    <a-form-item
+			      v-if="isRegister == true"
+			    >
+			      <a-row :gutter="8">
+			        <a-col :span="16">
+			          <a-input
+			          	placeholder="图片验证码"
+			            v-decorator="[
+			              'imageCode',
+			              { rules: [{ required: true, message: 'Please input the image code!' }] },
+			            ]"
+			          />
+			        </a-col>
+			        <a-col :span="8" style="height: 40px;">
+			          <img :src="imageUrl" class="image-code" v-on:click="getImageVerification"/>
+			        </a-col>
+			      </a-row>
+			    </a-form-item>
+
+			    <a-form-item
+			      v-if="isRegister == true"
+			    >
+			      <a-row :gutter="8">
+			        <a-col :span="14">
+			          <a-input
+			          	placeholder="短信验证码"
+			            v-decorator="[
+			              'captcha',
+			              { rules: [{ required: true, message: 'Please input the captcha you got!' }] },
+			            ]"
+			          />
+			        </a-col>
+			        <a-col :span="10">
+			          <a-button v-on:click="getSmsCode" class="getSmsCodeBtn">{{btnTxt}}</a-button>
+			        </a-col>
+			      </a-row>
+			    </a-form-item>
+
+			    <a-button type="primary" @click="toRegister" class="login-rigester-btn" v-if="isRegister == true">注册</a-button>
+				<a-button type="primary" @click="toLogin" class="login-rigester-btn" v-else>登录</a-button>
+
+			    <p class="tip" v-if="isRegister == true">
+					已有账号?
+					<span class="green" v-on:click="changeType">去登录</span>
+				</p>
+				<p class="tip" v-else>
+					没有账号?
+					<span class="green" v-on:click="changeType">注册</span>
+				</p>
+			</a-form>
+			</div>
 		</div>
   </a-layout>
 </template>
@@ -26,13 +136,19 @@
 import './index.less';
 import { mapState, mapActions } from 'vuex';
 const userInfo = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo'));
+let times = 50;
+let timer
 export default{
 	data(){
 		return {
 			username: userInfo && userInfo.userId || '',
 			password: userInfo && userInfo.password || '',
-			nickname: ''
+			nickname: '',
+			btnTxt: '获取验证码'
 		};
+	},
+	beforeCreate() {
+	    this.form = this.$form.createForm(this, { name: 'register' });
 	},
 	mounted: function(){
 		const path = this.isRegister ? '/register' : '/login';
@@ -40,30 +156,90 @@ export default{
 		if(path !== location.pathname){
 			this.$router.push(path);
 		}
+		if(this.isRegister){
+			this.getImageVerification()
+		}
+	},
+	watch: {
+		isRegister(result){
+			if(result){
+				this.getImageVerification()
+			}
+		}
 	},
 	components: {},
 	computed: {
 		isRegister(){
 			return this.$store.state.login.isRegister;
 		},
+		imageUrl(){
+			return this.$store.state.login.imageUrl
+		},
+		imageId(){
+			return this.$store.state.login.imageId
+		}
 	},
 	methods: {
-		...mapActions(['onLogin', 'setRegisterFlag', 'onRegister']),
+		...mapActions(['onLogin', 'setRegisterFlag', 'onRegister', 'getImageVerification', 'getCaptcha', 'registerUser', 'loginWithToken']),
 		toLogin(){
-			this.onLogin({
-				username: this.username.toLowerCase(),
-				password: this.password
-			});
+			// this.onLogin({
+			// 	username: this.username.toLowerCase(),
+			// 	password: this.password
+			// });
+			const form = this.form;
+		    form.validateFields(['username', 'password'], { force: true }, (err, value) => {
+		    	if(!err){
+		    		const {username, password} = value
+		    		this.loginWithToken({username, password})
+		    	}
+		    });
 		},
-		toRegister(){
-			this.onRegister({
-				username: this.username.toLowerCase(),
-				password: this.password,
-				nickname: this.nickname.toLowerCase(),
-			});
+		toRegister(e){
+			e.preventDefault(e);
+		    this.form.validateFieldsAndScroll((err, values) => {
+		    	console.log(err, values)
+		        if (!err) {
+		        	this.registerUser({
+		        		userId: values.username,
+		                userPassword: values.password,
+		                phoneNumber: values.phone,
+		                smsCode: values.captcha,
+		        	})
+		        }
+		    });
+
+			// this.onRegister({
+			// 	username: this.username.toLowerCase(),
+			// 	password: this.password,
+			// 	nickname: this.nickname.toLowerCase(),
+			// });
 		},
 		changeType(){
 			this.setRegisterFlag(!this.isRegister);
+		},
+		getSmsCode(){
+			if(this.$data.btnTxt != '获取验证码') return
+			const form = this.form;
+		    form.validateFields(['imageCode', 'phone'], { force: true }, (err, value) => {
+		    	if(!err){
+		    		const {phone, imageCode} = value
+		    		this.getCaptcha({phoneNumber: phone, imageCode})
+		    	}
+		    });
+		    this.countDown()
+		},
+		countDown(){
+			this.$data.btnTxt = times
+			timer = setTimeout(() => {
+				this.$data.btnTxt--
+				times--
+				if(this.$data.btnTxt === 0){
+					times = 50
+					this.$data.btnTxt = '获取验证码'
+					return clearTimeout(timer)
+				}
+				this.countDown()
+			}, 1000)
 		}
 	}
 };
