@@ -135,6 +135,9 @@
 <script>
 import './index.less';
 import { mapState, mapActions } from 'vuex';
+import axios from 'axios'
+import { Message } from 'ant-design-vue';
+const domain = window.location.protocol+'//a1.easemob.com'
 const userInfo = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo'));
 let times = 50;
 let timer
@@ -180,7 +183,7 @@ export default{
 		}
 	},
 	methods: {
-		...mapActions(['onLogin', 'setRegisterFlag', 'onRegister', 'getImageVerification', 'getCaptcha', 'registerUser', 'loginWithToken']),
+		...mapActions(['onLogin', 'setRegisterFlag', 'onRegister', 'getImageVerification', 'registerUser', 'loginWithToken']),
 		toLogin(){
 			// this.onLogin({
 			// 	username: this.username.toLowerCase(),
@@ -226,7 +229,28 @@ export default{
 		    		this.getCaptcha({phoneNumber: phone, imageCode})
 		    	}
 		    });
-		    this.countDown()
+		},
+		getCaptcha(payload){
+			const self = this
+			const imageId = this.imageId
+			axios.post(domain+'/inside/app/sms/send', {
+                phoneNumber: payload.phoneNumber,
+                imageId: imageId,
+                imageCode: payload.imageCode
+            })
+            .then(function (response) {
+                Message.success('短信已发送')
+                self.countDown()
+            })
+            .catch(function (error) {
+                console.log('error', error.response);
+                if(error.response && error.response.status == 400){
+                	if(error.response.data.errorInfo == 'Image verification code error.'){
+                		self.getImageVerification()
+                	}
+                    Message.error(error.response.data.errorInfo)
+                }
+            });
 		},
 		countDown(){
 			this.$data.btnTxt = times

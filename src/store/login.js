@@ -98,23 +98,6 @@ const Login = {
 			context.commit('setRegisterFlag', flag);
 		},
 
-		// 发短信获取验证码
-	    getCaptcha: (context, payload) => {
-            axios.post(domain+'/inside/app/sms/send', {
-                phoneNumber: payload.phoneNumber,
-                imageId: context.rootState.login.imageId,
-                imageCode: payload.imageCode
-            })
-            .then(function (response) {
-                Message.success('短信已发送')
-            })
-            .catch(function (error) {
-                console.log('error', error.response);
-                if(error.response.status == 400){
-                    Message.error(error.response.data.errorInfo)
-                }
-            });
-	    },
 	    // 获取图片验证码
 	    getImageVerification: (context, payload) => {
             axios.get(domain+'/inside/app/image')
