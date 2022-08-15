@@ -245,6 +245,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
             max-width: 50%;
             min-height: 34px;
             margin: 0 6px;
+          word-break: break-all;
 
             /* 通用音频播放样式 */
             .message_box_content_audio {
