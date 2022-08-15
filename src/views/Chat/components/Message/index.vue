@@ -41,9 +41,9 @@ const getIdInfo = async ({ id, chatType }) => {
   }
   //类型为群组
   if (chatType === CHAT_TYPE.GROUP) {
-    let goupid = groupList.value[id].groupid
-    goupid && store.dispatch('fetchMultiGoupsInfos', goupid)
-    if (groupList.value[id].groupDetail) {
+    let goupid = groupList.value[id]?.groupid && groupList.value[id]?.groupid
+    goupid && await store.dispatch('fetchMultiGoupsInfos', goupid)
+    if (groupList.value[id]?.groupDetail) {
       return nowPickInfo.value.groupDetail = groupList.value[id].groupDetail
     } else {
       //如果不存在用户属性则请求获取该群群详情。
@@ -55,6 +55,7 @@ const getIdInfo = async ({ id, chatType }) => {
 
 //监听路由改变获取对应的getIdInfo
 const stopWatchRoute = watch(() => route.query, (routeVal) => {
+  console.log('>>>>>>>>监听到路由参数变化', routeVal);
   if (routeVal) {
     nowPickInfo.value = { ...routeVal }
     getIdInfo(routeVal)
@@ -79,7 +80,7 @@ const fechHistoryMessage = (loadType) => {
     loadingHistoryMsg.value = true;
     notScrollBottom.value = true;
     if (loadType == 'fistLoad') {
-      let { messages, cursor } = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: -1 })
+      let { messages } = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: -1 })
       if (messages.length > 0) {
         //返回数组有数据显示加载更多
         isMoreHistoryMsg.value = true;
@@ -94,7 +95,7 @@ const fechHistoryMessage = (loadType) => {
     }
     else {
       const fistMessageId = messageData.value[0] && messageData.value[0].id;
-      let { messages, cursor } = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: fistMessageId })
+      let { messages } = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: fistMessageId })
       if (messages.length > 0) {
         //返回数组有数据显示加载更多
         isMoreHistoryMsg.value = true;
@@ -165,7 +166,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
 
 </script>
 <template>
-  <el-container class="app_container" v-if="nowPickInfo">
+  <el-container v-if="nowPickInfo.userInfo || nowPickInfo.groupDetail" class="app_container">
     <el-header class="chat_message_header">
       <div v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE" class="chat_user_name">
         {{ nowPickInfo.userInfo && nowPickInfo.userInfo.nickname ? nowPickInfo.userInfo.nickname : nowPickInfo.id }}
@@ -194,7 +195,6 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
 
     </div>
     <el-main class="chat_message_main">
-
       <el-scrollbar class="main_container" ref="messageContainer" @scroll="scroll">
         <div class="innerRef">
           <div class="chat_message_tips">
@@ -209,9 +209,6 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
             @reEditMessage="reEditMessage" />
         </div>
       </el-scrollbar>
-
-
-
     </el-main>
     <el-footer class="chat_message_inputbar">
       <InputBox ref="inputBox" :nowPickInfo="nowPickInfo" />
