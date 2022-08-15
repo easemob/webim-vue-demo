@@ -211,11 +211,12 @@ const deleteConversation = (itemKey) => {
     width: 50%;
     height: 40px;
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: flex-start;
 
     .name {
       min-width: 56px;
+      max-width: 120px;
       max-height: 20px;
       font-size: 14px;
       font-weight: bold;
@@ -243,7 +244,7 @@ const deleteConversation = (itemKey) => {
     height: 45px;
     flex-direction: column;
     align-items: flex-end;
-    justify-content: space-around;
+    //justify-content: space-around;
     margin-right: 10px;
 
     .time {
