@@ -5,6 +5,8 @@ import EaseIM from '@/IM/initwebsdk';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { useStore } from 'vuex';
 import CustomImConfig from '@/views/Login/components/CustomImConfig';
+import LoginInput from './components/LoginInput'
+import RegisterInput from './components/registerInput'
 const store = useStore();
 //login图
 const logo = require('@/assets/images/loginIcon.png');
@@ -37,15 +39,7 @@ const loginIM = async () => {
 
   }
 };
-//根据登陆初始化一部分状态
-const loginState = computed(() => store.state.loginState);
-watch(loginState, (newVal) => {
-  if (newVal) {
-    buttonLoding.value = false;
-    username.value = '';
-    password.value = '';
-  }
-});
+
 const registerIM = async () => {
   let resultStatus = checkParams({ username, password, confirmPwd });
   if (resultStatus) {
@@ -135,42 +129,37 @@ const IM_SDK_VERSION = EaseIM.conn.version
 <template>
   <el-container class="app_container">
     <el-main class="login_box">
-      <div>
+    
+     <div>
         <el-row class="login_box_card out-drawer animate__animated animate__slideInLeft">
           <el-col>
             <img class="logo" :src="logo" @click="toEasemob" alt="" />
           </el-col>
-          <el-col>
-            <el-input class="login_input_style" v-model="username" placeholder="请输入用户名..." clearable key="loginUserId"
-              maxlength="64" />
+          <el-col v-if="!isRegister">
+              <LoginInput/>
           </el-col>
-
-          <el-col>
-            <el-input class="login_input_style" v-model="password" type="password" placeholder="请输入密码..." show-password
-              key="loginPwd" />
+          <el-col v-else>
+              <RegisterInput/>
           </el-col>
-          <el-col v-if="isRegister">
-            <el-input class="login_input_style" v-model="confirmPwd" type="password" placeholder="请再次确认密码..."
-              show-password />
-          </el-col>
-          <el-col>
+        
+          <!-- <el-col>
             <div class="function_button_box">
               <el-button v-if="!isRegister" type="primary" round @click="loginIM" :loading="buttonLoding">登陆</el-button>
               <el-button v-else class="reister_button" type="primary" round @click="registerIM">注册</el-button>
             </div>
-          </el-col>
+          </el-col> -->
           <el-col>
             <div class="function_button_extra">
-              <el-link class="custom_config" @click="showCustomImConfigModal">服务器配置</el-link>
+              <!-- <el-link class="custom_config" @click="showCustomImConfigModal">服务器配置</el-link> -->
               <p class="login_text">
-                <span class="login_text_isuserid" v-text="isRegister ? '没有账号?' : '已有账号？'"></span><span
+                <span class="login_text_isuserid" v-text="isRegister ? '没有账号?' : '已有账号？'"></span>
+                <span
                   class="login_text_tologin" v-text="isRegister ? '登陆' : '注册'" @click="isRegister = !isRegister"></span>
               </p>
             </div>
-
           </el-col>
         </el-row>
-      </div>
+      </div> 
     </el-main>
     <el-footer>
       <div class="copyright">Copyright © easemob Web IM SDK版本号：{{ IM_SDK_VERSION ? IM_SDK_VERSION : '4.x' }}</div>
