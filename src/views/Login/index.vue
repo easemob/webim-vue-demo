@@ -4,13 +4,19 @@ import EaseIM from '@/IM/initwebsdk';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import CustomImConfig from '@/views/Login/components/CustomImConfig';
 import LoginInput from './components/LoginInput'
-import RegisterInput from './components/registerInput'
+import RegisterInput from './components/RegisterInput'
+import ResetPassword from './components/ResetPassword'
 //login图
 const logo = require('@/assets/images/loginIcon.png');
 // 登陆注册所用
-const isRegister = ref(false);
+const showComponent = ref(0);
+const componType = {
+  0: LoginInput,
+  1: RegisterInput,
+  2: ResetPassword
+}
 const changeToLogin = () => {
-  isRegister.value = false
+  showComponent.value = 0
 }
 const toEasemob = () => {
   const linkUrl = 'https://www.easemob.com/?utm_source=baidu-ppwx';
@@ -29,25 +35,21 @@ const IM_SDK_VERSION = EaseIM.conn.version
 <template>
   <el-container class="app_container">
     <el-main class="login_box">
-
       <div>
         <el-row class="login_box_card out-drawer animate__animated animate__slideInLeft">
           <el-col>
             <img class="logo" :src="logo" @click="toEasemob" alt="" />
           </el-col>
-          <el-col v-if="!isRegister">
-            <LoginInput />
-          </el-col>
-          <el-col v-else>
-            <RegisterInput @changeToLogin="changeToLogin" />
-          </el-col>
-          <el-col>
-            <div class="function_button_extra">
+          <component :is="componType[showComponent]" @changeToLogin="changeToLogin"></component>
+          <el-col v-show="showComponent !==2">
+            <div  class="function_button_extra">
+              <el-link class="reset_password" @click="showComponent = 2">重置密码</el-link>
               <!-- <el-link class="custom_config" @click="showCustomImConfigModal">服务器配置</el-link> -->
               <p class="login_text">
-                <span class="login_text_isuserid" v-text="isRegister ? '没有账号?' : '已有账号？'"></span>
-                <span class="login_text_tologin" v-text="isRegister ? '登陆' : '注册'"
-                  @click="isRegister = !isRegister"></span>
+                <span class="login_text_isuserid" v-show="showComponent === 0">没有账号？</span>
+                <span class="login_text_isuserid" v-show="showComponent === 1">已有账号？</span>
+                <span class="login_text_tologin" v-show="showComponent === 0" @click="showComponent = 1">注册</span>
+                <span class="login_text_tologin" v-show="showComponent === 1" @click="showComponent = 0">登录</span>
               </p>
             </div>
           </el-col>
@@ -134,7 +136,8 @@ const IM_SDK_VERSION = EaseIM.conn.version
         padding: 0 10px;
       }
 
-      .custom_config {
+      .custom_config,
+      .reset_password {
         margin-left: 20px;
         font-family: 'PingFang SC';
         font-style: normal;

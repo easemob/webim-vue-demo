@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, toRefs, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import EaseIM from '@/IM/initwebsdk';
 import { ElNotification } from 'element-plus';
@@ -44,14 +44,12 @@ const imageCodeInfo = reactive({
 })
 
 const changeImageCode = () => {
-    console.log('切换图片验证码');
     sendImageCode()
 }
 //获取图片验证码
 const sendImageCode = async () => {
     try {
         let { data } = await createImageCode()
-        console.log('sendMessageAuthCode', data);
         if (data.image_enabled === 'true') {
             imageCodeInfo.imgUrl = `${EaseIM.conn.apiUrl}/inside/app/image/${data.image_id}`
             imageCodeInfo.imageId = data.image_id
@@ -75,7 +73,6 @@ const sendMessageAuthCode = async () => {
         imageId: imageCodeInfo.imageId,
         imageCode: registerValue.imageCode
     }
-    console.log('>>>>>请求短信接口params', params);
     try {
         await fetchAuthCode({ ...params })
         ElMessage.success('验证码已发送,请注意查收！')
@@ -125,7 +122,6 @@ const registerIM = async (formEl) => {
                 });
                 //通知改变为登陆模式
                 emits('changeToLogin')
-                console.log('submit!')
             } catch (error) {
                 if (error.response.data) {
                     const { code, errorInfo } = error.response.data
@@ -134,7 +130,6 @@ const registerIM = async (formEl) => {
             }
 
         } else {
-            console.log('error submit!', fields)
         }
     })
 };
