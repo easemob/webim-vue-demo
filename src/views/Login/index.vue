@@ -1,117 +1,17 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
-import { ElNotification } from 'element-plus';
+import { ref } from 'vue';
 import EaseIM from '@/IM/initwebsdk';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
-import { useStore } from 'vuex';
-import CustomImConfig from '@/views/Login/components/CustomImConfig';
+// import CustomImConfig from '@/views/Login/components/CustomImConfig';
 import LoginInput from './components/LoginInput'
 import RegisterInput from './components/registerInput'
-const store = useStore();
 //login图
 const logo = require('@/assets/images/loginIcon.png');
 // 登陆注册所用
 const isRegister = ref(false);
-const username = ref('hfp');
-const password = ref('1');
-const confirmPwd = ref('');
-const buttonLoding = ref(false);
-const loginIM = async () => {
-  buttonLoding.value = true;
-  let resultStatus = checkParams({ username, password });
-  if (resultStatus) {
-    try {
-      let { accessToken } = await EaseIM.conn.open({
-        user: username.value.toLowerCase(),
-        pwd: password.value.toLowerCase(),
-      });
-      window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: username.value, accessToken: accessToken }))
-    } catch (error) {
-      console.log('>>>>登陆失败', error);
-      const { data: { extraInfo } } = error
-      handleSDKErrorNotifi(error.type, extraInfo.errDesc);
-      username.value = '';
-      password.value = '';
-    }
-    finally {
-      buttonLoding.value = false;
-    }
-
-  }
-};
-
-const registerIM = async () => {
-  let resultStatus = checkParams({ username, password, confirmPwd });
-  if (resultStatus) {
-    console.log('>>>>>>开始注册');
-    try {
-      await EaseIM.conn.registerUser({
-        username: username.value,
-        password: password.value,
-      });
-      ElNotification({
-        title: 'Easemob',
-        message: '注册成功！',
-        type: 'success',
-      });
-      username.value = '';
-      password.value = '';
-      confirmPwd.value = '';
-      isRegister.value = false;
-    } catch (error) {
-      console.log('注册error', error);
-      const errorMsg = error.data && JSON.parse(error.data);
-      console.log('>>>>>>>>>errorMsg', errorMsg);
-
-      errorMsg && handleSDKErrorNotifi(error.type, errorMsg.error);
-      username.value = '';
-      password.value = '';
-      confirmPwd.value = '';
-    }
-  }
-};
-const checkParams = (params) => {
-
-  if (params['username'] && params['username'].value === '') {
-    ElNotification({
-      title: 'Easemob',
-      message: '环信ID不可为空！',
-      type: 'error',
-    });
-    buttonLoding.value = false;
-    return false;
-  }
-  if (params['password'] && params['password'].value === '') {
-    ElNotification({
-      title: 'Easemob',
-      message: '环信密码不可为空！',
-      type: 'error',
-    });
-    buttonLoding.value = false;
-    return false;
-  }
-  if (params['confirmPwd'] && params['confirmPwd'].value === '') {
-    ElNotification({
-      title: 'Easemob',
-      message: '请再次确认密码！',
-      type: 'error',
-    });
-    buttonLoding.value = false;
-    return false;
-  }
-  if (params['password'] && params['confirmPwd']) {
-    if (params['password'].value !== params['confirmPwd'].value) {
-      ElNotification({
-        title: 'Easemob',
-        message: '两次密码输入不一致！',
-        type: 'error',
-      });
-      buttonLoding.value = false;
-      return false;
-    }
-  }
-  return true;
-};
+const changeToLogin = () => {
+  isRegister.value = false
+}
 const toEasemob = () => {
   const linkUrl = 'https://www.easemob.com/?utm_source=baidu-ppwx';
   window.open(linkUrl, 'Easemob');
@@ -129,37 +29,30 @@ const IM_SDK_VERSION = EaseIM.conn.version
 <template>
   <el-container class="app_container">
     <el-main class="login_box">
-    
-     <div>
+
+      <div>
         <el-row class="login_box_card out-drawer animate__animated animate__slideInLeft">
           <el-col>
             <img class="logo" :src="logo" @click="toEasemob" alt="" />
           </el-col>
           <el-col v-if="!isRegister">
-              <LoginInput/>
+            <LoginInput />
           </el-col>
           <el-col v-else>
-              <RegisterInput/>
+            <RegisterInput @changeToLogin="changeToLogin" />
           </el-col>
-        
-          <!-- <el-col>
-            <div class="function_button_box">
-              <el-button v-if="!isRegister" type="primary" round @click="loginIM" :loading="buttonLoding">登陆</el-button>
-              <el-button v-else class="reister_button" type="primary" round @click="registerIM">注册</el-button>
-            </div>
-          </el-col> -->
           <el-col>
             <div class="function_button_extra">
               <!-- <el-link class="custom_config" @click="showCustomImConfigModal">服务器配置</el-link> -->
               <p class="login_text">
                 <span class="login_text_isuserid" v-text="isRegister ? '没有账号?' : '已有账号？'"></span>
-                <span
-                  class="login_text_tologin" v-text="isRegister ? '登陆' : '注册'" @click="isRegister = !isRegister"></span>
+                <span class="login_text_tologin" v-text="isRegister ? '登陆' : '注册'"
+                  @click="isRegister = !isRegister"></span>
               </p>
             </div>
           </el-col>
         </el-row>
-      </div> 
+      </div>
     </el-main>
     <el-footer>
       <div class="copyright">Copyright © easemob Web IM SDK版本号：{{ IM_SDK_VERSION ? IM_SDK_VERSION : '4.x' }}</div>

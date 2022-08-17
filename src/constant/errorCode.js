@@ -36,6 +36,16 @@ export default {
   221: {
     'not contact': '非好友关系,不可发送消息！',
   },
+  400:{
+    'UserId password error.':'用户密码错误！',
+    'Please wait a moment while trying to send.':'验证码在有效期内，请勿重复发送！',
+    'Image verification code error.':'图片验证码错误，请更换验证码或重新输入！',
+    'Image code id cannot be empty.':'请填入图片验证码！',
+    'Phone number cannot be empty.':'获取图片验证码请填入手机号！',
+    'UserId hfp already exists.':'用户已注册！',
+    'phone number illegal':'手机号不合法！',
+    'Please send SMS to get mobile phone verification code.':'请发送短信获取手机验证码！'
+  },
   603: {
     blocked: '对方已将您加入黑名单！',
   },

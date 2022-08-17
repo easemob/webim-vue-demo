@@ -3,6 +3,7 @@ import { ref, reactive, watch, computed } from 'vue'
 import { ElNotification } from 'element-plus';
 import EaseIM from '@/IM/initwebsdk';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
+import { fetchUserLoginToken } from '@/api/login';
 import { useStore } from 'vuex';
 const store = useStore();
 const loginValue = reactive({
@@ -31,23 +32,47 @@ const rules = reactive({
 //登陆接口调用
 const loginIM = async () => {
   buttonLoding.value = true;
+  /* SDK 登陆的方式 */
+  // try {
+  //   let { accessToken } = await EaseIM.conn.open({
+  //     user: loginValue.username.toLowerCase(),
+  //     pwd: loginValue.password.toLowerCase(),
+  //   });
+  //   window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: loginValue.username, accessToken: accessToken }))
+  // } catch (error) {
+  //   console.log('>>>>登陆失败', error);
+  //   const { data: { extraInfo } } = error
+  //   handleSDKErrorNotifi(error.type, extraInfo.errDesc);
+  //   loginValue.username = '';
+  //   loginValue.username = '';
+  // }
+  // finally {
+  //   buttonLoding.value = false;
+  // }
+  /* 环信后台接口登陆（仅供环信线上demo使用！） */
+  let params = {
+    userId: loginValue.username.toLowerCase(),
+    userPassword: loginValue.password.toLowerCase(),
+  }
   try {
-    let { accessToken } = await EaseIM.conn.open({
+    //phoneNumber 暂时不支持用作user，后续支持手机号登陆
+    let { phoneNumber, token } = await fetchUserLoginToken(params)
+    console.log('>>>>>>登陆token获取成功', token);
+    EaseIM.conn.open({
       user: loginValue.username.toLowerCase(),
-      pwd: loginValue.password.toLowerCase(),
-    });
-    window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: loginValue.username, accessToken: accessToken }))
+      accessToken: token
+    })
+    window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: loginValue.username, accessToken: token }))
   } catch (error) {
     console.log('>>>>登陆失败', error);
-    const { data: { extraInfo } } = error
-    handleSDKErrorNotifi(error.type, extraInfo.errDesc);
-    loginValue.username = '';
-    loginValue.username = '';
+    if (error.response.data) {
+      const { code, errorInfo } = error.response.data
+      handleSDKErrorNotifi(code, errorInfo)
+    }
   }
   finally {
     buttonLoding.value = false;
   }
-
 
 };
 

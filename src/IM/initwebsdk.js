@@ -6,7 +6,7 @@ const webimConfig = window.localStorage.getItem('webimConfig');
 const CUSTOM_CONFIG = (webimConfig && JSON.parse(webimConfig)) || {};
 console.log('>>>>>>webimConfig', CUSTOM_CONFIG);
 //环信appKey默认配置项
-const DEFAULT_APPKEY = 'easemob-demo#support';
+const DEFAULT_APPKEY = 'easemob#easeim';
 const DEFAULT_URL = `//im-api-v2.easemob.com/ws`;
 const DEFAULT_APIURL = `//a1.easemob.com`;
 //存放实例化后所有的方法
