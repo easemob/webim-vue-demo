@@ -114,7 +114,7 @@ const sendFilesMessages = () => {
 }
 /* 语音消息相关 */
 //展示录音对话框
-const isHttps = window.location.protocol === 'https' || window.location.hostname === 'localhost'
+const isHttps = window.location.protocol === 'https:' || window.location.hostname === 'localhost'
 const isShowRecordBox = ref(false)
 const recordBox = ref(null)
 onClickOutside(recordBox, () => { isShowRecordBox.value = false; })
