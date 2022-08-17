@@ -155,7 +155,7 @@ const Chat = {
 			Object.keys(state.msgList[name]).forEach((user) => {
 				// console.log(state.msgList[name][user]);
 
-				if (action == 'oneUserReadMsgs') {
+				if (action == 'oneUserReadMsgs' || action == 'updatePushConfig') {
 					if (state.msgList[name][readUser]) {
 						state.msgList[name][readUser].forEach((msg) => {
 							if (msg.status != 'recall') {

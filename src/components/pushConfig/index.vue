@@ -43,6 +43,10 @@ export default{
         ]),
         handleChangeChecked(val){
             this.isPush = val;
+            if (!val) {
+                const { params } = Vue.$route;
+                Vue.$store.commit('updateMessageStatus', {action: 'updatePushConfig', readUser: params.id});
+            }
         },
         changeModal(){
 			this.$data.showConfigModal = !this.$data.showConfigModal;

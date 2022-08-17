@@ -126,6 +126,7 @@ export default {
     },
     handlerClose() {
       this.showModal = false;
+      this.searchValue = ''
     },
     onSearch (e) {
       let newMsgs = [];
