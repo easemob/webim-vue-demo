@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import EaseIM from '@/IM/initwebsdk';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
-// import CustomImConfig from '@/views/Login/components/CustomImConfig';
+import CustomImConfig from '@/views/Login/components/CustomImConfig';
 import LoginInput from './components/LoginInput'
 import RegisterInput from './components/registerInput'
 //login图

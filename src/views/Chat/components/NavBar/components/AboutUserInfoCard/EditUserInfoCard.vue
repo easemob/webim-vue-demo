@@ -18,13 +18,13 @@ const SEX_TEXT = {
 let isEdit = ref(false)
 const dialogVisible = ref(false)
 let userInfos = ref({
-    nickname: 'Meg',
+    nickname: '',
     avatarurl: '',
     mail: '123@qq.com',
     phone: '16888888888',
     gender: '0', //0 未知 1男 2女
-    birth: '2000-01-01',
-    sign: '一条个性签名一条个性签名一条个性条个性签名名名名名名名名名名名名名名',
+    birth: '2022-02-14',
+    sign: '像你这种人活该你写代码没bug！',
 
 })
 //获取store中的从SDK接口返回的用户属性
