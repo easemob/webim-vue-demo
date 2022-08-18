@@ -20,14 +20,6 @@ export default{
             showConfigModal: false,
         }
     },
-    watch: {
-        pushConfig: {
-            handler(newVal, oldVal){
-            const { params } = Vue.$route;
-            this.isPush = newVal.includes(params.id)
-            }
-        }
-    },
     computed: {
 		...mapGetters({
 			pushConfig: 'onPushConfig'
@@ -42,7 +34,6 @@ export default{
             'onClearSilent',
         ]),
         handleChangeChecked(val){
-            this.isPush = val;
             if (!val) {
                 const { params } = Vue.$route;
                 Vue.$store.commit('updateMessageStatus', {action: 'updatePushConfig', readUser: params.id});
@@ -50,6 +41,9 @@ export default{
         },
         changeModal(){
 			this.$data.showConfigModal = !this.$data.showConfigModal;
+            const { params } = Vue.$route;
+            const onPushConfigData = this.pushConfig;
+            this.isPush = onPushConfigData.includes(params.id)
 		},
         handleOk() {
             if (this.isPush) {
