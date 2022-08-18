@@ -74,14 +74,14 @@ const searchFriend = () => {
 /* 创建群组form */
 //创建群组群组所用参数
 let groupCreateForm = reactive({
-    groupname: "群名称...",
-    desc: "群描述...",
+    groupname: "",
+    desc: "",
     members: [],
     public: true,
     approval: true,
     allowinvites: true,
     inviteNeedConfirm: true,
-    maxusers: 500
+    maxusers: 200
 })
 //监听关闭初始化form内容
 watch(dialogVisible, (newVal) => {
@@ -91,14 +91,14 @@ watch(dialogVisible, (newVal) => {
 })
 const sourceForm = () => {
     return {
-        groupname: "群名称...",
-        desc: "群描述...",
+        groupname: "",
+        desc: "",
         members: [],
         public: true,
         approval: true,
         allowinvites: true,
         inviteNeedConfirm: true,
-        maxusers: 500
+        maxusers: 200
     }
 }
 //创建群组
@@ -119,6 +119,7 @@ const createNewGroups = async () => {
             type: 'success',
         })
         router.push({ path: '/chat/conversation/message', query: { id: data.groupid, chatType: CHAT_TYPE.GROUP } })
+        store.dispatch('createInformMessage', { from: EaseIM.conn.user, to: data.groupid, chatType: CHAT_TYPE.GROUP, msg: `您的群组，【${groupCreateForm.groupname}】创建成功,聊两句吧！` })
         resetTheModalStatus()
     }
     catch (error) {
@@ -196,15 +197,16 @@ const resetTheModalStatus = () => {
         <el-row v-else>
             <el-form class="create_groups__main" ref="groupCreate" :mode="groupCreateForm" label-position="left">
                 <el-form-item label="群名称">
-                    <el-input class="create_groups" v-model="groupCreateForm.groupname" size="large" />
+                    <el-input class="create_groups" v-model="groupCreateForm.groupname" size="large"
+                        placeholder="群组名称..." />
                 </el-form-item>
                 <el-form-item label="群详情">
-                    <el-input class="create_groups" v-model="groupCreateForm.desc" maxlength="300" placeholder="请输入群组详情"
+                    <el-input class="create_groups" v-model="groupCreateForm.desc" maxlength="300" placeholder="群组描述..."
                         show-word-limit type="text" />
                 </el-form-item>
                 <el-form-item label="群人数">
                     <el-input class="create_groups" v-model="groupCreateForm.maxusers" type="number" min="200"
-                        size="large" />
+                        max="1000" :step="100" size="large" />
                 </el-form-item>
                 <el-form-item label="公开群">
                     <el-switch v-model="groupCreateForm.public" inactive-color="#DCDFE5" inline-prompt active-text="是"
@@ -248,7 +250,7 @@ const resetTheModalStatus = () => {
         left: 0;
         top: 50px;
         width: 100%;
-        min-height: 290px;
+        min-height: 280px;
         max-height: 80%;
         overflow-y: auto;
         background: #FFF;
@@ -257,7 +259,7 @@ const resetTheModalStatus = () => {
 }
 
 .create_modal_main {
-    max-height: 270px;
+    max-height: 300px;
     overflow-y: auto;
 
 

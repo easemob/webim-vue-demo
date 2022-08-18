@@ -17,6 +17,7 @@ const ALL_MESSAGE_TYPE = {
   FILE: 'file',
   CUSTOM: 'custom',
   CMD: 'cmd',
+  INFORM:'inform' //这个类型不在环信消息类型内，属于自己定义的一种系统通知类的消息。
 };
 const CHAT_TYPE = {
   SINGLE: 'singleChat',

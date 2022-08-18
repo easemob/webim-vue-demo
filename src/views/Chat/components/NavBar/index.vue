@@ -135,6 +135,12 @@ const logout = ref(null)
       </template>
       <template #default>
         <div class="setting_fun_list">
+          <div class="func_item" @click="showInputModal('addNewFriend')">
+            <span class="settting_fun_icon">
+              <img :src="applyAddFriendIcon" alt="">
+            </span>
+            <span class="setting_fun_text">添加好友</span>
+          </div>
           <div class="func_item" @click="showInputModal('createNewGroups')">
             <span class="settting_fun_icon">
               <img :src="createGroupIcon" alt="">
@@ -150,12 +156,6 @@ const logout = ref(null)
               申请入群
               <b class="line"></b>
             </span>
-          </div>
-          <div class="func_item" @click="showInputModal('addNewFriend')">
-            <span class="settting_fun_icon">
-              <img :src="applyAddFriendIcon" alt="">
-            </span>
-            <span class="setting_fun_text">添加好友</span>
           </div>
         </div>
       </template>

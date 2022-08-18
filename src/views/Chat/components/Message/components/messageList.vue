@@ -123,7 +123,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
 <template>
 
     <div class="messageList_box" v-for="(msgBody, index) in messageData" :key="msgBody.id">
-        <div v-if="!msgBody.isRecall" class="message_box_item"
+        <div v-if="!msgBody.isRecall && msgBody.type !== ALL_MESSAGE_TYPE.INFORM" class="message_box_item"
             :style="{ flexDirection: (isMyself(msgBody) ? 'row-reverse' : 'row') }">
             <div class="message_item_time">{{ dateFormat('MM/DD/HH:mm', msgBody.time) }}</div>
             <el-avatar class="message_item_avator"
@@ -202,6 +202,11 @@ const reEdit = (msg) => emit('reEditMessage', msg)
         <div v-if="msgBody.isRecall" class="recall_style">{{ isMyself(msgBody) ? "你" : `${msgBody.from}` }}撤回了一条消息<span
                 class="reEdit" v-show="isMyself(msgBody) && msgBody.type === ALL_MESSAGE_TYPE.TEXT"
                 @click="reEdit(msgBody.msg)">重新编辑</span></div>
+        <div v-if="msgBody.type === ALL_MESSAGE_TYPE.INFORM" class="inform_style">
+            <p>
+                {{msgBody.msg}}
+            </p>
+        </div>
     </div>
 </template>
 
@@ -245,7 +250,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
             max-width: 50%;
             min-height: 34px;
             margin: 0 6px;
-          word-break: break-all;
+            word-break: break-all;
 
             /* 通用音频播放样式 */
             .message_box_content_audio {
@@ -429,7 +434,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
 
     }
 
-    .recall_style {
+    .recall_style,.inform_style {
         height: 60px;
         text-align: center;
         color: #aaaaaa;
@@ -442,6 +447,6 @@ const reEdit = (msg) => emit('reEditMessage', msg)
             cursor: pointer;
         }
     }
-
+    
 }
 </style>

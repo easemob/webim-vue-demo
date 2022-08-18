@@ -7,7 +7,7 @@ import {
 import _ from 'lodash';
 import { ref, toRaw } from 'vue';
 import { messageType } from '@/constant';
-const { CHAT_TYPE } = messageType;
+const { CHAT_TYPE,ALL_MESSAGE_TYPE } = messageType;
 const Message = {
   state: {
     messageList: ref({}),
@@ -117,6 +117,15 @@ const Message = {
           console.log('>>>>>>发送失败', error);
         }
       });
+    },
+    //添加通知类消息
+    createInformMessage: ({dispatch,commit},params)=>{
+      let msgBody = _.cloneDeep(params)
+      msgBody.type = ALL_MESSAGE_TYPE.INFORM
+      let key = setMessageKey(params);
+     console.log('>>>>>>添加系统消息',params);
+     commit('UPDATE_MESSAGE_LIST', msgBody);
+     dispatch('gatherConversation', key);
     },
     //撤回消息
     recallMessage: async ({ dispatch, commit }, params) => {

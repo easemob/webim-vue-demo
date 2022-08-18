@@ -7,8 +7,9 @@ import {
 } from '@/utils/handleSomeData';
 import Message from './message';
 import EaseIM from '@/IM/initwebsdk';
-import { informType } from '@/constant';
+import { informType,messageType } from '@/constant';
 const { INFORM_FROM, INFORM_TYPE } = informType;
+const { CHAT_TYPE } = messageType
 const Conversation = {
   state: {
     informDetail: [],
@@ -77,8 +78,14 @@ const Conversation = {
       console.log('>>>>>>>>>createNewInform', fromType, informContent);
       let result = createInform(fromType, informContent);
       commit('UPDATE_INFORM_LIST', result);
-      //部分事件需要调用接口更新本地信息
+     
+      //部分事件需要调用接口更新本地信息或者增加消息内系统通知
       if (fromType === INFORM_FROM.FRIEND) {
+        let informMsg = {
+          from:informContent.from,
+          to:informContent.to,
+          chatType: CHAT_TYPE.SINGLE
+        }
         switch (informContent.type) {
           case 'other_person_agree':
             {
@@ -88,12 +95,25 @@ const Conversation = {
             }
 
             break;
-
+            case 'unsubscribed':{
+              informMsg.msg = `你俩的友尽了，要不要重新加回来？`
+              dispatch('createInformMessage',informMsg)
+            }
+            break;
+            case 'subscribed':{
+              informMsg.msg = `你俩已经成为好友了~开心的聊两句吧。`
+              dispatch('createInformMessage',informMsg)
+            }
           default:
             break;
         }
       }
       if (fromType === INFORM_FROM.GROUP) {
+        let informMsg = {
+          from:informContent.from,
+          to:informContent.id,
+          chatType: CHAT_TYPE.GROUP
+        }
         switch (informContent.operation) {
           case 'memberPresence': //入群通知
             {
@@ -102,6 +122,8 @@ const Conversation = {
                 type: 'addAffiliationsCount',
               });
               dispatch('fetchGoupsMember', informContent.id);
+              informMsg.msg = `${informContent.from}加入了群组`
+              dispatch('createInformMessage',informMsg)
             }
             break;
           case 'memberAbsence': {
@@ -111,7 +133,37 @@ const Conversation = {
               type: 'delAffiliationsCount',
             });
             dispatch('fetchGoupsMember', informContent.id);
+            informMsg.msg = `${informContent.from}退出了群组`
+            dispatch('createInformMessage',informMsg)
           }
+          break;
+          case 'updateAnnouncement':{
+            dispatch('fetchGoupsAdmin')
+            informMsg.msg = `${informContent.from}更新了群组公告，去看看更新的什么吧~`
+            dispatch('createInformMessage',informMsg)
+          }
+          break;
+          case 'setAdmin':{
+            dispatch('fetchGoupsAdmin')
+            informMsg.msg = `${informContent.from}设定${informContent.to}为管理员~`
+            dispatch('createInformMessage',informMsg)
+          }
+          break;
+          case 'removeAdmin':{
+            informMsg.msg = `${informContent.from}移除了${informContent.to}的管理员身份~`
+            dispatch('createInformMessage',informMsg)
+          }
+          break;
+          case 'muteMember':{
+            informMsg.msg = `${informContent.from}禁言了${informContent.to}~`
+            dispatch('createInformMessage',informMsg)
+          }
+          break;
+          case 'unmuteMember':{
+            informMsg.msg = `${informContent.from}取消了${informContent.to}的禁言~`
+            dispatch('createInformMessage',informMsg)
+          }
+          break;
           default:
             break;
         }
