@@ -271,7 +271,6 @@ export default{
 		curMsgList: {
 			handler(msgNewVal, msgOldVal){
 				const { params: { id } } = this.$route
-				console.log(msgNewVal, msgOldVal, 'msgNewVal, msgOldVal')
 				if(!msgOldVal){
 					if(msgNewVal && Object.keys(msgNewVal).length){
 						// eslint-disable-next-line guard-for-in
@@ -472,7 +471,6 @@ export default{
 			});
 		},
 		select(key){
-			console.log(key, 'key')
 			switch(this.type){
 			case 'contact':
 				this.conversationId = key.name

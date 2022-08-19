@@ -149,7 +149,6 @@ export default{
 			};
 			WebIM.EMService.onStreamAdded = function(member, stream){
 				const located = stream.located();
-				console.log('来流了', stream.located());
 				let index;
 				if(located){
 					let localVideo = me.$refs.rv_local;

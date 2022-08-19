@@ -200,7 +200,6 @@ export default{
 		toRegister(e){
 			e.preventDefault(e);
 		    this.form.validateFieldsAndScroll((err, values) => {
-		    	console.log(err, values)
 		        if (!err) {
 		        	this.registerUser({
 		        		userId: values.username,
@@ -243,7 +242,6 @@ export default{
                 self.countDown()
             })
             .catch(function (error) {
-                console.log('error', error.response);
                 if(error.response && error.response.status == 400){
                 	if(error.response.data.errorInfo == 'Image verification code error.'){
                 		self.getImageVerification()

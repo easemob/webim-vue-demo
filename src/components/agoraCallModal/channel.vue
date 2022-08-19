@@ -123,7 +123,6 @@ export default{
 
 		addListener(){
 			rtc.client.on('user-published', async (user, mediaType) => {
-				console.log('-- 对方发布流 -- ');
 				// 开始订阅远端用户。
 				await rtc.client.subscribe(user, mediaType);
 
@@ -148,13 +147,11 @@ export default{
 			});
 
 			rtc.client.on('user-left', () => {
-				console.log('-- 对方已离开 --');
 				this.hangup();
 			});
 		},
 
 		async join(){
-			console.log('执行join');
 			const { confr } = this.$store.state.agora;
 			let { channel, token, type } = confr;
 			const appId = WebIM.config.AgoraAppId;
@@ -192,7 +189,6 @@ export default{
 				rtc.localVideoTrack.play('local-player');
 			}
 
-			console.log('publish success! --- ');
 			this.interval();
 		},
 

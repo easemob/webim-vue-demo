@@ -45,16 +45,13 @@ export default{
 
 		// 同意
 		accept(){
-			console.log('同意');
 			const answerCallStatus = 5;
 			this.answerCall({ result: 'accept' });
 			this.setCallStatus(answerCallStatus);
 		},
 		// 拒绝
 		refuse(){
-			console.log('拒绝');
 			this.answerCall({ result: 'refuse' });
-			console.log('Vue>>', Vue.$store.getters.getAgora);
 			if(Vue.$store.getters.getAgora.callStatus < 7){
 				this.hangup();
 			}

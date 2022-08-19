@@ -88,7 +88,6 @@ export default{
 		},
 		startConference(){
 			let invitees = this.$data.checkList.filter(item => item != this.$data.username)
-			console.log('invitees>>>', invitees);
 			this.handleSubmit(invitees)
 			this.hide();
 		},
@@ -103,7 +102,6 @@ export default{
 
 			const callId = confr.callId || WebIM.conn.getUniqueId().toString();
 			const channelName = confr.channel || Math.uuid(8);
-			console.log('channelName发送>>', channelName);
 			const confrObj = {
 				channelName: channelName,
 				type: 2,
@@ -129,7 +127,6 @@ export default{
 		sendInviteMsg(to, confr, gid){
 			let id = WebIM.conn.getUniqueId();
 			let msg = new WebIM.message('txt', id);
-			console.log('this.$store.state.confr>>', this.$store.state.agora.confr);
 			const { channel } = this.$store.state.agora.confr;
 			let set_options = {
 				msg: this.type === 'singleChat' ? '邀请您进行视频通话' : '邀请您进行多人视频通话',
@@ -147,8 +144,6 @@ export default{
 				},
 			};
 			msg.set(set_options);
-			console.log(msg, 'sendInviteMsg')
-			console.log('%c sendInviteMsg', 'font-size:20px;color:red;')
 			WebIM.conn.send(msg.body);
 		},
 	},

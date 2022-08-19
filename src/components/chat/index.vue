@@ -102,14 +102,12 @@ export default{
 				// this.getAllFriendsStatus()
 				this.dataFlag = false
 				
-        ('%c contact', 'color:red;font-size:20px;')
 				const params = {
 					usernames: []
 				}
 				val.forEach(item => {
 					params.usernames.push(item.name)
 				})
-				console.log(params)
 				// params.usernames.length && this.subFriendStatus(params).then(res => {
 				// 	console.log(res, this.contact, '333333333333333333')
 				// 	let tempArr = []
@@ -144,15 +142,11 @@ export default{
 		},
 		group: {
 			handler(val){
-				console.log('%c group', 'color:red;font-size:20px;')
-				console.log(val)
 			},
 			deep: true
 		},
 		chatroom: {
 			handler(val){
-				console.log('%c chatroom', 'color:red;font-size:20px;')
-				console.log(val)
 			},
 			deep: true
 		},
@@ -274,7 +268,6 @@ export default{
 			return unReadNum;
 		},
 		select2(key, index){
-			console.log(key, index)
 			this.$data.selectedKeys = [index];
 			this.select(key);
 			this.$data.activedKey[this.type] = key;
