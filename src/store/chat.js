@@ -203,6 +203,7 @@ const Chat = {
 			};
 
 			state.currentMsgs = [];
+			state.pushConfig = [];
 		},
 
 		// 传递数据给 call 组件，是否收到通话邀请
