@@ -101,7 +101,6 @@ export default{
 				invitedMembers
 			);
 			let a = joinedMembers.concat(invitedMembers);
-			console.log('a>>>>>>', a);
 			return joinedMembers.concat(invitedMembers);
 		}
 	},
@@ -153,18 +152,14 @@ export default{
 		video_class(item){
 			let joining = item ? '' : 'joining';
 			let newClass = 'default' + joining;
-			console.log('newClass>>', newClass);
 			return newClass;
 		},
 
 		addListener(){
 			rtc.client.on('user-published', async (user, mediaType) => {
-				console.log('有远端画面 -------- ');
 				console.log(user, mediaType);
 				// 开始订阅远端用户。
 				await rtc.client.subscribe(user, mediaType);
-
-				console.log('subscribe success');
 
 				let { joinedMembers } = this.$store.state.agora;
 				let videoElm = '';
@@ -178,7 +173,6 @@ export default{
 				}
 
 				joinedMembers.forEach((item, index) => {
-					console.log('item>>', item);
 					if(item.name === user.uid){
 						exist = true;
 					}
@@ -224,7 +218,6 @@ export default{
 			});
 
 			rtc.client.on('user-left', user => {
-				console.log('-- 对方已离开 ---', user);
 
 				this.updateJoinedMembers({ name: user.uid });
 
@@ -268,7 +261,6 @@ export default{
 				channelName: confr.channel,
 				appkey: WebIM.conn.appKey
 			};
-			console.log('params>>>>', params);
 			const { accessToken, agoraUserId } = await this.getRtctoken(params);
 			const uid = await rtc.client.join(
 				appId,
@@ -290,7 +282,6 @@ export default{
 				'invitedMembers>>',
 				invitedMembers
 			);
-			console.log('publish success! --- ');
 			let videoElm = 'video' + WebIM.conn.context.jid.name;
 			this.setJoinedMembers({
 				videoElm: videoElm,

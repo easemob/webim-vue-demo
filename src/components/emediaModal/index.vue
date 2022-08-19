@@ -76,11 +76,9 @@ export default{
 			'hideMultiAVModal'
 		]),
 		initWebRTC(){
-			console.log('InitWebRTC..........');
 			// if (WebIM.call) {
 			//     return
 			// }
-			console.log('InitWebRTC end..........');
 			const me = this;
 
 			WebIM.call = new WebIM.WebRTC.Call({

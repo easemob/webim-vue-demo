@@ -158,7 +158,6 @@ const HZRecorder = function(stream, config){
 			if(emptyDatacount > 10){
 				// recording = false;
 				// this.stop();
-				console.log('stoped');
 				return true;
 			}
 		}

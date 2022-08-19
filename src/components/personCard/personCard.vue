@@ -267,12 +267,10 @@ export default{
 		// 获取好友的用户属性信息
 		// eslint-disable-next-line require-await
 		async getOthersUserInfo(detail){
-			console.log(detail, 'detail')
 			const { friendDetail, name, presence } = detail;
 			this.userInfo = { friendDetail, name, presence };
 			this.isShowFriendsCard = true;
 			this.visible = true;
-			console.log('>>>>>>>>卡片页', detail);
 		},
 		// 提交要设置的用户属性
 		async commitUserInfo(type, value){

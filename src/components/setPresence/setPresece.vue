@@ -80,7 +80,6 @@ export default{
 			this.visible = false
 		},
 		handleChange(value){
-			console.log(`Selected: ${value}`)
 			this.selectValue = value
 		}
 	}
