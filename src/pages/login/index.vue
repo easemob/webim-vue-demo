@@ -80,7 +80,7 @@
 			    <a-form-item
 			      v-if="isRegister == true"
 			    >
-			      <a-row :gutter="8">
+			      <a-row :gutter="8" style="margin: 0px;">
 			        <a-col :span="16">
 			          <a-input
 			          	placeholder="图片验证码"
