@@ -293,6 +293,9 @@ export default{
 		onSetCallStatus(){
 			return this.$store.state.agora.callStatus;
 		},
+		pushConfigData() {
+			return this.$store.state.chat.pushConfig;
+		},
 		// 显隐主叫弹窗
 		showCall(){
 			const { confr, callStatus } = this.$store.state.agora;
@@ -310,7 +313,6 @@ export default{
 	watch: {
 		onSetCallStatus(msg){
 			let self = this;
-			console.log('触发对msg》》', this.$store.state.agora);
 			const { confr, callStatus, minisize } = this.$store.state.agora;
 			console.log(
 				'confr>>',
@@ -487,10 +489,10 @@ export default{
 				for(const item in chatList){
 					chatList[item].map((v, k) => {
 						if(v.status === 'unread'){
-							if(v.chatType === 'group'){
+							if (this.pushConfigData.includes(v.chatId)) return
+							else if(v.chatType === 'group'){
 								obj.group = true;
-							}
-							if(v.chatType === 'contact'){
+							}else if(v.chatType === 'contact'){
 								obj.contact = true;
 							}
 						}
