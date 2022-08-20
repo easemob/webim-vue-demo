@@ -50,6 +50,29 @@ const otherUserInfo = computed(() => {
     }
 }
 )
+
+/* 处理时间显示间隔 */
+
+const handleMsgTimeShow = computed(() => {
+    return (time, index) => {
+        console.log('index', index);
+        const msgList = Array.from(messageData.value)
+        if (index !== 0) {
+            let lastTime = msgList[index - 1].time;
+            if (time - lastTime > 50000) {
+                return dateFormat('MM/DD/HH:mm', time)
+            } else {
+                return false
+            }
+        } else {
+            return dateFormat('MM/DD/HH:mm', time)
+        }
+
+
+
+        return time
+    }
+})
 //音频播放状态
 const audioPlayStatus = reactive({
     isPlaying: false,//是否在播放中
@@ -125,7 +148,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
     <div class="messageList_box" v-for="(msgBody, index) in messageData" :key="msgBody.id">
         <div v-if="!msgBody.isRecall && msgBody.type !== ALL_MESSAGE_TYPE.INFORM" class="message_box_item"
             :style="{ flexDirection: (isMyself(msgBody) ? 'row-reverse' : 'row') }">
-            <div class="message_item_time">{{ dateFormat('MM/DD/HH:mm', msgBody.time) }}</div>
+            <div class="message_item_time">{{ handleMsgTimeShow(msgBody.time, index) || '' }}</div>
             <el-avatar class="message_item_avator"
                 :src="isMyself(msgBody) ? loginUserInfo.avatarurl : otherUserInfo(msgBody.from).avatarurl || defaultAvatar">
             </el-avatar>
@@ -204,7 +227,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                 @click="reEdit(msgBody.msg)">重新编辑</span></div>
         <div v-if="msgBody.type === ALL_MESSAGE_TYPE.INFORM" class="inform_style">
             <p>
-                {{msgBody.msg}}
+                {{ msgBody.msg }}
             </p>
         </div>
     </div>
@@ -434,7 +457,8 @@ const reEdit = (msg) => emit('reEditMessage', msg)
 
     }
 
-    .recall_style,.inform_style {
+    .recall_style,
+    .inform_style {
         height: 60px;
         text-align: center;
         color: #aaaaaa;
@@ -447,6 +471,6 @@ const reEdit = (msg) => emit('reEditMessage', msg)
             cursor: pointer;
         }
     }
-    
+
 }
 </style>
