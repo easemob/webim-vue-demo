@@ -196,8 +196,8 @@ const Contacts = {
         ...params,
       });
       let goupListData = _.keyBy(res.data, 'groupid');
-
       commit('SET_GROUP_LIST', { setType: 'init', data: goupListData });
+      console.log('>>>>>触发了拉取群组列表更新');
     },
     //获取指定群详情
     getAssignGroupDetail: async ({ dispatch, commit }, goupsId) => {

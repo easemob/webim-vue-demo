@@ -165,15 +165,29 @@ const Conversation = {
             dispatch('createInformMessage', informMsg)
           }
             break;
+          case 'removeMember': {
+            informMsg.msg = `${informContent.from}将你移出了群组~`
+            dispatch('createInformMessage', informMsg)
+            setTimeout(() => {
+              dispatch('fetchGroupList', {
+                pageNum: 1,
+                pageSize: 500
+              })
+            }, 300)
+
+          }
+            break;
           case 'destroy': {
             informMsg.msg = `${informContent.from}解散了该群！`
             dispatch('createInformMessage', informMsg)
-            dispatch('fetchGroupList', {
-              pageNum: 1,
-              pageSize: 500
-            })
+            setTimeout(() => {
+              dispatch('fetchGroupList', {
+                pageNum: 1,
+                pageSize: 500
+              })
+            }, 300)
           }
-          break;
+            break;
           default:
             break;
         }

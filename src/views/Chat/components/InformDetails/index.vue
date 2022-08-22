@@ -43,17 +43,17 @@ const handleClickBtn = ({ informData, index, type }) => {
   //邀请群组操作相关
   if (fromType === INFORM_FROM.GROUP && informData.operation === 'inviteToJoin') {
     const handleGroupInvite = {
-      agree: () => {
-        EaseIM.conn.acceptGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, status: 1 })
+      agree: async () => {
+        await EaseIM.conn.acceptGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
+        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
         store.dispatch('fetchGroupList', {
           pageNum: 1,
           pageSize: 500
         })
       },
-      refuse: () => {
-        EaseIM.conn.rejectGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, status: 2 })
+      refuse: async () => {
+        await EaseIM.conn.rejectGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
+        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 })
       },
     }
     handleGroupInvite[type]()
