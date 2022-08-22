@@ -7,7 +7,7 @@ import {
 } from '@/utils/handleSomeData';
 import Message from './message';
 import EaseIM from '@/IM/initwebsdk';
-import { informType,messageType } from '@/constant';
+import { informType, messageType } from '@/constant';
 const { INFORM_FROM, INFORM_TYPE } = informType;
 const { CHAT_TYPE } = messageType
 const Conversation = {
@@ -67,8 +67,9 @@ const Conversation = {
       state.informDetail[index].untreated = 0;
     },
     //更改卡片消息的按钮状态
-    UPDATE_INFORM_BTNSTATUS: (state, { index: index, status }) => {
-      state.informDetail[index].operationStatus = status;
+    UPDATE_INFORM_BTNSTATUS: (state, { index: index, btnStatus }) => {
+      console.log('>>>>触发了按钮更新状态', index, btnStatus);
+      state.informDetail[index].operationStatus = btnStatus;
     },
   },
   actions: {
@@ -78,12 +79,12 @@ const Conversation = {
       console.log('>>>>>>>>>createNewInform', fromType, informContent);
       let result = createInform(fromType, informContent);
       commit('UPDATE_INFORM_LIST', result);
-     
+
       //部分事件需要调用接口更新本地信息或者增加消息内系统通知
       if (fromType === INFORM_FROM.FRIEND) {
         let informMsg = {
-          from:informContent.from,
-          to:informContent.to,
+          from: informContent.from,
+          to: informContent.to,
           chatType: CHAT_TYPE.SINGLE
         }
         switch (informContent.type) {
@@ -95,23 +96,23 @@ const Conversation = {
             }
 
             break;
-            case 'unsubscribed':{
-              informMsg.msg = `你俩的友尽了，要不要重新加回来？`
-              dispatch('createInformMessage',informMsg)
-            }
+          case 'unsubscribed': {
+            informMsg.msg = `你俩的友尽了，要不要重新加回来？`
+            dispatch('createInformMessage', informMsg)
+          }
             break;
-            case 'subscribed':{
-              informMsg.msg = `你俩已经成为好友了~开心的聊两句吧。`
-              dispatch('createInformMessage',informMsg)
-            }
+          case 'subscribed': {
+            informMsg.msg = `你俩已经成为好友了~开心的聊两句吧。`
+            dispatch('createInformMessage', informMsg)
+          }
           default:
             break;
         }
       }
       if (fromType === INFORM_FROM.GROUP) {
         let informMsg = {
-          from:informContent.from,
-          to:informContent.id,
+          from: informContent.from,
+          to: informContent.id,
           chatType: CHAT_TYPE.GROUP
         }
         switch (informContent.operation) {
@@ -123,7 +124,7 @@ const Conversation = {
               });
               dispatch('fetchGoupsMember', informContent.id);
               informMsg.msg = `${informContent.from}加入了群组`
-              dispatch('createInformMessage',informMsg)
+              dispatch('createInformMessage', informMsg)
             }
             break;
           case 'memberAbsence': {
@@ -134,34 +135,43 @@ const Conversation = {
             });
             dispatch('fetchGoupsMember', informContent.id);
             informMsg.msg = `${informContent.from}退出了群组`
-            dispatch('createInformMessage',informMsg)
+            dispatch('createInformMessage', informMsg)
           }
-          break;
-          case 'updateAnnouncement':{
+            break;
+          case 'updateAnnouncement': {
             dispatch('fetchGoupsAdmin')
             informMsg.msg = `${informContent.from}更新了群组公告，去看看更新的什么吧~`
-            dispatch('createInformMessage',informMsg)
+            dispatch('createInformMessage', informMsg)
           }
-          break;
-          case 'setAdmin':{
+            break;
+          case 'setAdmin': {
             dispatch('fetchGoupsAdmin')
             informMsg.msg = `${informContent.from}设定${informContent.to}为管理员~`
-            dispatch('createInformMessage',informMsg)
+            dispatch('createInformMessage', informMsg)
           }
-          break;
-          case 'removeAdmin':{
+            break;
+          case 'removeAdmin': {
             informMsg.msg = `${informContent.from}移除了${informContent.to}的管理员身份~`
-            dispatch('createInformMessage',informMsg)
+            dispatch('createInformMessage', informMsg)
           }
-          break;
-          case 'muteMember':{
+            break;
+          case 'muteMember': {
             informMsg.msg = `${informContent.from}禁言了${informContent.to}~`
-            dispatch('createInformMessage',informMsg)
+            dispatch('createInformMessage', informMsg)
           }
-          break;
-          case 'unmuteMember':{
+            break;
+          case 'unmuteMember': {
             informMsg.msg = `${informContent.from}取消了${informContent.to}的禁言~`
-            dispatch('createInformMessage',informMsg)
+            dispatch('createInformMessage', informMsg)
+          }
+            break;
+          case 'destroy': {
+            informMsg.msg = `${informContent.from}解散了该群！`
+            dispatch('createInformMessage', informMsg)
+            dispatch('fetchGroupList', {
+              pageNum: 1,
+              pageSize: 500
+            })
           }
           break;
           default:

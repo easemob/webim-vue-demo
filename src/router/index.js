@@ -89,7 +89,6 @@ const router = createRouter({
   routes,
 });
 router.beforeEach((to, from, next) => {
-  console.log('router.from', from, 'router.to', to);
   NProgress.start();
   const loginState = store.state.loginState;
   const EASEIM_loginUser = window.localStorage.getItem('EASEIM_loginUser');
