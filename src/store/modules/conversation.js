@@ -32,15 +32,16 @@ const Conversation = {
     //更新系统通知
     UPDATE_INFORM_LIST: (state, informBody) => {
       const toBeUpdateInform = _.assign([], state.informDetail);
-      let _index = toBeUpdateInform.findIndex(
-        (v) => v.from === informBody.from
-      );
-      if (_index === -1) {
-        toBeUpdateInform.unshift(informBody);
-      } else {
-        toBeUpdateInform.splice(_index, 1);
-        toBeUpdateInform.unshift(informBody);
-      }
+      // let _index = toBeUpdateInform.findIndex(
+      //   (v) => v.from === informBody.from
+      // );
+      // if (_index === -1) {
+      //   toBeUpdateInform.unshift(informBody);
+      // } else {
+      //   toBeUpdateInform.splice(_index, 1);
+      //   toBeUpdateInform.unshift(informBody);
+      // }
+      toBeUpdateInform.unshift(informBody);
       state.informDetail = toBeUpdateInform;
     },
     //更新已有会话

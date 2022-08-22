@@ -29,11 +29,12 @@ const handleClickBtn = ({ informData, index, type }) => {
       'agree': () => {
         console.log('agree')
         EaseIM.conn.acceptContactInvite(from)
+        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
       },
       'refuse': () => {
         EaseIM.conn.declineContactInvite(from)
         //拒绝并更改当前通知卡片按钮状态
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, status: 2 })
+        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 })
 
       }
     }
