@@ -1,6 +1,7 @@
 <script setup>
 import { ref, toRefs, defineProps } from 'vue';
 import { useStore } from 'vuex';
+import { ElMessage } from 'element-plus';
 import { onClickOutside } from '@vueuse/core';
 import { emojis } from '@/constant';
 import { messageType } from '@/constant'
@@ -78,12 +79,19 @@ const sendImagesMessage = async () => {
         width: 0,
         height: 0
     }
-    img.onload = () => {
+    img.onload = async () => {
+        ElMessage.success('图片上传中...')
         msgOptions.width = img.width;
         msgOptions.height = img.height;
         console.log('height:' + img.height + '----' + img.width)
-        store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.IMAGE, msgOptions: _.cloneDeep(msgOptions) })
-        uploadImgs.value.value = null;
+        try {
+            await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.IMAGE, msgOptions: _.cloneDeep(msgOptions) })
+            uploadImgs.value.value = null;
+        } catch (error) {
+            ElMessage.error('发送失败请重试！')
+            uploadImgs.value.value = null;
+        }
+
     }
 
 
@@ -95,7 +103,7 @@ const chooseFiles = () => {
     uploadFiles.value.click()
 }
 //发送文件
-const sendFilesMessages = () => {
+const sendFilesMessages = async () => {
     let commonFile = uploadFiles.value.files[0];
     let file = {
         data: commonFile,           // file 对象。
@@ -109,8 +117,16 @@ const sendFilesMessages = () => {
         chatType: nowPickInfo.value.chatType,
         file: file,
     }
-    store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.FILE, msgOptions: _.cloneDeep(msgOptions) })
-    uploadFiles.value.value = null;
+    try {
+        ElMessage.success('文件上传后进行发送请稍后...')
+        await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.FILE, msgOptions: _.cloneDeep(msgOptions) })
+        uploadFiles.value.value = null;
+    } catch (error) {
+        console.log('>>>>file error',error);
+        ElMessage.error('发送失败，请重试！')
+        uploadFiles.value.value = null;
+    }
+
 }
 /* 语音消息相关 */
 //展示录音对话框

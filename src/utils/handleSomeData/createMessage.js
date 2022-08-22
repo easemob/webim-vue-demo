@@ -26,6 +26,7 @@ const createOptions = ({ msgType, msgOptions }) => {
       onFileUploadError: (error) => {
         // 消息上传失败。
         console.log('onFileUploadError', error);
+        //TO DO 4.10.0版本修复上传文件失败不从error中抛出问题
       },
       onFileUploadProgress: (progress) => {
         // 上传进度的回调。
