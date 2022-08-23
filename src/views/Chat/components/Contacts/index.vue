@@ -59,35 +59,49 @@ const informDetail = computed(() => {
         <div class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</div>
         <el-collapse>
           <el-collapse-item title="系统通知">
-            <div class="informDetail_box" @click="toInformDetails">
-              <div class="item_body item_left">
-                <!-- 通知头像 -->
-                <div class="session_other_avatar">
-                  <el-avatar :src="informIcon" />
+            <template v-if="Object.keys(informDetail.lastInformDeatail).length > 0">
+              <div class="informDetail_box" @click="toInformDetails">
+                <div class="item_body item_left">
+                  <!-- 通知头像 -->
+                  <div class="session_other_avatar">
+                    <el-avatar :src="informIcon" />
+                  </div>
                 </div>
-              </div>
-              <div class="item_body item_main">
-                <div class="name">新通知</div>
-                <div class="last_msg_body">{{ informDetail.lastInformDeatail.from }}：{{
-                    informDetail.lastInformDeatail.desc
-                }}
+                <div class="item_body item_main">
+                  <div class="name">新通知</div>
+                  <div class="last_msg_body">{{ informDetail.lastInformDeatail.from }}：{{
+                      informDetail.lastInformDeatail.desc
+                  }}
+                  </div>
                 </div>
+                <div class="item_body item_right">
+                  <span class="unReadNum_box" v-if="informDetail.untreated >= 1">
+                    <sup class="unReadNum_count"
+                      v-text="informDetail.untreated >= 99 ? '99+' : informDetail.untreated"></sup>
+                  </span>
+                </div>
+                <span class="time">{{ dateFormater('MM/DD/HH:mm', informDetail.lastInformDeatail.time) }}</span>
               </div>
-              <div class="item_body item_right">
-
-                <span class="unReadNum_box" v-if="informDetail.untreated >= 1">
-                  <sup class="unReadNum_count"
-                    v-text="informDetail.untreated >= 99 ? '99+' : informDetail.untreated"></sup>
-                </span>
-              </div>
-              <span class="time">{{ dateFormater('MM/DD/HH:mm', informDetail.lastInformDeatail.time) }}</span>
-            </div>
+            </template>
+            <template v-else>
+              <el-empty description="暂无新的通知..." />
+            </template>
           </el-collapse-item>
           <el-collapse-item :title="`联系人 ( ${Object.keys(friendList).length} )`">
-            <FriendItem @toContacts="toContacts" />
+            <template v-if="Object.keys(friendList).length > 0">
+              <FriendItem @toContacts="toContacts" />
+            </template>
+            <template v-else>
+              <el-empty description="暂无联系人..." />
+            </template>
           </el-collapse-item>
           <el-collapse-item :title="`群聊 ( ${Object.keys(joinedGroupList).length} )`">
-            <GroupItem @toContacts="toContacts" />
+            <template v-if="Object.keys(joinedGroupList).length > 0">
+              <GroupItem @toContacts="toContacts" />
+            </template>
+            <template v-else>
+              <el-empty description="暂无加入的群组..." />
+            </template>
           </el-collapse-item>
         </el-collapse>
 

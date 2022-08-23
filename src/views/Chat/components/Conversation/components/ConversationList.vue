@@ -108,7 +108,7 @@ const deleteConversation = (itemKey) => {
     </li>
 
     <!-- 普通会话 -->
-    <template v-if="conversationList">
+    <template v-if="Object.keys(conversationList).length > 0">
       <li v-for="( item, itemKey, index) in conversationList" :key="itemKey"
         @click="toChatMessage(item, itemKey, index)"
         :style="{ background: (checkedConverItemIndex === index ? '#E5E5E5' : '') }">
@@ -148,7 +148,10 @@ const deleteConversation = (itemKey) => {
         </el-popover>
       </li>
     </template>
-    <el-empty v-else description="暂无会话..." />
+    <template v-else>
+      <el-empty description="暂无会话..." />
+    </template>
+
   </el-scrollbar>
 </template>
 

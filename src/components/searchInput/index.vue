@@ -155,9 +155,14 @@ const emitContacts = (item) => {
           <span class="clear_search_history" @click="searchHistory = null">清空</span>
         </div>
         <ul class="search_history_item">
-          <li v-for="(item, index) in searchHistory" :key="item.label + index" @click="clickHistoryItem(item)">
-            <span>{{ item.label ? item.label : item.value }}</span>
-          </li>
+          <template v-if="searchHistory.length > 0">
+            <li v-for="(item, index) in searchHistory" :key="item.label + index" @click="clickHistoryItem(item)">
+              <span>{{ item.label ? item.label : item.value }}</span>
+            </li>
+          </template>
+          <template v-else>
+            <el-empty description="暂无搜索记录..." />
+          </template>
         </ul>
       </div>
       <div v-if="searchType === 'conversation'">
