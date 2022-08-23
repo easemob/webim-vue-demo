@@ -1,12 +1,12 @@
 import axios from 'axios'
 import EaseIM from '@/IM/initwebsdk'
 // console.log('EaseIM Axios', EaseIM)
-const defaultBaseUrl = 'http://a1.easemob.com'
+const defaultBaseUrl = '//a1.easemob.com'
 // create an axios instance
 const service = axios.create({
     withCredentials: false,
     // baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
-    baseURL:  defaultBaseUrl,
+    baseURL:  `${window.location.protocol}defaultBaseUrl`,
     // withCredentials: true, // send cookies when cross-domain requests
     timeout: 30000, // request timeout
     headers: { 'Content-Type': 'application/json' }
