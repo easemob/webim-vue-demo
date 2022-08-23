@@ -67,7 +67,7 @@ const handleClickBtn = ({ informData, index, type }) => {
   <el-container class="app_container">
     <div class="inforom_details_box">
       <div class="inforom_details_box_header">
-        <div v-if="informList.length <= 0" class="clear_inforom">
+        <div v-if="informList.length > 0" class="clear_inforom">
           <el-popconfirm title="清空当前所有通知?" @confirm="clearAllInform">
             <template #reference>
               <el-icon>
