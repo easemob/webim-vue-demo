@@ -126,7 +126,10 @@ const deleteConversation = (itemKey) => {
               </div>
               <div class="item_body item_main">
                 <div class="name">{{ handleConversationName(item) }}</div>
-                <div class="last_msg_body">{{ item.latestMessage.type !== 'inform'?item.fromInfo.fromId+'：':'' }}{{ item.latestMessage.msg }}
+                <div class="last_msg_body">{{ item.latestMessage.type !== 'inform' ? item.fromInfo.fromId + '：' : ''
+                }}{{
+    item.latestMessage.msg
+}}
                 </div>
               </div>
               <div class="item_body item_right">
@@ -217,7 +220,7 @@ const deleteConversation = (itemKey) => {
     .name {
       min-width: 56px;
       max-width: 120px;
-      max-height: 20px;
+      max-height: 25px;
       font-size: 14px;
       font-weight: bold;
       color: #000;

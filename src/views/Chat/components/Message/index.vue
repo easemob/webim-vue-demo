@@ -166,22 +166,27 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
 
 </script>
 <template>
-  <el-container v-if="nowPickInfo.userInfo || nowPickInfo.groupDetail" class="app_container">
+  <el-container class="app_container">
     <el-header class="chat_message_header">
-      <div v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE" class="chat_user_name">
-        {{ nowPickInfo.userInfo && nowPickInfo.userInfo.nickname ? nowPickInfo.userInfo.nickname : nowPickInfo.id }}
-        <UserStatus :userStatus="nowPickInfo.userInfo && nowPickInfo.userInfo.userStatus" />
-      </div>
-      <div v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP" class="chat_user_name">
-        {{ groupDetail && groupDetail.name || '' }} {{ `(${groupDetail &&
-            groupDetail.affiliations_count || ''})`
-        }}
-      </div>
-      <span class="more" v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP" @click="drawer = !drawer">
+      <template v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE">
+        <div v-if="nowPickInfo.userInfo" class="chat_user_name">
+          {{ nowPickInfo.userInfo.nickname || nowPickInfo.id }}
+          <UserStatus :userStatus="nowPickInfo.userInfo.userStatus" />
+        </div>
+        <div v-else>{{ nowPickInfo.id }}<span style="font-size:7px">(非好友)</span></div>
+      </template>
+      <template v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP">
+        <div v-if="nowPickInfo.groupDetail" class="chat_user_name">
+          {{ groupDetail.name || '' }} {{ `(${groupDetail.affiliations_count || ''})`
+          }}
+        </div>
+        <div v-else>{{ groupDetail.name || nowPickInfo.id }}</div>
+      </template>
+      <span class="more" v-if="nowPickInfo.groupDetail && nowPickInfo.chatType === CHAT_TYPE.GROUP"
+        @click="drawer = !drawer">
         ...
         <!-- 单人展示删除拉黑 -->
         <!-- 群组展示抽屉 -->
-
       </span>
     </el-header>
     <div v-if="isShowWarningTips" class="easeim_save_tips">
