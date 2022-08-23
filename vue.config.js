@@ -5,6 +5,7 @@ module.exports = defineConfig({
   devServer: {
     host: 'localhost',
     port: 9001,
+    https:true
   },
   chainWebpack: (config) => {
     //最小化代码

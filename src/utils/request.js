@@ -6,7 +6,7 @@ const defaultBaseUrl = '//a1.easemob.com'
 const service = axios.create({
     withCredentials: false,
     // baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
-    baseURL: `${window.location.protocol}defaultBaseUrl`,
+    baseURL: `${window.location.protocol}${defaultBaseUrl}`,
     // withCredentials: true, // send cookies when cross-domain requests
     timeout: 30000, // request timeout
     headers: { 'Content-Type': 'application/json' }
