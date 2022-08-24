@@ -33,6 +33,7 @@ const showEmojisBox = () => {
 //发送文本内容
 const textContent = ref('')
 const sendTextMessage = async () => {
+    if (textContent.value === '') return
     let msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
@@ -44,6 +45,7 @@ const sendTextMessage = async () => {
     } catch (error) {
         console.log('>>>>>>>发送失败+++++++', error)
     }
+
 
 }
 const addOneEmoji = (emoji) => {
@@ -122,7 +124,7 @@ const sendFilesMessages = async () => {
         await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.FILE, msgOptions: _.cloneDeep(msgOptions) })
         uploadFiles.value.value = null;
     } catch (error) {
-        console.log('>>>>file error',error);
+        console.log('>>>>file error', error);
         ElMessage.error('发送失败，请重试！')
         uploadFiles.value.value = null;
     }
