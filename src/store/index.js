@@ -7,6 +7,7 @@ import Group from './group';
 import Emedia from './emedia';
 import Agora from './agora';
 import Presence from './presence';
+import Resetpassword from './resetpassword'
 
 Vue.use(Vuex);
 
@@ -18,7 +19,8 @@ const store = new Vuex.Store({
 		group: Group,
 		emedia: Emedia,
 		agora: Agora,
-		presence: Presence
+		presence: Presence,
+		resetpassword: Resetpassword
 	}
 });
 

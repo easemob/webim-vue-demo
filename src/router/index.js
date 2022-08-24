@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import Login from '../pages/login/index.vue';
+import ResetPassword from '../pages/resetpassword/index.vue';
 import Contact from '../pages/chat/index.vue';
 
 Vue.use(Router);
@@ -25,6 +26,11 @@ export default new Router({
 			path: '/register',
 			name: 'login',
 			component: Login
+		},
+		{
+			path: '/resetpassword',
+			name: 'resetpassword',
+			component: ResetPassword
 		},
 		{
 			path: '/contact/:id',

@@ -123,8 +123,11 @@
 					<span class="green" v-on:click="changeType">去登录</span>
 				</p>
 				<p class="tip" v-else>
-					没有账号?
+					<span>
+						没有账号?
 					<span class="green" v-on:click="changeType">注册</span>
+					</span>
+					<span class="green" @click="toReset">找回密码</span>
 				</p>
 			</a-form>
 			</div>
@@ -196,6 +199,9 @@ export default{
 		    		this.loginWithToken({username, password})
 		    	}
 		    });
+		},
+		toReset(){
+			this.$router.push('/resetpassword')
 		},
 		toRegister(e){
 			e.preventDefault(e);
