@@ -55,7 +55,6 @@ const otherUserInfo = computed(() => {
 
 const handleMsgTimeShow = computed(() => {
     return (time, index) => {
-        console.log('index', index);
         const msgList = Array.from(messageData.value)
         if (index !== 0) {
             let lastTime = msgList[index - 1].time;
@@ -107,7 +106,6 @@ const startplayAudio = (msgBody, index) => {
 const permissionRead = usePermission('clipboard-read') //请求剪切板读的权限
 const permissionWrite = usePermission('clipboard-write') //请求剪切板写的权限
 const { copy, copied, isSupported } = useClipboard() //copy 复制方法 copied 是否已经复制 isSupported 是否支持剪切板
-console.log('permissionRead,permissionWrite', permissionRead, permissionWrite);
 const copyTextMessages = (msg) => {
     copy(msg)
     if (copied) {
@@ -120,7 +118,6 @@ const copyTextMessages = (msg) => {
 }
 //撤回消息
 const recallMessage = async ({ id, to, chatType }) => {
-    console.log('>>>>>>调用了撤回', id, to, chatType)
     let options = {
         mid: id,
         to: to,
@@ -144,7 +141,6 @@ const reEdit = (msg) => emit('reEditMessage', msg)
 
 </script>
 <template>
-
     <div class="messageList_box" v-for="(msgBody, index) in messageData" :key="msgBody.id">
         <div v-if="!msgBody.isRecall && msgBody.type !== ALL_MESSAGE_TYPE.INFORM" class="message_box_item"
             :style="{ flexDirection: (isMyself(msgBody) ? 'row-reverse' : 'row') }">
@@ -220,7 +216,6 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                 </div>
 
             </el-tooltip>
-
         </div>
         <div v-if="msgBody.isRecall" class="recall_style">{{ isMyself(msgBody) ? "你" : `${msgBody.from}` }}撤回了一条消息<span
                 class="reEdit" v-show="isMyself(msgBody) && msgBody.type === ALL_MESSAGE_TYPE.TEXT"
