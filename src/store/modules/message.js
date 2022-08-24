@@ -7,7 +7,7 @@ import {
 import _ from 'lodash';
 import { ref, toRaw } from 'vue';
 import { messageType } from '@/constant';
-const { CHAT_TYPE,ALL_MESSAGE_TYPE } = messageType;
+const { CHAT_TYPE, ALL_MESSAGE_TYPE } = messageType;
 const Message = {
   state: {
     messageList: ref({}),
@@ -18,9 +18,9 @@ const Message = {
       const listKey = setMessageKey(msgBody);
       if (!toUpdateMsgList[listKey]) {
         toUpdateMsgList[listKey] = [];
-        toUpdateMsgList[listKey].push(msgBody);
+        _.unionBy(toUpdateMsgList[listKey].push(msgBody), m => m.id);
       } else {
-        toUpdateMsgList[listKey].push(msgBody);
+        _.unionBy(toUpdateMsgList[listKey].push(msgBody), m => m.id);
       }
       state.messageList = toUpdateMsgList;
     },
@@ -29,9 +29,9 @@ const Message = {
       const toUpdateMsgList = _.assign({}, state.messageList);
       if (!toUpdateMsgList[listKey]) {
         toUpdateMsgList[listKey] = [];
-        toUpdateMsgList[listKey].push(...historyMessage);
+        _.unionBy(toUpdateMsgList[listKey].push(...historyMessage), m => m.id);
       } else {
-        toUpdateMsgList[listKey].unshift(...historyMessage);
+        _.unionBy(toUpdateMsgList[listKey].unshift(...historyMessage), m => m.id);
       }
       state.messageList = toUpdateMsgList;
     },
@@ -119,13 +119,13 @@ const Message = {
       });
     },
     //添加通知类消息
-    createInformMessage: ({dispatch,commit},params)=>{
+    createInformMessage: ({ dispatch, commit }, params) => {
       let msgBody = _.cloneDeep(params)
       msgBody.type = ALL_MESSAGE_TYPE.INFORM
       let key = setMessageKey(params);
-     console.log('>>>>>>添加系统消息',params);
-     commit('UPDATE_MESSAGE_LIST', msgBody);
-     dispatch('gatherConversation', key);
+      console.log('>>>>>>添加系统消息', params);
+      commit('UPDATE_MESSAGE_LIST', msgBody);
+      dispatch('gatherConversation', key);
     },
     //撤回消息
     recallMessage: async ({ dispatch, commit }, params) => {
