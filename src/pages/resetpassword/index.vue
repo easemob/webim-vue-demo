@@ -238,6 +238,9 @@ export default {
                   case "The phone number does not match the userId.":
                     Message.error("用户ID和手机号不匹配");
                     break;
+                  case "phone number illegal":
+                    Message.error("手机号不合法");
+                    break;
                   default:
                     Message.error("用户信息校验失败，请重试！");
                     break;

@@ -1,6 +1,17 @@
 <template>
   <div class="modalWrap">
     <a-modal title="消息举报" :destroy-on-close="true" v-model="reportVisible">
+      <p>请选择举报类型：</p>
+      <br />
+      <a-select v-model="reportType" class="typeSelect">
+        <a-select-option
+          v-for="item in reportTypeList"
+          :key="item.key"
+          :value="item.value"
+        >
+          {{ item.value }}
+        </a-select-option>
+      </a-select>
       <p>请输入举报原因：</p>
       <br />
       <a-input
@@ -19,18 +30,49 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+const ReportType = [
+  {
+    key: "1",
+    value: "涉政"
+  },
+  {
+    key: "2",
+    value: "涉黄"
+  },
+  {
+    key: "3",
+    value: "广告"
+  },
+  {
+    key: "4",
+    value: "辱骂"
+  },
+  {
+    key: "5",
+    value: "暴恐"
+  },
+  {
+    key: "6",
+    value: "违禁"
+  },
+  {
+    key: "7",
+    value: "其他"
+  }
+];
 export default {
   data() {
     return {
-      reason: "" // 举报原因
+      reason: "", // 举报原因
+      reportType: "涉政", // 举报类型
+      reportTypeList: ReportType // 举报类型list
     };
   },
   methods: {
     reportMessage() {
       WebIM.conn
         .reportMessage({
-          reportType: "UserReport", // 用户主动上报。
+          reportType: this.reportType, // 举报类型
           reportReason: this.reason, // 举报原因。
           messageId: this.$store.state.chat.reportMsgId
         })
@@ -64,9 +106,21 @@ export default {
     }
   },
   computed: {
-    ...mapState({
-      reportVisible: state => !!state.chat.reportMsgId
-    })
+    reportVisible: {
+      get() {
+        return !!this.$store.state.chat.reportMsgId;
+      },
+      set() {
+        this.$store.commit("setReportMsgId", { messageId: 0 });
+      }
+    }
   }
 };
 </script>
+
+<style lang="less" scoped>
+.typeSelect {
+  width: 100%;
+  margin-bottom: 10px;
+}
+</style>
