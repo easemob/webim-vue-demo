@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
-import { ElNotification } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import EaseIM from '@/IM/initwebsdk';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { fetchUserLoginToken } from '@/api/login';
@@ -67,7 +67,16 @@ const loginIM = async () => {
     console.log('>>>>登陆失败', error);
     if (error.response.data) {
       const { code, errorInfo } = error.response.data
-      handleSDKErrorNotifi(code, errorInfo)
+      if (errorInfo.includes('does not exist.')) {
+        ElMessage({
+          center: true,
+          message: `用户${loginValue.username}不存在！`,
+          type: 'error',
+        })
+      } else {
+        handleSDKErrorNotifi(code, errorInfo)
+      }
+
     }
   }
   finally {
@@ -81,10 +90,10 @@ const loginIM = async () => {
 <template>
   <el-form :model="loginValue" :rules="rules">
     <el-form-item prop="username">
-      <el-input class="login_input_style" v-model="loginValue.username" placeholder="请输入用户名" />
+      <el-input class="login_input_style" v-model="loginValue.username" placeholder="用户名" clearable />
     </el-form-item>
     <el-form-item prop="password">
-      <el-input class="login_input_style" v-model="loginValue.password" placeholder="请输入登录密码" />
+      <el-input class="login_input_style" v-model="loginValue.password" placeholder="密码" show-password />
     </el-form-item>
     <el-form-item>
       <div class="function_button_box">
@@ -101,8 +110,36 @@ const loginIM = async () => {
   margin: 10px 0;
   width: 400px;
   height: 50px;
-  font-size: 17px;
-  padding: 0 10px;
+  padding: 0 16px;
+}
+
+::v-deep .el-input__inner {
+  padding: 0 20px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 1.75px;
+  color: #3A3A3A;
+
+  &::placeholder {
+    font-family: 'PingFang SC';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    /* identical to box height */
+    letter-spacing: 1.75px;
+    color: #CCCCCC;
+  }
+}
+
+::v-deep .el-input__suffix-inner {
+  font-size: 20px;
+}
+
+::v-deep .el-form-item__error {
+  margin-left: 16px;
 }
 
 .login_text {

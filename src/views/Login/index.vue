@@ -41,8 +41,8 @@ const IM_SDK_VERSION = EaseIM.conn.version
             <img class="logo" :src="logo" @click="toEasemob" alt="" />
           </el-col>
           <component :is="componType[showComponent]" @changeToLogin="changeToLogin"></component>
-          <el-col v-show="showComponent !==2">
-            <div  class="function_button_extra">
+          <el-col v-show="showComponent !== 2">
+            <div class="function_button_extra">
               <el-link class="reset_password" @click="showComponent = 2">重置密码</el-link>
               <!-- <el-link class="custom_config" @click="showCustomImConfigModal">服务器配置</el-link> -->
               <p class="login_text">
@@ -80,14 +80,14 @@ const IM_SDK_VERSION = EaseIM.conn.version
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 800px;
+      width: 700px;
       margin: 15% auto;
       border-radius: 5px;
 
       .logo {
         width: 100px;
         height: 100px;
-        margin-bottom: 20px;
+        margin-bottom: 36.97px;
         transition: all 0.3s;
 
         &:hover {
@@ -120,16 +120,12 @@ const IM_SDK_VERSION = EaseIM.conn.version
           &:active {
             background: linear-gradient(90deg, #0b83b2 0%, #363df4 100%);
           }
-
-          &:hover {}
-
-          // width: 100%;
         }
       }
 
       .function_button_extra {
         width: 400px;
-        height: 35px;
+        // height: 35px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -180,10 +176,17 @@ const IM_SDK_VERSION = EaseIM.conn.version
   .copyright {
     width: 100%;
     height: 30px;
-    font-size: 13px;
-    color: #fff;
     line-height: 30px;
     text-align: center;
+    mix-blend-mode: normal;
+    opacity: 0.4;
+    font-family: 'PingFang SC';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 17px;
+    color: #FFFFFF;
+
   }
 }
 </style>

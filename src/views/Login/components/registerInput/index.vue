@@ -1,8 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
 import EaseIM from '@/IM/initwebsdk';
-import { ElNotification } from 'element-plus';
+import { ElMessage,ElNotification } from 'element-plus';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { createImageCode, fetchAuthCode, registerUser } from '@/api/register'
 /* emits */
@@ -51,7 +50,7 @@ const sendImageCode = async () => {
     try {
         let { data } = await createImageCode()
         if (data.image_enabled === 'true') {
-            imageCodeInfo.imgUrl = `${EaseIM.conn.apiUrl}/inside/app/image/${data.image_id}`
+            imageCodeInfo.imgUrl = `${window.location.protocol}//a1.easemob.com/inside/app/image/${data.image_id}`
             imageCodeInfo.imageId = data.image_id
         }
 
@@ -118,6 +117,7 @@ const registerIM = async (formEl) => {
                 ElNotification({
                     title: 'Easemob',
                     message: '注册成功！',
+                    center: true,
                     type: 'success',
                 });
                 //通知改变为登陆模式
@@ -138,14 +138,14 @@ const registerIM = async (formEl) => {
 <template>
     <el-form ref="registerFormEl" :model="registerValue" :rules="rules">
         <el-form-item prop="username">
-            <el-input class="login_input_style" v-model="registerValue.username" placeholder="请输入用户名" />
+            <el-input class="login_input_style" v-model="registerValue.username" placeholder="请输入用户名"  clearable/>
         </el-form-item>
         <el-form-item prop="password">
             <el-input class="login_input_style" type="password" v-model="registerValue.password" placeholder="请输入注册密码"
                 show-password />
         </el-form-item>
         <el-form-item prop="phoneNumber">
-            <el-input class="login_input_style" v-model="registerValue.phoneNumber" placeholder="请输入手机号">
+            <el-input class="login_input_style" v-model="registerValue.phoneNumber" placeholder="请输入手机号" clearable>
                 <template #prepend>+86</template>
             </el-input>
         </el-form-item>
@@ -203,10 +203,35 @@ const registerIM = async (formEl) => {
     margin: 3px 0;
     width: 400px;
     height: 50px;
-    font-size: 17px;
-    padding: 0 10px;
+    padding: 0 16px;
 }
 
+::v-deep .el-input__inner {
+    padding: 0 20px;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 1.75px;
+    color: #3A3A3A;
+
+    &::placeholder {
+        font-family: 'PingFang SC';
+        font-style: normal;
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 20px;
+        /* identical to box height */
+
+        letter-spacing: 1.75px;
+        text-transform: uppercase;
+
+        color: #CCCCCC;
+    }
+}
+::v-deep .el-form-item__error{
+    margin-left:16px;
+}
 .login_text {
     font-family: 'PingFang SC';
     font-style: normal;

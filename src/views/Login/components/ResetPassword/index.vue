@@ -79,7 +79,7 @@ const sendImageCode = async () => {
     try {
         let { data } = await createImageCode()
         if (data.image_enabled === 'true') {
-            imageCodeInfo.imgUrl = `${EaseIM.conn.apiUrl}/inside/app/image/${data.image_id}`
+            imageCodeInfo.imgUrl = `${window.location.protocol}//a1.easemob.com/inside/app/image/${data.image_id}`
             imageCodeInfo.imageId = data.image_id
         }
 
@@ -185,10 +185,10 @@ const submitNewPassword = (formEl) => {
     <el-form ref="resetPwdEl" :model="resetPasswordFrom" :rules="rules">
         <template v-if="nextStep === 1">
             <el-form-item prop="username">
-                <el-input class="login_input_style" v-model="resetPasswordFrom.username" placeholder="请输入用户ID" />
+                <el-input class="login_input_style" v-model="resetPasswordFrom.username" placeholder="请输入用户ID" clearable />
             </el-form-item>
             <el-form-item prop="phoneNumber">
-                <el-input class="login_input_style" v-model="resetPasswordFrom.phoneNumber" placeholder="请输入手机号">
+                <el-input class="login_input_style" v-model="resetPasswordFrom.phoneNumber" placeholder="请输入手机号" clearable>
                     <template #prepend>+86</template>
                 </el-input>
             </el-form-item>
@@ -264,10 +264,35 @@ const submitNewPassword = (formEl) => {
     margin: 3px 0;
     width: 400px;
     height: 50px;
-    font-size: 17px;
-    padding: 0 10px;
+    padding: 0 16px;
+
 }
 
+::v-deep .el-input__inner {
+    padding: 0 20px;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 1.75px;
+    color: #3A3A3A;
+    &::placeholder {
+        font-family: 'PingFang SC';
+        font-style: normal;
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 20px;
+        /* identical to box height */
+
+        letter-spacing: 1.75px;
+        text-transform: uppercase;
+
+        color: #CCCCCC;
+    }
+}
+::v-deep .el-form-item__error{
+    margin-left:16px;
+}
 .auth_code {
     width: 80px;
     height: 40px;
