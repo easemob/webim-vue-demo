@@ -260,11 +260,12 @@ const logout = ref(null)
 
   .online_status {
     position: absolute;
-    right: 0;
-    bottom: 0;
+    right: 2px;
+    bottom: 2px;
     display: inline-block;
-    width: 10px;
-    height: 10px;
+    width: 6px;
+    height: 6px;
+    border: 2px solid #fff;
     background: #fff;
     border-radius: 50%;
     transition: all 0.3s;

@@ -242,7 +242,8 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   justify-content: space-between;
   height: 60px;
   background: #F9F9F9;
-  // border-bottom: 1px solid #E6E6E6;
+  border-radius: 0 3px 0 0;
+  border-bottom: 1px solid #E6E6E6;
 
   .chat_user_name {
     font-family: 'PingFang SC';
@@ -343,6 +344,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   height: 25%;
   padding: 0;
   background-color: #F9F9F9;
+  border-radius: 0 0 3px 0;
 
 
 }

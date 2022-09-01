@@ -32,7 +32,7 @@ import NavBar from '@/views/Chat/components/NavBar';
   .chat_container {
     width: 85%;
     height: 95%;
-    background: rgba(255, 255, 255, 0.196);
+    background: #F2F2F2;
     position: relative;
     top: 50%;
     /*
