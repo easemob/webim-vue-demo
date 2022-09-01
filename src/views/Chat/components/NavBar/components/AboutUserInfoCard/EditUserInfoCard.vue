@@ -32,9 +32,13 @@ const userInfosData = computed(() => {
     return store.state.loginUserInfo
 })
 
-onMounted(() => {
+// onMounted(() => {
+//     console.log('userInfosData.value',userInfosData.value);
+//     _.merge(userInfos.value, userInfosData.value)
+// })
+const setUserInfos = ()=> {
     _.merge(userInfos.value, userInfosData.value)
-})
+}
 //点击待选的用户头像
 const chooseAvatar = (avatarNum) => {
     let fullAvatarUrl = `${avatarBaseUrl}Image${avatarNum}.png`
@@ -74,7 +78,7 @@ defineExpose({
 </script>
 <template>
     <el-dialog custom-class="edit_userinfo_diglog" v-model="dialogVisible" width="366px" :show-close="false"
-        :destroy-on-close="true" @close="initUserInfosDiglog">
+        :destroy-on-close="true" @close="initUserInfosDiglog" @open="setUserInfos">
         <template #header>
             <div class="infor_header">
                 <el-icon class="el_icon_right" @click="dialogVisible = false">
