@@ -152,9 +152,7 @@ const logout = ref(null)
               <img :src="applyJoinGroupIcon" alt="">
             </span>
             <span class="setting_fun_text apply_groups">
-              <b class="line"></b>
               申请入群
-              <b class="line"></b>
             </span>
           </div>
         </div>
@@ -379,17 +377,16 @@ const logout = ref(null)
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-around;
-    width: 100%;
+    // justify-content: space-around;
+    width: 101px;
+    height: 40px;
+    border-radius: 3px;
 
     &:hover {
       background-color: #F2F2F2;
     }
 
     .settting_fun_icon {
-      // display: flex;
-      // background: pink;
-
       img {
         width: 20px;
         height: 20px;
@@ -399,9 +396,14 @@ const logout = ref(null)
     .setting_fun_text {
       display: inline-block;
       text-align: center;
-      height: 50px;
-      line-height: 50px;
-      width: 70px;
+      margin-left: 12px;
+      height: 20px;
+      width: 58px;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 20px;
+      letter-spacing: 0.4px;
+      color: #333333;
       cursor: pointer;
     }
 
@@ -420,9 +422,9 @@ const logout = ref(null)
 
 .line {
   display: inline-block;
-  width: 100%;
+  width: 69px;
   height: 1px;
-  background: #000;
+  border: 1px solid rgba(0, 0, 0, 0.0462467);
 }
 
 .components {
