@@ -276,21 +276,24 @@ const logout = ref(null)
 }
 
 .chat_icon_box {
-
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 15px;
+  justify-content: center;
   width: 100%;
   height: 67px;
   text-align: center;
   line-height: 67px;
+  margin: 4px 0 ;
 
 }
 
 .chat_converation {
   .img_box {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 30px;
     height: 30px;
 

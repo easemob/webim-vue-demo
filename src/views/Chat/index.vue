@@ -7,7 +7,7 @@ import NavBar from '@/views/Chat/components/NavBar';
 <template>
   <div class="app-container">
     <el-container class="chat_container">
-      <el-aside class="chat_nav_bar" width="80px">
+      <el-aside class="chat_nav_bar" width="72px">
         <NavBar />
       </el-aside>
       <el-main class="chat_main_box">
