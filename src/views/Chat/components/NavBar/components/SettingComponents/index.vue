@@ -25,6 +25,13 @@ const showComponent = {
 }
 //modal显隐
 const dialogVisible = ref(false)
+//open时 初始化个别子组件所需要的数据
+const settingComps = ref(null)
+const initCompData = ()=>{
+    if (modalType.value === 'createNewGroups') {
+        settingComps.value && settingComps.value.handleRenderFiendList()
+    }
+}
 //手动控制dialog关闭
 const closeDialogVisible = () => dialogVisible.value = false
 defineExpose({
@@ -33,12 +40,13 @@ defineExpose({
 
 </script>
 <template>
-    <el-dialog v-model="dialogVisible" :title="modalTitle[modalType]" width="500px">
+    <el-dialog v-model="dialogVisible" :title="modalTitle[modalType]" width="500px" @open="initCompData">
         <!-- 动态组件 -->
-        <component :is="showComponent[modalType]" @closeDialogVisible="closeDialogVisible"
+        <component ref="settingComps" :is="showComponent[modalType]" @closeDialogVisible="closeDialogVisible"
             :dialogVisible="dialogVisible">
         </component>
     </el-dialog>
 </template>
 <style lang="scss" scoped>
+    
 </style>

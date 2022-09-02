@@ -59,10 +59,10 @@ let searchResultList = ref([])
 const searchFriend = () => {
     console.log('>>>>>serachInputValue.value ', serachInputValue.value === '')
     if (serachInputValue.value) {
-        isShowSearchContent.value = true
         let resultArr = _.filter(renderFriendList.value, (v) => v.keywords.includes(serachInputValue.value))
         searchResultList.value = resultArr
         console.log('>>>>>>>执行搜索', resultArr)
+        resultArr.length > 0 && (isShowSearchContent.value = true)
     } else {
         return isShowSearchContent.value = false
     }
@@ -144,6 +144,7 @@ const resetTheModalStatus = () => {
     searchResultList.value = []
     emit('closeDialogVisible')
 }
+defineExpose({ handleRenderFiendList })
 </script>
 <template>
     <div class="app_container">
