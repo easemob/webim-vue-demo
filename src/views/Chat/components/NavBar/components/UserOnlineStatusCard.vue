@@ -90,6 +90,8 @@ const selectOnlineMode = async (statusType) => {
   .active_status_style {
     font-weight: bold;
     transform: scale(1.1);
+    padding: 0 3px;
+    background-color: #F2F2F2;
   }
 }
 </style>
