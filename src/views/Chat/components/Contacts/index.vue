@@ -3,7 +3,6 @@ import { computed } from 'vue'
 import { useStore } from 'vuex'
 import router from '@/router'
 import _ from 'lodash'
-import dateFormater from '@/utils/dateFormater'
 /* 相关组件 */
 import SearchInput from '@/components/SearchInput'
 import FriendItem from './components/friendItem.vue'
@@ -55,38 +54,25 @@ const informDetail = computed(() => {
     <el-aside class="contacts_box">
       <SearchInput :searchType="'contacts'" :searchData="searchData" @toContacts="toContacts" />
       <el-scrollbar class="contacts_collapse" tag="div" :always="false">
-
         <div class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</div>
-        <el-collapse>
-          <el-collapse-item title="系统通知">
-            <template v-if="Object.keys(informDetail.lastInformDeatail).length > 0">
-              <div class="informDetail_box" @click="toInformDetails">
-                <div class="item_body item_left">
-                  <!-- 通知头像 -->
-                  <div class="session_other_avatar">
-                    <el-avatar :src="informIcon" />
-                  </div>
-                </div>
-                <div class="item_body item_main">
-                  <div class="name">新通知</div>
-                  <div class="last_msg_body">{{ informDetail.lastInformDeatail.from }}：{{
-                      informDetail.lastInformDeatail.desc
-                  }}
-                  </div>
-                </div>
-                <div class="item_body item_right">
-                  <span class="unReadNum_box" v-if="informDetail.untreated >= 1">
-                    <sup class="unReadNum_count"
-                      v-text="informDetail.untreated >= 99 ? '99+' : informDetail.untreated"></sup>
-                  </span>
-                </div>
-                <span class="time">{{ dateFormater('MM/DD/HH:mm', informDetail.lastInformDeatail.time) }}</span>
+        <!-- 系统通知 -->
+        <div>
+          <div class="informDetail_title">系统通知</div>
+          <div class="informDetail_box" @click="toInformDetails">
+            <div class="item_body item_left">
+              <!-- 通知头像 -->
+              <div class="session_other_avatar">
+                <el-avatar :size="37.54" :src="informIcon" />
               </div>
-            </template>
-            <template v-else>
-              <el-empty description="暂无新的通知..." />
-            </template>
-          </el-collapse-item>
+            </div>
+            <div class="item_body item_main">
+              <div class="name">新通知</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 联系人群组列表 -->
+        <el-collapse>
           <el-collapse-item :title="`联系人 ( ${Object.keys(friendList).length} )`">
             <template v-if="Object.keys(friendList).length > 0">
               <FriendItem @toContacts="toContacts" />
@@ -104,9 +90,7 @@ const informDetail = computed(() => {
             </template>
           </el-collapse-item>
         </el-collapse>
-
       </el-scrollbar>
-
     </el-aside>
     <el-main class="contacts_infors_main_box">
       <router-view></router-view>
@@ -121,6 +105,7 @@ const informDetail = computed(() => {
   width: 25%;
   background: #cfdbf171;
   min-width: 200px;
+  user-select: none;
 
   .contacts_collapse {
     height: calc(100% - 60px);
@@ -131,71 +116,54 @@ const informDetail = computed(() => {
 /* 修改el-collapse 的一部分默认样式 */
 ::v-deep .el-collapse-item__header {
   padding: 0 8px;
+  font-family: 'PingFang SC';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 24px;
+  letter-spacing: 0.342857px;
+  color: #333333;
 }
 
 ::v-deep .el-collapse-item__content {
   padding: 0;
 }
 
+.informDetail_title {
+  width: 100%;
+  line-height: 32px;
+  padding: 0 8px;
+  background: #FFF;
+  mix-blend-mode: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 24px;
+  letter-spacing: 0.342857px;
+  color: #333333;
+  box-sizing: border-box;
+}
+
 .informDetail_box {
   position: relative;
   width: 100%;
-  height: 80px;
-  padding: 0 15px;
+  height: 66px;
+  padding: 0 8px;
+  background: #EFEFEF;
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-around;
+  justify-content: flex-start;
 
   .item_main {
     .name {
-      font-weight: bold;
-    }
-
-    .last_msg_body {
-      margin-top: 5px;
-      max-width: 185px;
-      height: 17px;
-      color: #a3a3a3;
-      font-size: 12px;
-      font-weight: 300;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      margin-left: 11px;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 20px;
+      color: #333333;
     }
   }
-
-  .item_right {
-    width: 40px;
-
-    .unReadNum_box {
-      vertical-align: middle;
-
-      .unReadNum_count {
-        min-width: 20px;
-        height: 20px;
-        padding: 0 6px;
-        color: #fff;
-        font-weight: normal;
-        font-size: 12px;
-        line-height: 20px;
-        white-space: nowrap;
-        text-align: center;
-        background: #f5222d;
-        border-radius: 10px;
-      }
-    }
-  }
-
-  .time {
-    position: absolute;
-    right: 4px;
-    top: 4px;
-    color: #a3a3a3;
-    font-size: 7px;
-  }
-
 }
 
 .contacts_infors_main_box {

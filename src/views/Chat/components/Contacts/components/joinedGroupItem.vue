@@ -15,7 +15,7 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
         <el-row v-for=" groupItem in  joinedGroupList" :key="groupItem.groupid">
             <el-col class="groupItem_box" :span="24"
                 @click="$emit('toContacts', { id: groupItem.groupid, chatType: CHAT_TYPE.GROUP })">
-                <el-avatar style="margin-right: 10px;" :src="defaultGroupAvatarUrl">
+                <el-avatar style="margin-right: 11px;" :size="33.03" :src="defaultGroupAvatarUrl">
                 </el-avatar>
                 {{ groupItem.groupname }}
             </el-col>
@@ -33,9 +33,14 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    // background: #000;
-    padding: 0 15px;
+    padding: 0 23px;
     background: #EFEFEF;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    /* identical to box height */
+    text-align: center;
+    color: #333333;
 
     &:active {
         background: #DCDCDC;
