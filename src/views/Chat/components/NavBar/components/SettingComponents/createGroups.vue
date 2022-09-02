@@ -105,9 +105,9 @@ const sourceForm = () => {
 const createNewGroups = async () => {
     console.log('checkedUserArrcheckedUserArr', checkedUserArr)
     groupCreateForm.members = checkedUserArr.value
+    if (groupCreateForm.groupname === '') return ElNotification.error('请设置群组名称！')
     try {
         let { data } = await EaseIM.conn.createGroup({ data: { ...groupCreateForm } })
-
         //更新群组列表
         await store.dispatch('fetchGroupList', {
             pageNum: 1,
@@ -260,10 +260,9 @@ defineExpose({ handleRenderFiendList })
 }
 
 .create_modal_main {
+    height: 280px;
     max-height: 300px;
     overflow-y: auto;
-
-
 }
 
 .friend_user_list {
@@ -284,7 +283,7 @@ defineExpose({ handleRenderFiendList })
             font-weight: 500;
             font-size: 14px;
             line-height: 20px;
-            color: #333333;
+            color: #333;
         }
     }
 
@@ -295,7 +294,7 @@ defineExpose({ handleRenderFiendList })
 
         .checked_icon {
             font-size: 20px;
-            color: green;
+            color: #3F8FF7;
         }
 
         .unChecked_icon {
@@ -324,7 +323,6 @@ defineExpose({ handleRenderFiendList })
 .create_groups_btn {
     width: 100%;
     height: 50px;
-
     display: flex;
     flex-direction: row;
     justify-content: space-between;
