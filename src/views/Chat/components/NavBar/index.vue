@@ -219,7 +219,7 @@ const logout = ref(null)
               </svg>
 
             </span>
-            <span class="setting_fun_text">退出登陆</span>
+            <span class="setting_fun_text">退出登录</span>
           </div>
         </div>
       </template>

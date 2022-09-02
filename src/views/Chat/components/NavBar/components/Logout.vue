@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import EaseIM from '@/IM/initwebsdk'
 let dialogVisible = ref(false)
-let isClearStorage = ref(false)
+let isClearStorage = ref(true)
 
 const logoutTheUser = () => {
     if (isClearStorage.value) {
@@ -24,15 +24,14 @@ const clearLocalStorage = () => {
         return window.localStorage.removeItem(`${storageKey}_${item}`)
     })
     window.localStorage.removeItem('EASEIM_loginUser')
-    console.log('>>>>>清楚完成')
 }
 defineExpose({
     dialogVisible
 })
 </script>
 <template>
-    <el-dialog v-model="dialogVisible" title="退出登陆" width="480px" :destroy-on-close="true">
-        <span class="logout_title">确认退出当前账号？</span>
+    <el-dialog v-model="dialogVisible" title="退出登录" width="480px" :destroy-on-close="true">
+        <span class="logout_title">确认退出当前登录账号？</span>
         <br />
         <span class="logout_clear">
             <el-checkbox v-model="isClearStorage" label="清除账号缓存" size="small" />
