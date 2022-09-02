@@ -24,7 +24,7 @@ let userInfos = ref({
     phone: '16888888888',
     gender: '0', //0 未知 1男 2女
     birth: '2022-02-14',
-    sign: '像你这种人活该你写代码没bug！',
+    sign: '能用JavaScript解决的问题，最后都会用JavaScript实现！',
 
 })
 //获取store中的从SDK接口返回的用户属性
@@ -36,7 +36,7 @@ const userInfosData = computed(() => {
 //     console.log('userInfosData.value',userInfosData.value);
 //     _.merge(userInfos.value, userInfosData.value)
 // })
-const setUserInfos = ()=> {
+const setUserInfos = () => {
     _.merge(userInfos.value, userInfosData.value)
 }
 //点击待选的用户头像
@@ -89,7 +89,7 @@ defineExpose({
         </template>
         <template #default>
             <div class="infor_main">
-                <el-avatar class="infor_avatar" :size="80"
+                <el-avatar class="infor_avatar"  :size="80"
                     :src="userInfos.avatarurl ? userInfos.avatarurl : defaultAvatar" fit="fit">
                 </el-avatar>
                 <div class="infor_edit_text">
@@ -162,17 +162,18 @@ defineExpose({
                             <span class="content" v-if="!isEdit">{{ userInfos.mail || '未知' }}</span>
                             <span class="content" v-else>
                                 <el-input class="input_style" v-model="userInfos.mail" placeholder="请输入您的邮箱~"
-                                    :maxlength="20" show-word-limit clearable size="small" :prefix-icon="Message" />
+                                    :maxlength="50" clearable size="small" :prefix-icon="Message" />
                             </span>
                         </div>
-                        <div class="infor_content_main_item infor_content_main_sign">
+                        <!-- 编辑状态下展示签名内容 -->
+                        <div v-if="isEdit" class="infor_content_main_item infor_content_main_sign">
                             <span class="label">签名</span>
                             <span class="content" v-if="!isEdit" style="white-space: break-word;">{{ userInfos.sign ||
                                     '无个性，不签名！'
                             }}</span>
-                            <span class="content" v-else>
+                            <span class="content" style="border:none" v-else>
                                 <el-input class="textarea_style" v-model="userInfos.sign" type="textarea" :row="2"
-                                    placeholder="请输入您的个性签名~" :maxlength="35" show-word-limit clearable size="small"
+                                    placeholder="请输入您的个性签名~" :maxlength="40" show-word-limit clearable size="small"
                                     :prefix-icon="Flag" resize="none" />
                             </span>
                         </div>
@@ -201,6 +202,7 @@ defineExpose({
         position: absolute;
         left: 28px;
         top: -50px;
+        border: none;
     }
 
     .infor_edit_text {
@@ -278,7 +280,7 @@ defineExpose({
                 flex-direction: row;
                 justify-content: flex-start;
                 align-items: center;
-                margin: 15px 0;
+                margin: 20px 0;
 
                 .label {
                     display: inline-block;
@@ -320,7 +322,7 @@ defineExpose({
 
 .el_icon_right {
     color: #FFF;
-    font-size: 16px;
+    font-size: 20px;
     float: right;
     margin: 17px 21px 0 0;
     transition: all 0.3s;
