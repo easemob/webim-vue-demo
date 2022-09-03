@@ -457,7 +457,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
         height: 60px;
         text-align: center;
         color: #aaaaaa;
-        font-size: 9px;
+        font-size: 10px;
         margin: 5px 0;
 
         .reEdit {
