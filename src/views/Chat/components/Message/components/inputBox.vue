@@ -1,7 +1,7 @@
 <script setup>
 import { ref, toRefs, defineProps } from 'vue';
 import { useStore } from 'vuex';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElLoading } from 'element-plus';
 import { onClickOutside } from '@vueuse/core';
 import { emojis } from '@/constant';
 import { messageType } from '@/constant'
@@ -19,7 +19,8 @@ const props = defineProps({
 })
 const { ALL_MESSAGE_TYPE } = messageType;
 const { nowPickInfo } = toRefs(props)
-
+//加载状态
+const loadingBox = ref(null)
 
 /* 文本消息相关 */
 //emojis框展开
@@ -82,15 +83,21 @@ const sendImagesMessage = async () => {
         height: 0
     }
     img.onload = async () => {
-        ElMessage.success('图片上传中...')
+        const loadingInstance = ElLoading.service({ target: loadingBox.value, background: '#f7f7f7' })
         msgOptions.width = img.width;
         msgOptions.height = img.height;
         console.log('height:' + img.height + '----' + img.width)
         try {
             await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.IMAGE, msgOptions: _.cloneDeep(msgOptions) })
+            loadingInstance.close()
             uploadImgs.value.value = null;
         } catch (error) {
-            ElMessage.error('发送失败请重试！')
+            ElMessage({
+                type: 'error',
+                message: '发送失败请重试！',
+                center: true,
+            })
+            loadingInstance.close()
             uploadImgs.value.value = null;
         }
 
@@ -119,14 +126,16 @@ const sendFilesMessages = async () => {
         chatType: nowPickInfo.value.chatType,
         file: file,
     }
+    const loadingInstance = ElLoading.service({ target: loadingBox.value, background: '#f7f7f7' })
     try {
-        ElMessage.success('文件上传后进行发送请稍后...')
         await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.FILE, msgOptions: _.cloneDeep(msgOptions) })
+        loadingInstance.close()
         uploadFiles.value.value = null;
     } catch (error) {
         console.log('>>>>file error', error);
         ElMessage.error('发送失败，请重试！')
         uploadFiles.value.value = null;
+        loadingInstance.close()
     }
 
 }
@@ -194,7 +203,9 @@ defineExpose({
             <p v-if="!isHttps">由于浏览器限制,录音功能必须为https环境或者为localhost环境下使用！</p>
             <CollectAudio v-else @sendAudioMessages="sendAudioMessages" />
         </el-card>
+        <div ref="loadingBox" class="loading_box">
 
+        </div>
     </div>
     <textarea ref="editable" v-model="textContent" class="chat_content_editable" spellcheck="false"
         contenteditable="true" placeholder="请输入消息内容..." onkeydown="if (event.keyCode === 13) event.preventDefault();"
@@ -250,6 +261,22 @@ defineExpose({
             }
         }
     }
+
+    .loading_box {
+        position: absolute;
+        right: 5px;
+        top: 0;
+        width: 50px;
+        height: 100%;
+        font-size: 15px;
+    }
+}
+
+/* loading svg大小调整 */
+::v-deep .circular {
+    margin-top: 8px;
+    width: 25px;
+    height: 25px;
 }
 
 .chat_content_editable {

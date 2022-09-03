@@ -201,10 +201,11 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     <el-main class="chat_message_main">
       <el-scrollbar class="main_container" ref="messageContainer" @scroll="scroll">
         <div class="innerRef">
-          <div class="chat_message_tips">
+          <div v-show="isMoreHistoryMsg" class="chat_message_tips">
             <div v-show="messageData.length > 0 && messageData[0].type !== 'inform'" class="load_more_msg">
               <el-link v-show="!loadingHistoryMsg" :disabled="!isMoreHistoryMsg" :underline="false"
-                v-text="isMoreHistoryMsg ? '加载更多' : '已无更多'" @click="fechHistoryMessage()()">
+                @click="fechHistoryMessage()()">
+                加载更多
               </el-link>
               <el-link v-show="loadingHistoryMsg" disabled>消息加载中...</el-link>
             </div>

@@ -53,6 +53,9 @@ export default {
   504: {
     'exceed recall time limit': '消息超过可撤回时间！',
   },
+  508:{
+    //内容审核
+  }
   // e.type === '603' 被拉黑
   // e.type === '605' 群组不存在
   // e.type === '602' 不在群组或聊天室中
