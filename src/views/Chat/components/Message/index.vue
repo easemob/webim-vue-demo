@@ -260,7 +260,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     .user_status_box {
       width: 100px;
       height: 20px;
-      font-size: 7px;
+      font-size:12px;
 
       .status_icon {
         display: inline-block;
