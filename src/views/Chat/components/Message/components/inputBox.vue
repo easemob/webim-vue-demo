@@ -148,7 +148,7 @@ onClickOutside(recordBox, () => { isShowRecordBox.value = false; })
 const showRecordBox = () => {
     isShowRecordBox.value = true
 }
-const sendAudioMessages = (audioData) => {
+const sendAudioMessages = async (audioData) => {
     let file = {
         url: EaseIM.utils.parseDownloadResponse(audioData.src),
         filename: "录音",
@@ -162,7 +162,18 @@ const sendAudioMessages = (audioData) => {
         file: file,
         length: audioData.length
     }
-    store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.AUDIO, msgOptions: _.cloneDeep(msgOptions) })
+    try {
+        await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.AUDIO, msgOptions: _.cloneDeep(msgOptions) })
+        isShowRecordBox.value = false
+    } catch (error) {
+        ElMessage({
+            type: 'error',
+            center: true,
+            message: '发送失败请重试！'
+        })
+        isShowRecordBox.value = false
+    }
+
 }
 //清除屏幕
 const clearScreen = () => {
@@ -178,9 +189,6 @@ const all_func = [
     { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen },
 ]
 
-const test = ($event) => {
-    console.log('>>>>>>>+++++', $event)
-}
 defineExpose({
     textContent
 })
@@ -203,9 +211,8 @@ defineExpose({
             <p v-if="!isHttps">由于浏览器限制,录音功能必须为https环境或者为localhost环境下使用！</p>
             <CollectAudio v-else @sendAudioMessages="sendAudioMessages" />
         </el-card>
-        <div ref="loadingBox" class="loading_box">
-
-        </div>
+        <!-- 附件上传加载容器 -->
+        <div ref="loadingBox" class="loading_box"></div>
     </div>
     <textarea ref="editable" v-model="textContent" class="chat_content_editable" spellcheck="false"
         contenteditable="true" placeholder="请输入消息内容..." onkeydown="if (event.keyCode === 13) event.preventDefault();"
@@ -311,6 +318,7 @@ defineExpose({
 }
 
 .record_box {
-    min-width: 100px;
+    width: 250px;
+    height: 180px;
 }
 </style>

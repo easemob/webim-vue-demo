@@ -142,7 +142,7 @@ defineExpose({ closeDialog });
     <div>
         <div class="collect_box">
             <div v-show="!voice.type" class="start">
-                <span>单击开始录音，最长可录制60秒</span>
+                <span class="title">单击开始录音，最长可录制60秒</span>
                 <svg @click="startRecord()" width="58" height="58" viewBox="0 0 58 58" fill="none"
                     xmlns="http://www.w3.org/2000/svg">
                     <path
@@ -152,7 +152,7 @@ defineExpose({ closeDialog });
                 <span>{{ timer.tim }}″</span>
             </div>
             <div @click="recordOver()" v-show="voice.type && !showCountDown" class="send">
-                <span>再次单击发送，点空白处取消</span>
+                <span class="title">再次单击发送，点空白处取消</span>
                 <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M29 57.2363C44.6152 57.2363 57.3887 44.4629 57.3887 28.8477C57.3887 13.2324 44.6152 0.458984 29 0.458984C13.3848 0.458984 0.611328 13.2324 0.611328 28.8477C0.611328 44.4629 13.3848 57.2363 29 57.2363ZM29 55.8008C14.1465 55.8008 2.04688 43.7012 2.04688 28.8477C2.04688 13.9648 14.1465 1.89453 29 1.89453C43.8828 1.89453 55.9531 13.9648 55.9531 28.8477C55.9531 43.7012 43.8828 55.8008 29 55.8008ZM20.8848 39.2773H37.1152C38.5508 39.2773 39.4297 38.3691 39.4297 36.9629V20.7324C39.4297 19.2969 38.5508 18.418 37.1152 18.418H20.8848C19.4785 18.418 18.5703 19.2969 18.5703 20.7324V36.9629C18.5703 38.3691 19.4785 39.2773 20.8848 39.2773Z"
@@ -161,7 +161,7 @@ defineExpose({ closeDialog });
                 <span>{{ `${voice.length}″` }}</span>
             </div>
             <div v-show="showCountDown" class="send">
-                <span>{{ timer.tim }}秒后自动发送</span>
+                <span class="title">{{ timer.tim }}秒后自动发送</span>
                 <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M29 57.2363C44.6152 57.2363 57.3887 44.4629 57.3887 28.8477C57.3887 13.2324 44.6152 0.458984 29 0.458984C13.3848 0.458984 0.611328 13.2324 0.611328 28.8477C0.611328 44.4629 13.3848 57.2363 29 57.2363ZM29 55.8008C14.1465 55.8008 2.04688 43.7012 2.04688 28.8477C2.04688 13.9648 14.1465 1.89453 29 1.89453C43.8828 1.89453 55.9531 13.9648 55.9531 28.8477C55.9531 43.7012 43.8828 55.8008 29 55.8008ZM20.8848 39.2773H37.1152C38.5508 39.2773 39.4297 38.3691 39.4297 36.9629V20.7324C39.4297 19.2969 38.5508 18.418 37.1152 18.418H20.8848C19.4785 18.418 18.5703 19.2969 18.5703 20.7324V36.9629C18.5703 38.3691 19.4785 39.2773 20.8848 39.2773Z"
@@ -169,7 +169,6 @@ defineExpose({ closeDialog });
                 </svg>
                 <span>{{ `${voice.length}″` }}</span>
             </div>
-            <!-- showCountDown -->
         </div>
     </div>
 </template>
@@ -178,7 +177,7 @@ defineExpose({ closeDialog });
 .collect_box {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: space-around;
 
     .start,
     .send {
@@ -195,6 +194,10 @@ defineExpose({ closeDialog });
         svg {
             margin-bottom: 15px;
         }
+    }
+    .title{
+        margin-top: 10px;
+        font-size: 14px;
     }
 }
 
