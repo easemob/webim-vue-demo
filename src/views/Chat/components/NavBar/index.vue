@@ -312,7 +312,7 @@ const logout = ref(null)
     .badge {
       position: absolute;
       right: 0;
-      top: 15px;
+      top: 8px;
       display: inline-block;
       width: 7px;
       height: 7px;

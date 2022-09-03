@@ -27,7 +27,7 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
 
 <style lang="scss" scoped>
 .groupItem_box {
-    height: 80px;
+    height: 66px;
     width: 100%;
     display: flex;
     flex-direction: row;
