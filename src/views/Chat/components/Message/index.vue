@@ -52,7 +52,6 @@ const getIdInfo = async ({ id, chatType }) => {
     }
   }
 }
-
 //监听路由改变获取对应的getIdInfo
 const stopWatchRoute = watch(() => route.query, (routeVal) => {
   console.log('>>>>>>>>监听到路由参数变化', routeVal);
@@ -250,13 +249,13 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     font-style: normal;
     font-weight: 400;
     font-size: 17px;
-    line-height: 24px;
+    line-height: 17px;
     letter-spacing: 0.3px;
     color: #333333;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: flex-end;
+    // align-items: flex-end;
 
     .user_status_box {
       width: 100px;
