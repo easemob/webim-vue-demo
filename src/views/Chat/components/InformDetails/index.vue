@@ -95,7 +95,7 @@ const handleClickBtn = ({ informData, index, type }) => {
               <div class="text item">{{ item.from }}：{{ item.desc }} </div>
               <el-dropdown v-if="item.isOpearationBtn && item.operationStatus < 1" trigger="click" split-button
                 type="primary" @command="handleClickBtn">
-                同意
+                是否同意
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item :command="{ informData: item, index, type: 'agree' }">同意</el-dropdown-item>
