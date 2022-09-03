@@ -175,7 +175,7 @@ const emitContacts = (item) => {
               <div class="search_result_item" @click="emitConversation(1, item)">
                 <div class="item_body item_left">
                   <div class="session_other_avatar">
-                    <el-avatar :src="item.conversationInfo.avatarUrl"></el-avatar>
+                    <el-avatar :size="34" :src="item.conversationInfo.avatarUrl"></el-avatar>
                   </div>
                 </div>
                 <div class="item_body item_main">
@@ -342,12 +342,13 @@ const emitContacts = (item) => {
     justify-content: flex-start;
     height: 66px;
     background: #FFF;
-    padding: 0 14px;
+    // padding: 0 14px;
     cursor: pointer;
 
     .item_left {
       padding: 0;
       margin-right: 11px;
+      margin-left: 14px;
     }
 
     .item_main {

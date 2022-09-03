@@ -91,7 +91,7 @@ const deleteConversation = (itemKey) => {
       <div class="item_body item_left">
         <!-- 通知头像 -->
         <div class="session_other_avatar">
-          <el-avatar :src="informIcon" />
+          <el-avatar :size="34" :src="informIcon" />
         </div>
       </div>
       <div class="item_body item_main">
@@ -119,7 +119,7 @@ const deleteConversation = (itemKey) => {
               <div class="item_body item_left">
                 <div class="session_other_avatar">
 
-                  <el-avatar
+                  <el-avatar :size="34"
                     :src="friendList[item.conversationKey] && friendList[item.conversationKey].avatarurl ? friendList[item.conversationKey].avatarurl : item.conversationInfo.avatarUrl">
                   </el-avatar>
                 </div>
@@ -189,11 +189,12 @@ const deleteConversation = (itemKey) => {
 .session_list .session_list_item {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   height: 66px;
   background: #f0f0f0;
   color: var(--el-color-primary);
+  border-bottom: 1px solid var(--el-border-color);
   cursor: pointer;
 
   &:hover {
@@ -209,12 +210,13 @@ const deleteConversation = (itemKey) => {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    width: 25%;
-    padding: 0;
+    margin-left: 14px;
+    margin-right: 10px;
   }
 
   .item_main {
-    width: 50%;
+    width: 225px;
+    max-width: 225px;
     height: 40px;
     flex-direction: column;
     justify-content: space-between;
@@ -222,11 +224,13 @@ const deleteConversation = (itemKey) => {
 
     .name {
       min-width: 56px;
-      max-width: 120px;
+      max-width: 225px;
       max-height: 25px;
+      font-weight: 400;
       font-size: 14px;
-      font-weight: bold;
-      color: #000;
+      line-height: 20px;
+      /* identical to box height */
+      color: #333333;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -236,9 +240,11 @@ const deleteConversation = (itemKey) => {
       margin-top: 5px;
       max-width: 185px;
       height: 17px;
-      color: #a3a3a3;
+      font-weight: 400;
       font-size: 12px;
-      font-weight: 300;
+      line-height: 17px;
+      letter-spacing: 0.3px;
+      color: #A3A3A3;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -250,16 +256,19 @@ const deleteConversation = (itemKey) => {
     height: 45px;
     flex-direction: column;
     align-items: flex-end;
-    //justify-content: space-around;
     margin-right: 10px;
 
     .time {
       font-size: 10px;
-      color: #a3a3a3;
       font-weight: 400;
+      font-size: 10px;
+      line-height: 14px;
+      letter-spacing: 0.25px;
+      color: #A3A3A3;
     }
 
     .unReadNum_box {
+      margin-top: 10px;
       vertical-align: middle;
 
       .unReadNum_count {

@@ -54,7 +54,7 @@ const toChatMessage = (id, chatType) => {
   width: 25%;
   background: #cfdbf171;
   overflow: hidden;
-  min-width: 220px;
+  min-width: 324px;
 
   .chat_conversation_list {
     height: calc(100% - 60px);
