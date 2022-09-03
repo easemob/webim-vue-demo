@@ -4,6 +4,7 @@ import { useStore } from 'vuex';
 import EaseIM from '@/IM/initwebsdk';
 import dateFormater from '@/utils/dateFormater';
 import { informType } from '@/constant';
+import {  ElMessageBox } from 'element-plus'
 import { Delete } from '@element-plus/icons-vue';
 const store = useStore()
 const { INFORM_FROM } = informType
@@ -16,7 +17,24 @@ const clearUnread = (inform, index) => {
   }
 }
 //清空所有通知
-const clearAllInform = () => store.commit('CLEAR_INFORM_LIST')
+const clearAllInform = () => {
+  console.log('>>>>>调用清除');
+  ElMessageBox.confirm(
+    '确认清除所有系统通知?',
+    '清除系统通知',
+    {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+    .then(() => {
+      store.commit('CLEAR_INFORM_LIST')
+    })
+    .catch(() => {
+      return
+    })
+}
 
 //处理申请
 const handleClickBtn = ({ informData, index, type }) => {
@@ -68,13 +86,14 @@ const handleClickBtn = ({ informData, index, type }) => {
     <div class="inforom_details_box">
       <div class="inforom_details_box_header">
         <div v-if="informList.length > 0" class="clear_inforom">
-          <el-popconfirm title="清空当前所有通知?" @confirm="clearAllInform">
+          <!-- <el-popconfirm title="清空当前所有通知?" @confirm="clearAllInform">
             <template #reference>
-              <el-icon>
-                <Delete />
-              </el-icon>
+             
             </template>
-          </el-popconfirm>
+          </el-popconfirm> -->
+          <el-icon @click="clearAllInform">
+            <Delete />
+          </el-icon>
         </div>
 
       </div>

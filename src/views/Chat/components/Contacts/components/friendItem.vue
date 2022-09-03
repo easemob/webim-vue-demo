@@ -60,8 +60,8 @@ const { CHAT_TYPE } = messageType
     /* identical to box height */
     text-align: center;
     color: #333333;
-
-    &:active {
+    cursor: pointer;
+    &:hover {
         background: #DCDCDC;
     }
 }

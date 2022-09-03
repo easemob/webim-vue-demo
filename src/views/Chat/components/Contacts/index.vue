@@ -154,7 +154,10 @@ const informDetail = computed(() => {
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-
+  cursor: pointer;
+  &:hover{
+    background: #DCDCDC;
+  }
   .item_main {
     .name {
       margin-left: 11px;

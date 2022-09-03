@@ -41,8 +41,8 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
     /* identical to box height */
     text-align: center;
     color: #333333;
-
-    &:active {
+    cursor: pointer;
+    &:hover{
         background: #DCDCDC;
     }
 }
