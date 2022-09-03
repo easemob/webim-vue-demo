@@ -173,7 +173,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
           {{ nowPickInfo.userInfo.nickname || nowPickInfo.id }}
           <UserStatus :userStatus="nowPickInfo.userInfo.userStatus" />
         </div>
-        <div v-else>{{ nowPickInfo.id }}<span style="font-size:7px">(非好友)</span></div>
+        <div v-else>{{ nowPickInfo.id }}<span style="font-size:10px">(非好友)</span></div>
       </template>
       <template v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP">
         <div v-if="nowPickInfo.groupDetail" class="chat_user_name">
@@ -240,7 +240,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   align-items: center;
   flex-direction: row;
   justify-content: space-between;
-  height: 60px;
+  height: 61px;
   background: #F9F9F9;
   border-radius: 0 3px 0 0;
   border-bottom: 1px solid #E6E6E6;
