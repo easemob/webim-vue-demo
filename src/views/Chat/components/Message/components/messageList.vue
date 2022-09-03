@@ -238,6 +238,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
         margin: 32px auto;
         font-weight: 400;
         font-size: 14px;
+        line-height:20px;
         letter-spacing: 0.4px;
         color: #333333;
 
@@ -368,7 +369,6 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                 min-height: 60px;
                 max-height: 120px;
                 padding: 10px;
-
                 .file_text_box {
                     width: 75%;
                     height: 80%;
@@ -451,7 +451,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
         }
 
     }
-
+/* 撤回或者系统通知类消息 */
     .recall_style,
     .inform_style {
         height: 60px;
