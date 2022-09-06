@@ -74,7 +74,7 @@ const showShareInfoModal = () => {
 
 .user_info_card {
   position: absolute;
-  left: 80px;
+  left: 75px;
   top: 50px;
   background: #fff;
   border-radius: 4px;
@@ -101,8 +101,12 @@ const showShareInfoModal = () => {
     .avatar {
       width: 60px;
       height: 60px;
-      box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.20633);
       animation: avatar .3s linear 1;
+      transition: all 0.8s;
+      &:hover{
+        box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.20633);
+        transform: rotate(360deg);
+      }
     }
 
     .nickname {

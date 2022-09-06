@@ -25,7 +25,7 @@ const selectOnlineMode = async (statusType) => {
 };
 </script>
 <template>
-  <div style="width: 140px;height: 134px; display: flex; align-items: center">
+  <div style="width: 100%;height: 100%; display: flex; align-items: center">
     <ul class="chat_status_change">
       <li class="chat_status_change_item" :class="loginUserOnlineStatus === itemKey && 'active_status_style'"
         v-for="(item, itemKey, index) in onLineStatus" :key="item" @click="selectOnlineMode(itemKey)">
@@ -81,7 +81,7 @@ const selectOnlineMode = async (statusType) => {
 
     .checked_icon {
       position: absolute;
-      right: 20px;
+      right: 10px;
       top: 10%;
     }
 
@@ -92,6 +92,7 @@ const selectOnlineMode = async (statusType) => {
     transform: scale(1.1);
     padding: 0 3px;
     background-color: #F2F2F2;
+    box-sizing: border-box;
   }
 }
 </style>

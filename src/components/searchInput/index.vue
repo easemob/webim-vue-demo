@@ -356,7 +356,7 @@ const emitContacts = (item) => {
     }
 
     .item_main {
-      width: 25%;
+      // width: 25%;
       display: flex;
       flex-direction: column;
       align-items: flex-start;

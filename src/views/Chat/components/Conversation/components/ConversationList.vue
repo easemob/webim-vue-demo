@@ -149,7 +149,7 @@ const deleteConversation = (itemKey) => {
       </li>
     </template>
     <template v-else>
-      <el-empty description="暂无会话..." />
+      <el-empty description="暂无最近会话" />
     </template>
 
   </el-scrollbar>
@@ -217,7 +217,7 @@ const deleteConversation = (itemKey) => {
   .item_main {
     width: 225px;
     max-width: 225px;
-    height: 40px;
+    height: 34px;
     flex-direction: column;
     justify-content: space-between;
     align-items: flex-start;
@@ -228,12 +228,11 @@ const deleteConversation = (itemKey) => {
       max-height: 25px;
       font-weight: 400;
       font-size: 14px;
-      line-height: 20px;
       /* identical to box height */
       color: #333333;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      // overflow: hidden;
+      // text-overflow: ellipsis;
+      // white-space: nowrap;
     }
 
     .last_msg_body {
@@ -253,7 +252,7 @@ const deleteConversation = (itemKey) => {
 
   .item_right {
     width: 25%;
-    height: 45px;
+    height: 34px;
     flex-direction: column;
     align-items: flex-end;
     margin-right: 10px;

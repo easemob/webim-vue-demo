@@ -56,8 +56,8 @@ const informDetail = computed(() => {
       <el-scrollbar class="contacts_collapse" tag="div" :always="false">
         <div class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</div>
         <!-- 系统通知 -->
-        <div>
-          <div class="informDetail_title">系统通知</div>
+        <!-- <div> -->
+          <!-- <div class="informDetail_title">系统通知</div> -->
           <div class="informDetail_box" @click="toInformDetails">
             <div class="item_body item_left">
               <!-- 通知头像 -->
@@ -69,7 +69,7 @@ const informDetail = computed(() => {
               <div class="name">新通知</div>
             </div>
           </div>
-        </div>
+        <!-- </div> -->
 
         <!-- 联系人群组列表 -->
         <el-collapse>

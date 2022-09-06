@@ -82,8 +82,8 @@ const handleClickBtn = ({ informData, index, type }) => {
 
 </script>
 <template>
-  <el-container class="app_container">
-    <div class="inforom_details_box">
+  <el-container class="app_container" v-if="informList.length > 0">
+    <div  class="inforom_details_box">
       <div class="inforom_details_box_header">
         <div v-if="informList.length > 0" class="clear_inforom">
           <!-- <el-popconfirm title="清空当前所有通知?" @confirm="clearAllInform">
@@ -129,12 +129,11 @@ const handleClickBtn = ({ informData, index, type }) => {
 
           </el-card>
         </div>
-        <el-empty v-if="informList.length <= 0" description="暂无新的通知..." />
+
       </el-scrollbar>
-
     </div>
-
   </el-container>
+  <el-empty style="height:100%" v-else description="暂无新的系统通知" />
 </template>
 
 <style lang="scss" scoped>

@@ -390,6 +390,7 @@ const logout = ref(null)
     }
 
     .settting_fun_icon {
+      margin-left: 5px;
       img {
         width: 20px;
         height: 20px;
