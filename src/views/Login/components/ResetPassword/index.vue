@@ -290,6 +290,10 @@ const submitNewPassword = (formEl) => {
         color: #CCCCCC;
     }
 }
+::v-deep .el-input__suffix-inner {
+  font-size: 20px;
+  margin-right: 15px;
+}
 ::v-deep .el-form-item__error{
     margin-left:16px;
 }
