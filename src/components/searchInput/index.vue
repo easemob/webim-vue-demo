@@ -263,6 +263,10 @@ const emitContacts = (item) => {
   </div>
 </template>
 <style lang="scss" scoped>
+::v-deep .el-input__wrapper {
+  box-shadow: none;
+}
+
 .search_box {
   width: 100%;
   height: 60px;
