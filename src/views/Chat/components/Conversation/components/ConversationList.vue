@@ -96,7 +96,7 @@ const deleteConversation = (itemKey) => {
       </div>
       <div class="item_body item_main">
         <div class="name">系统通知</div>
-        <div class="last_msg_body">{{ informDetail.lastInformDeatail.from }}：{{ informDetail.lastInformDeatail.desc }}
+        <div class="last_msg_body">{{ informDetail.lastInformDeatail.from }}:{{ informDetail.lastInformDeatail.desc }}
         </div>
       </div>
       <div class="item_body item_right">
@@ -126,7 +126,7 @@ const deleteConversation = (itemKey) => {
               </div>
               <div class="item_body item_main">
                 <div class="name">{{ handleConversationName(item) }}</div>
-                <div class="last_msg_body">{{ item.latestMessage.type !== 'inform' ? item.fromInfo.fromId + '：' : ''
+                <div class="last_msg_body">{{ item.latestMessage.type !== 'inform' ? item.fromInfo.fromId + ':' : ''
                 }}{{
                   item.latestMessage.msg
                   }}
