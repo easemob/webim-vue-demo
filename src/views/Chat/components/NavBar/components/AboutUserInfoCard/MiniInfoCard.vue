@@ -24,9 +24,9 @@ const showShareInfoModal = () => {
     <div class="info_fist_col">
       <el-avatar class="avatar" :size="56" :src="userInfos.avatarurl" />
       <span class="nickname">{{
-          userInfos.nickname
-            ? userInfos.nickname + '(' + userInfos.hxId + ')'
-            : `暂无昵称(${loginUserId})`
+      userInfos.nickname
+      ? userInfos.nickname + '(' + userInfos.hxId + ')'
+      : `暂无昵称(${loginUserId})`
       }}</span>
     </div>
     <el-divider style="margin:0;" />
@@ -68,10 +68,6 @@ const showShareInfoModal = () => {
   }
 }
 
-
-
-
-
 .user_info_card {
   position: absolute;
   left: 75px;
@@ -103,7 +99,8 @@ const showShareInfoModal = () => {
       height: 60px;
       animation: avatar .3s linear 1;
       transition: all 0.8s;
-      &:hover{
+
+      &:hover {
         box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.20633);
         transform: rotate(360deg);
       }
@@ -151,5 +148,11 @@ const showShareInfoModal = () => {
       }
     }
   }
+
+}
+
+::v-deep .el-dialog__header {
+  background: #F2F2F2;
+  margin: 0;
 }
 </style>

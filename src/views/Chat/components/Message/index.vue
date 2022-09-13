@@ -281,6 +281,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   .more {
     display: flex;
     width: 35px;
+    height:100%;
     align-items: center;
     justify-content: center;
     font-size: 20px;

@@ -203,7 +203,7 @@ defineExpose({ saveHandleMembers })
                                     <b class="friend_list_username">{{ showGroupsMembersName(item) }}</b>
                                 </div>
                                 <el-icon v-if="memberRole" class="checked_btn" @click="removeTheMember(item)">
-                                    <CircleClose class="checked_btn" />
+                                    <CircleClose class="checked_btn circle_close" />
                                 </el-icon>
                             </div>
                         </div>
@@ -368,6 +368,10 @@ defineExpose({ saveHandleMembers })
             border-radius: 50%;
         }
 
+    }
+
+    .circle_close:hover {
+        color: #0091FF;
     }
 }
 </style>

@@ -3,7 +3,7 @@ import { ref, toRefs, toRaw, computed, onMounted } from 'vue'
 import {
     CircleClose,
     Search,
-    Star,
+    // Star,
     CircleCheckFilled,
 } from '@element-plus/icons-vue';
 import getArrDifference from '@/utils/getArrdifference'
@@ -266,14 +266,14 @@ defineExpose({ saveHandleMembers })
 
                 </div>
             </div>
-            <div style="text-align: left; margin-top: 5px;">
+            <!-- <div style="text-align: left; margin-top: 5px;">
                 <el-icon>
                     <Star />
                 </el-icon>
                 <b>
                     群成员
                 </b>
-            </div>
+            </div> -->
             <!-- 黑名单群成员邀请列表 -->
             <template v-if="groupModalTitle.type === 1">
                 <el-row style="height: 100%;margin-top: 5px;" v-if="renderBlackMembers">

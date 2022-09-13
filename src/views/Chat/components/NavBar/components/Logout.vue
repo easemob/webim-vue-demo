@@ -30,7 +30,7 @@ defineExpose({
 })
 </script>
 <template>
-    <el-dialog  v-model="dialogVisible" title="退出登录" width="480px" :destroy-on-close="true">
+    <el-dialog custom-class="login_diglog"  v-model="dialogVisible" title="退出登录" width="480px" :destroy-on-close="true">
         <span class="logout_title">确认退出当前登录账号？</span>
         <br />
         <span class="logout_clear">
