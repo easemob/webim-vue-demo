@@ -34,7 +34,7 @@ const showEmojisBox = () => {
 //发送文本内容
 const textContent = ref('')
 const sendTextMessage = async () => {
-    if (textContent.value === '') return
+    if (textContent.value.match(/^\s*$/)) return
     let msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,

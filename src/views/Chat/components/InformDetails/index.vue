@@ -1,13 +1,16 @@
 <script setup>
 import { computed } from 'vue';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 import EaseIM from '@/IM/initwebsdk';
 import dateFormater from '@/utils/dateFormater';
-import { informType } from '@/constant';
-import { ElMessageBox } from 'element-plus'
+import { informType, messageType } from '@/constant';
+import { ElMessageBox, ElMessage } from 'element-plus'
 import { Delete } from '@element-plus/icons-vue';
 const store = useStore()
+const router = useRouter()
 const { INFORM_FROM } = informType
+const { CHAT_TYPE } = messageType
 const informList = computed(() => store.state.Conversation.informDetail)
 
 //清除inform的未读
@@ -63,12 +66,25 @@ const handleClickBtn = ({ informData, index, type }) => {
   if (fromType === INFORM_FROM.GROUP && informData.operation === 'inviteToJoin') {
     const handleGroupInvite = {
       agree: async () => {
-        await EaseIM.conn.acceptGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
-        store.dispatch('fetchGroupList', {
-          pageNum: 1,
-          pageSize: 500
-        })
+        try {
+          await EaseIM.conn.acceptGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
+          store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
+          await store.dispatch('fetchGroupList', {
+            pageNum: 1,
+            pageSize: 500
+          })
+          //同意之后跳转至对应的群组详情
+          router.push({ path: '/chat/contacts/contactInfo', query: { id: informData.groupId, chatType: CHAT_TYPE.GROUP } })
+        } catch (error) {
+          ElMessage({
+            type: 'error',
+            center: true,
+            message: '加入失败请稍后重试！'
+          })
+          return
+        }
+
+
       },
       refuse: async () => {
         await EaseIM.conn.rejectGroupInvite({ invitee: loginUserId, groupId: informData.groupId })

@@ -57,18 +57,18 @@ const informDetail = computed(() => {
         <div class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</div>
         <!-- 系统通知 -->
         <!-- <div> -->
-          <!-- <div class="informDetail_title">系统通知</div> -->
-          <div class="informDetail_box" @click="toInformDetails">
-            <div class="item_body item_left">
-              <!-- 通知头像 -->
-              <div class="session_other_avatar">
-                <el-avatar :size="37.54" :src="informIcon" />
-              </div>
-            </div>
-            <div class="item_body item_main">
-              <div class="name">新通知</div>
+        <!-- <div class="informDetail_title">系统通知</div> -->
+        <div class="informDetail_box" @click="toInformDetails">
+          <div class="item_body item_left">
+            <!-- 通知头像 -->
+            <div class="session_other_avatar">
+              <el-avatar :size="37.54" :src="informIcon" />
             </div>
           </div>
+          <div class="item_body item_main">
+            <div class="name">新通知</div>
+          </div>
+        </div>
         <!-- </div> -->
 
         <!-- 联系人群组列表 -->
@@ -155,9 +155,11 @@ const informDetail = computed(() => {
   align-items: center;
   justify-content: flex-start;
   cursor: pointer;
-  &:hover{
+
+  &:hover {
     background: #DCDCDC;
   }
+
   .item_main {
     .name {
       margin-left: 11px;
