@@ -371,7 +371,7 @@ defineExpose({ saveHandleMembers })
                                             <el-avatar :src="defaultAvatar"></el-avatar>
                                             <b class="friend_list_username">{{ item.user }}</b>
                                             <sup v-if="item.expire" style="font: size 7px;">【失效时间：{{
-                                                    dateFormater('MM-DD-HH:mm', item.expire)
+                                            dateFormater('MM-DD-HH:mm', item.expire)
                                             }}】</sup>
                                         </div>
                                         <el-icon class="checked_btn" @click="deleteMembersFromMute(item, index)">
@@ -395,6 +395,10 @@ defineExpose({ saveHandleMembers })
 
 
 <style lang="scss" scoped>
+::v-deep .el-input__prefix {
+    margin-left: 3px;
+}
+
 // 禁言
 .taboo_box {
     position: relative;
@@ -420,7 +424,7 @@ defineExpose({ saveHandleMembers })
     min-height: 266px;
     overflow: hidden;
     border-right: 1px solid #DCDFE6;
-    padding: 0 24px;
+    padding: 0 12px 0 0;
 
     .friend_user_list_box {
         height: calc(100% - 36px);

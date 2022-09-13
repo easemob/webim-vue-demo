@@ -126,7 +126,7 @@ defineExpose({ saveHandleMembers })
         <div class="taboo_left">
             <!-- 搜索栏 -->
             <div class="search_friend_box">
-                <el-input style="height: 36px;" v-model="serachInputValue" placeholder="搜索" @input="searchUsers"
+                <el-input class="search_friend_input" v-model="serachInputValue" placeholder="搜索" @input="searchUsers"
                     :prefix-icon="Search">
                 </el-input>
 
@@ -257,7 +257,7 @@ defineExpose({ saveHandleMembers })
     min-height: 266px;
     overflow: hidden;
     border-right: 1px solid #DCDFE6;
-    padding: 0 24px;
+    padding: 0 12px 0 0;
     box-sizing: border-box;
 
     .friend_user_list_box {
@@ -267,6 +267,14 @@ defineExpose({ saveHandleMembers })
         padding: 15px 0;
 
     }
+}
+
+.search_friend_input {
+    height: 36px;
+}
+
+::v-deep .el-input__prefix {
+    margin-left: 3px;
 }
 
 .taboo_right {
@@ -281,7 +289,7 @@ defineExpose({ saveHandleMembers })
     width: 100%;
     height: 100%;
     flex-direction: column;
-    padding: 0 16px;
+    padding: 0 0 0 12px;
     overflow: auto;
     box-sizing: border-box;
 
@@ -309,6 +317,7 @@ defineExpose({ saveHandleMembers })
         z-index: 99;
     }
 }
+
 
 .title {
     text-align: left;
