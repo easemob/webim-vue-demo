@@ -228,7 +228,8 @@ defineExpose({
         contenteditable="true" placeholder="请输入消息内容..." onkeydown="if (event.keyCode === 13) event.preventDefault();"
         @keyup.enter="sendTextMessage">
     </textarea>
-    <el-button class="chat_send_btn" type="primary" @click="sendTextMessage">发送</el-button>
+    <el-button :class="[textContent === ''?'no_content_send_btn': 'chat_send_btn']" type="primary"
+        @click="sendTextMessage">发送</el-button>
 </template>
 
 <style lang="scss" scoped>
@@ -306,6 +307,14 @@ defineExpose({
     resize: none;
     padding: 10px 20px;
     font-size: 14px;
+}
+
+.no_content_send_btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 80px;
+    opacity: .5;
 }
 
 .chat_send_btn {

@@ -183,7 +183,12 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
       </template>
       <span class="more" v-if="nowPickInfo.groupDetail && nowPickInfo.chatType === CHAT_TYPE.GROUP"
         @click="drawer = !drawer">
-        ...
+        <svg width="18" height="4" viewBox="0 0 18 4" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="2" cy="2" r="2" fill="#333333" />
+          <circle cx="9" cy="2" r="2" fill="#333333" />
+          <circle cx="16" cy="2" r="2" fill="#333333" />
+        </svg>
+
         <!-- 单人展示删除拉黑 -->
         <!-- 群组展示抽屉 -->
       </span>
