@@ -358,7 +358,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   margin-top: 60px;
   width: 150px;
   height: calc(100% - 60px);
-  border-radius: 0 5px 5px 0;
+  border-radius: 5px 0 0 5px;
 
   .el-drawer__header {
     margin-bottom: 0;

@@ -184,6 +184,7 @@ const editGroupName = async (type, oldGroupName) => {
                     </div>
                 </div>
             </div>
+            <el-divider style="margin: 0;" />
         </template>
 
         <GroupsManagement ref="groupmanagement" :modalType="modalType" :groupModalTitle="groupModalTitle"
@@ -275,7 +276,7 @@ const editGroupName = async (type, oldGroupName) => {
     }
 
     .group_list_card {
-        padding: 15px;
+        padding: 15px 0px 15px 15px;
         height: 52px;
         box-sizing: border-box;
         display: flex;
