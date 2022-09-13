@@ -51,7 +51,6 @@ const toChatMessage = (id, chatType) => {
 <style lang="scss" scoped>
 .chat_converation_box {
   position: relative;
-  width: 25%;
   background: #cfdbf171;
   overflow: hidden;
   min-width: 324px;

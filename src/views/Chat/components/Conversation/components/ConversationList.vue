@@ -86,8 +86,8 @@ const deleteConversation = (itemKey) => {
   <el-scrollbar class="session_list" style="overflow: auto" tag="ul">
     <li class="offline_hint" v-if="!networkStatus"><span class="plaint_icon">!</span> 网络不给力，请检查网络设置。</li>
     <!-- 系统通知会话 -->
-    <li v-if="JSON.stringify(informDetail.lastInformDeatail) !== '{}'" class="session_list_item"
-      @click="$emit('toInformDetails')">
+    <li v-if="JSON.stringify(informDetail.lastInformDeatail) !== '{}' && informDetail.untreated >= 1"
+      class="session_list_item" @click="$emit('toInformDetails')">
       <div class="item_body item_left">
         <!-- 通知头像 -->
         <div class="session_other_avatar">
@@ -106,7 +106,6 @@ const deleteConversation = (itemKey) => {
         </span>
       </div>
     </li>
-
     <!-- 普通会话 -->
     <template v-if="Object.keys(conversationList).length > 0">
       <li v-for="( item, itemKey, index) in conversationList" :key="itemKey"
