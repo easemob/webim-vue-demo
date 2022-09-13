@@ -167,10 +167,10 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                         {{ msgBody.msg }}
                     </p>
                     <!-- 图片类型消息 -->
-                    <div v-if="msgBody.type === ALL_MESSAGE_TYPE.IMAGE">
-                        <el-image :src="msgBody.thumb" :preview-src-list="[msgBody.url]" :initial-index="1"
-                            fit="cover" />
-                    </div>
+                    <!-- <div> -->
+                    <el-image v-if="msgBody.type === ALL_MESSAGE_TYPE.IMAGE" style="border-radius:5px;"
+                        :src="msgBody.thumb" :preview-src-list="[msgBody.url]" :initial-index="1" fit="cover" />
+                    <!-- </div> -->
                     <!-- 语音类型消息 -->
                     <div :class="['message_box_content_audio', isMyself(msgBody) ? 'message_box_content_audio_mine' : 'message_box_content_audio_other']"
                         v-if="msgBody.type === ALL_MESSAGE_TYPE.AUDIO" @click="startplayAudio(msgBody, index)"
@@ -205,7 +205,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                                         fit="cover" />
                                     <!-- 昵称 -->
                                     <span class="nickname">{{ msgBody.customExts && msgBody.customExts.nickname ||
-                                            msgBody.customExts.uid
+                                    msgBody.customExts.uid
                                     }}</span>
                                 </div>
                                 <el-divider style="margin:5px 0;  border-top:1px solid black;" />
