@@ -128,8 +128,8 @@ const deleteConversation = (itemKey) => {
                 <div class="name">{{ handleConversationName(item) }}</div>
                 <div class="last_msg_body">{{ item.latestMessage.type !== 'inform' ? item.fromInfo.fromId + '：' : ''
                 }}{{
-    item.latestMessage.msg
-}}
+                  item.latestMessage.msg
+                  }}
                 </div>
               </div>
               <div class="item_body item_right">
@@ -271,6 +271,7 @@ const deleteConversation = (itemKey) => {
       vertical-align: middle;
 
       .unReadNum_count {
+        display: inline-block;
         min-width: 20px;
         height: 20px;
         padding: 0 6px;
@@ -282,6 +283,7 @@ const deleteConversation = (itemKey) => {
         text-align: center;
         background: #f5222d;
         border-radius: 10px;
+        box-sizing: border-box;
       }
     }
   }
