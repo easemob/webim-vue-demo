@@ -98,12 +98,12 @@ const Conversation = {
 
             break;
           case 'unsubscribed': {
-            informMsg.msg = `你俩的友尽了，要不要重新加回来？`
+            informMsg.msg = `你俩的友尽了，可重新发起好友申请`
             dispatch('createInformMessage', informMsg)
           }
             break;
           case 'subscribed': {
-            informMsg.msg = `你俩已经成为好友了~开心的聊两句吧。`
+            informMsg.msg = `已成为你的好友,开始聊天吧`
             dispatch('createInformMessage', informMsg)
           }
           default:
