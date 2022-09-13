@@ -4,7 +4,7 @@ import { useStore } from 'vuex';
 import EaseIM from '@/IM/initwebsdk';
 import dateFormater from '@/utils/dateFormater';
 import { informType } from '@/constant';
-import {  ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { Delete } from '@element-plus/icons-vue';
 const store = useStore()
 const { INFORM_FROM } = informType
@@ -83,7 +83,7 @@ const handleClickBtn = ({ informData, index, type }) => {
 </script>
 <template>
   <el-container class="app_container" v-if="informList.length > 0">
-    <div  class="inforom_details_box">
+    <div class="inforom_details_box">
       <div class="inforom_details_box_header">
         <div v-if="informList.length > 0" class="clear_inforom">
           <!-- <el-popconfirm title="清空当前所有通知?" @confirm="clearAllInform">
@@ -105,7 +105,7 @@ const handleClickBtn = ({ informData, index, type }) => {
             <template #header>
               <div class="card-header">
                 <span>{{ item.title }} {{ item.fromType === INFORM_FROM.GROUP &&
-                    `(${item.groupId})` || ''
+                `(${item.groupId})` || ''
                 }}</span>
               </div>
             </template>
@@ -179,7 +179,7 @@ const handleClickBtn = ({ informData, index, type }) => {
         font-size: 7px;
         border-radius: 20px;
         background: #FFF;
-        box-shadow: var(--el-box-shadow-light);
+        // box-shadow: var(--el-box-shadow-light);
       }
     }
 
