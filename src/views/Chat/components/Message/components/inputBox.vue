@@ -33,7 +33,7 @@ const showEmojisBox = () => {
 }
 //发送文本内容
 const textContent = ref('')
-const sendTextMessage = async () => {
+const sendTextMessage = _.debounce(async () => {
     if (textContent.value.match(/^\s*$/)) return
     let msgOptions = {
         id: nowPickInfo.value.id,
@@ -46,9 +46,8 @@ const sendTextMessage = async () => {
     } catch (error) {
         console.log('>>>>>>>发送失败+++++++', error)
     }
-
-
-}
+}, 300)
+//新增一个emoji
 const addOneEmoji = (emoji) => {
     console.log('>>>>>>emoji', emoji);
     textContent.value = textContent.value + emoji
