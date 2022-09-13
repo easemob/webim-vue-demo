@@ -284,7 +284,7 @@ const logout = ref(null)
   height: 67px;
   text-align: center;
   line-height: 67px;
-  margin: 4px 0 ;
+  margin: 4px 0;
 
 }
 
@@ -391,6 +391,7 @@ const logout = ref(null)
 
     .settting_fun_icon {
       margin-left: 5px;
+
       img {
         width: 20px;
         height: 20px;
@@ -432,9 +433,19 @@ const logout = ref(null)
 }
 
 .components {
+
   ::v-deep .edit_userinfo_diglog {
     border-radius: 4px;
     overflow: hidden;
+  }
+
+  // ::v-deep .setting_func_diglog>.el-dialog__header {
+  //   background: #F2F2F2;
+  //   margin: 0;
+  // }
+
+  ::v-deep .setting_func_diglog>.el-dialog__body {
+    padding: 28px 24px 24px 24px;
   }
 
   ::v-deep .edit_userinfo_diglog>.el-dialog__header {
@@ -442,10 +453,13 @@ const logout = ref(null)
     margin-right: 0px;
   }
 
+
+
   ::v-deep .edit_userinfo_diglog>.el-dialog__body {
     padding: 0;
     border-radius: 4px;
   }
+
 
 }
 </style>

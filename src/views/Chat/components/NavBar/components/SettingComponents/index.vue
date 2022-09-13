@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, defineExpose, defineProps } from 'vue'
+import { ref, toRefs, nextTick, defineExpose, defineProps } from 'vue'
 import CreateGroups from './createGroups.vue'
 import ApplyJoinGroups from './applyJoinGroups'
 import AddFriends from './addFriends.vue'
@@ -13,7 +13,7 @@ const props = defineProps({
 const { modalType } = toRefs(props)
 //Title展示
 const modalTitle = {
-    'createNewGroups': '创建群组',
+    'createNewGroups': '创建群聊',
     'applyJoinGroups': '申请入群',
     'addNewFriend': '添加好友'
 }
@@ -27,9 +27,12 @@ const showComponent = {
 const dialogVisible = ref(false)
 //open时 初始化个别子组件所需要的数据
 const settingComps = ref(null)
-const initCompData = ()=>{
+const initCompData = () => {
+    console.log('>>>>>>initCompData', modalType.value);
     if (modalType.value === 'createNewGroups') {
-        settingComps.value && settingComps.value.handleRenderFiendList()
+        nextTick(() => {
+            settingComps.value && settingComps.value.handleRenderFiendList()
+        })
     }
 }
 //手动控制dialog关闭
@@ -40,7 +43,8 @@ defineExpose({
 
 </script>
 <template>
-    <el-dialog v-model="dialogVisible" :title="modalTitle[modalType]" width="500px" @open="initCompData">
+    <el-dialog custom-class="setting_func_diglog" v-model="dialogVisible" :title="modalTitle[modalType]" width="500px"
+        @open="initCompData">
         <!-- 动态组件 -->
         <component ref="settingComps" :is="showComponent[modalType]" @closeDialogVisible="closeDialogVisible"
             :dialogVisible="dialogVisible">
@@ -48,5 +52,5 @@ defineExpose({
     </el-dialog>
 </template>
 <style lang="scss" scoped>
-    
+
 </style>

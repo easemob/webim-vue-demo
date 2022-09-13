@@ -150,10 +150,10 @@ defineExpose({ handleRenderFiendList })
     <div class="app_container">
         <el-row v-if="nextStep === 0">
             <el-col class="search_friend_box">
-                <el-input v-model="serachInputValue" style="height: 40px;" placeholder="搜索" @input="searchFriend"
+                <el-input class="search_friend_input" v-model="serachInputValue" placeholder="搜索" @input="searchFriend"
                     :prefix-icon="Search">
                 </el-input>
-                <el-divider style="margin:12px 0;" />
+                <el-divider style="margin: top 20px;margin-bottom: 12px;" />
                 <el-scrollbar v-if="isShowSearchContent" class="search_friend_box_content" tag="div">
                     <div v-for="(item, index) in searchResultList" :key="item.name">
                         <div class="friend_user_list">
@@ -191,8 +191,8 @@ defineExpose({ handleRenderFiendList })
 
             </el-col>
             <el-col class="create_friend_footer">
-                <span>{{ checkedCount }} 人被选中</span>
-                <el-button plain @click="nextStep = 1">下一步</el-button>
+                <span><b class="checked_text">{{ checkedCount }}</b> 人被选中</span>
+                <el-button class="next_btn" plain @click="nextStep = 1">下一步</el-button>
             </el-col>
         </el-row>
         <el-row v-else>
@@ -243,8 +243,18 @@ defineExpose({ handleRenderFiendList })
 
 
 <style lang="scss" scoped>
+::v-deep .search_friend_input>.el-input__wrapper {
+    background: #F7F7F7;
+    box-shadow: none;
+}
+
 .search_friend_box {
     position: relative;
+
+    .search_friend_input {
+        height: 40px;
+
+    }
 
     .search_friend_box_content {
         position: absolute;
@@ -313,6 +323,22 @@ defineExpose({ handleRenderFiendList })
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-size: 12px;
+
+    .checked_text {
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 17px;
+        letter-spacing: 0.3px;
+        color: #5A5A5A;
+    }
+
+    .next_btn {
+        width: 124px;
+        height: 40px;
+        --el-button-text-color: var(--el-color-primary);
+        --el-button-border-color: var(--el-color-primary);
+    }
 }
 
 .create_groups__main {
