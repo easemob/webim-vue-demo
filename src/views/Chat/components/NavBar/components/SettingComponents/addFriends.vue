@@ -1,5 +1,6 @@
 <script setup>
-import { reactive, toRefs, watch, defineProps, defineEmits } from 'vue'
+import { reactive, toRefs, watch, computed, defineProps, defineEmits } from 'vue'
+import store from '@/store';
 import EaseIM from '@/IM/initwebsdk'
 import { ElNotification } from 'element-plus'
 const props = defineProps({
@@ -14,12 +15,25 @@ const applyAddFriendsForm = reactive({
     username: '',
     applyFriendMessage: ''
 })
-
+const friendList = computed(() => store.state.Contacts.friendList);
+console.log('>>>>>好友列表', friendList.value);
 const applyAddFriends = () => {
-    //todo 此处没有判断是否已经成为好友，目前SDK没有判断是否以为好友的则返回失败的机制，后续可在申请加好友时加上判断。
     if (!applyAddFriendsForm.username) return ElNotification({
         title: '好友操作',
         message: '好友ID不可为空！',
+        center: true,
+        type: 'warning',
+    })
+    if (Object.keys(friendList.value).includes(applyAddFriendsForm.username)) return ElNotification({
+        title: '好友操作',
+        message: '该ID已成为您的好友！',
+        center: true,
+        type: 'warning',
+    })
+    if (applyAddFriendsForm.username === EaseIM.conn.user) return ElNotification({
+        title: '好友操作',
+        message: '不可添加自己为好友！',
+        center: true,
         type: 'warning',
     })
     try {
@@ -54,7 +68,8 @@ const resetTheModalStatus = () => {
     <div class="app_container">
         <el-form label-position="top" label-width="100px">
             <el-form-item label="好友ID">
-                <el-input class="addFriends_input" v-model.trim="applyAddFriendsForm.username" />
+                <el-input class="addFriends_input" v-model.trim="applyAddFriendsForm.username"
+                    placeholder="输入对方的环信ID" />
             </el-form-item>
             <el-form-item label="申请信息">
                 <el-input class="addFriends_input" v-model="applyAddFriendsForm.applyFriendMessage" maxlength="300"

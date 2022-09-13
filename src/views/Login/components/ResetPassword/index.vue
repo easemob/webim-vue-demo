@@ -167,12 +167,12 @@ const submitNewPassword = (formEl) => {
             try {
                 const { code } = await updateNewPasswrod({ ...params })
                 if (code === 200) {
-                    ElMessage.success('重置完成！登录试试吧😁')
+                    ElMessage({ type: "success", message: "重置完成！登录试试吧😁", center: true })
                     emits('changeToLogin')
                 }
             } catch (error) {
                 console.log('>>>>>重置失败', error);
-                ElMessage.error('重置失败，请稍后重试！')
+                ElMessage({ type: "error", message: "重置失败，请稍后重试！", center: true })
             }
 
         } else {
@@ -185,10 +185,12 @@ const submitNewPassword = (formEl) => {
     <el-form ref="resetPwdEl" :model="resetPasswordFrom" :rules="rules">
         <template v-if="nextStep === 1">
             <el-form-item prop="username">
-                <el-input class="login_input_style" v-model="resetPasswordFrom.username" placeholder="请输入用户ID" clearable />
+                <el-input class="login_input_style" v-model="resetPasswordFrom.username" placeholder="请输入用户ID"
+                    clearable />
             </el-form-item>
             <el-form-item prop="phoneNumber">
-                <el-input class="login_input_style" v-model="resetPasswordFrom.phoneNumber" placeholder="请输入手机号" clearable>
+                <el-input class="login_input_style" v-model="resetPasswordFrom.phoneNumber" placeholder="请输入手机号"
+                    clearable>
                     <template #prepend>+86</template>
                 </el-input>
             </el-form-item>
@@ -276,6 +278,7 @@ const submitNewPassword = (formEl) => {
     line-height: 20px;
     letter-spacing: 1.75px;
     color: #3A3A3A;
+
     &::placeholder {
         font-family: 'PingFang SC';
         font-style: normal;
@@ -290,13 +293,16 @@ const submitNewPassword = (formEl) => {
         color: #CCCCCC;
     }
 }
+
 ::v-deep .el-input__suffix-inner {
-  font-size: 20px;
-  margin-right: 15px;
+    font-size: 20px;
+    margin-right: 15px;
 }
-::v-deep .el-form-item__error{
-    margin-left:16px;
+
+::v-deep .el-form-item__error {
+    margin-left: 16px;
 }
+
 .auth_code {
     width: 80px;
     height: 40px;
