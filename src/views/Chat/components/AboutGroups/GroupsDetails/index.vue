@@ -283,6 +283,10 @@ const editGroupName = async (type, oldGroupName) => {
         justify-content: space-between;
         align-items: center;
 
+        &:hover {
+            background: #F3F3F3;
+        }
+
         .label {
             font-family: 'PingFang SC';
             font-style: normal;
@@ -318,6 +322,7 @@ const editGroupName = async (type, oldGroupName) => {
                 >svg {
                     width: 18.49px;
                     height: 10.84px;
+                    cursor: pointer;
                 }
 
             }
