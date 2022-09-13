@@ -1,7 +1,7 @@
 <script setup>
 import { ref, toRefs, defineProps } from 'vue';
 import { useStore } from 'vuex';
-import { ElMessage, ElLoading } from 'element-plus';
+import { ElMessage, ElLoading, ElMessageBox } from 'element-plus';
 import { onClickOutside } from '@vueuse/core';
 import { emojis } from '@/constant';
 import { messageType } from '@/constant'
@@ -177,8 +177,18 @@ const sendAudioMessages = async (audioData) => {
 }
 //清除屏幕
 const clearScreen = () => {
-    const key = nowPickInfo.value.id
-    store.commit('CLEAR_SOMEONE_MESSAGE', key)
+    ElMessageBox.confirm('确认清空当前消息内容？',
+        '消息清屏', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+    }).then(() => {
+        const key = nowPickInfo.value.id
+        store.commit('CLEAR_SOMEONE_MESSAGE', key)
+    }).catch(error => {
+        return false;
+    })
+
 }
 //func 对应事件 icon class样式等
 const all_func = [
