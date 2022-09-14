@@ -138,7 +138,6 @@ const deleteMessage = ({ from, to, id: mid }) => {
 }
 //父组件重新编辑方法
 const reEdit = (msg) => emit('reEditMessage', msg)
-
 </script>
 <template>
     <div class="messageList_box" v-for="(msgBody, index) in messageData" :key="msgBody.id">
@@ -148,74 +147,76 @@ const reEdit = (msg) => emit('reEditMessage', msg)
             <el-avatar class="message_item_avator"
                 :src="isMyself(msgBody) ? loginUserInfo.avatarurl : otherUserInfo(msgBody.from).avatarurl || defaultAvatar">
             </el-avatar>
-            <el-tooltip trigger="contextmenu">
-                <template #content>
-                    <span v-if="msgBody.type === ALL_MESSAGE_TYPE.TEXT && isSupported">
-                        <span style="cursor: pointer" @click.stop="copyTextMessages(msgBody.msg)">复制</span>
-                        <el-divider direction="vertical" />
+            <el-dropdown class="message_box_content"
+                :class="[isMyself(msgBody) ? 'message_box_content_mine' : 'message_box_content_other']"
+                trigger="contextmenu" placement="bottom-end">
+                <!-- 文本类型消息 -->
+                <p style="padding: 10px" v-if="msgBody.type === ALL_MESSAGE_TYPE.TEXT">
+                    {{ msgBody.msg }}
+                </p>
+                <!-- 图片类型消息 -->
+                <!-- <div> -->
+                <el-image v-if="msgBody.type === ALL_MESSAGE_TYPE.IMAGE" style="border-radius:5px;" :src="msgBody.thumb"
+                    :preview-src-list="[msgBody.url]" :initial-index="1" fit="cover" />
+                <!-- </div> -->
+                <!-- 语音类型消息 -->
+                <div :class="['message_box_content_audio', isMyself(msgBody) ? 'message_box_content_audio_mine' : 'message_box_content_audio_other']"
+                    v-if="msgBody.type === ALL_MESSAGE_TYPE.AUDIO" @click="startplayAudio(msgBody, index)"
+                    :style="`width:${msgBody.length * 10}px`">
+                    <span class="audio_length_text">
+                        {{ msgBody.length }}′′
                     </span>
-                    <span v-if="isMyself(msgBody)">
-                        <span style="cursor: pointer" @click="recallMessage(msgBody)">撤回</span>
-                        <el-divider direction="vertical" />
-                    </span>
-                    <span style="cursor: pointer" @click="deleteMessage(msgBody)">删除</span>
-                </template>
-                <div class="message_box_content"
-                    :class="[isMyself(msgBody) ? 'message_box_content_mine' : 'message_box_content_other']">
-                    <!-- 文本类型消息 -->
-                    <p style="padding: 10px" v-if="msgBody.type === ALL_MESSAGE_TYPE.TEXT">
-                        {{ msgBody.msg }}
-                    </p>
-                    <!-- 图片类型消息 -->
-                    <!-- <div> -->
-                    <el-image v-if="msgBody.type === ALL_MESSAGE_TYPE.IMAGE" style="border-radius:5px;"
-                        :src="msgBody.thumb" :preview-src-list="[msgBody.url]" :initial-index="1" fit="cover" />
-                    <!-- </div> -->
-                    <!-- 语音类型消息 -->
-                    <div :class="['message_box_content_audio', isMyself(msgBody) ? 'message_box_content_audio_mine' : 'message_box_content_audio_other']"
-                        v-if="msgBody.type === ALL_MESSAGE_TYPE.AUDIO" @click="startplayAudio(msgBody, index)"
-                        :style="`width:${msgBody.length * 10}px`">
-                        <span class="audio_length_text">
-                            {{ msgBody.length }}′′
-                        </span>
-                        <div :class="[isMyself(msgBody) ? 'play_audio_icon_mine' : 'play_audio_icon_other', audioPlayStatus.playIndex === index && 'start_play_audio']"
-                            style=" background-size: 100% 100%;">
-                        </div>
-                    </div>
-                    <div v-if="msgBody.type === ALL_MESSAGE_TYPE.LOCAL">
-                        <p style="padding: 10px">[暂不支持位置消息展示]</p>
-                    </div>
-                    <!-- 文件类型消息 -->
-                    <div v-if="msgBody.type === ALL_MESSAGE_TYPE.FILE" class="message_box_content_file">
-                        <div class="file_text_box">
-                            <div class="file_name">{{ msgBody.filename }}</div>
-                            <div class="file_size">{{ fileSizeFormat(msgBody.file_length) }}</div>
-                            <a class="file_download" :href="msgBody.url" download>点击下载</a>
-                        </div>
-                        <span class="iconfont icon-wenjian"></span>
-                    </div>
-                    <!-- 自定义类型消息 -->
-                    <div v-if="msgBody.type === ALL_MESSAGE_TYPE.CUSTOM" class="message_box_content_custom">
-                        <template v-if="msgBody.customEvent && CUSTOM_TYPE[msgBody.customEvent]">
-                            <div class="user_card">
-                                <div class="user_card_main">
-                                    <!-- 头像 -->
-                                    <el-avatar shape="circle" :size="50"
-                                        :src="msgBody.customExts && msgBody.customExts.avatarurl || msgBody.customExts.avatar || defaultAvatar"
-                                        fit="cover" />
-                                    <!-- 昵称 -->
-                                    <span class="nickname">{{ msgBody.customExts && msgBody.customExts.nickname ||
-                                    msgBody.customExts.uid
-                                    }}</span>
-                                </div>
-                                <el-divider style="margin:5px 0;  border-top:1px solid black;" />
-                                <p style="font-size: 8px;">个人名片</p>
-                            </div>
-                        </template>
+                    <div :class="[isMyself(msgBody) ? 'play_audio_icon_mine' : 'play_audio_icon_other', audioPlayStatus.playIndex === index && 'start_play_audio']"
+                        style=" background-size: 100% 100%;">
                     </div>
                 </div>
+                <div v-if="msgBody.type === ALL_MESSAGE_TYPE.LOCAL">
+                    <p style="padding: 10px">[暂不支持位置消息展示]</p>
+                </div>
+                <!-- 文件类型消息 -->
+                <div v-if="msgBody.type === ALL_MESSAGE_TYPE.FILE" class="message_box_content_file">
+                    <div class="file_text_box">
+                        <div class="file_name">{{ msgBody.filename }}</div>
+                        <div class="file_size">{{ fileSizeFormat(msgBody.file_length) }}</div>
+                        <a class="file_download" :href="msgBody.url" download>点击下载</a>
+                    </div>
+                    <span class="iconfont icon-wenjian"></span>
+                </div>
+                <!-- 自定义类型消息 -->
+                <div v-if="msgBody.type === ALL_MESSAGE_TYPE.CUSTOM" class="message_box_content_custom">
+                    <template v-if="msgBody.customEvent && CUSTOM_TYPE[msgBody.customEvent]">
+                        <div class="user_card">
+                            <div class="user_card_main">
+                                <!-- 头像 -->
+                                <el-avatar shape="circle" :size="50"
+                                    :src="msgBody.customExts && msgBody.customExts.avatarurl || msgBody.customExts.avatar || defaultAvatar"
+                                    fit="cover" />
+                                <!-- 昵称 -->
+                                <span class="nickname">{{ msgBody.customExts && msgBody.customExts.nickname ||
+                                msgBody.customExts.uid
+                                }}</span>
+                            </div>
+                            <el-divider style="margin:5px 0;  border-top:1px solid black;" />
+                            <p style="font-size: 8px;">个人名片</p>
+                        </div>
+                    </template>
+                </div>
+                <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item v-if="msgBody.type === ALL_MESSAGE_TYPE.TEXT && isSupported"
+                            @click="copyTextMessages(msgBody.msg)">
+                            复制
+                        </el-dropdown-item>
+                        <el-dropdown-item v-if="isMyself(msgBody)" @click="recallMessage(msgBody)">
+                            撤回
+                        </el-dropdown-item>
+                        <el-dropdown-item @click="deleteMessage(msgBody)">
+                            删除
+                        </el-dropdown-item>
+                    </el-dropdown-menu>
+                </template>
 
-            </el-tooltip>
+            </el-dropdown>
         </div>
         <div v-if="msgBody.isRecall" class="recall_style">{{ isMyself(msgBody) ? "你" : `${msgBody.from}` }}撤回了一条消息<span
                 class="reEdit" v-show="isMyself(msgBody) && msgBody.type === ALL_MESSAGE_TYPE.TEXT"

@@ -62,7 +62,7 @@ export default function (fromType, informContnet) {
         to: to,
         groupId: id,
         time: Date.now(),
-        desc: INFORM_TYPE[operation],
+        desc: INFORM_TYPE[operation] || operation,
       };
     }
 
