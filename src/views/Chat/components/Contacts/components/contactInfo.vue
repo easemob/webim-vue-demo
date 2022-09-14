@@ -13,17 +13,16 @@ import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
 /* store */
 const store = useStore()
-
 /* route */
 const route = useRoute()
 const { CHAT_TYPE } = messageType
 //当前选中id的info
 const nowContactInfo = computed(() => {
     if (route.query.chatType === CHAT_TYPE.SINGLE) {
-        return store.state.Contacts.friendList[route.query.id]
+        return store.state.Contacts.friendList[route.query.id] ?? {}
     }
     if (route.query.chatType === CHAT_TYPE.GROUP) {
-        return store.state.Contacts.groupList[route.query.id]
+        return store.state.Contacts.groupList[route.query.id] ?? {}
     }
 })
 
@@ -65,7 +64,10 @@ const changeBlackStatus = async () => {
         blackStatus.value = true;
         switchStatus.value = false;
     }
-    store.dispatch('fetchBlackList')
+    setTimeout(() => {
+        store.dispatch('fetchBlackList')
+    }, 500)
+
 
 }
 
@@ -111,11 +113,11 @@ const toChatMessage = () => {
                     <div class="name">
                         <p v-if="$route.query.chatType === CHAT_TYPE.SINGLE">
                             {{ nowContactInfo.nickname ? `${nowContactInfo.nickname}(${nowContactInfo.hxId})` :
-                                    nowContactInfo.hxId
+                            nowContactInfo.hxId
                             }}</p>
                         <p v-if="$route.query.chatType === CHAT_TYPE.GROUP">
                             {{ nowContactInfo.groupname ? `${nowContactInfo.groupname}(${nowContactInfo.groupid})` :
-                                    nowContactInfo.groupid
+                            nowContactInfo.groupid
                             }}</p>
                     </div>
                     <div class="func_box">

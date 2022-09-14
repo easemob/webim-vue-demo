@@ -22,6 +22,8 @@ const nowPickInfo = ref({});
 const friendList = computed(() => store.state.Contacts.friendList)
 const groupList = computed(() => store.state.Contacts.groupList)
 
+/* loginstatus */
+const loginState = computed(() => store.state.loginState);
 /* warningTips */
 const isShowWarningTips = computed(() => store.state.isShowWarningTips)
 const randomTips = computed(() => {
@@ -57,7 +59,7 @@ const stopWatchRoute = watch(() => route.query, (routeVal) => {
   console.log('>>>>>>>>监听到路由参数变化', routeVal);
   if (routeVal) {
     nowPickInfo.value = { ...routeVal }
-    getIdInfo(routeVal)
+    loginState.value && getIdInfo(routeVal)
   }
 }, {
   immediate: true
@@ -165,7 +167,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
 
 </script>
 <template>
-  <el-container class="app_container">
+  <el-container v-if="loginState" class="app_container">
     <el-header class="chat_message_header">
       <template v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE">
         <div v-if="nowPickInfo.userInfo" class="chat_user_name">
@@ -228,7 +230,6 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
       <GroupsDetails :nowGroupId="nowPickInfo.id" :groupDetail="groupDetail" />
     </el-drawer>
   </el-container>
-
 </template>
 
 
@@ -281,7 +282,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   .more {
     display: flex;
     width: 35px;
-    height:100%;
+    height: 100%;
     align-items: center;
     justify-content: center;
     font-size: 20px;
