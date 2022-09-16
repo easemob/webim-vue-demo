@@ -174,6 +174,7 @@ const Contacts = {
         let tobeCommitRes =
           usersPresenceList.length > 0 &&
           usersPresenceList.filter((p) => p.uid !== '');
+          console.log('resultData',resultData);
         commit('SET_FRIEND_PRESENCE', tobeCommitRes);
       } catch (error) {
         console.log('>>>>>>订阅失败', error);

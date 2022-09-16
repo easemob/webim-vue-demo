@@ -7,6 +7,7 @@ import {
 import _ from 'lodash';
 import { ref, toRaw } from 'vue';
 import { messageType } from '@/constant';
+import { usePlayRing } from '@/hooks';
 const { CHAT_TYPE, ALL_MESSAGE_TYPE } = messageType;
 const Message = {
   state: {
@@ -61,8 +62,11 @@ const Message = {
   actions: {
     //添加新消息
     createNewMessage: ({ dispatch, commit }, params) => {
+      const { isOpenPlayRing, playRing } = usePlayRing()
       let key = setMessageKey(params);
       commit('UPDATE_MESSAGE_LIST', params);
+      //目前根据全局配置进行新消息声音提示，后续计划根据会话级别可进行设置是否声音提示，比如设定免打扰。
+      if (isOpenPlayRing.value) playRing()
       dispatch('gatherConversation', key);
     },
     //获取历史消息

@@ -4,13 +4,17 @@ import router from '@/router';
 import EaseIM from '@/IM/initwebsdk';
 import { handleSDKErrorNotifi, setMessageKey } from '@/utils/handleSomeData';
 import { informType } from '@/constant'
+import { usePlayRing } from '@/hooks'
+import ring from '@/assets/ring.mp3'
 const store = useStore();
+const { isOpenPlayRing, clickRing, playRing } = usePlayRing()
 EaseIM.logger.disableAll()
 /* connect 相关监听 */
 EaseIM.conn.addEventHandler('connection', {
   onConnected: () => {
     console.log('>>>>>环信连接成功');
     store.commit('CHANGE_LOGIN_STATUS', true);
+    if (isOpenPlayRing.value) clickRing()
     fetchLoginUsersInitData()
     router.replace('/chat');
   },
@@ -199,11 +203,11 @@ const handleRelogin = () => {
     user: loginUserFromStorage.user,
     accessToken: loginUserFromStorage.accessToken
   })
+
 }
 if (loginUserFromStorage?.user && loginUserFromStorage?.accessToken) {
   handleRelogin()
 }
-
 
 </script>
 <template>
@@ -212,6 +216,8 @@ if (loginUserFromStorage?.user && loginUserFromStorage?.accessToken) {
       <component :is="Component" />
     </transition>
   </router-view>
+  <!-- 铃声标签 -->
+  <audio id="ring" :src="ring" controls hidden></audio>
 </template>
 
 <style type="scss">
