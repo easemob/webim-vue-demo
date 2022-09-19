@@ -228,7 +228,7 @@ const Chat = {
 	actions: {
 		onGetContactUserList: function (context, payload) {
 			try {
-				WebIM.conn.getRoster({
+				WebIM.conn.getContacts({
 					success: function (roster) {
 						const userList = roster.filter(user => ['both', 'to'].includes(user.subscription));
 						const userInfoList = [];
@@ -241,28 +241,6 @@ const Chat = {
 								type: 'contactUserList',
 								black: payload
 							});
-							// WebIM.conn.fetchSubscribedListWithCompletion().then(res => {
-							// 	const { data, type } = res
-							// 	if (type === 200 && data.length) {
-							// 		data.forEach(val => {
-							// 			userList.forEach(item => {
-							// 				if (item.name === val.name) {
-							// 					item.presence = data.status
-							// 				}
-							// 			})
-							// 		})
-							// 		console.log(userList)
-							// 		context.commit("updateUserList", {
-							// 			userList,
-							// 			type: "contactUserList",
-							// 			black: payload
-							// 		})
-							// 	} else {
-							// 		WebIM.conn.subscribePresence({ members: userInfoList }).then(res => {
-							// 			console.log(res)
-							// 		})
-							// 	}
-							// })
 						})['catch'](err => {
 							context.commit('updateUserList', {
 								userList,
@@ -296,7 +274,7 @@ const Chat = {
 				},
 				error: function (e) { },
 			};
-			WebIM.conn.getGroup(options);
+			WebIM.conn.getJoinedGroups(options);
 		},
 		onGetChatroomUserList: function (context, payload) {
 			var option = {

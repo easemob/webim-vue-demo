@@ -49,7 +49,7 @@ const Emedia = {
 					console.log('error', e);
 				}
 			};
-			WebIM.conn.listGroupMember(options);
+			WebIM.conn.listGroupMembers(options);
 		},
 		showMultiAVModal(context, payload){
 			console.log('payload>>', payload);

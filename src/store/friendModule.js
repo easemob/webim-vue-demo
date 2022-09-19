@@ -16,7 +16,7 @@ const FriendModule = {
 		addfirend: function(context, payload){
 			const username = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).userId;
 			const { id } = payload;
-			WebIM.conn.subscribe({
+			WebIM.conn.addContact({
 				to: id,
 				message: username + '请求添加你为好友'
 			});
@@ -24,7 +24,7 @@ const FriendModule = {
 
 		// 接受好友请求
 		acceptSubscribe: function(context, payload){
-			WebIM.conn.subscribed({
+			WebIM.conn.acceptContactInvite({
 				to: payload,
 				message: '[resp:true]'
 			});
@@ -34,7 +34,7 @@ const FriendModule = {
 		declineSubscribe: function(context, payload){
 			const username = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).userId;
 			const { id } = payload;
-			WebIM.conn.unsubscribed({
+			WebIM.conn.declineContactInvite({
 				to: id,
 				message: username + '拒绝您的好友请求'
 			});
@@ -42,20 +42,20 @@ const FriendModule = {
 		// 添加黑名单-单人
 		onAddBlack: function(context, payload){
 			let addName = payload.userId.name;
-			WebIM.conn.addToBlackList({
+			WebIM.conn.addUsersToBlocklist({
 				name: addName,
 			});
 			Vue.$store.dispatch('onGetContactUserList', { type: 'addBlack', addName });
 		},
 		// 获取黑名单
 		onGetFirendBlack: function(context, payload){
-			WebIM.conn.getBlacklist();
+			WebIM.conn.getBlocklist();
 		},
 
 		// 移除黑名单
 		onRemoveBlack: function(context, payload){
 			let blackName = payload.removeName;
-			WebIM.conn.removeFromBlackList({
+			WebIM.conn.removeUserFromBlackList({
 				name: blackName,
 				success: function(){
 					console.log('Remove from black list success.');
@@ -82,7 +82,7 @@ const FriendModule = {
 			};
 			payload.callback();
 			Vue.$router.push('/contact');
-			WebIM.conn.removeRoster(option);
+			WebIM.conn.deleteContact(option);
 		}
 	},
 	getters: {

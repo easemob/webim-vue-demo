@@ -180,7 +180,7 @@
       </div>
     </div>
     <GetGroupInfo ref="groupInfoModel" @closeGroupMessage="closeGroupMessage" />
-	<DisturbConfig ref="disturbConfigModel" :userId="this.userId"/> 
+	<DisturbConfig ref="disturbConfigModel" :userId="this.userId"/>
 
     <!-- fix 移动到全局 -->
     <!-- <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" @start="start_multi"/> -->
@@ -205,7 +205,7 @@ import _ from 'lodash';
 import GetGroupInfo from '../group/groupInfo.vue';
 import DisturbConfig from '../pushConfig/index.vue'
 import SearchModal from '../search/index.vue'
-import {readablizeBytes, renderTime} from '../../utils/index'
+import { readablizeBytes, renderTime } from '../../utils/index'
 export default{
 	data(){
 		return {
@@ -247,7 +247,7 @@ export default{
 			globalHistoryMsg: {},
 			conversationId: '',
 			userId: '',
-			readablizeBytes, 
+			readablizeBytes,
 			renderTime
 		};
 	},
@@ -500,7 +500,7 @@ export default{
 			const me = this;
 			me.$data.loadText = '加载更多';
 			// if( me.roomId){
-			//     WebIM.conn.quitChatRoom({
+			//     WebIM.conn.leaveChatRoom({
 			//         roomId: me.roomId // 聊天室id
 			//     });
 			//     me.roomId = ''
@@ -623,7 +623,7 @@ export default{
 					},
 				});
 				break;
-				case '3': 
+			case '3':
 				this.$refs.disturbConfigModel.changeModal();
 				this.onGetSilentConfig();
 				break;
