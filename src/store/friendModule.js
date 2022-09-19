@@ -25,8 +25,7 @@ const FriendModule = {
 		// 接受好友请求
 		acceptSubscribe: function(context, payload){
 			WebIM.conn.acceptContactInvite({
-				to: payload,
-				message: '[resp:true]'
+				to: payload
 			});
 		},
 
@@ -35,8 +34,7 @@ const FriendModule = {
 			const username = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).userId;
 			const { id } = payload;
 			WebIM.conn.declineContactInvite({
-				to: id,
-				message: username + '拒绝您的好友请求'
+				to: id
 			});
 		},
 		// 添加黑名单-单人
@@ -55,7 +53,7 @@ const FriendModule = {
 		// 移除黑名单
 		onRemoveBlack: function(context, payload){
 			let blackName = payload.removeName;
-			WebIM.conn.removeUserFromBlackList({
+			WebIM.conn.removeUserFromBlocklist({
 				name: blackName,
 				success: function(){
 					console.log('Remove from black list success.');
@@ -71,14 +69,6 @@ const FriendModule = {
 			let deleteName = payload.userId.name;
 			let option = {
 				to: deleteName,
-				success: function(){  // 删除成功
-					conn.unsubscribed({
-						to: deleteName
-					});
-					console.log('删除好友成功');
-				},
-				error: function(){    // 删除失败
-				}
 			};
 			payload.callback();
 			Vue.$router.push('/contact');

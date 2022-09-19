@@ -259,22 +259,18 @@ const Chat = {
 			console.log(payload);
 		},
 		onGetGroupUserList: function (context, payload) {
-			var options = {
-				success: function (resp) {
-					let userList = resp.data;
-					userList.forEach((user, index) => {
-						userList[index].name = user.groupname;
-					});
-					const userInfoList = [];
-					userList && userList.forEach(item => { userInfoList.push(item.name); });
-					context.commit('updateUserList', {
-						userList,
-						type: 'groupUserList'
-					});
-				},
-				error: function (e) { },
-			};
-			WebIM.conn.getJoinedGroups(options);
+			WebIM.conn.getJoinedGroups({pageNum:1, pageSize: 500}).then((res)=>{
+				let userList = res.data;
+				userList.forEach((user, index) => {
+					userList[index].name = user.groupname;
+				});
+				const userInfoList = [];
+				userList && userList.forEach(item => { userInfoList.push(item.name); });
+				context.commit('updateUserList', {
+					userList,
+					type: 'groupUserList'
+				});
+			});
 		},
 		onGetChatroomUserList: function (context, payload) {
 			var option = {
