@@ -5,6 +5,7 @@ import { useStore } from 'vuex'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { messageType, warningText } from '@/constant'
 import { useScroll } from '@vueuse/core'
+import { ElMessage } from 'element-plus';
 import { Close } from '@element-plus/icons-vue';
 /* 组件 */
 import MessageList from './components/messageList.vue'
@@ -15,15 +16,28 @@ import GroupsDetails from '@/views/Chat/components/AboutGroups/GroupsDetails'
 const store = useStore()
 /* route */
 const route = useRoute()
-const drawer = ref(false) //抽屉显隐
 const { CHAT_TYPE } = messageType
 const { EASEIM_HINT, SWINDLER_GO_DIE } = warningText
 const nowPickInfo = ref({});
 const friendList = computed(() => store.state.Contacts.friendList)
 const groupList = computed(() => store.state.Contacts.groupList)
-
 /* loginstatus */
 const loginState = computed(() => store.state.loginState);
+/* header 操作 */
+const drawer = ref(false) //抽屉显隐
+//删除好友
+const delTheFriend = () => {
+  console.log(nowPickInfo.value);
+  if (nowPickInfo.value?.id) {
+    const targetId = nowPickInfo.value.id
+    EaseIM.conn.deleteContact(targetId);
+    ElMessage({ type: 'success', center: true, message: '好友已删除~' })
+  }
+}
+//加入好友到黑名单
+const addFriendToBlackList = () => {
+
+}
 /* warningTips */
 const isShowWarningTips = computed(() => store.state.isShowWarningTips)
 const randomTips = computed(() => {
@@ -160,10 +174,10 @@ watch(() => route.query, () => nextTick(() => {
   }
 }))
 
-
 //消息重新编辑
 const inputBox = ref(null)
 const reEditMessage = (msg) => inputBox.value.textContent = msg;
+
 
 </script>
 <template>
@@ -183,6 +197,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
         </div>
         <div v-else>{{ groupDetail.name || nowPickInfo.id }}</div>
       </template>
+      <!-- 群组展示抽屉 -->
       <span class="more" v-if="nowPickInfo.groupDetail && nowPickInfo.chatType === CHAT_TYPE.GROUP"
         @click="drawer = !drawer">
         <svg width="18" height="4" viewBox="0 0 18 4" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -190,12 +205,30 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
           <circle cx="9" cy="2" r="2" fill="#333333" />
           <circle cx="16" cy="2" r="2" fill="#333333" />
         </svg>
+      </span>
+      <!-- 单人展示删除拉黑 -->
+      <span class="more" v-else>
+        <el-dropdown placement="bottom-end" trigger="click">
+          <svg width="18" height="4" viewBox="0 0 18 4" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="2" cy="2" r="2" fill="#333333" />
+            <circle cx="9" cy="2" r="2" fill="#333333" />
+            <circle cx="16" cy="2" r="2" fill="#333333" />
+          </svg>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="delTheFriend">
+                删除好友
+              </el-dropdown-item>
+              <!-- <el-dropdown-item @click="addFriendToBlackList">
+                加入黑名单
+              </el-dropdown-item> -->
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
 
-        <!-- 单人展示删除拉黑 -->
-        <!-- 群组展示抽屉 -->
       </span>
     </el-header>
-    <div v-if="isShowWarningTips" class="easeim_save_tips">
+    <div v-if="isShowWarningTips" class="easeim_safe_tips">
       <p>{{ EASEIM_HINT }}</p>
       <p>【防骗提示】{{ randomTips }}</p>
       <span class="easeim_close_tips" @click="closeWarningTips">
@@ -295,7 +328,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   }
 }
 
-.easeim_save_tips {
+.easeim_safe_tips {
   position: relative;
   padding: 12px 20px;
   background-color: #FFF4E6;
