@@ -35,6 +35,9 @@
               <a-menu-item @click="GetFirendBlack">
                 <a href="javascript:;">好友黑名单</a>
               </a-menu-item>
+							 <a-menu-item>
+                <a href="mailto:yunying@easemob.com">意见反馈</a>
+              </a-menu-item>
               <a-menu-item @click="toLogout">
                 <a href="javascript:;">退出</a>
               </a-menu-item>
@@ -137,6 +140,7 @@
         <VidoeSetting ref="videoSetting" />
         <GroupRequest />
         <GroupInvite />
+				<ReportMessage />
 
         <EmediaModal
           ref="emediaModal"
@@ -178,6 +182,7 @@ import GroupRequest from '../../components/group/groupRequest.vue';
 import GroupInvite from '../../components/group/groupInvite.vue';
 import PersonCard from '../../components/personCard/personCard';
 import SetPresece from '../../components/setPresence/setPresece';
+import ReportMessage from "../../components/reportMessage/index.vue"
 
 import EmediaModal from '../../components/emediaModal/index';
 // import MultiAVModal from "../../components/emediaModal/multiAVModal";
@@ -687,7 +692,8 @@ export default{
 		AddAVMemberModal,
 		AlertModal,
 		PersonCard,
-		SetPresece
+		SetPresece,
+		ReportMessage
 	}
 };
 </script>

@@ -154,7 +154,18 @@ const Login = {
 				localStorage.setItem('userInfo', JSON.stringify({ userId: payload.username, password: payload.password }));
             })
             .catch(function (error) {
-                console.log(error);
+							switch (error.response.data.errorInfo) {
+								case "UserId password error.":
+									Message.error('用户名或密码错误！')
+									break;
+								case `UserId ${payload.username} does not exist.`:
+									Message.error('登录用户不存在')
+									break;
+								default:
+									Message.error('登录失败，请重试！')
+									break;
+							}
+              console.log(error);
             });
 	    }
 	},

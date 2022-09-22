@@ -32,6 +32,7 @@ const Chat = {
 			group: {},
 			chatroom: {},
 		},
+		reportMsgId: 0, // 上报消息ID, 如果不为0,则显示上报弹窗
 		currentMsgs: [],
 		searchMsgList: [],
 		noticeCallMsg: {},
@@ -223,7 +224,11 @@ const Chat = {
 				newData = state.pushConfig
 			}
 			state.pushConfig = newData;
-		}
+		},
+		// 设置reportMsgId
+		setReportMsgId(state, data) {
+			state.reportMsgId = data.messageId
+		},
 	},
 	actions: {
 		onGetContactUserList: function (context, payload) {

@@ -71,7 +71,7 @@
           v-else
           :trigger="['contextmenu']"
           :style="{ float: item.bySelf ? 'right' : 'left' }"
-          :disabled="!item.bySelf"
+          :disabled="item.status == 'recall'"
         >
           <span style="user-select: none">
             <!-- 图片消息 -->
@@ -121,7 +121,8 @@
             <!-- <div v-if="item.bySelf?true:false" class="status">{{status[item.status]}}</div> -->
           </span>
           <a-menu slot="overlay">
-            <a-menu-item key="1" @click="handleCommand(item)">撤回</a-menu-item>
+            <a-menu-item v-if="item.bySelf" key="1" @click="handleCommand(item)">撤回</a-menu-item>
+            <a-menu-item v-else key="2" @click="()=>{setReportMsgId(item.mid)}">举报</a-menu-item>
           </a-menu>
         </a-dropdown>
 
@@ -447,6 +448,9 @@ export default{
 			'onGetSilentConfig',
 
 		]),
+		setReportMsgId(id){
+			this.$store.commit('setReportMsgId', {messageId: id});
+		},
 		getKey(item, type){
 			let key = '';
 			switch(type){
