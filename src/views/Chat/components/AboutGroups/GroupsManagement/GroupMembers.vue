@@ -135,7 +135,7 @@ defineExpose({ saveHandleMembers })
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
                                 <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{ item.name }}</b>
+                                <b class="friend_list_username">{{ `${item.name}(${item.hxId})` }}</b>
                             </div>
                             <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
                             <el-icon v-if="!groupDetail.public || memberRole" class="checked_btn">
@@ -166,7 +166,7 @@ defineExpose({ saveHandleMembers })
                                     <div class="friend_user_list">
                                         <div class="friend_user_list_left">
                                             <el-avatar :src="defaultAvatar"></el-avatar>
-                                            <b class="friend_list_username">{{ item.name }}</b>
+                                            <b class="friend_list_username">{{ `${item.name}(${item.hxId})` }}</b>
                                         </div>
                                         <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
                                         <el-icon v-if="!groupDetail.public || memberRole" class="checked_btn">

@@ -42,6 +42,7 @@ const handleAddFriendToSendList = (item) => {
     if (toRaw(checkedTobeSendFriend.value).length > 4) {
         ElMessage({
             type: 'warning',
+            center: true,
             message: "超出单次最大可分享人数~"
         })
         return
@@ -141,7 +142,7 @@ defineExpose({
                             <div class="friend_user_list">
                                 <div class="friend_user_list_left">
                                     <el-avatar :src="defaultAvatar"></el-avatar>
-                                    <b class="friend_list_username">{{ item.name }}</b>
+                                    <b class="friend_list_username">{{`${item.name}(${item.hxId})` }}</b>
                                 </div>
                                 <el-icon class="checked_btn">
                                     <div @click="handleAddFriendToSendList(item)">
@@ -165,7 +166,7 @@ defineExpose({
                                         <div class="friend_user_list">
                                             <div class="friend_user_list_left">
                                                 <el-avatar :src="defaultAvatar"></el-avatar>
-                                                <b class="friend_list_username">{{ item.name }}</b>
+                                                <b class="friend_list_username">{{ `${item.name}(${item.hxId})` }}</b>
                                             </div>
                                             <el-icon class="checked_btn">
                                                 <div @click="handleAddFriendToSendList(item)">
@@ -240,7 +241,7 @@ defineExpose({
         height: calc(100% - 36px);
         width: 100%;
         overflow: auto;
-        padding: 15px 15px;
+        // padding: 15px 15px;
     }
 }
 

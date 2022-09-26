@@ -159,7 +159,7 @@ defineExpose({ handleRenderFiendList })
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
                                 <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{ item.name }}</b>
+                                <b class="friend_list_username">{{`${item.name}(${item.hxId})` }}</b>
                             </div>
                             <el-icon class="checked_btn"
                                 @click="searchResultList[index].isChecked = !searchResultList[index].isChecked">
@@ -177,7 +177,7 @@ defineExpose({ handleRenderFiendList })
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
                                 <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{ item.name }}</b>
+                                <b class="friend_list_username">{{ `${item.name}(${item.hxId})` }}</b>
                             </div>
                             <el-icon class="checked_btn"
                                 @click="renderFriendList[index].isChecked = !renderFriendList[index].isChecked">
