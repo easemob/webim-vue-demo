@@ -42,10 +42,10 @@ let loginUserOnlineStatusIcon = computed(() => {
 
 /* tabbar icon 路由跳转 */
 let skipRouterName = ref('conversation');
-let highligthConversation = require('@/assets/images/tabbar/sessionhighlight2x.png');
-let grayConversation = require('@/assets/images/tabbar/session2x.png');
-let highligthContacts = require('@/assets/images/tabbar/comtactshighlight2x.png');
-let grayContacts = require('@/assets/images/tabbar/1491654067271_.pic.jpg');
+let highligthConversation = require('@/assets/images/tabbar/highlightconversation.png');
+let grayConversation = require('@/assets/images/tabbar/grayconversation.png');
+let highligthContacts = require('@/assets/images/tabbar/higtlightcontacts.png');
+let grayContacts = require('@/assets/images/tabbar/graycontacts.png');
 const changeSkipRouterName = (routerName) => {
   router.push(`/chat/${routerName}`);
 };
@@ -477,6 +477,7 @@ const logout = ref(null)
     background: #F2F2F2;
     margin: 0;
   }
+
   ::v-deep .personal_setting_card>.el-dialog__header {
     background: #F2F2F2;
     margin: 0;
