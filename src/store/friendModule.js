@@ -16,10 +16,10 @@ const FriendModule = {
 		addfirend: function(context, payload){
 			const username = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).userId;
 			const { id } = payload;
-			WebIM.conn.addContact({
-				to: id,
-				message: username + '请求添加你为好友'
-			});
+			WebIM.conn.addContact(
+				id,
+				username + '请求添加你为好友'
+			);
 		},
 
 		// 接受好友请求
