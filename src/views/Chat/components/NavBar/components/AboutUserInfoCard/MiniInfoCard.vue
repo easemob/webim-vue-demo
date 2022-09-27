@@ -7,10 +7,15 @@ import EaseIM from '@/IM/initwebsdk'
 import ShareMyInfoCard from './components/ShareMyInfoCard.vue'
 const store = useStore();
 const userInfos = computed(() => {
-  return store.getters.loginUserInfo;
+  return store.getters.loginUserInfo ?? {};
 });
 const loginUserId = computed(() => { return store.state.loginUserInfo.hxId })
-
+const bodyIcon = require('@/assets/images/gender/Group76.png')
+const girlIcon = require('@/assets/images/gender/Group77.png')
+const genderIcon = {
+  "1": bodyIcon,
+  "2": girlIcon
+}
 /* share */
 const shareInfo = ref(null);
 const showShareInfoModal = () => {
@@ -23,11 +28,16 @@ const showShareInfoModal = () => {
   <div class="user_info_card line3">
     <div class="info_fist_col">
       <el-avatar class="avatar" :size="56" :src="userInfos.avatarurl" />
-      <span class="nickname">{{
-      userInfos.nickname
-      ? userInfos.nickname + '(' + userInfos.hxId + ')'
-      : `暂无昵称(${loginUserId})`
-      }}</span>
+      <div class="name_box">
+        <span class="nickname">{{
+        userInfos.nickname
+        ? userInfos.nickname
+        : loginUserId
+        }}</span>
+        <img v-if="userInfos.gender && genderIcon[userInfos.gender]" class="gender"
+          :src="genderIcon[userInfos.gender]" />
+      </div>
+
     </div>
     <el-divider style="margin:0;" />
     <div class="info_second_col">
@@ -106,17 +116,30 @@ const showShareInfoModal = () => {
       }
     }
 
-    .nickname {
-      margin-top: 3px;
-      display: inline-block;
-      font-family: 'PingFang SC';
-      font-style: normal;
-      font-weight: 600;
-      font-size: 16px;
-      line-height: 22px;
-      color: #333333;
+    .name_box {
+      height: 30px;
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
 
+      .nickname {
+        margin-top: 3px;
+        display: inline-block;
+        font-family: 'PingFang SC';
+        font-style: normal;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 22px;
+        color: #333333;
+      }
+
+      .gender {
+        width: 18px;
+        height: 18px;
+      }
     }
+
   }
 
   .info_second_col {

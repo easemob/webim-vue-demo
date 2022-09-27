@@ -5,6 +5,7 @@ import router from '@/router'
 import _ from 'lodash'
 /* 相关组件 */
 import SearchInput from '@/components/SearchInput'
+import Welcome from '@/components/Welcome'
 import FriendItem from './components/friendItem.vue'
 import GroupItem from './components/joinedGroupItem.vue'
 /* 头像相关 */
@@ -92,6 +93,7 @@ const informDetail = computed(() => {
     </el-aside>
     <el-main class="contacts_infors_main_box">
       <router-view></router-view>
+      <Welcome />
     </el-main>
   </el-container>
 
@@ -169,6 +171,7 @@ const informDetail = computed(() => {
 }
 
 .contacts_infors_main_box {
+  position: relative;
   width: 100%;
   height: 100%;
   padding: 0;

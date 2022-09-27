@@ -6,9 +6,10 @@ import router from '@/router';
 
 /* 搜索框组件 */
 import SearchInput from '@/components/SearchInput';
+/* 欢迎页 */
+import Welcome from '@/components/Welcome'
 /* 会话列表组件 */
 import ConversationList from './components/ConversationList.vue';
-
 
 const store = useStore();
 
@@ -44,6 +45,7 @@ const toChatMessage = (id, chatType) => {
     </el-aside>
     <el-main class="chat_converation_main_box">
       <router-view></router-view>
+      <Welcome />
     </el-main>
   </el-container>
 </template>
@@ -61,6 +63,7 @@ const toChatMessage = (id, chatType) => {
 }
 
 .chat_converation_main_box {
+  position: relative;
   width: 100%;
   height: 100%;
   padding: 0;

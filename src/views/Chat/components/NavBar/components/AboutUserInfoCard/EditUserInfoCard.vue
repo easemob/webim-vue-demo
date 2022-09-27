@@ -8,6 +8,13 @@ import store from '@/store'
 /* 头像相关 */
 import defaultAvatar from '@/assets/images/loginIcon.png'
 const avatarBaseUrl = 'https://download-sdk.oss-cn-beijing.aliyuncs.com/downloads/IMDemo/avatar/'
+/* 性别相关 */
+const bodyIcon = require('@/assets/images/gender/Group76.png')
+const girlIcon = require('@/assets/images/gender/Group77.png')
+const genderIcon = {
+    "1": bodyIcon,
+    "2": girlIcon
+}
 const loginUserId = computed(() => { return store.state.loginUserInfo.hxId })
 const SEX_TEXT = {
     '0': '保密',
@@ -89,7 +96,7 @@ defineExpose({
         </template>
         <template #default>
             <div class="infor_main">
-                <el-avatar class="infor_avatar"  :size="80"
+                <el-avatar class="infor_avatar" :size="80"
                     :src="userInfos.avatarurl ? userInfos.avatarurl : defaultAvatar" fit="fit">
                 </el-avatar>
                 <div class="infor_edit_text">
@@ -100,11 +107,8 @@ defineExpose({
                     <div class="infor_content_header">
                         <div class="infor_name">
                             <span>{{ userInfos.nickname || '暂无昵称' }}</span>
-                            <span class="infor_sex">
-                                <svg width="8" height="9" viewBox="0 0 8 9" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="4" cy="4.5" r="3.4" stroke="#0091FF" stroke-width="1.2" />
-                                </svg>
+                            <span class="infor_sex" v-if="genderIcon[userInfos.gender]">
+                                <img :src="genderIcon[userInfos.gender]" />
                             </span>
                         </div>
                         <div class="infor_sign">
@@ -169,7 +173,7 @@ defineExpose({
                         <div v-if="isEdit" class="infor_content_main_item infor_content_main_sign">
                             <span class="label">签名</span>
                             <span class="content" v-if="!isEdit" style="white-space: break-word;">{{ userInfos.sign ||
-                                    '无个性，不签名！'
+                            '无个性，不签名！'
                             }}</span>
                             <span class="content" style="border:none" v-else>
                                 <el-input class="textarea_style" v-model="userInfos.sign" type="textarea" :row="2"
@@ -236,6 +240,8 @@ defineExpose({
             margin-bottom: 30px;
 
             .infor_name {
+                display: flex;
+                align-items: center;
                 font-family: 'PingFang SC';
                 font-style: normal;
                 font-weight: 600;
@@ -245,6 +251,11 @@ defineExpose({
 
                 .infor_sex {
                     margin-left: 5px;
+
+                    img {
+                        width: 15px;
+                        height: 15px;
+                    }
                 }
             }
 
