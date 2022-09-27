@@ -5,7 +5,7 @@ import EaseIM from '@/IM/initwebsdk';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { fetchUserLoginToken } from '@/api/login';
 import { useStore } from 'vuex';
-import {usePlayRing } from '@/hooks'
+import { usePlayRing } from '@/hooks'
 const store = useStore();
 const loginValue = reactive({
   username: '',
@@ -32,9 +32,9 @@ const rules = reactive({
 })
 //登陆接口调用
 const loginIM = async () => {
-  const {isOpenPlayRing,playRing} = usePlayRing()
+  const { isOpenPlayRing, playRing, clickRing } = usePlayRing()
   playRing()
-  console.log('isOpenPlayRingisOpenPlayRingisOpenPlayRing',isOpenPlayRing.value);
+  console.log('isOpenPlayRingisOpenPlayRingisOpenPlayRing', isOpenPlayRing.value);
 
   buttonLoding.value = true;
   /* SDK 登陆的方式 */
@@ -68,10 +68,10 @@ const loginIM = async () => {
       accessToken: token
     })
     window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: loginValue.username, accessToken: token }))
-    if(isOpenPlayRing.value) clickRing()
+    if (isOpenPlayRing.value) clickRing()
   } catch (error) {
     console.log('>>>>登陆失败', error);
-    if (error.response.data) {
+    if (error.response?.data) {
       const { code, errorInfo } = error.response.data
       if (errorInfo.includes('does not exist.')) {
         ElMessage({

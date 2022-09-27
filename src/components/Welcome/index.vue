@@ -25,6 +25,7 @@ const maskGroup = require('@/assets/images/Mask_group2.png')
     background: url('../../assets/images/Mask_group.png') no-repeat;
     background-size: 100% 100%;
     border-radius: 0 5px 5px 0;
+    overflow: hidden;
 }
 
 .welcome_box {
