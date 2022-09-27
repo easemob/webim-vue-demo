@@ -199,7 +199,7 @@ const Conversation = {
 
     //收集会话依赖数据
     gatherConversation: ({ commit }, key) => {
-      let corresMessage = _.cloneDeep(Message.state.messageList.value[key]);
+      let corresMessage = _.cloneDeep(Message.state.messageList[key]);
       let res = createConversation(corresMessage);
       commit('UPDATE_CONVERSATION_LIST', res);
     },

@@ -5,13 +5,13 @@ import {
   createMessage,
 } from '@/utils/handleSomeData';
 import _ from 'lodash';
-import { ref, toRaw } from 'vue';
+// import { ref, toRaw } from 'vue';
 import { messageType } from '@/constant';
 import { usePlayRing } from '@/hooks';
-const { CHAT_TYPE, ALL_MESSAGE_TYPE } = messageType;
+const { ALL_MESSAGE_TYPE } = messageType;
 const Message = {
   state: {
-    messageList: ref({}),
+    messageList: {},
   },
   mutations: {
     UPDATE_MESSAGE_LIST: (state, msgBody) => {
@@ -51,7 +51,7 @@ const Message = {
       }
       if (type === 'deleteMsg') {
         if (state.messageList[key]) {
-          let sourceData = toRaw(state.messageList[key]);
+          let sourceData = state.messageList[key];
           let index = _.findIndex(state.messageList[key], (o) => o.id === mid);
           sourceData.splice(index, 1);
           state.messageList[key] = _.assign([], sourceData);
