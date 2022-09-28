@@ -2,7 +2,7 @@
 import { messageType } from '@/constant';
 const { ALL_MESSAGE_TYPE } = messageType;
 //创建消息options
-const createOptions = ({ msgType, msgOptions }) => {
+const createOptions = ({ msgType, msgOptions }, errorCallback) => {
   console.log('>>>msgType, msgOptions', msgType, msgOptions);
   let theMessageOptions = {
     [ALL_MESSAGE_TYPE.TEXT]: {
@@ -25,7 +25,9 @@ const createOptions = ({ msgType, msgOptions }) => {
       secret: '',
       onFileUploadError: (error) => {
         // 消息上传失败。
+        errorCallback(error)
         console.log('onFileUploadError', error);
+
         //TO DO 4.10.0版本修复上传文件失败不从error中抛出问题
       },
       onFileUploadProgress: (progress) => {
@@ -48,9 +50,12 @@ const createOptions = ({ msgType, msgOptions }) => {
           file_length: msgOptions.file && msgOptions.file.size,
           ...msgOptions.ext,
         } || {},
-      onFileUploadError: function () {
+      onFileUploadError: function (error) {
+        errorCallback(error)
+        console.log('>>>>>onFileUploadError>>>>>');
+        // console.log('onFileUploadError');
         // 消息上传失败。
-        console.log('onFileUploadError');
+
       },
       onFileUploadProgress: function (progress) {
         // 上传进度的回调。
@@ -72,8 +77,9 @@ const createOptions = ({ msgType, msgOptions }) => {
         {
           ...msgOptions.ext,
         } || {},
-      onFileUploadError: function () {
+      onFileUploadError: function (error) {
         // 消息上传失败。
+        errorCallback(error)
         console.log('onFileUploadError');
       },
       onFileUploadProgress: function (progress) {

@@ -5,6 +5,9 @@
 export default {
   /* 登陆相关
    */
+  0: {
+    'none': '未知错误！'
+  },
   1: {
     'invalid password': '密码错误！',
     'login failed': '登陆失败！',
@@ -18,6 +21,10 @@ export default {
   },
   28: {
     'appkey or token error': '未登录！',
+  },
+  101: {
+    "file exceeding maximum limit": "文件大小超出限制（默认10M）！",
+    'none':'文件相关未知错误！'
   },
   217: {
     'the user was kicked by other device': '其他端踢出了该账号！',

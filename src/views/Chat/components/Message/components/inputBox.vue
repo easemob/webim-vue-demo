@@ -1,7 +1,8 @@
 <script setup>
 import { ref, toRefs, defineProps } from 'vue';
 import { useStore } from 'vuex';
-import { ElMessage, ElLoading, ElMessageBox } from 'element-plus';
+import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
+import { ElLoading, ElMessageBox } from 'element-plus';
 import { onClickOutside } from '@vueuse/core';
 import { emojis } from '@/constant';
 import { messageType } from '@/constant'
@@ -91,11 +92,12 @@ const sendImagesMessage = async () => {
             loadingInstance.close()
             uploadImgs.value.value = null;
         } catch (error) {
-            // ElMessage({
-            //     type: 'error',
-            //     message: '发送失败请重试！',
-            //     center: true,
-            // })
+            console.log('>>>>>发送失败', error);
+            if (error.type && error?.data) {
+                handleSDKErrorNotifi(error.type, error.data.error || 'none')
+            } else {
+                handleSDKErrorNotifi(0, 'none')
+            }
             loadingInstance.close()
             uploadImgs.value.value = null;
         }
@@ -132,7 +134,12 @@ const sendFilesMessages = async () => {
         uploadFiles.value.value = null;
     } catch (error) {
         console.log('>>>>file error', error);
-        ElMessage.error('发送失败，请重试！')
+        if (error.type && error?.data) {
+            handleSDKErrorNotifi(error.type, error.data.error || 'none')
+        } else {
+            handleSDKErrorNotifi(0, 'none')
+        }
+
         uploadFiles.value.value = null;
         loadingInstance.close()
     }
@@ -165,11 +172,11 @@ const sendAudioMessages = async (audioData) => {
         await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.AUDIO, msgOptions: _.cloneDeep(msgOptions) })
         isShowRecordBox.value = false
     } catch (error) {
-        ElMessage({
-            type: 'error',
-            center: true,
-            message: '发送失败请重试！'
-        })
+        if (error.type && error?.data) {
+            handleSDKErrorNotifi(error.type, error.data.error || 'none')
+        } else {
+            handleSDKErrorNotifi(0, 'none')
+        }
         isShowRecordBox.value = false
     }
 

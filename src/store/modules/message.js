@@ -102,8 +102,12 @@ const Message = {
     },
     //发送展示类型消息
     sendShowTypeMessage: async ({ dispatch, commit }, params) => {
-      let options = createMessage.createOptions(params);
+
       return new Promise(async (resolve, reject) => {
+        //主要作用为创建消息Options中附件会有上传失败的回调函数。
+        //传入errorCallback，让附件类型消息在上传失败时调用reject抛出error
+        const errorCallback = (error) => { reject(error) }
+        let options = createMessage.createOptions(params, errorCallback);
         let msg = WebIM.message.create(options);
         try {
           let { serverMsgId } = await EaseIM.conn.send(msg);
@@ -116,9 +120,8 @@ const Message = {
           dispatch('gatherConversation', msgBody.to);
           resolve('OK');
         } catch (error) {
-          console.log('>>>>>>>>发送失败',error);
+          console.log('>>>>>>>>发送失败', error);
           handleSDKErrorNotifi(error.type, error.message);
-          reject(error);
         }
       });
     },
