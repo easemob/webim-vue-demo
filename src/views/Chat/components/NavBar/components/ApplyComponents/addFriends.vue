@@ -72,7 +72,7 @@ const resetTheModalStatus = () => {
                     placeholder="请输入对方的环信ID" />
             </el-form-item>
             <el-form-item label="申请信息" style="margin-bottom: 28px">
-                <el-input class="addFriends_input" v-model="applyAddFriendsForm.applyFriendMessage" maxlength="300"
+                <el-input class="addFriends_input" v-model="applyAddFriendsForm.applyFriendMessage" maxlength="150"
                     show-word-limit />
             </el-form-item>
             <el-form-item>

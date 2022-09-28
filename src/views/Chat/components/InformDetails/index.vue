@@ -234,7 +234,8 @@ const handleClickBtn = ({ informData, index, type }) => {
       position: relative;
       margin: 35px auto;
       width: 85%;
-      height: 150px;
+      min-height: 150px;
+      // height: 150px;
       cursor: pointer;
       transition: all 0.1s;
 
@@ -258,6 +259,20 @@ const handleClickBtn = ({ informData, index, type }) => {
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
+
+        .text {
+          font-family: 'PingFang SC';
+          font-style: normal;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 22px;
+          letter-spacing: 0.6px;
+
+          color: #999999;
+          max-width: 80%;
+          word-break: break-all;
+          white-space: wrap;
+        }
       }
     }
 
