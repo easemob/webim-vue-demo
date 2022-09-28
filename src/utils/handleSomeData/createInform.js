@@ -40,6 +40,7 @@ export default function (fromType, informContnet) {
     let informBody = {};
     console.log('>>>>>收到了群组事件', informContnet);
     const { operation, from, to, id } = informContnet;
+    //收到群组邀请加入通知
     if (operation === 'inviteToJoin') {
       informBody = {
         fromType,
@@ -53,7 +54,21 @@ export default function (fromType, informContnet) {
         isOpearationBtn: true, //是否显示操作按钮？
         operationStatus: 0, //0未操作 1同意 2拒绝
       };
-    } else {
+    } else if (operation === 'requestToJoin') {
+      informBody = {
+        fromType,
+        operation,
+        title: '群组通知',
+        from: from,
+        to: to,
+        groupId: id,
+        time: Date.now(),
+        desc: INFORM_TYPE[operation],
+        isOpearationBtn: true, //是否显示操作按钮？
+        operationStatus: 0, //0未操作 1同意 2拒绝
+      };
+    }
+    else {
       informBody = {
         fromType,
         operation,

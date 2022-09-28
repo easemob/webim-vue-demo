@@ -93,7 +93,38 @@ const handleClickBtn = ({ informData, index, type }) => {
     }
     handleGroupInvite[type]()
   }
-
+  //其他用户申请加入群组操作
+  if (fromType === INFORM_FROM.GROUP && informData.operation === 'requestToJoin') {
+    const handleGroupInvite = {
+      agree: async () => {
+        console.log('>>>>>agree requestToJoin');
+        try {
+          EaseIM.conn.acceptGroupJoinRequest({
+            applicant: from,
+            groupId: informData.groupId,
+          });
+          store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
+        } catch (error) {
+          ElMessage({
+            type: 'error',
+            center: true,
+            message: '同意失败请稍后重试！'
+          })
+          return
+        }
+      },
+      refuse: async () => {
+        console.log('>>>>>refuse requestToJoin');
+        EaseIM.conn.rejectGroupJoinRequest({
+          applicant: from,
+          groupId: informData.groupId,
+          reason: "不好意思，不同意你的入群申请！",
+        });
+        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 })
+      },
+    }
+    handleGroupInvite[type]()
+  }
 }
 
 </script>
