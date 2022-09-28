@@ -303,7 +303,6 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
 
     .chat_user_name {
       font-family: 'PingFang SC';
-      width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
