@@ -53,10 +53,15 @@ const joinGroups = async () => {
             type: 'success',
         })
     } catch (error) {
+        const { type, data } = error
         if (error.data) {
-            const { type, data } = error
-            console.log('>>>>>>>type, data', type);
-            handleSDKErrorNotifi(type, JSON.parse(data).error)
+            if (JSON.parse(data).error_description.includes('blacklist')) {
+                handleSDKErrorNotifi(type, 'blacklist')
+            } else if (JSON.parse(data).error_description.includes('already')) {
+                handleSDKErrorNotifi(type, 'already')
+            } else {
+                handleSDKErrorNotifi(type, JSON.parse(data).error_description)
+            }
         } else {
             console.log(error)
             handleSDKErrorNotifi(null, '未知错误！')

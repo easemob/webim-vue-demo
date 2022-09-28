@@ -53,10 +53,14 @@ export default {
   },
   603: {
     'blocked': '对方已将您加入黑名单！',
-    'forbidden_op': '已在群组当中！',
+    'blacklist': '已在该群黑名单当中！无法加入该群。',
+    'already': '已加入该群！'
   },
   504: {
     'exceed recall time limit': '消息超过可撤回时间！',
+  },
+  507: {
+    'muted': '已被禁言！'
   },
   508: {
     "moderation": '内容审核不通过！请检查发送内容。'
