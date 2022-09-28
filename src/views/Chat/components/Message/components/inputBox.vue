@@ -91,11 +91,11 @@ const sendImagesMessage = async () => {
             loadingInstance.close()
             uploadImgs.value.value = null;
         } catch (error) {
-            ElMessage({
-                type: 'error',
-                message: '发送失败请重试！',
-                center: true,
-            })
+            // ElMessage({
+            //     type: 'error',
+            //     message: '发送失败请重试！',
+            //     center: true,
+            // })
             loadingInstance.close()
             uploadImgs.value.value = null;
         }

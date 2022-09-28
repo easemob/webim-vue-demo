@@ -36,16 +36,16 @@ export default {
   221: {
     'not contact': '非好友关系,不可发送消息！',
   },
-  400:{
-    'UserId password error.':'用户密码错误！',
-    'Please wait a moment while trying to send.':'验证码在有效期内，请勿重复发送！',
-    'Image verification code error.':'图片验证码错误，请更换验证码或重新输入！',
-    'Image code id cannot be empty.':'请填入图片验证码！',
-    'Phone number cannot be empty.':'获取图片验证码请填入手机号！',
-    'UserId hfp already exists.':'用户已注册！',
-    'phone number illegal':'手机号不合法！',
-    'Please send SMS to get mobile phone verification code.':'请发送短信获取手机验证码！',
-    'SMS verification code error.':'验证码错误！'
+  400: {
+    'UserId password error.': '用户密码错误！',
+    'Please wait a moment while trying to send.': '验证码在有效期内，请勿重复发送！',
+    'Image verification code error.': '图片验证码错误，请更换验证码或重新输入！',
+    'Image code id cannot be empty.': '请填入图片验证码！',
+    'Phone number cannot be empty.': '获取图片验证码请填入手机号！',
+    'UserId hfp already exists.': '用户已注册！',
+    'phone number illegal': '手机号不合法！',
+    'Please send SMS to get mobile phone verification code.': '请发送短信获取手机验证码！',
+    'SMS verification code error.': '验证码错误！'
   },
   603: {
     blocked: '对方已将您加入黑名单！',
@@ -53,8 +53,8 @@ export default {
   504: {
     'exceed recall time limit': '消息超过可撤回时间！',
   },
-  508:{
-    //内容审核
+  508: {
+    "moderation": '内容审核不通过！请检查发送内容。'
   }
   // e.type === '603' 被拉黑
   // e.type === '605' 群组不存在

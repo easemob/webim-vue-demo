@@ -116,9 +116,9 @@ const Message = {
           dispatch('gatherConversation', msgBody.to);
           resolve('OK');
         } catch (error) {
+          console.log('>>>>>>>>发送失败',error);
           handleSDKErrorNotifi(error.type, error.message);
           reject(error);
-          console.log('>>>>>>发送失败', error);
         }
       });
     },
