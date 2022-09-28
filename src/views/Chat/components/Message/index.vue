@@ -185,8 +185,9 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   <el-container v-if="loginState" class="app_container">
     <el-header class="chat_message_header">
       <template v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE">
-        <div v-if="nowPickInfo.userInfo" class="chat_user_name">
-          {{ nowPickInfo.userInfo.nickname || nowPickInfo.id }}
+        <div v-if="nowPickInfo.userInfo" class="chat_user_box">
+          <span class="chat_user_name"> {{ nowPickInfo.userInfo.nickname || nowPickInfo.id }}</span>
+
           <UserStatus :userStatus="nowPickInfo.userInfo.userStatus" />
         </div>
         <div v-else>{{ nowPickInfo.id }}<span style="font-size:10px">(非好友)</span></div>
@@ -285,33 +286,24 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
   border-radius: 0 3px 0 0;
   border-bottom: 1px solid #E6E6E6;
 
-  .chat_user_name {
-    font-family: 'PingFang SC';
-    font-style: normal;
-    font-weight: 400;
-    font-size: 17px;
-    line-height: 17px;
-    letter-spacing: 0.3px;
-    color: #333333;
+  .chat_user_box {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    // align-items: flex-end;
+    align-items: center;
+    height: 20px;
 
-    .user_status_box {
-      width: 100px;
-      height: 20px;
-      font-size: 12px;
-
-      .status_icon {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        margin: 0 3px;
-      }
+    .chat_user_name {
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-weight: 400;
+      font-size: 17px;
+      line-height: 20px;
+      letter-spacing: 0.3px;
+      color: #333333;
     }
   }
+
 
   .more {
     display: flex;

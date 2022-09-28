@@ -48,10 +48,10 @@ const userInfoStatus = computed(() => {
         statusObj.onlineDeviceCount = onlineStatus.length
         //如果在线设备为1则赋予设备类型
         onlineStatus.length === 1 && (statusObj.deviceType = onlineStatus[0].device.split('_')[0])
-        //如果在此判断中ext设定为Offline,状态应该在线
+        //如果在此判断中ext设定为Offline,状态直接设定为离线样式
         if (userStatus.value.ext === 'Offline') {
-            statusObj.style = onLineStatus['Online'].style
-            statusObj.label = onLineStatus['Online'].label
+            statusObj.style = onLineStatus['Offline'].style
+            statusObj.label = onLineStatus['Offline'].label
         }
     }
     //如若offlineStatus里有值,并且onlineStatus无，也说明订阅的目标id，本质也是处于离线状态。
@@ -68,7 +68,7 @@ const userInfoStatus = computed(() => {
     <div class="user_status_box">
         <span class="status_icon" :style="userInfoStatus.style"></span>
         <span class="os_type">{{ userInfoStatus.onlineDeviceCount > 1 ? `多设备${userInfoStatus.label}` :
-                `${userInfoStatus.deviceType}${userInfoStatus.label}`
+        `${userInfoStatus.deviceType.toUpperCase()}${userInfoStatus.label}`
         }}</span>
     </div>
 </template>
@@ -77,8 +77,12 @@ const userInfoStatus = computed(() => {
 
 <style lang="scss" scoped>
 .user_status_box {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
     width: 100px;
-    height: 20px;
+    height: 100%;
     font-size: 7px;
 
     .status_icon {
