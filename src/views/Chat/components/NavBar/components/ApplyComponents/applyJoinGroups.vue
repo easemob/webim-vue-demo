@@ -21,9 +21,26 @@ const getTheGroupIsPublic = async (groupId) => {
     try {
         let res = await EaseIM.conn.getGroupInfo({ groupId: groupId + '' })
         console.log('>>>>获取成功', res);
-        return Promise.resolve(res)
+        if (res && res?.data && res.data[0]?.public === false) {
+            Promise.resolve(false);
+            return ElNotification({
+                title: '申请入群',
+                message: '该群为私有群不可主动申请！',
+                type: 'warning',
+            })
+        } else {
+            return Promise.resolve(true)
+        }
+
     } catch (error) {
-        console.log('>>>>>>>获取群组信息失败');
+        console.log('>>>>>>>获取群组信息失败', error);
+        ElNotification({
+            title: '申请入群',
+            message: '该群为私有群不可主动申请！',
+            type: 'warning',
+        })
+        return Promise.resolve(false)
+
     }
 
 }
@@ -34,13 +51,9 @@ const joinGroups = async () => {
         type: 'warning',
     })
     //如果获取到期群组详情中的public为false代表为私有群（私有群不可主动申请加入）
-    let res = await getTheGroupIsPublic(applyJoinGroupsForm.groupId)
-    console.log('res', res);
-    if (res && res?.data && res.data[0]?.public === false) return ElNotification({
-        title: '申请入群',
-        message: '该群为私有群不可主动申请！',
-        type: 'warning',
-    })
+    let isPublic = await getTheGroupIsPublic(applyJoinGroupsForm.groupId)
+    console.log('isPublic', isPublic);
+    if (!isPublic) return;
     let options = {
         groupId: applyJoinGroupsForm.groupId + '',         // 群组ID
         message: applyJoinGroupsForm.applyJoinMessage       // 请求信息
