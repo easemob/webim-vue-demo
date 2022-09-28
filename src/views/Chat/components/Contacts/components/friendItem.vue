@@ -33,7 +33,10 @@ const { CHAT_TYPE } = messageType
                         <el-avatar style="margin-right: 11px;" :size="33.03"
                             :src="item.avatarurl ? item.avatarurl : defaultAvatar">
                         </el-avatar>
-                        {{ item.nickname ? item.nickname : item.hxId }}
+                        <span class="friend_name">
+                            {{ item.nickname ? item.nickname : item.hxId }}
+                        </span>
+
                     </el-col>
                 </el-row>
             </div>
@@ -61,6 +64,16 @@ const { CHAT_TYPE } = messageType
     text-align: center;
     color: #333333;
     cursor: pointer;
+
+    .friend_name {
+        display: inline-block;
+        text-align: left;
+        width: 80%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
     &:hover {
         background: #DCDCDC;
     }

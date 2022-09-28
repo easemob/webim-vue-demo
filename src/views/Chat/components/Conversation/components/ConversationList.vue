@@ -223,19 +223,18 @@ const deleteConversation = (itemKey) => {
 
     .name {
       min-width: 56px;
-      max-width: 225px;
-      max-height: 25px;
+      max-width: 180px;
+      height: 17px;
       font-weight: 400;
       font-size: 14px;
       /* identical to box height */
       color: #333333;
-      // overflow: hidden;
-      // text-overflow: ellipsis;
-      // white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .last_msg_body {
-      margin-top: 5px;
       max-width: 185px;
       height: 17px;
       font-weight: 400;

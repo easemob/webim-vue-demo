@@ -118,7 +118,7 @@ const editGroupName = async (type, oldGroupName) => {
             <div class="content">
                 <div v-if="!isEdit">{{ groupDetail.name || '' }}</div>
                 <el-input v-else class="group_name_input" ref="editGroupNameInput" v-model="groupName" size="small"
-                    @blur="editGroupName('save', groupDetail.name)">
+                    maxlength="15" show-word-limit @blur="editGroupName('save', groupDetail.name)">
                 </el-input>
 
             </div>

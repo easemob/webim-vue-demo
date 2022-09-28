@@ -277,7 +277,7 @@ const emitContacts = (item) => {
 
 .resultContent {
   position: absolute;
-  top: 60px;
+  top: 58px;
   left: 0;
   width: 100%;
   height: calc(100% - 60px);
@@ -367,6 +367,13 @@ const emitContacts = (item) => {
       font-weight: 500;
       font-size: 14px;
 
+      .name {
+        max-width: 100px;
+        height: 17px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
       .last_msg_body {
         max-width: 100px;

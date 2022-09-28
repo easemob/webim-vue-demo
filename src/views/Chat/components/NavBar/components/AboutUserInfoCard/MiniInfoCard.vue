@@ -124,6 +124,7 @@ const showShareInfoModal = () => {
       align-items: center;
 
       .nickname {
+        max-width: 130px;
         margin-top: 3px;
         display: inline-block;
         font-family: 'PingFang SC';
@@ -131,6 +132,9 @@ const showShareInfoModal = () => {
         font-weight: 600;
         font-size: 16px;
         line-height: 22px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         color: #333333;
       }
 

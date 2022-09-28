@@ -187,17 +187,24 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
       <template v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE">
         <div v-if="nowPickInfo.userInfo" class="chat_user_box">
           <span class="chat_user_name"> {{ nowPickInfo.userInfo.nickname || nowPickInfo.id }}</span>
-
           <UserStatus :userStatus="nowPickInfo.userInfo.userStatus" />
         </div>
         <div v-else>{{ nowPickInfo.id }}<span style="font-size:10px">(非好友)</span></div>
       </template>
       <template v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP">
-        <div v-if="nowPickInfo.groupDetail" class="chat_user_name">
-          {{ groupDetail.name || '' }} {{ `(${groupDetail.affiliations_count || ''})`
-          }}
+        <div v-if="nowPickInfo.groupDetail" class="chat_user_box">
+          <span class="chat_user_name">
+            {{ groupDetail.name || '' }} {{ `(${groupDetail.affiliations_count || ''})`
+            }}
+          </span>
+
         </div>
-        <div v-else>{{ groupDetail.name || nowPickInfo.id }}</div>
+        <div v-else class="chat_user_box">
+          <span class="chat_user_name">
+            {{ groupDetail.name || nowPickInfo.id }}
+          </span>
+
+        </div>
       </template>
       <!-- 群组展示抽屉 -->
       <span class="more" v-if="nowPickInfo.groupDetail && nowPickInfo.chatType === CHAT_TYPE.GROUP"
@@ -292,9 +299,14 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
     justify-content: flex-start;
     align-items: center;
     height: 20px;
+    max-width: 80%;
 
     .chat_user_name {
       font-family: 'PingFang SC';
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       font-style: normal;
       font-weight: 400;
       font-size: 17px;

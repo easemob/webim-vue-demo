@@ -127,7 +127,7 @@ defineExpose({
                             <span class="content" v-if="!isEdit">{{ userInfos.nickname || '暂无昵称' }}</span>
                             <span class="content" v-else>
                                 <el-input class="input_style" v-model="userInfos.nickname" placeholder="请输入您的昵称~"
-                                    :maxlength="20" show-word-limit clearable size="small" :prefix-icon="EditPen" />
+                                    :maxlength="10" show-word-limit clearable size="small" :prefix-icon="EditPen" />
                             </span>
                         </div>
                         <div class="infor_content_main_item">

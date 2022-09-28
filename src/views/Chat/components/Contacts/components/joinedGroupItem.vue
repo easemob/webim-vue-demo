@@ -17,7 +17,10 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
                 @click="$emit('toContacts', { id: groupItem.groupid, chatType: CHAT_TYPE.GROUP })">
                 <el-avatar style="margin-right: 11px;" :size="33.03" :src="defaultGroupAvatarUrl">
                 </el-avatar>
-                {{ groupItem.groupname }}
+                <span class="group_name">
+                    {{ groupItem.groupname }}
+                </span>
+
             </el-col>
         </el-row>
     </div>
@@ -42,7 +45,17 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
     text-align: center;
     color: #333333;
     cursor: pointer;
-    &:hover{
+
+    .group_name {
+        display: inline-block;
+        text-align: left;
+        width: 80%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &:hover {
         background: #DCDCDC;
     }
 }
