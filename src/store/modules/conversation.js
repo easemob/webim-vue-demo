@@ -140,18 +140,20 @@ const Conversation = {
           }
             break;
           case 'updateAnnouncement': {
-            dispatch('fetchGoupsAdmin')
+            //更新群公告
+            dispatch('fetchAnnounment', informContent.id)
             informMsg.msg = `${informContent.from}更新了群组公告，去看看更新的什么吧~`
             dispatch('createInformMessage', informMsg)
           }
             break;
           case 'setAdmin': {
-            dispatch('fetchGoupsAdmin')
+            dispatch('fetchGoupsAdmin', informContent.id)
             informMsg.msg = `${informContent.from}设定${informContent.to}为管理员~`
             dispatch('createInformMessage', informMsg)
           }
             break;
           case 'removeAdmin': {
+            dispatch('fetchGoupsAdmin', informContent.id)
             informMsg.msg = `${informContent.from}移除了${informContent.to}的管理员身份~`
             dispatch('createInformMessage', informMsg)
           }
@@ -179,7 +181,7 @@ const Conversation = {
           }
             break;
           case 'destroy': {
-            informMsg.msg = `${informContent.from}解散了该群！`
+            informMsg.msg = `${informContent.from}解散了该群~`
             dispatch('createInformMessage', informMsg)
             setTimeout(() => {
               dispatch('fetchGroupList', {
@@ -187,6 +189,12 @@ const Conversation = {
                 pageSize: 500
               })
             }, 300)
+          }
+            break;
+          case 'updateInfo': {
+            informMsg.msg = `${informContent.from}更新了群组详情~`
+            dispatch('createInformMessage', informMsg)
+            dispatch('getAssignGroupDetail', informContent.id)
           }
             break;
           default:
