@@ -32,8 +32,8 @@ const rules = reactive({
 })
 //登陆接口调用
 const loginIM = async () => {
-  const { isOpenPlayRing, playRing, clickRing } = usePlayRing()
-  playRing()
+  const { isOpenPlayRing, clickRing } = usePlayRing()
+  clickRing()
   console.log('isOpenPlayRingisOpenPlayRingisOpenPlayRing', isOpenPlayRing.value);
 
   buttonLoding.value = true;
@@ -68,7 +68,6 @@ const loginIM = async () => {
       accessToken: token
     })
     window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: loginValue.username, accessToken: token }))
-    if (isOpenPlayRing.value) clickRing()
   } catch (error) {
     console.log('>>>>登陆失败', error);
     if (error.response?.data) {
