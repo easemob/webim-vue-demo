@@ -34,7 +34,7 @@ export default {
     'not in group or chatroom': '已不再该群组中！',
   },
   605: {
-    'resource_not_found': '此群不存在！',
+    'The chat room dose not exist.': '此群不存在！',
   },
   /* 消息相关 */
   221: {

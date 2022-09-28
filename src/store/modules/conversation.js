@@ -169,8 +169,10 @@ const Conversation = {
           }
             break;
           case 'removeMember': {
-            informMsg.msg = `${informContent.from}将你移出了群组~`
+            informMsg.msg = `${informContent.from}将你移出了群组${informContent.id}~`
             dispatch('createInformMessage', informMsg)
+            //执行删除会话
+            commit('DELETE_ONE_CONVERSATION', informContent.id)
             setTimeout(() => {
               dispatch('fetchGroupList', {
                 pageNum: 1,

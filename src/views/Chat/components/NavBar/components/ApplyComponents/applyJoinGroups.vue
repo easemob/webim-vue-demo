@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, toRefs, watch, defineProps, defineEmits } from 'vue'
 import EaseIM from '@/IM/initwebsdk'
-import { ElNotification, ElMessage } from 'element-plus'
+import { ElNotification } from 'element-plus'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 const props = defineProps({
     dialogVisible: {
@@ -31,15 +31,19 @@ const getTheGroupIsPublic = async (groupId) => {
         } else {
             return Promise.resolve(true)
         }
-
     } catch (error) {
         console.log('>>>>>>>获取群组信息失败', error);
-        ElNotification({
-            title: '申请入群',
-            message: '该群为私有群不可主动申请！',
-            type: 'warning',
-        })
-        return Promise.resolve(false)
+        if (error.type === 17) {
+            ElNotification({
+                title: '申请入群',
+                message: '该群为私有群不可主动申请！',
+                type: 'warning',
+            })
+            return Promise.resolve(false)
+        } else {
+            return Promise.resolve(true)
+        }
+
 
     }
 
@@ -66,14 +70,15 @@ const joinGroups = async () => {
             type: 'success',
         })
     } catch (error) {
-        const { type, data } = error
+        const { type, data, message } = error
+        console.log('>>>>>申请失败', error);
         if (error.data) {
             if (JSON.parse(data).error_description.includes('blacklist')) {
                 handleSDKErrorNotifi(type, 'blacklist')
             } else if (JSON.parse(data).error_description.includes('already')) {
                 handleSDKErrorNotifi(type, 'already')
             } else {
-                handleSDKErrorNotifi(type, JSON.parse(data).error_description)
+                handleSDKErrorNotifi(type, message)
             }
         } else {
             console.log(error)
