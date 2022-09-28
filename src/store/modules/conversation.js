@@ -197,6 +197,16 @@ const Conversation = {
             dispatch('getAssignGroupDetail', informContent.id)
           }
             break;
+          case 'acceptRequest': {
+            console.log('>>>>>>>收到了群组同意加入事件');
+            setTimeout(() => {
+              dispatch('fetchGroupList', {
+                pageNum: 1,
+                pageSize: 500
+              })
+            }, 300)
+          }
+            break;
           default:
             break;
         }
