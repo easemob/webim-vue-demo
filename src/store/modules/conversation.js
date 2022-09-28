@@ -159,12 +159,12 @@ const Conversation = {
           }
             break;
           case 'muteMember': {
-            informMsg.msg = `${informContent.from}禁言了${informContent.to}~`
+            informMsg.msg = `${informContent.from}禁言了${informContent.to ? informContent.to : '你'}~`
             dispatch('createInformMessage', informMsg)
           }
             break;
           case 'unmuteMember': {
-            informMsg.msg = `${informContent.from}取消了${informContent.to}的禁言~`
+            informMsg.msg = `${informContent.from}取消了${informContent.to ? informContent.to : '你'}的禁言~`
             dispatch('createInformMessage', informMsg)
           }
             break;
