@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, toRefs, watch, defineProps, defineEmits } from 'vue'
 import EaseIM from '@/IM/initwebsdk'
-import { ElNotification } from 'element-plus'
+import { ElNotification, ElMessage } from 'element-plus'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 const props = defineProps({
     dialogVisible: {
@@ -15,11 +15,30 @@ const applyJoinGroupsForm = reactive({
     groupId: '',
     applyJoinMessage: ''
 })
+//判断是否为公开群
+const getTheGroupIsPublic = async (groupId) => {
+    console.log('groupId', groupId);
+    try {
+        let res = await EaseIM.conn.getGroupInfo({ groupId: groupId + '' })
+        console.log('>>>>获取成功', res);
+        return Promise.resolve(res)
+    } catch (error) {
+        console.log('>>>>>>>获取群组信息失败');
+    }
 
+}
 const joinGroups = async () => {
     if (!applyJoinGroupsForm.groupId) return ElNotification({
-        title: '群组操作',
+        title: '申请入群',
         message: '群组ID不可为空',
+        type: 'warning',
+    })
+    //如果获取到期群组详情中的public为false代表为私有群（私有群不可主动申请加入）
+    let res = await getTheGroupIsPublic(applyJoinGroupsForm.groupId)
+    console.log('res', res);
+    if (res && res?.data && res.data[0]?.public === false) return ElNotification({
+        title: '申请入群',
+        message: '该群为私有群不可主动申请！',
         type: 'warning',
     })
     let options = {
@@ -36,6 +55,7 @@ const joinGroups = async () => {
     } catch (error) {
         if (error.data) {
             const { type, data } = error
+            console.log('>>>>>>>type, data', type);
             handleSDKErrorNotifi(type, JSON.parse(data).error)
         } else {
             console.log(error)

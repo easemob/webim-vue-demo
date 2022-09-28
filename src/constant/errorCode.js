@@ -14,17 +14,17 @@ export default {
     'user not found': '该用户不存在！',
   },
   17: {
-    duplicate_unique_property_exists: 'id已存在！',
-    resource_limited: '注册已达上限请开通企业版！',
-    unauthorized: '未开放授权注册！',
-    resource_not_found: '账号不存在！',
+    'duplicate_unique_property_exists': 'id已存在！',
+    'resource_limited': '注册已达上限请开通企业版！',
+    'unauthorized': '未开放授权注册！',
+    'resource_not_found': '账号不存在！',
   },
   28: {
     'appkey or token error': '未登录！',
   },
   101: {
     "file exceeding maximum limit": "文件大小超出限制（默认10M）！",
-    'none':'文件相关未知错误！'
+    'none': '文件相关未知错误！'
   },
   217: {
     'the user was kicked by other device': '其他端踢出了该账号！',
@@ -33,11 +33,8 @@ export default {
   602: {
     'not in group or chatroom': '已不再该群组中！',
   },
-  603: {
-    forbidden_op: '已在群组当中！',
-  },
   605: {
-    resource_not_found: '此群不存在！',
+    'resource_not_found': '此群不存在！',
   },
   /* 消息相关 */
   221: {
@@ -55,7 +52,8 @@ export default {
     'SMS verification code error.': '验证码错误！'
   },
   603: {
-    blocked: '对方已将您加入黑名单！',
+    'blocked': '对方已将您加入黑名单！',
+    'forbidden_op': '已在群组当中！',
   },
   504: {
     'exceed recall time limit': '消息超过可撤回时间！',
