@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, computed, nextTick } from "vue"
+import { ref, toRefs, computed, onMounted, nextTick } from "vue"
 import { ElMessage } from 'element-plus';
 import store from '@/store'
 const props = defineProps({
@@ -55,14 +55,19 @@ const editAnnouncment = async (type, oldAnnouncment) => {
 
     }
 }
+onMounted(() => {
+    nextTick(() => {
+        editAnnouncment('edit', goupsInfos.value.announcement)
+    })
+})
 </script>
 <template>
     <div class="app_container">
         <!-- 群主及管理员可编辑 -->
         <template v-if="memberRole">
             <p v-if="!isEdit" @click="editAnnouncment('edit', goupsInfos.announcement)">{{
-                    goupsInfos.announcement ||
-                    '暂无群公告~'
+            goupsInfos.announcement ||
+            '暂无群公告~'
             }}</p>
             <el-input v-if="isEdit" ref="announcementRef" v-model="announcmentValue" maxlength="500" show-word-limit
                 :autosize="{ minRows: 2, maxRows: 4 }" type="textarea" class="announcment_detail" placeholder="请输入群组公告~"
@@ -70,7 +75,7 @@ const editAnnouncment = async (type, oldAnnouncment) => {
         </template>
         <!-- 仅供查看 -->
         <p v-else>{{ goupsInfos.announcement ||
-                '暂无群公告~'
+        '暂无群公告~'
         }}</p>
 
     </div>

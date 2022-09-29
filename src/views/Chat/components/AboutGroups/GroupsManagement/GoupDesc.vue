@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, nextTick } from "vue"
+import { ref, toRefs, onMounted, nextTick } from "vue"
 import { ElMessage } from 'element-plus';
 import store from '@/store'
 const props = defineProps({
@@ -53,7 +53,11 @@ const editGroupsDesc = async (type, oldGroupDesc) => {
 
     }
 }
-
+onMounted(() => {
+    nextTick(() => {
+        editGroupsDesc('edit', groupDetail.value.description)
+    })
+})
 </script>
 <template>
     <div class="app_container">
