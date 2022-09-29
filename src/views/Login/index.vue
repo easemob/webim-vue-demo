@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue';
 import EaseIM from '@/IM/initwebsdk';
-import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import CustomImConfig from '@/views/Login/components/CustomImConfig';
 import LoginInput from './components/LoginInput'
 import RegisterInput from './components/RegisterInput'
@@ -25,9 +24,9 @@ const toEasemob = () => {
 
 //服务配置
 const customImConfig = ref(null);
-const showCustomImConfigModal = () => {
-  customImConfig.value.centerDialogVisible = true
-}
+// const showCustomImConfigModal = () => {
+//   customImConfig.value.centerDialogVisible = true
+// }
 
 //SDK-Version
 const IM_SDK_VERSION = EaseIM.conn.version

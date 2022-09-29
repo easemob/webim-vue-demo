@@ -1,7 +1,6 @@
 <script setup>
 import { toRefs, computed } from 'vue'
 import { onLineStatus } from '@/constant'
-import { useStore } from 'vuex'
 
 /* props */
 const props = defineProps({

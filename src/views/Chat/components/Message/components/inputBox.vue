@@ -191,7 +191,7 @@ const clearScreen = () => {
     }).then(() => {
         const key = nowPickInfo.value.id
         store.commit('CLEAR_SOMEONE_MESSAGE', key)
-    }).catch(error => {
+    }).catch(() => {
         return false;
     })
 

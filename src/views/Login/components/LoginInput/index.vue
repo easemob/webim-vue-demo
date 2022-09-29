@@ -61,7 +61,7 @@ const loginIM = async () => {
   }
   try {
     //phoneNumber 暂时不支持用作user，后续支持手机号登陆
-    let { phoneNumber, token } = await fetchUserLoginToken(params)
+    let { token } = await fetchUserLoginToken(params)
     console.log('>>>>>>登陆token获取成功', token);
     EaseIM.conn.open({
       user: loginValue.username.toLowerCase(),

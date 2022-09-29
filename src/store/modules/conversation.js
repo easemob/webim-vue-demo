@@ -1,3 +1,4 @@
+
 import _ from 'lodash';
 import { useLocalStorage } from '@vueuse/core';
 import {
@@ -8,7 +9,7 @@ import {
 import Message from './message';
 import EaseIM from '@/IM/initwebsdk';
 import { informType, messageType } from '@/constant';
-const { INFORM_FROM, INFORM_TYPE } = informType;
+const { INFORM_FROM } = informType;
 const { CHAT_TYPE } = messageType
 const Conversation = {
   state: {
@@ -54,9 +55,13 @@ const Conversation = {
     },
     //删除某条会话
     DELETE_ONE_CONVERSATION: (state, key) => {
-      if (state.conversationListData[key]) {
-        delete state.conversationListData[key];
+      console.log('>>>>>>>执行删除会话操作', key);
+      const toUpdateConversation = _.assign({}, state.conversationListData);
+      if (toUpdateConversation[key]) {
+        delete toUpdateConversation[key];
       }
+      console.log('删除后toUpdateConversation', toUpdateConversation)
+      state.conversationListData = _.assign({}, toUpdateConversation)
     },
     //清除会话未读状态
     CLEAR_UNREAD_NUM: (state, key) => {
@@ -106,6 +111,7 @@ const Conversation = {
             informMsg.msg = `已成为你的好友,开始聊天吧`
             dispatch('createInformMessage', informMsg)
           }
+          break;
           default:
             break;
         }
@@ -173,13 +179,8 @@ const Conversation = {
             dispatch('createInformMessage', informMsg)
             //执行删除会话
             commit('DELETE_ONE_CONVERSATION', informContent.id)
-            setTimeout(() => {
-              dispatch('fetchGroupList', {
-                pageNum: 1,
-                pageSize: 500
-              })
-            }, 300)
-
+            //从群组列表中移除
+            commit('UPDATE_GROUP_LIST', { type: 'deleteFromList', groupId: informContent.id })
           }
             break;
           case 'destroy': {

@@ -123,7 +123,7 @@ const Groups = {
           type: 'groupName',
           params: content,
         });
-        commit('UPDATE_GROUP_LIST', { groupId: groupid, groupName: content });
+        commit('UPDATE_GROUP_LIST', { type: 'updateGroupName', groupId: groupid, groupName: content });
       }
       //1 是修改群详情
       if (modifyType === 1) {

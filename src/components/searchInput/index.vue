@@ -2,7 +2,6 @@
 import { ref, toRaw, watch, defineProps, defineEmits } from 'vue';
 import EaseIM from '@/IM/initwebsdk'
 import { Search } from '@element-plus/icons-vue';
-import { useStore } from "vuex";
 import { useLocalStorage } from '@vueuse/core'
 import _ from "lodash"
 import { onClickOutside } from '@vueuse/core';

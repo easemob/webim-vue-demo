@@ -108,7 +108,7 @@ const Message = {
         //传入errorCallback，让附件类型消息在上传失败时调用reject抛出error
         const errorCallback = (error) => { reject(error) }
         let options = createMessage.createOptions(params, errorCallback);
-        let msg = WebIM.message.create(options);
+        let msg = EaseIM.message.create(options);
         try {
           let { serverMsgId } = await EaseIM.conn.send(msg);
           console.log('>>>>发送成功', msg);

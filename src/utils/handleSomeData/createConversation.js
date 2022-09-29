@@ -87,7 +87,7 @@ export default function (corresMessage) {
    */
     const loginUserId = EaseIM.conn.user;
     const listKey = setMessageKey(msgBody);
-    const { chatType, from, ext, id, msg, time, to, type } = msgBody;
+    const { chatType, from, ext, id, time, to, type } = msgBody;
     //操作类型为新建
     if (operateType === 'create') {
       let state = {

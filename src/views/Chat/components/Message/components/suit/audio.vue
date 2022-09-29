@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import BenzAMRRecorder from "benz-amr-recorder"
 import { ElNotification } from 'element-plus';
-const type = ref(0) // 0未录音 1录音中 2录音完毕
 const voice = ref({
     interval: null, // 录音定时器
     type: 0, // 0未录音 1录音中 2录音完毕 3回放录音
@@ -10,7 +9,7 @@ const voice = ref({
     src: null // 录音资源
 })
 const amrRec = ref(null)
-const timer = ref({
+let timer = ref({
     interval: null,
     tim: 60
 }); //倒计时
@@ -38,7 +37,7 @@ const benginTimer = () => {
     }, 1000);
 }
 
-const startRecord = (e) => {
+const startRecord = () => {
     if (voice.value.type === 0) {
         amrRec.value = new BenzAMRRecorder();
         console.log(amrRec)
@@ -111,23 +110,23 @@ const initVocie = () => {
     showCountDown.value = false
     timer.value.interval = null;
 }
-const filterRecordVoicTime = (len) => {
-    let min = Math.floor(len / 60),
-        sec = len % 60;
-    ("1:30");
-    return min + ":" + (sec < 10 ? "0" + sec : sec);
-}
-const cancelRecord = (e) => {
-    amrRec.value.cancelRecord();
-    clearInterval(timer.value.interval);
-    clearInterval(voice.value.interval);
-    initVocie();
-    ElNotification({
-        title: '',
-        message: '取消录音',
-        type: 'success',
-    });
-}
+// const filterRecordVoicTime = (len) => {
+//     let min = Math.floor(len / 60),
+//         sec = len % 60;
+//     ("1:30");
+//     return min + ":" + (sec < 10 ? "0" + sec : sec);
+// }
+// const cancelRecord = (e) => {
+//     amrRec.value.cancelRecord();
+//     clearInterval(timer.value.interval);
+//     clearInterval(voice.value.interval);
+//     initVocie();
+//     ElNotification({
+//         title: '',
+//         message: '取消录音',
+//         type: 'success',
+//     });
+// }
 const closeDialog = () => {
     console.log("关闭子组件的定时器")
     clearInterval(timer.value.interval);

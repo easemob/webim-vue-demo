@@ -1,7 +1,6 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { usePlayRing } from '@/hooks';
-import { Close, EditPen, Phone, Message, Flag } from '@element-plus/icons-vue';
 const dialogVisible = ref(false)
 const { isOpenPlayRing } = usePlayRing()
 

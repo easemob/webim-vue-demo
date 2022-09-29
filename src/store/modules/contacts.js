@@ -91,9 +91,17 @@ const Contacts = {
     },
     //示例优化方向--更改本地群组列表群名(或其他状态)
     UPDATE_GROUP_LIST: (state, payload) => {
-      console.log('>>>>>更新本地群组列表群名');
-      const { groupId, groupName } = payload;
-      state.groupList[groupId].groupname = groupName;
+
+      const { type, groupId, groupName } = payload;
+      if (type === 'updateGroupName') {
+        console.log('>>>>>更新本地群组列表群名');
+        state.groupList[groupId].groupname = groupName;
+      }
+      if (type === 'deleteFromList') {
+        console.log('>>>>>从本地群组列表中删除某个群');
+        state.groupList[groupId] && (delete state.groupList[groupId])
+      }
+
     },
   },
   actions: {
@@ -174,7 +182,7 @@ const Contacts = {
         let tobeCommitRes =
           usersPresenceList.length > 0 &&
           usersPresenceList.filter((p) => p.uid !== '');
-          console.log('resultData',resultData);
+        console.log('resultData', resultData);
         commit('SET_FRIEND_PRESENCE', tobeCommitRes);
       } catch (error) {
         console.log('>>>>>>订阅失败', error);

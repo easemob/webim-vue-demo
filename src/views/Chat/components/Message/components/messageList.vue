@@ -66,9 +66,6 @@ const handleMsgTimeShow = computed(() => {
         } else {
             return dateFormat('MM/DD/HH:mm', time)
         }
-
-
-
         return time
     }
 })
@@ -103,8 +100,8 @@ const startplayAudio = (msgBody, index) => {
 
 
 //复制文本
-const permissionRead = usePermission('clipboard-read') //请求剪切板读的权限
-const permissionWrite = usePermission('clipboard-write') //请求剪切板写的权限
+// const permissionRead = usePermission('clipboard-read') //请求剪切板读的权限
+// const permissionWrite = usePermission('clipboard-write') //请求剪切板写的权限
 const { copy, copied, isSupported } = useClipboard() //copy 复制方法 copied 是否已经复制 isSupported 是否支持剪切板
 const copyTextMessages = (msg) => {
     copy(msg)

@@ -7,7 +7,7 @@ import { informType } from '@/constant'
 import { usePlayRing } from '@/hooks'
 import ring from '@/assets/ring.mp3'
 const store = useStore();
-const { isOpenPlayRing, clickRing, playRing } = usePlayRing()
+const { isOpenPlayRing, clickRing } = usePlayRing()
 EaseIM.logger.disableAll()
 /* connect 相关监听 */
 EaseIM.conn.addEventHandler('connection', {

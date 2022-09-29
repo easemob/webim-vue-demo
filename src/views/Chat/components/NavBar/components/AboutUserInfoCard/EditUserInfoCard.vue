@@ -1,8 +1,8 @@
 <script setup>
-import { ref, toRaw, computed, onMounted } from 'vue'
+import { ref, toRaw, computed } from 'vue'
 import { ElMessage } from 'element-plus';
-import EaseIM from '@/IM/initwebsdk'
 import { Close, EditPen, Phone, Message, Flag } from '@element-plus/icons-vue';
+import _ from 'lodash';
 /* store */
 import store from '@/store'
 /* 头像相关 */

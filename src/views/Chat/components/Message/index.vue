@@ -1,10 +1,11 @@
 <script setup>
-import { ref, watch, toRefs, nextTick, computed } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import _ from 'lodash';
+import EaseIM from '@/IM/initwebsdk'
 import { useStore } from 'vuex'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { messageType, warningText } from '@/constant'
-import { useScroll } from '@vueuse/core'
+// import { useScroll } from '@vueuse/core'
 import { ElMessage } from 'element-plus';
 import { Close } from '@element-plus/icons-vue';
 /* 组件 */
@@ -35,9 +36,9 @@ const delTheFriend = () => {
   }
 }
 //加入好友到黑名单
-const addFriendToBlackList = () => {
+// const addFriendToBlackList = () => {
 
-}
+// }
 /* warningTips */
 const isShowWarningTips = computed(() => store.state.isShowWarningTips)
 const randomTips = computed(() => {
@@ -132,9 +133,9 @@ const messageData = computed(() => {
 })
 
 const messageContainer = ref(null);
-const innerRef = ref(null);
-const { arrivedState, } = useScroll(messageContainer)
-const { top } = toRefs(arrivedState)
+// const innerRef = ref(null);
+// const { arrivedState, } = useScroll(messageContainer)
+// const { top } = toRefs(arrivedState)
 //控制消息滚动
 const scrollMessageList = (direction) => {
   //direction滚动方向 bottom向下滚动 normal向上滚动 
@@ -154,9 +155,9 @@ const scrollMessageList = (direction) => {
     }
   })
 }
-const scroll = ({ scrollTop }) => {
+// const scroll = ({ scrollTop }) => {
   // console.log('scrollscrollscroll', scrollTop)
-}
+// }
 //监听到消息内容改变 置底滚动。
 watch(() => store.state.Message.messageList[nowPickInfo.value.id], () => {
   setTimeout(() => {

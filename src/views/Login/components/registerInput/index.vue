@@ -1,6 +1,5 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import EaseIM from '@/IM/initwebsdk';
 import { ElMessage,ElNotification } from 'element-plus';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { createImageCode, fetchAuthCode, registerUser } from '@/api/register'
@@ -104,7 +103,7 @@ const startCountDown = () => {
 /* 发起注册 */
 const registerIM = async (formEl) => {
     if (!formEl) return
-    await formEl.validate(async (valid, fields) => {
+    await formEl.validate(async (valid) => {
         if (valid) {
             let params = {
                 userId: registerValue.username,
@@ -129,7 +128,6 @@ const registerIM = async (formEl) => {
                 }
             }
 
-        } else {
         }
     })
 };

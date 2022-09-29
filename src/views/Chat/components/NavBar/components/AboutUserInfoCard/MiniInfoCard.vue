@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useStore } from 'vuex';
-import EaseIM from '@/IM/initwebsdk'
 
 /* 组件 */
 import ShareMyInfoCard from './components/ShareMyInfoCard.vue'

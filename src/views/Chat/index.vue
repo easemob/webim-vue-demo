@@ -35,9 +35,6 @@ import NavBar from '@/views/Chat/components/NavBar';
     background: #FFF;
     position: relative;
     top: 50%;
-    /*
-      	transform的百分比相对的是自身的宽度或高度( refer to the size of bounding box )
-      */
     transform: translateY(-50%);
     margin: auto auto;
     border-radius: 5px;

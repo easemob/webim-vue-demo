@@ -1,8 +1,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import EaseIM from '@/IM/initwebsdk';
-import { ElNotification } from 'element-plus';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { createImageCode, fetchAuthCode } from '@/api/register'
 import { requestModifyPwd, updateNewPasswrod } from '@/api/resetPassword'
