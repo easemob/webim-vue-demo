@@ -74,16 +74,18 @@ const Contacts = {
             break;
           case 'addAffiliationsCount':
             {
-              state.groupList[groupId].groupDetail.affiliations_count =
-                state.groupList[groupId].groupDetail.affiliations_count + 1;
+              console.log('>>>>>执行群人数++');
+              let newList = _.assign({}, state.groupList)
+              newList[groupId].groupDetail.affiliations_count ++
+              state.groupList = newList;
             }
             break;
-          case 'delAffiliationsCount':
-            {
-              state.groupList[groupId].groupDetail.affiliations_count =
-                state.groupList[groupId].groupDetail.affiliations_count - 1;
-            }
-            break;
+          // case 'delAffiliationsCount':
+          //   {
+          //     console.log('>>>>>执行群人数--');
+          //     state.groupList[groupId].groupDetail.affiliations_count - 1
+          //   }
+          //   break;
           default:
             break;
         }
