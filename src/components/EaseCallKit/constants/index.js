@@ -17,7 +17,8 @@ const CALL_ACTIONS_TYPE = {
 	ANSWER: 'answerCall',//答复
 	ALERT: 'alert',//弹出通话窗口
 	CONFIRM_RING: 'confirmRing',//窗口响铃待确认
-	CONFIRM_CALLEE: "confirmCallee" //被叫方确认
+	CONFIRM_CALLEE: "confirmCallee", //被叫方确认
+	Video_TO_VOICE: "videoToVoice"//视频转语音
 }
 
 const ANSWER_TYPE = {

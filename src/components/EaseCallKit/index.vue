@@ -1,11 +1,14 @@
 <script setup>
-import { reactive, toRefs, watch, onUnmounted } from 'vue'
-import { CallKitClient, AgoraAppId } from './config/initAgoraRtc'
+import { ref, reactive, toRefs, watch, onUnmounted } from 'vue'
 import { CALLSTATUS, CALL_ACTIONS_TYPE, ANSWER_TYPE } from './constants'
 import CallKitMessages from './utils/callMessages'
-
+import getAgoraRtcToken from './utils/getRtcToken'
 /* 组件 */
+//待确认弹出框
 import AlertModal from './alertModal.vue'
+//单人通话组件
+import SingleCall from './components/singleCall.vue';
+import MultiCall from './components/multiCall.vue'
 /** 
                                 ** 呼叫流程 **
     caller            -------------------------------------->          callee
@@ -67,16 +70,21 @@ const setMessageListener = () => {
 const removeMessageListener = () => EaseIM.value[conn].removeEventHandler(msgLisnnerName)
 
 /* CallKit status */
+const callCompsType = {
+    'singleCall': SingleCall,
+    'multiCall': MultiCall,
+}
+let callComponents = ref('')
 let callKitStatus = reactive({
     localClientStatus: CALLSTATUS.idle,//callkit状态
     channelInfos: {
-        channelName: "",//频道名
-        token: '', //频道token
+        channelName: '',//频道名
+        agoraChannelToken: '', //频道token
+        agoraUserId: '', //频道用户id
         callType: null, //0 语音 1 视频 2 多人音视频
         callId: null,//会议ID
         callerDevId: '',//主叫方设备ID
         calleeDevId: '',//被叫方设备ID
-        confrontId: '',//要处理的目标ID
         callerIMName: '',//主叫方环信ID
         calleeIMName: ''//被叫方环信ID
     }
@@ -84,9 +92,12 @@ let callKitStatus = reactive({
 })
 //初始化频道信息
 const initChannelInfos = () => {
+    callComponents.value = ''
+    callKitStatus.localClientStatus = CALLSTATUS.idle
     callKitStatus.channelInfos = {
         channelName: "",//频道名
-        token: '', //频道token
+        agoraChannelToken: '', //频道token
+        agoraUid: '', //频道用户id
         callType: null, //0 语音 1 视频 2 多人音视频
         callId: null,//会议ID
         callerDevId: '',//主叫方设备ID
@@ -101,6 +112,7 @@ watch(() => callKitStatus.localClientStatus, (newClientStatus, oldClientStatus) 
     console.log('%c 监听到本地客户端状态的改变', 'color:yellow', newClientStatus, oldClientStatus);
     handleClientStatusForAction(newClientStatus)
 })
+//处理不同clientstatus执行不同的操作
 const handleClientStatusForAction = (clientStatus) => {
     switch (clientStatus) {
         case CALLSTATUS.idle:
@@ -109,6 +121,23 @@ const handleClientStatusForAction = (clientStatus) => {
             break;
         case CALLSTATUS.receivedConfirmRing:
             console.log('>>>>新状态为弹出框，执行弹出待确认框');
+            break;
+        case CALLSTATUS.answerCall:
+            console.log('>>>>>可以弹出通话接听UI组件');
+            if (callKitStatus.channelInfos.callType < 2 > 0) {
+                console.log('>>>>>>>展示单人音视频组件');
+                callComponents.value = 'singleCall'
+            }
+            if (callKitStatus.channelInfos.callType === 2) {
+                console.log('》》》》》展示多人音视频组件');
+                callComponents.value = 'multiCall'
+            }
+            break;
+        case CALLSTATUS.confirmCallee: {
+            console.log('%c >>>>>可以加入房间了', 'color:green;');
+            console.log('++++++将入的频道类型是', callKitStatus.channelInfos.callType);
+
+        }
             break;
         default:
             break;
@@ -235,11 +264,10 @@ const handleCallKitCommand = (msgBody) => {
             break;
 
         default:
-            console.log('>>>其他位置状态');
+            console.log('>>>其他未知状态');
             break;
     }
 }
-
 //发送接听挂断信令
 const handleSendAnswerMsg = (sendType) => {
     const channelInfos = callKitStatus.channelInfos;
@@ -261,6 +289,19 @@ const handleSendAnswerMsg = (sendType) => {
         console.log('>>>>开始发送挂断信令');
     }
 }
+
+/* 获取agoraToken */
+const getRtcToken = async (callback) => {
+    const username = EaseIM.value[conn].user
+    const channelName = callKitStatus.channelInfos.channelName
+    if (!username && !channelName) return
+    const { accessToken, agoraUserId } = await getAgoraRtcToken(EaseIM.value[conn], { username, channelName })
+    console.log('+_+_+_+_+_+获取房间token成功', accessToken, agoraUserId);
+    callKitStatus.channelInfos.agoraChannelToken = accessToken
+    callKitStatus.channelInfos.agoraUserId = agoraUserId
+    callback()
+}
+
 /* 组件卸载操作 */
 onUnmounted(() => {
     //移除消息监听
@@ -269,9 +310,14 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="container">
+        <!-- 待确认弹出框 -->
         <AlertModal v-if="callKitStatus.localClientStatus === CALLSTATUS.receivedConfirmRing"
             :callKitStatus="callKitStatus" @updateLocalStatus="updateLocalStatus"
             @handleSendAnswerMsg="handleSendAnswerMsg" />
+        <!-- 音视频UI展示组件 -->
+        <component :is="callCompsType[callComponents]" :callKitStatus="callKitStatus" @getRtcToken="getRtcToken"
+            @updateLocalStatus="updateLocalStatus">
+        </component>
     </div>
 </template>
 
@@ -279,11 +325,8 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .container {
-    position: absolute;
-    right: 0;
+    position: relative;
+    left: 0;
     top: 0;
-    // width: 100%;
-    // height: 100%;
-    // z-index: -1;
 }
 </style>

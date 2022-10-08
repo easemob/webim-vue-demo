@@ -1,8 +1,8 @@
 <script setup>
 import EaseIM from '@/IM/initwebsdk'
 import NavBar from '@/views/Chat/components/NavBar';
-/* CallKit */
-import EaseCallKit from '@/components/EaseCallKit'
+// /* CallKit */
+// import EaseCallKit from '@/components/EaseCallKit'
 </script>
 <template>
   <div class="app-container">
@@ -14,7 +14,7 @@ import EaseCallKit from '@/components/EaseCallKit'
         <router-view>
         </router-view>
       </el-main>
-      <EaseCallKit :EaseIM="EaseIM" :connectionName="'conn'" />
+      <!-- <EaseCallKit :EaseIM="EaseIM" :connectionName="'conn'" /> -->
     </el-container>
   </div>
 </template>
