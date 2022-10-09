@@ -74,7 +74,7 @@ const callCompsType = {
     'singleCall': SingleCall,
     'multiCall': MultiCall,
 }
-let callComponents = ref('')
+let callComponents = ref('multiCall')
 let callKitStatus = reactive({
     localClientStatus: CALLSTATUS.idle,//callkit状态
     channelInfos: {
