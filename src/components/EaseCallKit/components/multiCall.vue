@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, toRefs, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, watch, toRefs, onMounted, onUnmounted } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
 import { CALLSTATUS } from '../constants'
 /* vueUse */
@@ -30,21 +30,45 @@ const emits = defineEmits(['getRtcToken', 'updateLocalStatus'])
 /* AgoraRTC */
 //client 初始化
 let CallKitClient = null
+CallKitClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
+//本地音视频轨道
 let localVoiceTrack = null
 let localVideoTrack = null
-CallKitClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
+//已在频道中的用户list
+let inChannelUsersIdList = reactive([])
 const setAgoraRtcListener = () => {
     console.log('>>>>>AgoraRtc监听挂载完毕')
+    //监听到用用户加入了频道
+    CallKitClient.on('user-joined', user => {
+        const remoteUserId = user.uid.toString()
+        console.log('>>>>>加入频道的用户id', remoteUserId);
+        if (remoteUserId && !inChannelUsersIdList.includes(remoteUserId)) {
+            inChannelUsersIdList.push(remoteUserId)
+            console.log('>>>>可以创建一个新的dom容器了');
+            handleRemoteContainer('create', remoteUserId)
+        }
+
+    })
     //监听用户发布流
     CallKitClient.on('user-published', async (user, mediaType) => {
         await CallKitClient.subscribe(user, mediaType)
         if (mediaType === 'video') {
             console.log('>>>>>>视频类型')
+            const remoteUserId = user.uid.toString();
             const remoteVideoTrack = user.videoTrack
+            const remotePlayerContainer = document.getElementById(remoteUserId)
+            if (remotePlayerContainer) {
+                setTimeout(() => {
+                    remoteVideoTrack.play(remotePlayerContainer)
+                }, 300)
+            } else {
+                handleRemoteContainer('create', remoteUserId)
+                setTimeout(() => {
+                    remoteVideoTrack.play(remotePlayerContainer)
+                }, 300)
+            }
             console.log('remoteVideoTrack', remoteVideoTrack)
-            setTimeout(() => {
-                remoteVideoTrack.play(mainContainer.value)
-            }, 300)
+
 
         }
         if (mediaType === 'audio') {
@@ -68,7 +92,8 @@ const setAgoraRtcListener = () => {
     //监听用户离开回调
     CallKitClient.on('user-left', (user, reason) => {
         console.log('>>>>>>用户离开回调触发,离开原因', reason)
-        leaveChannel()
+        const remoteUserId = user.uid.toString();
+        handleRemoteContainer('remove', remoteUserId)
     })
 }
 onMounted(() => {
@@ -76,7 +101,6 @@ onMounted(() => {
 })
 
 /* 频道控制 */
-
 //监听本地端状态
 watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
     console.log('>>>>>>> single组件监听是否可加入房间', newVal, oldVal)
@@ -116,6 +140,7 @@ const joinChannel = async () => {
             localVideoTrack.play(myContainer.value)
         }, 300)
         console.log('>>>>>>音视频---本地轨道推流成功')
+        inChannelUsersIdList.push(agoraUserId.toString())
     } catch (error) {
         console.log('>>>>加入频道失败', error)
     }
@@ -128,6 +153,26 @@ const leaveChannel = async () => {
     localVoiceTrack && localVideoTrack.close()
     await CallKitClient.leave()
     emits('updateLocalStatus', CALLSTATUS.idle)
+}
+//处理DOM容器【包含创建以及移除】
+const handleRemoteContainer = (handleType, userUid) => {
+    let elementId = ''
+    userUid && (elementId = userUid)
+    if (handleType === 'create') {
+        if (document.getElementById(elementId)) return;
+        const remotePlayerContainer = document.createElement("div");
+        remotePlayerContainer.id = elementId;
+        remotePlayerContainer.style.width = "150px";
+        remotePlayerContainer.style.height = "150px";
+        remotePlayerContainer.style.background = "black";
+        streamContainer.value.append(remotePlayerContainer)
+    }
+    if (handleType === 'remove') {
+        if (document.getElementById(elementId)) {
+            const toBeRemoveChild = document.getElementById(elementId)
+            streamContainer.value.removeChild(toBeRemoveChild)
+        };
+    }
 }
 //组件卸载
 onUnmounted(() => {
@@ -152,10 +197,11 @@ onUnmounted(() => {
     border-radius: 4px;
     overflow: hidden;
     background-color: rgb(204, 204, 204);
-    padding:5px;
+    padding: 5px;
 }
+
 .stream_container {
-    display:flex;
+    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -171,6 +217,7 @@ onUnmounted(() => {
     background: #000;
     margin: 5px 0;
 }
+
 .stream_control {
     position: absolute;
     left: 0;
