@@ -1,7 +1,8 @@
 module.exports = {
     root: true,
     env: {
-        node: true
+        node: true,
+        'vue/setup-compiler-macros': true //针对setup语法糖 可不用defined defineEmits 以及 definExpose
     },
     'extends': [
         'plugin:vue/vue3-essential',
@@ -45,6 +46,6 @@ module.exports = {
             }
         ],
         'guard-for-in': 'error',
-        'vue/multi-word-component-names': 0 // 取消组件名称校验
+        'vue/multi-word-component-names': 'off' // 取消组件名称校验
     }
 }

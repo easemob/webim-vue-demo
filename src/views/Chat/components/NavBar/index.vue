@@ -22,8 +22,6 @@ import { onLineStatus } from '@/constant'
 /* vueUse */
 import { onClickOutside } from '@vueuse/core'
 const route = useRoute()
-
-
 const store = useStore()
 /* 取用户头像 */
 const loginUserAvatar = computed(() => {
