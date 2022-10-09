@@ -111,7 +111,7 @@ const Conversation = {
             informMsg.msg = `已成为你的好友,开始聊天吧`
             dispatch('createInformMessage', informMsg)
           }
-            break;
+          break;
           default:
             break;
         }
@@ -208,17 +208,6 @@ const Conversation = {
                 pageSize: 500
               })
             }, 300)
-          }
-            break;
-          case 'directJoined': {
-            setTimeout(() => {
-              dispatch('fetchGroupList', {
-                pageNum: 1,
-                pageSize: 500
-              })
-            }, 300)
-            informMsg.msg = `${informContent.from}已直接加入了群组`
-            dispatch('createInformMessage', informMsg)
           }
             break;
           default:

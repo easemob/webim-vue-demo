@@ -156,7 +156,7 @@ const scrollMessageList = (direction) => {
   })
 }
 const scroll = ({ scrollTop }) => {
-  // console.log('scrollscrollscroll')
+  console.log('scrollscrollscroll', scrollTop)
 }
 //监听到消息内容改变 置底滚动。
 watch(() => store.state.Message.messageList[nowPickInfo.value.id], () => {
@@ -195,7 +195,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg;
       <template v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP">
         <div v-if="nowPickInfo.groupDetail" class="chat_user_box">
           <span class="chat_user_name">
-            {{ groupDetail.name || '' }} {{ `(${groupDetail.affiliations_count})`
+            {{ groupDetail.name || '' }} {{ `(${groupDetail.affiliations_count || ''})`
             }}
           </span>
 
