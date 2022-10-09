@@ -94,7 +94,7 @@ const Groups = {
     },
     //群黑名单
     fetchGoupsBlackList: async ({ dispatch, commit }, params) => {
-      let { data } = await EaseIM.conn.getGroupBlacklist({ groupId: params });
+      let { data } = await EaseIM.conn.getGroupBlocklist({ groupId: params });
       commit('SET_GROUPS_BLIACK_LIST', { groupId: params, blacklist: data });
     },
     //群禁言列表
