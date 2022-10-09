@@ -6,6 +6,8 @@ import { handleSDKErrorNotifi, setMessageKey } from '@/utils/handleSomeData';
 import { informType } from '@/constant'
 import { usePlayRing } from '@/hooks'
 import ring from '@/assets/ring.mp3'
+/* callkit */
+import EaseCallKit from '@/components/EaseCallKit'
 const store = useStore();
 const { isOpenPlayRing, clickRing } = usePlayRing()
 EaseIM.logger.disableAll()
@@ -218,6 +220,8 @@ if (loginUserFromStorage?.user && loginUserFromStorage?.accessToken) {
   </router-view>
   <!-- 铃声标签 -->
   <audio id="ring" :src="ring" controls hidden></audio>
+  <!-- EaseCallKit -->
+  <EaseCallKit :EaseIM="EaseIM" :connectionName="'conn'"/>
 </template>
 
 <style type="scss">
