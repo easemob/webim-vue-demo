@@ -5,12 +5,12 @@ import {
     Search,
     // Star,
     CircleCheckFilled,
-} from '@element-plus/icons-vue';
+} from '@element-plus/icons-vue'
 import getArrDifference from '@/utils/getArrdifference'
 import store from '@/store'
-import _ from 'lodash';
+import _ from 'lodash'
 import dateFormater from '@/utils/dateFormater'
-import defaultAvatar from '@/assets/images/avatar/theme2x.png';
+import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 const props = defineProps({
     groupModalTitle: {
         type: Object,
@@ -32,16 +32,16 @@ const { groupModalTitle, groupDetail, memberRole } = toRefs(props)
 /* 数据获取 */
 //群组成员
 const groupMembers = computed(() => {
-    return store.state.Groups.groupsInfos[groupDetail.value.id].members;
+    return store.state.Groups.groupsInfos[groupDetail.value.id].members
 })
 //黑名单列表
 const blackMemberList = computed(() => {
-    return store.state.Groups.groupsInfos[groupDetail.value.id].blacklist;
+    return store.state.Groups.groupsInfos[groupDetail.value.id].blacklist
 })
-console.log('blackMemberList>>>>', blackMemberList.value);
+console.log('blackMemberList>>>>', blackMemberList.value)
 //禁言列表
 const muteMemberList = computed(() => {
-    return store.state.Groups.groupsInfos[groupDetail.value.id].mutelist;
+    return store.state.Groups.groupsInfos[groupDetail.value.id].mutelist
 })
 console.log('muteMemberList>>>', muteMemberList.value)
 
@@ -50,13 +50,13 @@ console.log('muteMemberList>>>', muteMemberList.value)
 const renderBlackMembers = ref(null)
 const insideTheBlackList = ref([])
 const sortedMembersList = computed(() => {
-    const sourceData = _.cloneDeep(groupMembers.value);
+    const sourceData = _.cloneDeep(groupMembers.value)
     for (const key in sourceData) {
         if (Object.hasOwnProperty.call(sourceData, key)) {
-            const v = sourceData[key];
+            const v = sourceData[key]
             // v.exitTheGroup = groupMembers.value && toRaw(groupMembers.value).some((m) => m.member === v.hxId);
             v.keywords = v.owner ? v.owner : v.member
-            v.isChecked = false;
+            v.isChecked = false
         }
     }
     return sourceData
@@ -66,10 +66,10 @@ const handleMembersToBlack = (item) => {
     console.log('>>>>>>添加引入黑名单', item)
     if (item.isChecked && insideTheBlackList.value.includes(item.member)) {
         insideTheBlackList.value.map((m, idx) => { if (m === item.member) { insideTheBlackList.value.splice(idx, 1) } })
-        item.isChecked = false;
+        item.isChecked = false
     } else {
         if (!insideTheBlackList.value.includes(item.member)) insideTheBlackList.value.push(item.member)
-        item.isChecked = true;
+        item.isChecked = true
     }
 }
 //从黑名单列表中删除
@@ -79,11 +79,11 @@ const deleteMembersFromBlack = (memberId, index) => {
 }
 //调用SDK方法改变黑名单列表
 const handleBlackFromSDK = (difArr) => {
-    const groupId = groupDetail.value.id;
+    const groupId = groupDetail.value.id
     //待提交给SDK添加的数组
-    let toBeAddList = []
+    const toBeAddList = []
     //待提交给SDK移除 的数组
-    let toBeRemoveList = []
+    const toBeRemoveList = []
     //遍历difArr如果再原黑名单中存在则说明需要移出，如果不存在说明需要添加
     difArr.forEach(member => {
         if (blackMemberList.value.includes(member)) {
@@ -91,7 +91,7 @@ const handleBlackFromSDK = (difArr) => {
         } else {
             toBeAddList.push(member)
         }
-    });
+    })
     if (toBeAddList.length > 0) {
         store.dispatch('addMemberToBlackList', { groupId, usernames: toBeAddList })
     }
@@ -105,33 +105,33 @@ const handleBlackFromSDK = (difArr) => {
 
 /* 禁言部分功能 */
 //群组列表
-const renderMuteMembers = ref(null);
-const insideTheMuteList = ref([]);
+const renderMuteMembers = ref(null)
+const insideTheMuteList = ref([])
 const sortedMuteMembersList = computed(() => {
-    const sourceData = _.cloneDeep(groupMembers.value);
+    const sourceData = _.cloneDeep(groupMembers.value)
     for (const key in sourceData) {
         if (Object.hasOwnProperty.call(sourceData, key)) {
-            const v = sourceData[key];
+            const v = sourceData[key]
             // v.exitTheGroup = groupMembers.value && toRaw(groupMembers.value).some((m) => m.member === v.hxId);
             v.keywords = v.owner ? v.owner : v.member
-            v.isChecked = false;
+            v.isChecked = false
         }
     }
     return sourceData
 })
 //操作群成员在禁言列表中的状态变更
 const handleMembersToMute = (item) => {
-    let memberList = []
+    const memberList = []
     insideTheMuteList.value.map(m => memberList.push(m.user))
     console.log('>>>>>>添加引入禁言列表', item)
     if (item.isChecked && memberList.includes(item.member)) {
         insideTheMuteList.value.map((m, idx) => { if (m.user === item.member) { insideTheMuteList.value.splice(idx, 1) } })
-        item.isChecked = false;
+        item.isChecked = false
     } else {
         if (!memberList.includes(item.member)) {
             insideTheMuteList.value.push({ user: item.member, expire: 0 })
         }
-        item.isChecked = true;
+        item.isChecked = true
     }
 }
 //从禁言列表中删除
@@ -141,11 +141,11 @@ const deleteMembersFromMute = (item, index) => {
 }
 //调用SDK方法改变禁言列表
 const handleMuteFromSDK = (difArr, oldMuteList) => {
-    const groupId = groupDetail.value.id;
+    const groupId = groupDetail.value.id
     //待提交给SDK添加的数组
-    let toBeAddList = []
+    const toBeAddList = []
     //待提交给SDK移除 的数组
-    let toBeRemoveList = []
+    const toBeRemoveList = []
     //遍历difArr如果再原黑名单中存在则说明需要移出，如果不存在说明需要添加
     difArr.forEach(member => {
         if (oldMuteList.includes(member)) {
@@ -153,7 +153,7 @@ const handleMuteFromSDK = (difArr, oldMuteList) => {
         } else {
             toBeAddList.push(member)
         }
-    });
+    })
     if (toBeAddList.length > 0) {
         console.log('>>>>>>添加禁言', toBeAddList)
         store.dispatch('addMemberToMuteList', { groupId, usernames: toBeAddList })
@@ -184,18 +184,18 @@ onMounted(() => {
 
 /* 搜索逻辑 */
 //创建用户搜索部分
-let serachInputValue = ref('')
-let isShowSearchContent = ref(false) //控制检索内容显隐
-let searchResultList = ref([])
+const serachInputValue = ref('')
+const isShowSearchContent = ref(false) //控制检索内容显隐
+const searchResultList = ref([])
 const searchUsers = () => {
     if (serachInputValue.value) {
         isShowSearchContent.value = true
         if (groupModalTitle.value.type === 1) {
-            let resultArr = _.filter(sortedMembersList.value, (v) => v.keywords.includes(serachInputValue.value))
+            const resultArr = _.filter(sortedMembersList.value, (v) => v.keywords.includes(serachInputValue.value))
             return searchResultList.value = resultArr
         }
         if (groupModalTitle.value.type === 2) {
-            let resultArr = _.filter(sortedMuteMembersList.value, (v) => v.keywords.includes(serachInputValue.value))
+            const resultArr = _.filter(sortedMuteMembersList.value, (v) => v.keywords.includes(serachInputValue.value))
             return searchResultList.value = resultArr
         }
     } else {
@@ -209,19 +209,19 @@ const searchUsers = () => {
 const saveHandleMembers = async () => {
     if (groupModalTitle.value.type === 1) {
         //返回比对后的数组
-        let difArr = getArrDifference(insideTheBlackList.value, blackMemberList.value)
+        const difArr = getArrDifference(insideTheBlackList.value, blackMemberList.value)
         //无差异会返回空数组
         if (difArr.length <= 0) return
         //有差异开始执行
         return handleBlackFromSDK(difArr)
     }
     if (groupModalTitle.value.type === 2) {
-        let checkMuteList = []
-        let oldMuteList = []
+        const checkMuteList = []
+        const oldMuteList = []
         insideTheMuteList.value.map(m => checkMuteList.push(m.user))
         muteMemberList.value.map(m => oldMuteList.push(m.user))
         console.log('checkMuteList', checkMuteList, 'oldMuteList', oldMuteList)
-        let difArr = getArrDifference(checkMuteList, oldMuteList)
+        const difArr = getArrDifference(checkMuteList, oldMuteList)
         console.log('>>>>>>待提交', difArr)
         return handleMuteFromSDK(difArr, oldMuteList)
     }

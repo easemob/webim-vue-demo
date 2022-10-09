@@ -9,19 +9,19 @@ const props = defineProps({
         default: () => ({})
     }
 })
-const { callKitStatus } = toRefs(props);
-console.log('callKitStatuscallKitStatus', callKitStatus);
+const { callKitStatus } = toRefs(props)
+console.log('callKitStatuscallKitStatus', callKitStatus)
 const channelInfos = computed(() => {
     return callKitStatus.value.channelInfos ?? {}
 })
 /* emits */
 const $emits = defineEmits(['updateLocalStatus', 'handleSendAnswerMsg'])
 const agreeJoinChannel = () => {
-    console.log('>>>>>接听通话');
+    console.log('>>>>>接听通话')
     $emits('handleSendAnswerMsg', ANSWER_TYPE.ACCPET)
 }
 const refuseJoinChannel = () => {
-    console.log('>>>>>拒绝接听');
+    console.log('>>>>>拒绝接听')
     $emits('handleSendAnswerMsg', ANSWER_TYPE.REFUSE)
 
 }

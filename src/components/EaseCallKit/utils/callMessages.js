@@ -1,7 +1,7 @@
 import { CALL_ACTIONS_TYPE, ANSWER_TYPE, MSG_TYPE } from '../constants'
 export default class CallKitMessages {
     constructor(params) {
-        const { IM, conn } = params;
+        const { IM, conn } = params
         this.action = 'rtcCall'
         this.IM = IM
         this.conn = IM[conn]
@@ -10,9 +10,9 @@ export default class CallKitMessages {
     //发送视频转语音信令
     //发送给对方确认后的结果
     sendConfirmCallee(payload) {
-        const { targetId, sendBody } = payload;
-        console.log('sendConfirmCalllee', payload);
-        let option = {
+        const { targetId, sendBody } = payload
+        console.log('sendConfirmCalllee', payload)
+        const option = {
             type: 'cmd',
             chatType: 'singleChat',
             to: targetId,
@@ -27,20 +27,20 @@ export default class CallKitMessages {
                 msgType: MSG_TYPE
             }
         }
-        let msg = this.IM.message.create(option);
+        const msg = this.IM.message.create(option)
         // // 调用 `send` 方法发送该透传消息。
         this.conn.send(msg).then((res) => {
             // 消息成功发送回调。
-            console.log("answer Success", res)
+            console.log('answer Success', res)
         }).catch((e) => {
             // 消息发送失败回调。
-            console.log("anser Fail", e);
-        });
+            console.log('anser Fail', e)
+        })
     }
     //发送通知弹出待接听窗口信令
     sendAlertMsg(payload) {
-        const { from, ext } = payload;
-        let option = {
+        const { from, ext } = payload
+        const option = {
             type: 'cmd',
             chatType: 'singleChat',
             to: from,
@@ -54,21 +54,21 @@ export default class CallKitMessages {
                 msgType: MSG_TYPE
             }
         }
-        console.log('>>>>>>>option', option);
-        let msg = this.IM.message.create(option);
+        console.log('>>>>>>>option', option)
+        const msg = this.IM.message.create(option)
         // // 调用 `send` 方法发送该透传消息。
         this.conn.send(msg).then((res) => {
             // 消息成功发送回调。
-            console.log("answer Success", res)
+            console.log('answer Success', res)
         }).catch((e) => {
             // 消息发送失败回调。
-            console.log("anser Fail", e);
-        });
+            console.log('anser Fail', e)
+        })
     }
     //发送应答消息
     sendAnswerMsg(payload, answerType) {
-        const { targetId, sendBody } = payload;
-        let option = {
+        const { targetId, sendBody } = payload
+        const option = {
             type: 'cmd',
             chatType: 'singleChat',
             // 设置消息接收方的用户 ID。
@@ -87,14 +87,14 @@ export default class CallKitMessages {
             }
 
         }
-        let msg = this.IM.message.create(option);
+        const msg = this.IM.message.create(option)
         // // 调用 `send` 方法发送该透传消息。
         this.conn.send(msg).then((res) => {
             // 消息成功发送回调。
-            console.log("answer Success", res)
+            console.log('answer Success', res)
         }).catch((e) => {
             // 消息发送失败回调。
-            console.log("anser Fail", e);
-        });
+            console.log('anser Fail', e)
+        })
     }
 }

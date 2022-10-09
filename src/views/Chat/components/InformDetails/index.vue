@@ -1,12 +1,12 @@
 <script setup>
-import { computed } from 'vue';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
-import EaseIM from '@/IM/initwebsdk';
-import dateFormater from '@/utils/dateFormater';
-import { informType, messageType } from '@/constant';
+import { computed } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+import EaseIM from '@/IM/initwebsdk'
+import dateFormater from '@/utils/dateFormater'
+import { informType, messageType } from '@/constant'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Delete } from '@element-plus/icons-vue';
+import { Delete } from '@element-plus/icons-vue'
 const store = useStore()
 const router = useRouter()
 const { INFORM_FROM } = informType
@@ -15,116 +15,116 @@ const informList = computed(() => store.state.Conversation.informDetail)
 
 //清除inform的未读
 const clearUnread = (inform, index) => {
-  if (inform.untreated) {
-    store.commit('CLEAR_UNTREATED_STATUS', index)
-  }
+    if (inform.untreated) {
+        store.commit('CLEAR_UNTREATED_STATUS', index)
+    }
 }
 //清空所有通知
 const clearAllInform = () => {
-  console.log('>>>>>调用清除');
-  ElMessageBox.confirm(
-    '确认清除所有系统通知?',
-    '清除系统通知',
-    {
-      confirmButtonText: '确认',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
-  )
-    .then(() => {
-      store.commit('CLEAR_INFORM_LIST')
-    })
-    .catch(() => {
-      return
-    })
+    console.log('>>>>>调用清除')
+    ElMessageBox.confirm(
+        '确认清除所有系统通知?',
+        '清除系统通知',
+        {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }
+    )
+        .then(() => {
+            store.commit('CLEAR_INFORM_LIST')
+        })
+        .catch(() => {
+            return
+        })
 }
 
 //处理申请
 const handleClickBtn = ({ informData, index, type }) => {
-  console.log('handleClick', informData)
-  const loginUserId = EaseIM.conn.user;
-  const { fromType, from } = informData;
-  //好友申请操作相关
-  if (fromType === INFORM_FROM.FRIEND) {
-    let handleFriendApply = {
-      'agree': () => {
-        console.log('agree')
-        EaseIM.conn.acceptContactInvite(from)
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
-      },
-      'refuse': () => {
-        EaseIM.conn.declineContactInvite(from)
-        //拒绝并更改当前通知卡片按钮状态
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 })
+    console.log('handleClick', informData)
+    const loginUserId = EaseIM.conn.user
+    const { fromType, from } = informData
+    //好友申请操作相关
+    if (fromType === INFORM_FROM.FRIEND) {
+        const handleFriendApply = {
+            'agree': () => {
+                console.log('agree')
+                EaseIM.conn.acceptContactInvite(from)
+                store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
+            },
+            'refuse': () => {
+                EaseIM.conn.declineContactInvite(from)
+                //拒绝并更改当前通知卡片按钮状态
+                store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 })
 
-      }
-    }
-    handleFriendApply[type]()
-  }
-  console.log('informData', informData.operation)
-  //邀请群组操作相关
-  if (fromType === INFORM_FROM.GROUP && informData.operation === 'inviteToJoin') {
-    const handleGroupInvite = {
-      agree: async () => {
-        try {
-          await EaseIM.conn.acceptGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
-          store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
-          await store.dispatch('fetchGroupList', {
-            pageNum: 1,
-            pageSize: 500
-          })
-          //同意之后跳转至对应的群组详情
-          router.push({ path: '/chat/contacts/contactInfo', query: { id: informData.groupId, chatType: CHAT_TYPE.GROUP } })
-        } catch (error) {
-          ElMessage({
-            type: 'error',
-            center: true,
-            message: '加入失败请稍后重试！'
-          })
-          return
+            }
         }
-
-
-      },
-      refuse: async () => {
-        await EaseIM.conn.rejectGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 })
-      },
+        handleFriendApply[type]()
     }
-    handleGroupInvite[type]()
-  }
-  //其他用户申请加入群组操作
-  if (fromType === INFORM_FROM.GROUP && informData.operation === 'requestToJoin') {
-    const handleGroupInvite = {
-      agree: async () => {
-        console.log('>>>>>agree requestToJoin');
-        try {
-          EaseIM.conn.acceptGroupJoinRequest({
-            applicant: from,
-            groupId: informData.groupId,
-          });
-          store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
-        } catch (error) {
-          ElMessage({
-            type: 'error',
-            center: true,
-            message: '同意失败请稍后重试！'
-          })
-          return
+    console.log('informData', informData.operation)
+    //邀请群组操作相关
+    if (fromType === INFORM_FROM.GROUP && informData.operation === 'inviteToJoin') {
+        const handleGroupInvite = {
+            agree: async () => {
+                try {
+                    await EaseIM.conn.acceptGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
+                    store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
+                    await store.dispatch('fetchGroupList', {
+                        pageNum: 1,
+                        pageSize: 500
+                    })
+                    //同意之后跳转至对应的群组详情
+                    router.push({ path: '/chat/contacts/contactInfo', query: { id: informData.groupId, chatType: CHAT_TYPE.GROUP } })
+                } catch (error) {
+                    ElMessage({
+                        type: 'error',
+                        center: true,
+                        message: '加入失败请稍后重试！'
+                    })
+                    return
+                }
+
+
+            },
+            refuse: async () => {
+                await EaseIM.conn.rejectGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
+                store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 })
+            },
         }
-      },
-      refuse: async () => {
-        console.log('>>>>>refuse requestToJoin');
-        EaseIM.conn.rejectGroupJoinRequest({
-          applicant: from,
-          groupId: informData.groupId,
-          reason: "不好意思，不同意你的入群申请！",
-        });
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 })
-      },
+        handleGroupInvite[type]()
     }
-    handleGroupInvite[type]()
-  }
+    //其他用户申请加入群组操作
+    if (fromType === INFORM_FROM.GROUP && informData.operation === 'requestToJoin') {
+        const handleGroupInvite = {
+            agree: async () => {
+                console.log('>>>>>agree requestToJoin')
+                try {
+                    EaseIM.conn.acceptGroupJoinRequest({
+                        applicant: from,
+                        groupId: informData.groupId,
+                    })
+                    store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
+                } catch (error) {
+                    ElMessage({
+                        type: 'error',
+                        center: true,
+                        message: '同意失败请稍后重试！'
+                    })
+                    return
+                }
+            },
+            refuse: async () => {
+                console.log('>>>>>refuse requestToJoin')
+                EaseIM.conn.rejectGroupJoinRequest({
+                    applicant: from,
+                    groupId: informData.groupId,
+                    reason: '不好意思，不同意你的入群申请！',
+                })
+                store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 })
+            },
+        }
+        handleGroupInvite[type]()
+    }
 }
 
 </script>

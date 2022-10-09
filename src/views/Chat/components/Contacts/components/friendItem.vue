@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { useStore } from "vuex"
+import { useStore } from 'vuex'
 // import router from '@/router'
 import { messageType } from '@/constant'
 /* 默认头像 */

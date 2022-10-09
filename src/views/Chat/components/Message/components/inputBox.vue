@@ -1,16 +1,16 @@
 <script setup>
-import { ref, toRefs, defineProps } from 'vue';
-import { useStore } from 'vuex';
-import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
-import { ElLoading, ElMessageBox } from 'element-plus';
-import { onClickOutside } from '@vueuse/core';
-import { emojis } from '@/constant';
+import { ref, toRefs, defineProps } from 'vue'
+import { useStore } from 'vuex'
+import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
+import { ElLoading, ElMessageBox } from 'element-plus'
+import { onClickOutside } from '@vueuse/core'
+import { emojis } from '@/constant'
 import { messageType } from '@/constant'
 import _ from 'lodash'
 import EaseIM from '@/IM/initwebsdk'
 /* 组件 */
 import CollectAudio from './suit/audio.vue'
-const store = useStore();
+const store = useStore()
 const props = defineProps({
     nowPickInfo: {
         type: Object,
@@ -18,7 +18,7 @@ const props = defineProps({
         default: () => ({})
     }
 })
-const { ALL_MESSAGE_TYPE } = messageType;
+const { ALL_MESSAGE_TYPE } = messageType
 const { nowPickInfo } = toRefs(props)
 //加载状态
 const loadingBox = ref(null)
@@ -27,7 +27,7 @@ const loadingBox = ref(null)
 //emojis框展开
 const isShowEmojisBox = ref(false)
 const emojisBox = ref(null)
-onClickOutside(emojisBox, () => { isShowEmojisBox.value = false; })
+onClickOutside(emojisBox, () => { isShowEmojisBox.value = false })
 const showEmojisBox = () => {
     console.log('>>>>>展开模态框')
     isShowEmojisBox.value = true
@@ -36,21 +36,21 @@ const showEmojisBox = () => {
 const textContent = ref('')
 const sendTextMessage = _.debounce(async () => {
     if (textContent.value.match(/^\s*$/)) return
-    let msgOptions = {
+    const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
         msg: textContent.value,
     }
     try {
         await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.TEXT, msgOptions })
-        textContent.value = ""
+        textContent.value = ''
     } catch (error) {
         console.log('>>>>>>>发送失败+++++++', error)
     }
 }, 300)
 //新增一个emoji
 const addOneEmoji = (emoji) => {
-    console.log('>>>>>>emoji', emoji);
+    console.log('>>>>>>emoji', emoji)
     textContent.value = textContent.value + emoji
 
 }
@@ -65,17 +65,17 @@ const chooseImages = () => {
 //发送图片
 const sendImagesMessage = async () => {
     //读取图片的宽高
-    let imgFile = uploadImgs.value.files[0];
-    let file = {
+    const imgFile = uploadImgs.value.files[0]
+    const file = {
         data: imgFile,           // file 对象。
         filename: imgFile.name, //文件名称。
         filetype: imgFile.type, //文件类型。
     }
-    console.log('imgFile', file);
-    let url = window.URL || window.webkitURL;
-    let img = new Image();              //手动创建一个Image对象
-    img.src = url.createObjectURL(imgFile);//创建Image的对象的url
-    let msgOptions = {
+    console.log('imgFile', file)
+    const url = window.URL || window.webkitURL
+    const img = new Image()              //手动创建一个Image对象
+    img.src = url.createObjectURL(imgFile)//创建Image的对象的url
+    const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
         file: file,
@@ -84,22 +84,22 @@ const sendImagesMessage = async () => {
     }
     img.onload = async () => {
         const loadingInstance = ElLoading.service({ target: loadingBox.value, background: '#f7f7f7' })
-        msgOptions.width = img.width;
-        msgOptions.height = img.height;
+        msgOptions.width = img.width
+        msgOptions.height = img.height
         console.log('height:' + img.height + '----' + img.width)
         try {
             await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.IMAGE, msgOptions: _.cloneDeep(msgOptions) })
             loadingInstance.close()
-            uploadImgs.value.value = null;
+            uploadImgs.value.value = null
         } catch (error) {
-            console.log('>>>>>发送失败', error);
+            console.log('>>>>>发送失败', error)
             if (error.type && error?.data) {
                 handleSDKErrorNotifi(error.type, error.data.error || 'none')
             } else {
                 handleSDKErrorNotifi(0, 'none')
             }
             loadingInstance.close()
-            uploadImgs.value.value = null;
+            uploadImgs.value.value = null
         }
 
     }
@@ -108,21 +108,21 @@ const sendImagesMessage = async () => {
 }
 /* 文件消息相关 */
 //选择文件
-const uploadFiles = ref(null);
+const uploadFiles = ref(null)
 const chooseFiles = () => {
     uploadFiles.value.click()
 }
 //发送文件
 const sendFilesMessages = async () => {
-    let commonFile = uploadFiles.value.files[0];
-    let file = {
+    const commonFile = uploadFiles.value.files[0]
+    const file = {
         data: commonFile,           // file 对象。
         filename: commonFile.name, //文件名称。
         filetype: commonFile.type, //文件类型。
         size: commonFile.size
     }
     console.log('>>>>>调用发送文件', file)
-    let msgOptions = {
+    const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
         file: file,
@@ -131,16 +131,16 @@ const sendFilesMessages = async () => {
     try {
         await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.FILE, msgOptions: _.cloneDeep(msgOptions) })
         loadingInstance.close()
-        uploadFiles.value.value = null;
+        uploadFiles.value.value = null
     } catch (error) {
-        console.log('>>>>file error', error);
+        console.log('>>>>file error', error)
         if (error.type && error?.data) {
             handleSDKErrorNotifi(error.type, error.data.error || 'none')
         } else {
             handleSDKErrorNotifi(0, 'none')
         }
 
-        uploadFiles.value.value = null;
+        uploadFiles.value.value = null
         loadingInstance.close()
     }
 
@@ -150,19 +150,19 @@ const sendFilesMessages = async () => {
 const isHttps = window.location.protocol === 'https:' || window.location.hostname === 'localhost'
 const isShowRecordBox = ref(false)
 const recordBox = ref(null)
-onClickOutside(recordBox, () => { isShowRecordBox.value = false; })
+onClickOutside(recordBox, () => { isShowRecordBox.value = false })
 const showRecordBox = () => {
     isShowRecordBox.value = true
 }
 const sendAudioMessages = async (audioData) => {
-    let file = {
+    const file = {
         url: EaseIM.utils.parseDownloadResponse(audioData.src),
-        filename: "录音",
-        filetype: ".amr",
+        filename: '录音',
+        filetype: '.amr',
         data: audioData.src
-    };
+    }
     console.log('>>>>>audioData', audioData, file)
-    let msgOptions = {
+    const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
         file: file,
@@ -185,14 +185,14 @@ const sendAudioMessages = async (audioData) => {
 const clearScreen = () => {
     ElMessageBox.confirm('确认清空当前消息内容？',
         '消息清屏', {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'warning',
-    }).then(() => {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }).then(() => {
         const key = nowPickInfo.value.id
         store.commit('CLEAR_SOMEONE_MESSAGE', key)
     }).catch(() => {
-        return false;
+        return false
     })
 
 }

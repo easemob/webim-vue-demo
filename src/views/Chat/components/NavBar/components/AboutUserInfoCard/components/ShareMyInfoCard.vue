@@ -1,20 +1,20 @@
 <script setup>
 import { ref, toRaw, computed, nextTick } from 'vue'
-import { ElMessage } from 'element-plus';
+import { ElMessage } from 'element-plus'
 import {
     CircleClose,
     Search,
     CircleCheckFilled
-} from '@element-plus/icons-vue';
+} from '@element-plus/icons-vue'
 import { messageType } from '@/constant'
 /* 拼音排序好友列表 */
 import { sortPinyinFriendItem } from '@/utils/handleSomeData'
 /* store */
 import store from '@/store'
-import _ from 'lodash';
+import _ from 'lodash'
 
-import defaultAvatar from '@/assets/images/avatar/theme2x.png';
-const { CHAT_TYPE, ALL_MESSAGE_TYPE } = messageType;
+import defaultAvatar from '@/assets/images/avatar/theme2x.png'
+const { CHAT_TYPE, ALL_MESSAGE_TYPE } = messageType
 /* 登陆用户的用户属性 */
 const loginUserInfo = computed(() => {
     return store.state.loginUserInfo
@@ -22,16 +22,16 @@ const loginUserInfo = computed(() => {
 const dialogTableVisible = ref(false)
 
 //待渲染的群成员
-let renderFriend = ref(null);
-let checkedTobeSendFriend = ref([])
+const renderFriend = ref(null)
+const checkedTobeSendFriend = ref([])
 //将原数据重新组建
 const sortedFriendList = computed(() => {
-    const sourceData = _.cloneDeep(store.state.Contacts.friendList);
+    const sourceData = _.cloneDeep(store.state.Contacts.friendList)
     for (const key in sourceData) {
         if (Object.hasOwnProperty.call(sourceData, key)) {
-            const v = sourceData[key];
-            v.name = v.nickname ? v.nickname : v.hxId;
-            v.isChecked = false;
+            const v = sourceData[key]
+            v.name = v.nickname ? v.nickname : v.hxId
+            v.isChecked = false
             v.keywords = `${v.hxId && v.hxId}${v.nickname && v.nickname || ''}`
         }
     }
@@ -43,16 +43,16 @@ const handleAddFriendToSendList = (item) => {
         ElMessage({
             type: 'warning',
             center: true,
-            message: "超出单次最大可分享人数~"
+            message: '超出单次最大可分享人数~'
         })
         return
     }
     if (item.isChecked && checkedTobeSendFriend.value.includes(item.hxId)) {
         checkedTobeSendFriend.value.map((m, idx) => { if (m === item.hxId) { checkedTobeSendFriend.value.splice(idx, 1) } })
-        item.isChecked = false;
+        item.isChecked = false
     } else {
         if (!checkedTobeSendFriend.value.includes(item.hxId)) checkedTobeSendFriend.value.push(item.hxId)
-        item.isChecked = true;
+        item.isChecked = true
     }
 }
 //从选中的列表中移出个别id
@@ -60,21 +60,21 @@ const delFriendFromCheckedList = (item, index) => {
     checkedTobeSendFriend.value.splice(index, 1)
     for (const key in renderFriend.value) {
         if (Object.hasOwnProperty.call(renderFriend.value, key)) {
-            const m = renderFriend.value[key];
-            if (m.hxId === item) return m.isChecked = false;
+            const m = renderFriend.value[key]
+            if (m.hxId === item) return m.isChecked = false
         }
     }
 }
 
 /* 搜索逻辑 */
 //创建用户搜索部分
-let serachInputValue = ref('')
-let isShowSearchContent = ref(false) //控制检索内容显隐
-let searchResultList = ref([])
+const serachInputValue = ref('')
+const isShowSearchContent = ref(false) //控制检索内容显隐
+const searchResultList = ref([])
 const searchUsers = () => {
     if (serachInputValue.value) {
         isShowSearchContent.value = true
-        let resultArr = _.filter(sortedFriendList.value, (v) => v.keywords.includes(serachInputValue.value))
+        const resultArr = _.filter(sortedFriendList.value, (v) => v.keywords.includes(serachInputValue.value))
         searchResultList.value = resultArr
     } else {
         return isShowSearchContent.value = false
@@ -93,7 +93,7 @@ const initData = () => {
 }
 //关闭执行重置数据
 const resetData = () => {
-    renderFriend.value = null;
+    renderFriend.value = null
     checkedTobeSendFriend.value = []
     dialogTableVisible.value = false
 
@@ -102,15 +102,15 @@ const resetData = () => {
 /* 执行发送 */
 const startSendMyUserCard = () => {
     console.log(checkedTobeSendFriend.value)
-    let sendTask = []
+    const sendTask = []
     toRaw(checkedTobeSendFriend.value).length > 0 && toRaw(checkedTobeSendFriend.value).forEach(userId => {
         console.log('>>>>>>userId', userId)
         sendTask.push(userId)
-        let infoParams = _.clone(loginUserInfo.value)
+        const infoParams = _.clone(loginUserInfo.value)
         //这一步是因为其他端统一用的avatar 作为头像路径的展示
         infoParams.avatar = infoParams.avatarurl
         console.log('infoParams', infoParams)
-        let msgOptions = {
+        const msgOptions = {
             id: userId,
             chatType: CHAT_TYPE.SINGLE,
             customEvent: 'userCard',

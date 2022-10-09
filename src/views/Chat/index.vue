@@ -1,6 +1,6 @@
 <script setup>
 import EaseIM from '@/IM/initwebsdk'
-import NavBar from '@/views/Chat/components/NavBar';
+import NavBar from '@/views/Chat/components/NavBar'
 // /* CallKit */
 // import EaseCallKit from '@/components/EaseCallKit'
 </script>

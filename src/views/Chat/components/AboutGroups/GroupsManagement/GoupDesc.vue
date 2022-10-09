@@ -1,6 +1,6 @@
 <script setup>
-import { ref, toRefs, onMounted, nextTick } from "vue"
-import { ElMessage } from 'element-plus';
+import { ref, toRefs, onMounted, nextTick } from 'vue'
+import { ElMessage } from 'element-plus'
 import store from '@/store'
 const props = defineProps({
     memberRole: {
@@ -17,7 +17,7 @@ const props = defineProps({
 const { groupDetail } = toRefs(props)
 const introduceRef = ref(null)
 const isEdit = ref(false)
-let groupDescValue = ref('');
+const groupDescValue = ref('')
 const editGroupsDesc = async (type, oldGroupDesc) => {
     if (type === 'edit') {
         isEdit.value = true
@@ -28,7 +28,7 @@ const editGroupsDesc = async (type, oldGroupDesc) => {
     }
     if (type === 'save') {
         if (groupDescValue.value === oldGroupDesc) return isEdit.value = false
-        let params = {
+        const params = {
             groupid: groupDetail.value.id,
             modifyType: 1,
             content: groupDescValue.value

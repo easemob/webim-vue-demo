@@ -15,15 +15,15 @@ const { userStatus } = toRefs(props)
 const userInfoStatus = computed(() => {
     console.log('userStatususerStatususerStatususerStatus', userStatus.value)
     //定义后续返回的状态对象
-    let statusObj = {
+    const statusObj = {
         ext: '',
         style: '',
         label: '',
         onlineDeviceCount: 0, //在线设备数
         deviceType: '' //在线设备类型
     }
-    let onlineStatus = [];
-    let offlineStatus = [];
+    const onlineStatus = []
+    const offlineStatus = []
     if (userStatus.value && userStatus.value.statusDetails && userStatus.value.statusDetails.length > 0) {
         userStatus.value.statusDetails.map(i => {
             if (i.status === 0) {
@@ -59,7 +59,7 @@ const userInfoStatus = computed(() => {
         statusObj.style = onLineStatus['Offline'].style
         statusObj.label = onLineStatus['Offline'].label
     }
-    console.log('onlineStatus&&offlineStatus', onlineStatus, offlineStatus);
+    console.log('onlineStatus&&offlineStatus', onlineStatus, offlineStatus)
     return statusObj
 })
 </script>

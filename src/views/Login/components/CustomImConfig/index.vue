@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { ElMessage } from 'element-plus';
+import { ElMessage } from 'element-plus'
 import _ from 'lodash'
 import { useStorage } from '@vueuse/core'
 const centerDialogVisible = ref(false)
@@ -30,7 +30,7 @@ const appKeyRules = ref([
 
 //save config
 const saveImConfig = (configRef) => {
-    if (!configRef) return;
+    if (!configRef) return
     configRef.validate((valid, fields) => {
         if (valid) {
             webimConfig.value = _.cloneDeep(configForm.value)

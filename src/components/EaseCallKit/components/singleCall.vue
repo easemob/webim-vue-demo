@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, toRefs, onMounted, onUnmounted } from 'vue';
+import { ref, watch, toRefs, onMounted, onUnmounted } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
 import { CALLSTATUS } from '../constants'
 /* vueUse */
@@ -20,10 +20,10 @@ const props = defineProps({
         required: true,
     }
 })
-const { callKitStatus } = toRefs(props);
+const { callKitStatus } = toRefs(props)
 /* 视频UI控制 */
 //channel是否接通
-let isStreamPlay = ref(false)
+const isStreamPlay = ref(false)
 //流播放容器
 const smallContainer = ref(null)
 const mainContainer = ref(null)
@@ -31,47 +31,47 @@ const mainContainer = ref(null)
 const emits = defineEmits(['getRtcToken', 'updateLocalStatus'])
 /* AgoraRTC */
 //client 初始化
-let CallKitClient = null;
-let localVoiceTrack = null;
-let localVideoTrack = null;
-CallKitClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+let CallKitClient = null
+let localVoiceTrack = null
+let localVideoTrack = null
+CallKitClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
 const setAgoraRtcListener = () => {
-    console.log('>>>>>AgoraRtc监听挂载完毕');
+    console.log('>>>>>AgoraRtc监听挂载完毕')
     //监听用户发布流
-    CallKitClient.on("user-published", async (user, mediaType) => {
-        await CallKitClient.subscribe(user, mediaType);
-        if (mediaType === "video") {
-            console.log('>>>>>>视频类型');
-            const remoteVideoTrack = user.videoTrack;
-            console.log('remoteVideoTrack', remoteVideoTrack);
+    CallKitClient.on('user-published', async (user, mediaType) => {
+        await CallKitClient.subscribe(user, mediaType)
+        if (mediaType === 'video') {
+            console.log('>>>>>>视频类型')
+            const remoteVideoTrack = user.videoTrack
+            console.log('remoteVideoTrack', remoteVideoTrack)
             setTimeout(() => {
-                remoteVideoTrack.play(mainContainer.value);
+                remoteVideoTrack.play(mainContainer.value)
             }, 300)
 
         }
-        if (mediaType === "audio") {
-            console.log('>>>>>>音视类型');
-            const remoteAudioTrack = user.audioTrack;
+        if (mediaType === 'audio') {
+            console.log('>>>>>>音视类型')
+            const remoteAudioTrack = user.audioTrack
             // Play the remote audio track. No need to pass any DOM element.
-            remoteAudioTrack.play();
+            remoteAudioTrack.play()
         }
     })
     //监听用户关闭推流
-    CallKitClient.on("user-unpublished", (user, mediaType) => {
-        console.log('>>>>>>监听到流移除', user, mediaType);
-        if (mediaType === "video") {
-            console.log('>>>>>取消发布了视频流');
+    CallKitClient.on('user-unpublished', (user, mediaType) => {
+        console.log('>>>>>>监听到流移除', user, mediaType)
+        if (mediaType === 'video') {
+            console.log('>>>>>取消发布了视频流')
         }
         if (mediaType === 'audio') {
-            console.log('>>>>>>取消发布了音频流');
+            console.log('>>>>>>取消发布了音频流')
 
         }
-    });
+    })
     //监听用户离开回调
-    CallKitClient.on("user-left", (user, reason) => {
-        console.log('>>>>>>用户离开回调触发,离开原因', reason);
+    CallKitClient.on('user-left', (user, reason) => {
+        console.log('>>>>>>用户离开回调触发,离开原因', reason)
         leaveChannel()
-    });
+    })
 }
 onMounted(() => {
     setAgoraRtcListener()
@@ -81,22 +81,22 @@ onMounted(() => {
 
 //监听本地端状态
 watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
-    console.log('>>>>>>> single组件监听是否可加入房间', newVal, oldVal);
+    console.log('>>>>>>> single组件监听是否可加入房间', newVal, oldVal)
     if (newVal === CALLSTATUS.confirmCallee) {
         emitChannelToken()
     }
 
 }, {
     immediate: true
-});
+})
 
 //通知获取频道token
 const emitChannelToken = () => {
-    let callback = async () => {
-        console.log('>>>>触发了子组件的callback');
+    const callback = async () => {
+        console.log('>>>>触发了子组件的callback')
         joinChannel()
     }
-    emits('getRtcToken', callback);
+    emits('getRtcToken', callback)
 
 }
 //加入频道【接听】
@@ -108,38 +108,38 @@ const joinChannel = async () => {
     const callType = channelInfos.callType
     try {
         await CallKitClient.join(AgoraAppId, channelName, agoraChannelToken, agoraUserId)
-        localVoiceTrack = await AgoraRTC.createMicrophoneAudioTrack();
+        localVoiceTrack = await AgoraRTC.createMicrophoneAudioTrack()
         // Create a local video track from the video captured by a camera.
-        localVideoTrack = await AgoraRTC.createCameraVideoTrack();
-        console.log('>>>>加入频道成功');
+        localVideoTrack = await AgoraRTC.createCameraVideoTrack()
+        console.log('>>>>加入频道成功')
         if (callType === 0) {
-            localVoiceTrack && await CallKitClient.publish(localVoiceTrack);
-            console.log('>>>>>>音频---本地轨道推流成功');
+            localVoiceTrack && await CallKitClient.publish(localVoiceTrack)
+            console.log('>>>>>>音频---本地轨道推流成功')
         }
         if (callType === 1) {
-            if (localVoiceTrack && localVideoTrack) await CallKitClient.publish([localVoiceTrack, localVideoTrack]);
+            if (localVoiceTrack && localVideoTrack) await CallKitClient.publish([localVoiceTrack, localVideoTrack])
             setTimeout(() => {
-                localVideoTrack.play(smallContainer.value);
+                localVideoTrack.play(smallContainer.value)
             }, 300)
-            console.log('>>>>>>音视频---本地轨道推流成功');
+            console.log('>>>>>>音视频---本地轨道推流成功')
         }
         isStreamPlay.value = true
     } catch (error) {
-        console.log('>>>>加入频道失败', error);
+        console.log('>>>>加入频道失败', error)
     }
 
 }
 //离开频道【挂断&对方挂断】
 const leaveChannel = async () => {
-    console.log('》》》》》挂断');
+    console.log('》》》》》挂断')
     localVoiceTrack && localVoiceTrack.close()
     localVoiceTrack && localVideoTrack.close()
-    await CallKitClient.leave();
+    await CallKitClient.leave()
     emits('updateLocalStatus', CALLSTATUS.idle)
 }
 //组件卸载
 onUnmounted(() => {
-    console.log('>>>>>>监听到组件卸载');
+    console.log('>>>>>>监听到组件卸载')
 })
 </script>
 <template>

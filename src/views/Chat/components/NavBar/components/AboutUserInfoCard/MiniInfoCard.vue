@@ -1,25 +1,25 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { useStore } from 'vuex';
+import { ref, computed } from 'vue'
+import { useStore } from 'vuex'
 
 /* 组件 */
 import ShareMyInfoCard from './components/ShareMyInfoCard.vue'
-const store = useStore();
+const store = useStore()
 const userInfos = computed(() => {
-  return store.getters.loginUserInfo ?? {};
-});
+    return store.getters.loginUserInfo ?? {}
+})
 const loginUserId = computed(() => { return store.state.loginUserInfo.hxId })
 const bodyIcon = require('@/assets/images/gender/Group76.png')
 const girlIcon = require('@/assets/images/gender/Group77.png')
 const genderIcon = {
-  "1": bodyIcon,
-  "2": girlIcon
+    '1': bodyIcon,
+    '2': girlIcon
 }
 /* share */
-const shareInfo = ref(null);
+const shareInfo = ref(null)
 const showShareInfoModal = () => {
-  console.log('>>>>>>>分享卡片')
-  shareInfo.value.dialogTableVisible = true;
+    console.log('>>>>>>>分享卡片')
+    shareInfo.value.dialogTableVisible = true
 
 }
 </script>

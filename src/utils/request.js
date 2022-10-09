@@ -48,7 +48,7 @@ service.interceptors.response.use(
         if (error.response) {
             const res = error.response.data// for debug
             if (error.response.status === 401 && res.code !== '001') {
-                console.log('>>>>>无权限');
+                console.log('>>>>>无权限')
             }
             if (error.response.status === 403) {
                 res.desc = '您没有权限进行查询和操作!'

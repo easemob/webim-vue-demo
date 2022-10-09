@@ -1,6 +1,6 @@
 <script setup>
-import { ref, toRefs, computed, onMounted, nextTick } from "vue"
-import { ElMessage } from 'element-plus';
+import { ref, toRefs, computed, onMounted, nextTick } from 'vue'
+import { ElMessage } from 'element-plus'
 import store from '@/store'
 const props = defineProps({
     memberRole: {
@@ -18,9 +18,9 @@ const { memberRole, groupDetail } = toRefs(props)
 const goupsInfos = computed(() => {
     return groupDetail.value.id && store.state.Groups.groupsInfos[groupDetail.value.id]
 })
-const announcementRef = ref(null);
-let isEdit = ref(false);
-let announcmentValue = ref('');
+const announcementRef = ref(null)
+const isEdit = ref(false)
+const announcmentValue = ref('')
 const editAnnouncment = async (type, oldAnnouncment) => {
     if (type === 'edit') {
         isEdit.value = true
@@ -32,7 +32,7 @@ const editAnnouncment = async (type, oldAnnouncment) => {
     if (type === 'save') {
         if (announcmentValue.value === oldAnnouncment) return isEdit.value = false
         console.log('>>>>>保存编辑')
-        let params = {
+        const params = {
             groupId: groupDetail.value.id,
             announcement: announcmentValue.value
         }

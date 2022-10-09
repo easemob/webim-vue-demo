@@ -1,13 +1,13 @@
 <script setup>
 import { ref, watch, nextTick, computed } from 'vue'
-import _ from 'lodash';
+import _ from 'lodash'
 import EaseIM from '@/IM/initwebsdk'
 import { useStore } from 'vuex'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { messageType, warningText } from '@/constant'
 // import { useScroll } from '@vueuse/core'
-import { ElMessage } from 'element-plus';
-import { Close } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus'
+import { Close } from '@element-plus/icons-vue'
 /* 组件 */
 import MessageList from './components/messageList.vue'
 import InputBox from './components/inputBox.vue'
@@ -19,21 +19,21 @@ const store = useStore()
 const route = useRoute()
 const { CHAT_TYPE } = messageType
 const { EASEIM_HINT, SWINDLER_GO_DIE } = warningText
-const nowPickInfo = ref({});
+const nowPickInfo = ref({})
 const friendList = computed(() => store.state.Contacts.friendList)
 const groupList = computed(() => store.state.Contacts.groupList)
 /* loginstatus */
-const loginState = computed(() => store.state.loginState);
+const loginState = computed(() => store.state.loginState)
 /* header 操作 */
 const drawer = ref(false) //抽屉显隐
 //删除好友
 const delTheFriend = () => {
-  console.log(nowPickInfo.value);
-  if (nowPickInfo.value?.id) {
-    const targetId = nowPickInfo.value.id
-    EaseIM.conn.deleteContact(targetId);
-    ElMessage({ type: 'success', center: true, message: '好友已删除~' })
-  }
+    console.log(nowPickInfo.value)
+    if (nowPickInfo.value?.id) {
+        const targetId = nowPickInfo.value.id
+        EaseIM.conn.deleteContact(targetId)
+        ElMessage({ type: 'success', center: true, message: '好友已删除~' })
+    }
 }
 //加入好友到黑名单
 // const addFriendToBlackList = () => {
@@ -42,143 +42,143 @@ const delTheFriend = () => {
 /* warningTips */
 const isShowWarningTips = computed(() => store.state.isShowWarningTips)
 const randomTips = computed(() => {
-  return _.toString(_.sampleSize(SWINDLER_GO_DIE, 1))
+    return _.toString(_.sampleSize(SWINDLER_GO_DIE, 1))
 })
 const closeWarningTips = () => store.commit('CLOSE_WARNING_TIPS')
 /* userInfo */
 //获取路由ID对应的信息
 const getIdInfo = async ({ id, chatType }) => {
-  //类型为单聊
-  if (chatType === CHAT_TYPE.SINGLE) {
-    if (friendList.value[id]) {
-      nowPickInfo.value.userInfo = friendList.value[id]
-    } else {
-      return
+    //类型为单聊
+    if (chatType === CHAT_TYPE.SINGLE) {
+        if (friendList.value[id]) {
+            nowPickInfo.value.userInfo = friendList.value[id]
+        } else {
+            return
+        }
     }
-  }
-  //类型为群组
-  if (chatType === CHAT_TYPE.GROUP) {
-    let goupid = groupList.value[id]?.groupid && groupList.value[id]?.groupid
-    goupid && await store.dispatch('fetchMultiGoupsInfos', goupid)
-    if (groupList.value[id]?.groupDetail) {
-      return nowPickInfo.value.groupDetail = groupList.value[id].groupDetail
-    } else {
-      //如果不存在用户属性则请求获取该群群详情。
-      await store.dispatch('getAssignGroupDetail', id)
-      return nowPickInfo.value.groupDetail = groupList.value[id].groupDetail
+    //类型为群组
+    if (chatType === CHAT_TYPE.GROUP) {
+        const goupid = groupList.value[id]?.groupid && groupList.value[id]?.groupid
+        goupid && await store.dispatch('fetchMultiGoupsInfos', goupid)
+        if (groupList.value[id]?.groupDetail) {
+            return nowPickInfo.value.groupDetail = groupList.value[id].groupDetail
+        } else {
+            //如果不存在用户属性则请求获取该群群详情。
+            await store.dispatch('getAssignGroupDetail', id)
+            return nowPickInfo.value.groupDetail = groupList.value[id].groupDetail
+        }
     }
-  }
 }
 //监听路由改变获取对应的getIdInfo
 const stopWatchRoute = watch(() => route.query, (routeVal) => {
-  console.log('>>>>>>>>监听到路由参数变化', routeVal);
-  if (routeVal) {
-    nowPickInfo.value = { ...routeVal }
-    loginState.value && getIdInfo(routeVal)
-  }
+    console.log('>>>>>>>>监听到路由参数变化', routeVal)
+    if (routeVal) {
+        nowPickInfo.value = { ...routeVal }
+        loginState.value && getIdInfo(routeVal)
+    }
 }, {
-  immediate: true
+    immediate: true
 })
 //获取群组详情
 const groupDetail = computed(() => groupList.value[nowPickInfo.value.id] && groupList.value[nowPickInfo.value.id].groupDetail || {})
 //离开该路由销毁route监听
 onBeforeRouteLeave(() => {
-  stopWatchRoute()
+    stopWatchRoute()
 })
 /* 消息相关 */
-const loadingHistoryMsg = ref(false); //是否正在加载中
+const loadingHistoryMsg = ref(false) //是否正在加载中
 const isMoreHistoryMsg = ref(true) //加载文案展示为加载更多还是已无更多。
-const notScrollBottom = ref(false); //是否滚动置底
+const notScrollBottom = ref(false) //是否滚动置底
 //获取历史记录
 const fechHistoryMessage = (loadType) => {
-  if (!nowPickInfo.value) return []
-  return async () => {
-    loadingHistoryMsg.value = true;
-    notScrollBottom.value = true;
-    if (loadType == 'fistLoad') {
-      let { messages } = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: -1 })
-      if (messages.length > 0) {
-        //返回数组有数据显示加载更多
-        isMoreHistoryMsg.value = true;
-      } else {
-        //否则已无更多。
-        isMoreHistoryMsg.value = false;
-      }
-      setTimeout(() => {
-        scrollMessageList('bottom')
-      }, 500)
+    if (!nowPickInfo.value) return []
+    return async () => {
+        loadingHistoryMsg.value = true
+        notScrollBottom.value = true
+        if (loadType == 'fistLoad') {
+            const { messages } = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: -1 })
+            if (messages.length > 0) {
+                //返回数组有数据显示加载更多
+                isMoreHistoryMsg.value = true
+            } else {
+                //否则已无更多。
+                isMoreHistoryMsg.value = false
+            }
+            setTimeout(() => {
+                scrollMessageList('bottom')
+            }, 500)
 
+        }
+        else {
+            const fistMessageId = messageData.value[0] && messageData.value[0].id
+            const { messages } = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: fistMessageId })
+            if (messages.length > 0) {
+                //返回数组有数据显示加载更多
+                isMoreHistoryMsg.value = true
+            } else {
+                //否则已无更多。
+                isMoreHistoryMsg.value = false
+            }
+            scrollMessageList('normal')
+        }
+        loadingHistoryMsg.value = false
+        notScrollBottom.value = false
     }
-    else {
-      const fistMessageId = messageData.value[0] && messageData.value[0].id;
-      let { messages } = await store.dispatch('getHistoryMessage', { ...nowPickInfo.value, cursor: fistMessageId })
-      if (messages.length > 0) {
-        //返回数组有数据显示加载更多
-        isMoreHistoryMsg.value = true;
-      } else {
-        //否则已无更多。
-        isMoreHistoryMsg.value = false;
-      }
-      scrollMessageList('normal')
-    }
-    loadingHistoryMsg.value = false
-    notScrollBottom.value = false;
-  }
 
 }
 //获取其id对应的消息内容
 const messageData = computed(() => {
-  //如果Message.messageList中不存在的话调用拉取漫游取一下历史消息
-  return nowPickInfo.value.id && store.state.Message.messageList[nowPickInfo.value.id] || fechHistoryMessage('fistLoad')()
+    //如果Message.messageList中不存在的话调用拉取漫游取一下历史消息
+    return nowPickInfo.value.id && store.state.Message.messageList[nowPickInfo.value.id] || fechHistoryMessage('fistLoad')()
 })
 
-const messageContainer = ref(null);
+const messageContainer = ref(null)
 // const innerRef = ref(null);
 // const { arrivedState, } = useScroll(messageContainer)
 // const { top } = toRefs(arrivedState)
 //控制消息滚动
 const scrollMessageList = (direction) => {
-  //direction滚动方向 bottom向下滚动 normal向上滚动 
-  nextTick(() => {
-    const messageNodeList = document.querySelectorAll('.messageList_box')
-    const fistMsgElement = messageNodeList[0];
-    const lastMsgElement = messageNodeList[messageNodeList.length - 1];
-    console.log('lastMsgElement', lastMsgElement);
-    console.log('fistMsgElement', fistMsgElement);
-    //直接滚动置底
-    if (direction === 'bottom') {
-      lastMsgElement && lastMsgElement.scrollIntoView(false);
-    }
-    //保持当前的消息位于当前可视窗口
-    if (direction === 'normal') {
-      fistMsgElement.scrollIntoView(true)
-    }
-  })
+    //direction滚动方向 bottom向下滚动 normal向上滚动 
+    nextTick(() => {
+        const messageNodeList = document.querySelectorAll('.messageList_box')
+        const fistMsgElement = messageNodeList[0]
+        const lastMsgElement = messageNodeList[messageNodeList.length - 1]
+        console.log('lastMsgElement', lastMsgElement)
+        console.log('fistMsgElement', fistMsgElement)
+        //直接滚动置底
+        if (direction === 'bottom') {
+            lastMsgElement && lastMsgElement.scrollIntoView(false)
+        }
+        //保持当前的消息位于当前可视窗口
+        if (direction === 'normal') {
+            fistMsgElement.scrollIntoView(true)
+        }
+    })
 }
 const scroll = ({ scrollTop }) => {
-  console.log('scrollscrollscroll', scrollTop)
+    console.log('scrollscrollscroll', scrollTop)
 }
 //监听到消息内容改变 置底滚动。
 watch(() => store.state.Message.messageList[nowPickInfo.value.id], () => {
-  setTimeout(() => {
-    scrollMessageList('bottom')
-  }, 300)
+    setTimeout(() => {
+        scrollMessageList('bottom')
+    }, 300)
 }, {
-  deep: true
+    deep: true
 })
 //监听到nowPickInfo改变 让消息直接置底
 watch(() => route.query, () => nextTick(() => {
-  if (Object.keys(nowPickInfo.value).length > 0) {
-    nextTick(() => {
-      // messageContainer.value.setScrollTop(100000)
-      scrollMessageList('bottom')
-    })
-  }
+    if (Object.keys(nowPickInfo.value).length > 0) {
+        nextTick(() => {
+            // messageContainer.value.setScrollTop(100000)
+            scrollMessageList('bottom')
+        })
+    }
 }))
 
 //消息重新编辑
 const inputBox = ref(null)
-const reEditMessage = (msg) => inputBox.value.textContent = msg;
+const reEditMessage = (msg) => inputBox.value.textContent = msg
 
 
 </script>

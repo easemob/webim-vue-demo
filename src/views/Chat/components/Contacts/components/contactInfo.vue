@@ -3,14 +3,14 @@ import { ref, computed, watch, onMounted } from 'vue'
 import EaseIM from '@/IM/initwebsdk'
 import { useStore } from 'vuex'
 import router from '@/router'
-import { useRoute } from "vue-router"
+import { useRoute } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { messageType } from '@/constant'
 /* 组件 */
 // import UserStatus from '@/components/UserStatus'
 /* 单人头像 */
 import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
-import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
+import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png'
 /* store */
 const store = useStore()
 /* route */
@@ -27,11 +27,11 @@ const nowContactInfo = computed(() => {
 })
 
 /* 单人黑名单状态的处理 */
-let blackStatus = ref(false)
-let switchStatus = ref(false)
+const blackStatus = ref(false)
+const switchStatus = ref(false)
 //判断单聊联系人是否在黑名单
 const isInBlackList = computed(() => {
-    let result = Array.from(store.state.Contacts.friendBlackList).includes(route.query.id)
+    const result = Array.from(store.state.Contacts.friendBlackList).includes(route.query.id)
     return result
 })
 //首次onMounted进行黑名单状态的初始赋值
@@ -41,28 +41,28 @@ onMounted(() => {
 //监听route变化重新赋值switch状态
 watch(() => route.query.id, () => {
     if (route.query.chatType === CHAT_TYPE.SINGLE) {
-        console.log('>>>>>监听变化赋值黑名单状态', isInBlackList.value);
-        blackStatus.value = isInBlackList.value;
+        console.log('>>>>>监听变化赋值黑名单状态', isInBlackList.value)
+        blackStatus.value = isInBlackList.value
     }
 })
 //执行加入或移出黑名单
 const changeBlackStatus = async () => {
-    switchStatus.value = true;
+    switchStatus.value = true
     if (blackStatus.value && route.query.id) {
         console.log('>>>>>移除黑明单')
         // 当前 removeUserFromBlackList 以及 addUsersToBlacklist 暂不支持promise 返回所以暂时获取不到其请求状态。
         EaseIM.conn.removeUserFromBlackList({
             name: [route.query.id]
-        });
-        blackStatus.value = false;
-        switchStatus.value = false;
+        })
+        blackStatus.value = false
+        switchStatus.value = false
     } else {
         console.log('>>>>加入黑名单')
         EaseIM.conn.addUsersToBlacklist({
             name: [route.query.id]
-        });
-        blackStatus.value = true;
-        switchStatus.value = false;
+        })
+        blackStatus.value = true
+        switchStatus.value = false
     }
     setTimeout(() => {
         store.dispatch('fetchBlackList')
@@ -73,22 +73,22 @@ const changeBlackStatus = async () => {
 
 /* 单人删除好友 */
 const delTheFriend = () => {
-    console.log('>>>>>>>删除好友');
-    if (!route.query.id) return;
+    console.log('>>>>>>>删除好友')
+    if (!route.query.id) return
     const targetId = route.query.id
-    EaseIM.conn.deleteContact(targetId);
-    router.push('/chat/contacts');
+    EaseIM.conn.deleteContact(targetId)
+    router.push('/chat/contacts')
 }
 
 /* 进入会话 */
 const toChatMessage = () => {
-    console.log('>>>>>>>...route.query');
+    console.log('>>>>>>>...route.query')
     router.push({
         path: '/chat/conversation/message', query: {
             id: route.query.id,
             chatType: route.query.chatType
         }
-    });
+    })
 }
 </script>
 

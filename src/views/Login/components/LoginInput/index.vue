@@ -1,94 +1,94 @@
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
-import { ElMessage } from 'element-plus';
-import EaseIM from '@/IM/initwebsdk';
+import { ElMessage } from 'element-plus'
+import EaseIM from '@/IM/initwebsdk'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
-import { fetchUserLoginToken } from '@/api/login';
-import { useStore } from 'vuex';
+import { fetchUserLoginToken } from '@/api/login'
+import { useStore } from 'vuex'
 import { usePlayRing } from '@/hooks'
-const store = useStore();
+const store = useStore()
 const loginValue = reactive({
-  username: '',
-  password: ''
+    username: '',
+    password: ''
 })
-const buttonLoding = ref(false);
+const buttonLoding = ref(false)
 //根据登陆初始化一部分状态
-const loginState = computed(() => store.state.loginState);
+const loginState = computed(() => store.state.loginState)
 watch(loginState, (newVal) => {
-  if (newVal) {
-    buttonLoding.value = false;
-    loginValue.username = '';
-    loginValue.password = '';
-  }
-});
+    if (newVal) {
+        buttonLoding.value = false
+        loginValue.username = ''
+        loginValue.password = ''
+    }
+})
 const rules = reactive({
-  username: [
-    { required: true, message: '请输入登录ID', trigger: 'blur' },
-    { min: 1, max: 20, message: '登陆ID>1,<20', trigger: 'blur' },
-  ],
-  password: [
-    { required: true, message: '请输入登录密码', trigger: 'blur' },
-  ],
+    username: [
+        { required: true, message: '请输入登录ID', trigger: 'blur' },
+        { min: 1, max: 20, message: '登陆ID>1,<20', trigger: 'blur' },
+    ],
+    password: [
+        { required: true, message: '请输入登录密码', trigger: 'blur' },
+    ],
 })
 //登陆接口调用
 const loginIM = async () => {
-  const { isOpenPlayRing, clickRing } = usePlayRing()
-  clickRing()
-  console.log('isOpenPlayRingisOpenPlayRingisOpenPlayRing', isOpenPlayRing.value);
+    const { isOpenPlayRing, clickRing } = usePlayRing()
+    clickRing()
+    console.log('isOpenPlayRingisOpenPlayRingisOpenPlayRing', isOpenPlayRing.value)
 
-  buttonLoding.value = true;
-  /* SDK 登陆的方式 */
-  // try {
-  //   let { accessToken } = await EaseIM.conn.open({
-  //     user: loginValue.username.toLowerCase(),
-  //     pwd: loginValue.password.toLowerCase(),
-  //   });
-  //   window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: loginValue.username, accessToken: accessToken }))
-  // } catch (error) {
-  //   console.log('>>>>登陆失败', error);
-  //   const { data: { extraInfo } } = error
-  //   handleSDKErrorNotifi(error.type, extraInfo.errDesc);
-  //   loginValue.username = '';
-  //   loginValue.username = '';
-  // }
-  // finally {
-  //   buttonLoding.value = false;
-  // }
-  /* 环信后台接口登陆（仅供环信线上demo使用！） */
-  let params = {
-    userId: loginValue.username.toLowerCase(),
-    userPassword: loginValue.password.toLowerCase(),
-  }
-  try {
-    //phoneNumber 暂时不支持用作user，后续支持手机号登陆
-    let { token } = await fetchUserLoginToken(params)
-    console.log('>>>>>>登陆token获取成功', token);
-    EaseIM.conn.open({
-      user: loginValue.username.toLowerCase(),
-      accessToken: token
-    })
-    window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: loginValue.username, accessToken: token }))
-  } catch (error) {
-    console.log('>>>>登陆失败', error);
-    if (error.response?.data) {
-      const { code, errorInfo } = error.response.data
-      if (errorInfo.includes('does not exist.')) {
-        ElMessage({
-          center: true,
-          message: `用户${loginValue.username}不存在！`,
-          type: 'error',
-        })
-      } else {
-        handleSDKErrorNotifi(code, errorInfo)
-      }
-
+    buttonLoding.value = true
+    /* SDK 登陆的方式 */
+    // try {
+    //   let { accessToken } = await EaseIM.conn.open({
+    //     user: loginValue.username.toLowerCase(),
+    //     pwd: loginValue.password.toLowerCase(),
+    //   });
+    //   window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: loginValue.username, accessToken: accessToken }))
+    // } catch (error) {
+    //   console.log('>>>>登陆失败', error);
+    //   const { data: { extraInfo } } = error
+    //   handleSDKErrorNotifi(error.type, extraInfo.errDesc);
+    //   loginValue.username = '';
+    //   loginValue.username = '';
+    // }
+    // finally {
+    //   buttonLoding.value = false;
+    // }
+    /* 环信后台接口登陆（仅供环信线上demo使用！） */
+    const params = {
+        userId: loginValue.username.toLowerCase(),
+        userPassword: loginValue.password.toLowerCase(),
     }
-  }
-  finally {
-    buttonLoding.value = false;
-  }
+    try {
+    //phoneNumber 暂时不支持用作user，后续支持手机号登陆
+        const { token } = await fetchUserLoginToken(params)
+        console.log('>>>>>>登陆token获取成功', token)
+        EaseIM.conn.open({
+            user: loginValue.username.toLowerCase(),
+            accessToken: token
+        })
+        window.localStorage.setItem('EASEIM_loginUser', JSON.stringify({ user: loginValue.username, accessToken: token }))
+    } catch (error) {
+        console.log('>>>>登陆失败', error)
+        if (error.response?.data) {
+            const { code, errorInfo } = error.response.data
+            if (errorInfo.includes('does not exist.')) {
+                ElMessage({
+                    center: true,
+                    message: `用户${loginValue.username}不存在！`,
+                    type: 'error',
+                })
+            } else {
+                handleSDKErrorNotifi(code, errorInfo)
+            }
 
-};
+        }
+    }
+    finally {
+        buttonLoding.value = false
+    }
+
+}
 
 </script>
 

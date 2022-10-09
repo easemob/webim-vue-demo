@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, toRefs, watch, computed, defineProps, defineEmits } from 'vue'
-import store from '@/store';
+import store from '@/store'
 import EaseIM from '@/IM/initwebsdk'
 import { ElNotification } from 'element-plus'
 const props = defineProps({
@@ -15,8 +15,8 @@ const applyAddFriendsForm = reactive({
     username: '',
     applyFriendMessage: ''
 })
-const friendList = computed(() => store.state.Contacts.friendList);
-console.log('>>>>>好友列表', friendList.value);
+const friendList = computed(() => store.state.Contacts.friendList)
+console.log('>>>>>好友列表', friendList.value)
 const applyAddFriends = () => {
     if (!applyAddFriendsForm.username) return ElNotification({
         title: '好友操作',
@@ -37,7 +37,7 @@ const applyAddFriends = () => {
         type: 'warning',
     })
     try {
-        EaseIM.conn.addContact(applyAddFriendsForm.username, applyAddFriendsForm.applyFriendMessage);
+        EaseIM.conn.addContact(applyAddFriendsForm.username, applyAddFriendsForm.applyFriendMessage)
         ElNotification({
             title: '好友操作',
             message: '好友申请已发送！',

@@ -1,28 +1,28 @@
 <script setup>
-import { computed } from 'vue';
-import { useStore } from 'vuex';
-import { onLineStatus } from '@/constant';
-import { ElNotification } from 'element-plus';
-import EaseIM from '@/IM/initwebsdk';
+import { computed } from 'vue'
+import { useStore } from 'vuex'
+import { onLineStatus } from '@/constant'
+import { ElNotification } from 'element-plus'
+import EaseIM from '@/IM/initwebsdk'
 
-const store = useStore();
-const loginUserOnlineStatus = computed(() => store.state.loginUserOnlineStatus);
+const store = useStore()
+const loginUserOnlineStatus = computed(() => store.state.loginUserOnlineStatus)
 
 const selectOnlineMode = async (statusType) => {
-  console.log('checkedStatusType', statusType);
-  let option = {
-    description: statusType,
-  };
-  try {
-    await EaseIM.conn.publishPresence(option);
-  } catch (error) {
-    ElNotification({
-      title: 'Easemob',
-      message: '在线状态修改失败，请稍后重试！',
-      type: 'error',
-    });
-  }
-};
+    console.log('checkedStatusType', statusType)
+    const option = {
+        description: statusType,
+    }
+    try {
+        await EaseIM.conn.publishPresence(option)
+    } catch (error) {
+        ElNotification({
+            title: 'Easemob',
+            message: '在线状态修改失败，请稍后重试！',
+            type: 'error',
+        })
+    }
+}
 </script>
 <template>
   <div style="width: 100%;height: 100%; display: flex; align-items: center">

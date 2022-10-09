@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage,ElNotification } from 'element-plus';
+import { ElMessage,ElNotification } from 'element-plus'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { createImageCode, fetchAuthCode, registerUser } from '@/api/register'
 /* emits */
@@ -47,7 +47,7 @@ const changeImageCode = () => {
 //获取图片验证码
 const sendImageCode = async () => {
     try {
-        let { data } = await createImageCode()
+        const { data } = await createImageCode()
         if (data.image_enabled === 'true') {
             imageCodeInfo.imgUrl = `${window.location.protocol}//a1.easemob.com/inside/app/image/${data.image_id}`
             imageCodeInfo.imageId = data.image_id
@@ -63,10 +63,10 @@ onMounted(() => {
 })
 
 /* 短信验证码相关 */
-let isSenedAuthCode = ref(false)
-let authCodeNextCansendTime = ref(60)
+const isSenedAuthCode = ref(false)
+const authCodeNextCansendTime = ref(60)
 const sendMessageAuthCode = async () => {
-    let params = {
+    const params = {
         phoneNumber: registerValue.phoneNumber,
         imageId: imageCodeInfo.imageId,
         imageCode: registerValue.imageCode
@@ -92,8 +92,8 @@ const startCountDown = () => {
         }
         else {
             clearInterval(timer)
-            timer = null;
-            authCodeNextCansendTime.value = 60;
+            timer = null
+            authCodeNextCansendTime.value = 60
             isSenedAuthCode.value = false
         }
     }, 1000)
@@ -105,7 +105,7 @@ const registerIM = async (formEl) => {
     if (!formEl) return
     await formEl.validate(async (valid) => {
         if (valid) {
-            let params = {
+            const params = {
                 userId: registerValue.username,
                 userPassword: registerValue.password,
                 phoneNumber: registerValue.phoneNumber,
@@ -118,7 +118,7 @@ const registerIM = async (formEl) => {
                     message: '注册成功！',
                     center: true,
                     type: 'success',
-                });
+                })
                 //通知改变为登陆模式
                 emits('changeToLogin')
             } catch (error) {
@@ -130,7 +130,7 @@ const registerIM = async (formEl) => {
 
         }
     })
-};
+}
 </script>
 
 <template>

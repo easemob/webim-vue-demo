@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, computed, toRefs } from 'vue';
+import { reactive, computed, toRefs } from 'vue'
 import { useStore } from 'vuex'
 import { useClipboard, usePermission } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
@@ -24,14 +24,14 @@ const props = defineProps({
         default: () => ({})
     }
 
-});
+})
 /* emits */
 const emit = defineEmits(['scrollMessageList', 'reEditMessage'])
-const { messageData } = toRefs(props);
+const { messageData } = toRefs(props)
 /* constant */
 const { ALL_MESSAGE_TYPE, CUSTOM_TYPE } = messageType
 /* login hxId */
-const loginUserId = EaseIM.conn.user;
+const loginUserId = EaseIM.conn.user
 
 /* computed-- 消息来源是否为自己 */
 const isMyself = computed(() => {
@@ -45,7 +45,7 @@ const loginUserInfo = computed(() => store.state.loginUserInfo)
 /* 获取他人的用户信息 */
 const otherUserInfo = computed(() => {
     return (otherId) => {
-        let otherInfos = store.state.Contacts.friendList[otherId] || { avatarurl: defaultAvatar }
+        const otherInfos = store.state.Contacts.friendList[otherId] || { avatarurl: defaultAvatar }
         return otherInfos
     }
 }
@@ -57,7 +57,7 @@ const handleMsgTimeShow = computed(() => {
     return (time, index) => {
         const msgList = Array.from(messageData.value)
         if (index !== 0) {
-            let lastTime = msgList[index - 1].time;
+            const lastTime = msgList[index - 1].time
             if (time - lastTime > 50000) {
                 return dateFormat('MM/DD/HH:mm', time)
             } else {
@@ -76,8 +76,8 @@ const audioPlayStatus = reactive({
 })
 //开始播放
 const startplayAudio = (msgBody, index) => {
-    let armRec = new BenzAMRRecorder();
-    let src = msgBody.url;
+    const armRec = new BenzAMRRecorder()
+    const src = msgBody.url
     audioPlayStatus.playIndex = index
     console.log('>>>>>开始播放音频', msgBody.url)
     //初始化音频源并调用播放
@@ -88,13 +88,13 @@ const startplayAudio = (msgBody, index) => {
     })
     //播放开始监听
     armRec.onPlay(() => {
-        audioPlayStatus.isPlaying = true;
-        audioPlayStatus.playIndex = index;
+        audioPlayStatus.isPlaying = true
+        audioPlayStatus.playIndex = index
     })
     //播放结束监听
     armRec.onStop(() => {
-        audioPlayStatus.isPlaying = false;
-        audioPlayStatus.playIndex = -1;
+        audioPlayStatus.isPlaying = false
+        audioPlayStatus.playIndex = -1
     })
 }
 
@@ -110,12 +110,12 @@ const copyTextMessages = (msg) => {
             message: '成功复制到剪切板',
             center: true,
         })
-        console.log('>>>>>成功复制');
+        console.log('>>>>>成功复制')
     }
 }
 //撤回消息
 const recallMessage = async ({ id, to, chatType }) => {
-    let options = {
+    const options = {
         mid: id,
         to: to,
         chatType: chatType
@@ -124,13 +124,13 @@ const recallMessage = async ({ id, to, chatType }) => {
         await store.dispatch('recallMessage', options)
     } catch (error) {
         //todo error提示待添加
-        console.log('>>>>>>撤回失败', error);
+        console.log('>>>>>>撤回失败', error)
     }
 
 }
 //删除消息（非从服务器删除）
 const deleteMessage = ({ from, to, id: mid }) => {
-    let key = to === EaseIM.conn.user ? from : to
+    const key = to === EaseIM.conn.user ? from : to
     store.commit('CHANGE_MESSAGE_BODAY', { type: 'deleteMsg', key, mid })
 }
 //父组件重新编辑方法

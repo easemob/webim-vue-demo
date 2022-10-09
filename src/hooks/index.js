@@ -1,3 +1,3 @@
-import usePlayRing from './usePlayRing';
+import usePlayRing from './usePlayRing'
 
-export { usePlayRing };
+export { usePlayRing }

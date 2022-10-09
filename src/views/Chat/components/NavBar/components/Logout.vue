@@ -1,8 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 import EaseIM from '@/IM/initwebsdk'
-let dialogVisible = ref(false)
-let isClearStorage = ref(true)
+const dialogVisible = ref(false)
+const isClearStorage = ref(true)
 
 const logoutTheUser = () => {
     if (isClearStorage.value) {
@@ -18,8 +18,8 @@ const logoutTheUser = () => {
 
 const clearLocalStorage = () => {
     const storageType = ['INFORM', 'conversationList', 'search_hisory',]
-    let loginUserId = EaseIM.conn.user;
-    let storageKey = `EASEIM_${loginUserId}`
+    const loginUserId = EaseIM.conn.user
+    const storageKey = `EASEIM_${loginUserId}`
     storageType.map((item) => {
         return window.localStorage.removeItem(`${storageKey}_${item}`)
     })
