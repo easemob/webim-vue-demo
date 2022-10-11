@@ -2,7 +2,8 @@
 import { ref, reactive, toRefs, watch, onUnmounted } from 'vue'
 import { CALLSTATUS, CALL_ACTIONS_TYPE, ANSWER_TYPE } from './constants'
 import CallKitMessages from './utils/callMessages'
-import getAgoraRtcToken from './utils/getRtcToken'
+import getRtcToken from './utils/getRtcToken'
+import getChannelDetails from './utils/getChannelDetails'
 /* 组件 */
 //待确认弹出框
 import AlertModal from './alertModal.vue'
@@ -83,6 +84,7 @@ const callKitStatus = reactive({
         agoraUserId: '', //频道用户id
         callType: null, //0 语音 1 视频 2 多人音视频
         callId: null,//会议ID
+        channelUsers: {}, //频道内用户
         callerDevId: '',//主叫方设备ID
         calleeDevId: '',//被叫方设备ID
         callerIMName: '',//主叫方环信ID
@@ -100,11 +102,13 @@ const initChannelInfos = () => {
         agoraUid: '', //频道用户id
         callType: null, //0 语音 1 视频 2 多人音视频
         callId: null,//会议ID
+        channelUsers: {}, //频道内用户
         callerDevId: '',//主叫方设备ID
         calleeDevId: '',//被叫方设备ID
         confrontId: '',//要处理的目标ID
         callerIMName: '',//主叫方环信ID
-        calleeIMName: ''//被叫方环信ID
+        calleeIMName: '',//被叫方环信ID
+
     }
 }
 /* localClientStatus 监听处理 */
@@ -115,32 +119,32 @@ watch(() => callKitStatus.localClientStatus, (newClientStatus, oldClientStatus) 
 //处理不同clientstatus执行不同的操作
 const handleClientStatusForAction = (clientStatus) => {
     switch (clientStatus) {
-    case CALLSTATUS.idle:
-        console.log('%c >>>监听新状态为空闲处理，执行初始化', 'color:red')
-        initChannelInfos()
-        break
-    case CALLSTATUS.receivedConfirmRing:
-        console.log('>>>>新状态为弹出框，执行弹出待确认框')
-        break
-    case CALLSTATUS.answerCall:
-        console.log('>>>>>可以弹出通话接听UI组件')
-        if (callKitStatus.channelInfos.callType < 2 > 0) {
-            console.log('>>>>>>>展示单人音视频组件')
-            callComponents.value = 'singleCall'
-        }
-        if (callKitStatus.channelInfos.callType === 2) {
-            console.log('》》》》》展示多人音视频组件')
-            callComponents.value = 'multiCall'
-        }
-        break
-    case CALLSTATUS.confirmCallee: {
-        console.log('%c >>>>>可以加入房间了', 'color:green;')
-        console.log('++++++将入的频道类型是', callKitStatus.channelInfos.callType)
+        case CALLSTATUS.idle:
+            console.log('%c >>>监听新状态为空闲处理，执行初始化', 'color:red')
+            initChannelInfos()
+            break
+        case CALLSTATUS.receivedConfirmRing:
+            console.log('>>>>新状态为弹出框，执行弹出待确认框')
+            break
+        case CALLSTATUS.answerCall:
+            console.log('>>>>>可以弹出通话接听UI组件')
+            if (callKitStatus.channelInfos.callType < 2 > 0) {
+                console.log('>>>>>>>展示单人音视频组件')
+                callComponents.value = 'singleCall'
+            }
+            if (callKitStatus.channelInfos.callType === 2) {
+                console.log('》》》》》展示多人音视频组件')
+                callComponents.value = 'multiCall'
+            }
+            break
+        case CALLSTATUS.confirmCallee: {
+            console.log('%c >>>>>可以加入房间了', 'color:green;')
+            console.log('++++++将入的频道类型是', callKitStatus.channelInfos.callType)
 
-    }
-        break
-    default:
-        break
+        }
+            break
+        default:
+            break
     }
 }
 /* CallKit status 管理 */
@@ -199,73 +203,73 @@ const handleCallKitCommand = (msgBody) => {
     const clientResource = EaseIM.value[conn].context.jid.clientResource
     const { action } = cmdMsgBody
     switch (action) {
-    case CALL_ACTIONS_TYPE.ALERT: //回复confirmring
-        break
+        case CALL_ACTIONS_TYPE.ALERT: //回复confirmring
+            break
 
-    case CALL_ACTIONS_TYPE.CONFIRM_RING: {//调起confirm待接听界面
-        if (calleeDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
-        if (!cmdMsgBody.status && callKitStatus.localClientStatus < CALLSTATUS.receivedConfirmRing) {
-            updateLocalStatus(CALLSTATUS.idle) //重置为闲置状态
-            //todo 设置为初始化状态
-        } //邀请失效，不弹出接听确认框
-        //有效邀请则设置状态为收到confirmRing
-        console.log('%chandle confimring', 'color:blue;')
-        updateLocalStatus(CALLSTATUS.receivedConfirmRing)
-    }
-        break
-    case CALL_ACTIONS_TYPE.ANSWER: {
-        console.log('>>>>>')
-        if (calleeDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
-        const params = {
-            targetId: msgBody.from,
-            sendBody: cmdMsgBody
+        case CALL_ACTIONS_TYPE.CONFIRM_RING: {//调起confirm待接听界面
+            if (calleeDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
+            if (!cmdMsgBody.status && callKitStatus.localClientStatus < CALLSTATUS.receivedConfirmRing) {
+                updateLocalStatus(CALLSTATUS.idle) //重置为闲置状态
+                //todo 设置为初始化状态
+            } //邀请失效，不弹出接听确认框
+            //有效邀请则设置状态为收到confirmRing
+            console.log('%chandle confimring', 'color:blue;')
+            updateLocalStatus(CALLSTATUS.receivedConfirmRing)
         }
-        if (!callKitStatus.channelInfos.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
-            //如果calleeDevId不存在，并且非多人音视频模式，主动更新频道信息
-            updateChannelInfos(msgBody)
-        } else if (callKitStatus.channelInfos.calleeDevId !== cmdMsgBody.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
-            //如果存在频道信息，但是与待呼叫确认的calleeDevId不一致直接发送拒绝应答。
-            params.sendBody.result = ANSWER_TYPE.REFUSE
-        }
-        SignalMsgs.sendConfirmCallee(params)
-        if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET) {
-            const resultStatus = {
-                '忙碌': ANSWER_TYPE.BUSY,
-                '拒绝': ANSWER_TYPE.REFUSE
+            break
+        case CALL_ACTIONS_TYPE.ANSWER: {
+            console.log('>>>>>')
+            if (calleeDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
+            const params = {
+                targetId: msgBody.from,
+                sendBody: cmdMsgBody
             }
-            console.log('>>>>>>对方应答结果为：', Object.values(resultStatus[cmdMsgBody.result]))
-            if (callKitStatus.localClientStatus.callType !== 2) { //无论对方是忙碌还是拒接都讲通话状态更改为闲置。
-                return updateLocalStatus(CALLSTATUS.idle)
+            if (!callKitStatus.channelInfos.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
+                //如果calleeDevId不存在，并且非多人音视频模式，主动更新频道信息
+                updateChannelInfos(msgBody)
+            } else if (callKitStatus.channelInfos.calleeDevId !== cmdMsgBody.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
+                //如果存在频道信息，但是与待呼叫确认的calleeDevId不一致直接发送拒绝应答。
+                params.sendBody.result = ANSWER_TYPE.REFUSE
             }
-        }
+            SignalMsgs.sendConfirmCallee(params)
+            if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET) {
+                const resultStatus = {
+                    '忙碌': ANSWER_TYPE.BUSY,
+                    '拒绝': ANSWER_TYPE.REFUSE
+                }
+                console.log('>>>>>>对方应答结果为：', Object.values(resultStatus[cmdMsgBody.result]))
+                if (callKitStatus.localClientStatus.callType !== 2) { //无论对方是忙碌还是拒接都讲通话状态更改为闲置。
+                    return updateLocalStatus(CALLSTATUS.idle)
+                }
+            }
 
-    }
-        break
-    case CALL_ACTIONS_TYPE.CONFIRM_CALLEE: {
-        if (cmdMsgBody.calleeDevId !== EaseIM.value[conn].context.jid.clientResource) {
-            if (msgBody.to === EaseIM.value[conn].user) {
-                updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
-                console.log('%c 已在其他设备处理', 'color:red;')
+        }
+            break
+        case CALL_ACTIONS_TYPE.CONFIRM_CALLEE: {
+            if (cmdMsgBody.calleeDevId !== EaseIM.value[conn].context.jid.clientResource) {
+                if (msgBody.to === EaseIM.value[conn].user) {
+                    updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
+                    console.log('%c 已在其他设备处理', 'color:red;')
+                    return
+                }
                 return
             }
-            return
+            // 防止通话中收到 busy refuse时挂断
+            if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET && callKitStatus.localClientStatus !== CALLSTATUS.confirmCallee) {
+                return updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
+            }
+            //变更状态为confirmCallee
+            updateLocalStatus(CALLSTATUS.confirmCallee)
         }
-        // 防止通话中收到 busy refuse时挂断
-        if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET && callKitStatus.localClientStatus !== CALLSTATUS.confirmCallee) {
-            return updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
-        }
-        //变更状态为confirmCallee
-        updateLocalStatus(CALLSTATUS.confirmCallee)
-    }
-        break
-    case CALL_ACTIONS_TYPE.CANCEL:
-        if (msgBody.from === EaseIM.value[conn].user) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
-        if (msgBody.from === callKitStatus.channelInfos.callerIMName) return updateLocalStatus(CALLSTATUS.idle)
-        break
+            break
+        case CALL_ACTIONS_TYPE.CANCEL:
+            if (msgBody.from === EaseIM.value[conn].user) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
+            if (msgBody.from === callKitStatus.channelInfos.callerIMName) return updateLocalStatus(CALLSTATUS.idle)
+            break
 
-    default:
-        console.log('>>>其他未知状态')
-        break
+        default:
+            console.log('>>>其他未知状态')
+            break
     }
 }
 //发送接听挂断信令
@@ -291,17 +295,28 @@ const handleSendAnswerMsg = (sendType) => {
 }
 
 /* 获取agoraToken */
-const getRtcToken = async (callback) => {
+const getAgoraRtcToken = async (callback) => {
     const username = EaseIM.value[conn].user
     const channelName = callKitStatus.channelInfos.channelName
     if (!username && !channelName) return
-    const { accessToken, agoraUserId } = await getAgoraRtcToken(EaseIM.value[conn], { username, channelName })
+    const { accessToken, agoraUserId } = await getRtcToken(EaseIM.value[conn], { username, channelName })
     console.log('+_+_+_+_+_+获取房间token成功', accessToken, agoraUserId)
     callKitStatus.channelInfos.agoraChannelToken = accessToken
     callKitStatus.channelInfos.agoraUserId = agoraUserId
     callback()
 }
+/* 获取channel信息 */
+const getAgoraChannelDetails = async (callback) => {
+    console.log('>>>>>调用获取channel信息');
+    const username = EaseIM.value[conn].user
+    const channelName = callKitStatus.channelInfos.channelName
+    if (!username && !channelName) return
+    const { result } = await getChannelDetails(EaseIM.value[conn], { username, channelName })
+    console.log('+_+_+_+_+_+获取房间内用户信息', result)
+    callKitStatus.channelInfos.channelUsers = { ...result }
+    callback()
 
+}
 /* 组件卸载操作 */
 onUnmounted(() => {
     //移除消息监听
@@ -315,7 +330,8 @@ onUnmounted(() => {
             :callKitStatus="callKitStatus" @updateLocalStatus="updateLocalStatus"
             @handleSendAnswerMsg="handleSendAnswerMsg" />
         <!-- 音视频UI展示组件 -->
-        <component :is="callCompsType[callComponents]" :callKitStatus="callKitStatus" @getRtcToken="getRtcToken"
+        <component :is="callCompsType[callComponents]" :callKitStatus="callKitStatus"
+            @getAgoraRtcToken="getAgoraRtcToken" @getAgoraChannelDetails="getAgoraChannelDetails"
             @updateLocalStatus="updateLocalStatus">
         </component>
     </div>

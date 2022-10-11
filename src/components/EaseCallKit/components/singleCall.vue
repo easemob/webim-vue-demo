@@ -28,7 +28,7 @@ const isStreamPlay = ref(false)
 const smallContainer = ref(null)
 const mainContainer = ref(null)
 /* emits */
-const emits = defineEmits(['getRtcToken', 'updateLocalStatus'])
+const emits = defineEmits(['getAgoraRtcToken', 'updateLocalStatus'])
 /* AgoraRTC */
 //client 初始化
 let CallKitClient = null
@@ -96,7 +96,7 @@ const emitChannelToken = () => {
         console.log('>>>>触发了子组件的callback')
         joinChannel()
     }
-    emits('getRtcToken', callback)
+    emits('getAgoraRtcToken', callback)
 
 }
 //加入频道【接听】

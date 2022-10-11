@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch, toRefs, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, watch, toRaw, toRefs, onMounted, onUnmounted } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
 import { CALLSTATUS } from '../constants'
 /* vueUse */
@@ -21,12 +21,8 @@ const props = defineProps({
     }
 })
 const { callKitStatus } = toRefs(props)
-/* 视频UI控制 */
-//channel是否接通
-//流播放容器
-const myContainer = ref(null)
 /* emits */
-const emits = defineEmits(['getRtcToken', 'updateLocalStatus'])
+const emits = defineEmits(['getAgoraRtcToken', 'getAgoraChannelDetails', 'updateLocalStatus'])
 /* AgoraRTC */
 //client 初始化
 let CallKitClient = null
@@ -34,27 +30,27 @@ CallKitClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
 //本地音视频轨道
 let localVoiceTrack = null
 let localVideoTrack = null
+let localStreamStatus = reactive({
+    voice: false,
+    video: false
+})
 //已在频道中的用户list
-let inChannelUsersIdList = reactive([])
+let inChannelUsersList = reactive([])
 const setAgoraRtcListener = () => {
     console.log('>>>>>AgoraRtc监听挂载完毕')
     //监听到用用户加入了频道
     CallKitClient.on('user-joined', user => {
         const remoteUserId = user.uid.toString()
+        handleRemoteContainer('create', remoteUserId)
         console.log('>>>>>加入频道的用户id', remoteUserId);
-        if (remoteUserId && !inChannelUsersIdList.includes(remoteUserId)) {
-            inChannelUsersIdList.push(remoteUserId)
-            console.log('>>>>可以创建一个新的dom容器了');
-            handleRemoteContainer('create', remoteUserId)
-        }
 
     })
     //监听用户发布流
     CallKitClient.on('user-published', async (user, mediaType) => {
         await CallKitClient.subscribe(user, mediaType)
+        const remoteUserId = user.uid.toString();
         if (mediaType === 'video') {
             console.log('>>>>>>视频类型')
-            const remoteUserId = user.uid.toString();
             const remoteVideoTrack = user.videoTrack
             const remotePlayerContainer = document.getElementById(remoteUserId)
             if (remotePlayerContainer) {
@@ -62,13 +58,12 @@ const setAgoraRtcListener = () => {
                     remoteVideoTrack.play(remotePlayerContainer)
                 }, 300)
             } else {
-                handleRemoteContainer('create', remoteUserId)
                 setTimeout(() => {
                     remoteVideoTrack.play(remotePlayerContainer)
                 }, 300)
             }
             console.log('remoteVideoTrack', remoteVideoTrack)
-
+            updateInChannelUserStatus('videoPlay', remoteUserId, true)
 
         }
         if (mediaType === 'audio') {
@@ -76,17 +71,28 @@ const setAgoraRtcListener = () => {
             const remoteAudioTrack = user.audioTrack
             // Play the remote audio track. No need to pass any DOM element.
             remoteAudioTrack.play()
+            //更改状态为未闭麦
+            updateInChannelUserStatus('muteStatus', remoteUserId, false)
         }
+    })
+    //监听用户发言音量
+    //开启音量监听
+    CallKitClient.enableAudioVolumeIndicator()
+    CallKitClient.on('volume-indicator', result => {
+        checkVolume(result)
     })
     //监听用户关闭推流
     CallKitClient.on('user-unpublished', (user, mediaType) => {
         console.log('>>>>>>监听到流移除', user, mediaType)
+        const remoteUserId = user.uid.toString();
         if (mediaType === 'video') {
             console.log('>>>>>取消发布了视频流')
+            updateInChannelUserStatus('videoPlay', remoteUserId, false)
         }
         if (mediaType === 'audio') {
             console.log('>>>>>>取消发布了音频流')
-
+            //更改状态为已闭麦
+            updateInChannelUserStatus('muteStatus', remoteUserId, true)
         }
     })
     //监听用户离开回调
@@ -94,6 +100,10 @@ const setAgoraRtcListener = () => {
         console.log('>>>>>>用户离开回调触发,离开原因', reason)
         const remoteUserId = user.uid.toString();
         handleRemoteContainer('remove', remoteUserId)
+        //如果频道内人数小于等于1则直接离开该频道
+        if (inChannelUsersList.length <= 1) {
+            leaveChannel(remoteUserId)
+        }
     })
 }
 onMounted(() => {
@@ -111,14 +121,13 @@ watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
 }, {
     immediate: true
 })
-
 //通知获取频道token
 const emitChannelToken = () => {
     const callback = async () => {
         console.log('>>>>触发了子组件的callback')
         joinChannel()
     }
-    emits('getRtcToken', callback)
+    emits('getAgoraRtcToken', callback)
 
 }
 //加入频道【接听】
@@ -127,20 +136,26 @@ const joinChannel = async () => {
     const channelName = channelInfos.channelName
     const agoraChannelToken = channelInfos.agoraChannelToken
     const agoraUserId = channelInfos.agoraUserId
+    const calleeIMName = channelInfos.calleeIMName
     try {
         await CallKitClient.join(AgoraAppId, channelName, agoraChannelToken, agoraUserId)
+        inChannelUsersList.push({
+            easeimUserId: calleeIMName,
+            agoraUserId: agoraUserId.toString(),
+            volume: 0,//音量
+            muteStatus: false,
+            videoPlay: true,
+        })
         localVoiceTrack = await AgoraRTC.createMicrophoneAudioTrack()
         // Create a local video track from the video captured by a camera.
         localVideoTrack = await AgoraRTC.createCameraVideoTrack()
-        console.log('>>>>加入频道成功')
-        localVoiceTrack && await CallKitClient.publish(localVoiceTrack)
-        console.log('>>>>>>音频---本地轨道推流成功')
         if (localVoiceTrack && localVideoTrack) await CallKitClient.publish([localVoiceTrack, localVideoTrack])
+        handleLocalStreamPublish('allPlay')
         setTimeout(() => {
-            localVideoTrack.play(myContainer.value)
+            const myContainer = document.getElementById(`${agoraUserId}`)
+            localVideoTrack.play(myContainer)
         }, 300)
-        console.log('>>>>>>音视频---本地轨道推流成功')
-        inChannelUsersIdList.push(agoraUserId.toString())
+        // console.log('>>>>>>音视频---本地轨道推流成功')
     } catch (error) {
         console.log('>>>>加入频道失败', error)
     }
@@ -156,22 +171,103 @@ const leaveChannel = async () => {
 }
 //处理DOM容器【包含创建以及移除】
 const handleRemoteContainer = (handleType, userUid) => {
-    let elementId = ''
-    userUid && (elementId = userUid)
     if (handleType === 'create') {
-        if (document.getElementById(elementId)) return;
-        const remotePlayerContainer = document.createElement("div");
-        remotePlayerContainer.id = elementId;
-        remotePlayerContainer.style.width = "150px";
-        remotePlayerContainer.style.height = "150px";
-        remotePlayerContainer.style.background = "black";
-        streamContainer.value.append(remotePlayerContainer)
+        console.log('调用了创建视频容器', handleType, userUid);
+        //查找该用户是否已在channellist中
+        const isInChannel = inChannelUsersList.some(item => item.agoraUserId === userUid)
+        if (isInChannel) return
+        if (!isInChannel) {
+            const channelUsers = callKitStatus.value.channelInfos.channelUsers
+            if (channelUsers[userUid]) {
+                console.log('>>>>包含该用户的对应信息');
+                //包含直接进行添加
+                inChannelUsersList.push({
+                    easeimUserId: channelUsers[userUid],
+                    agoraUserId: userUid.toString(),
+                    volume: 0,
+                    muteStatus: false,
+                    videoPlay: false,
+                })
+                return
+            } else {
+                console.log('>>>>不包含该用户的对应信息');
+                const callback = () => {
+                    const channelUsers = callKitStatus.value.channelInfos.channelUsers
+                    inChannelUsersList.push({
+                        easeimUserId: channelUsers[userUid],
+                        agoraUserId: userUid.toString(),
+                        volume: 0,
+                        muteStatus: false,
+                        videoPlay: false,
+                    })
+                    console.log('>>>>>执行添加一个新的容器', channelUsers);
+                }
+                emits('getAgoraChannelDetails', callback)
+                return
+            }
+
+        }
     }
     if (handleType === 'remove') {
-        if (document.getElementById(elementId)) {
-            const toBeRemoveChild = document.getElementById(elementId)
+        if (document.getElementById(userUid)) {
+            //从inChannelUserList中移除
+            const _index = inChannelUsersList.findIndex(item => item.agoraUserId === userUid)
+            if (_index > -1) inChannelUsersList.splice(_index, 1)
+            const toBeRemoveChild = document.getElementById(userUid)
             streamContainer.value.removeChild(toBeRemoveChild)
         };
+    }
+}
+//检查房间内音量
+const checkVolume = (result) => {
+    result.forEach((volume, index) => {
+        const { level } = volume
+        const uid = volume.uid.toString()
+        console.log(`${index} UID ${uid} Level ${level}`);
+        const nowUidChannelInfo = inChannelUsersList.filter(item => item.agoraUserId === uid)
+        console.log('nowUidChannelInfo', toRaw(nowUidChannelInfo[0]));
+        if (toRaw(nowUidChannelInfo[0]).volume === 1 && level * 1 >= 5) return
+        if (nowUidChannelInfo[0].muteStatus === true) {
+            updateInChannelUserStatus('volume', uid, 0)
+        }
+        if (toRaw(nowUidChannelInfo[0]).volume === 0 && level * 1 >= 5) {
+            updateInChannelUserStatus('volume', uid, 1)
+        }
+        if (toRaw(nowUidChannelInfo[0]).volume === 1 && level * 1 === 0) {
+            updateInChannelUserStatus('volume', uid, 0)
+        }
+    });
+}
+//更新频道内用户推流以及音量状态
+const updateInChannelUserStatus = (handleType, userUid, data) => {
+    // console.log('>>>>>开始更改状态', handleType, userUid, data);
+    let _index = inChannelUsersList.length > 0 && inChannelUsersList.findIndex(item => item.agoraUserId === userUid);
+    if (handleType === 'volume') {
+        console.log('>>>>>更改音量状态', userUid, data);
+        if (_index !== -1) { inChannelUsersList[_index].volume = data }
+    }
+    if (handleType === 'muteStatus') {
+        if (_index !== -1) { inChannelUsersList[_index].muteStatus = data }
+    }
+    if (handleType === 'videoPlay') {
+        if (_index !== -1) { inChannelUsersList[_index].videoPlay = data }
+    }
+}
+//操纵publish & unpublish voiceStream videoStream
+const handleLocalStreamPublish = (handleType) => {
+    if (handleType === 'allPlay') {
+        localStreamStatus.voice = true
+        localStreamStatus.video = true
+    }
+    if (handleType === 'voice') {
+        const voiceStatus = localStreamStatus.voice
+        localVoiceTrack.setEnabled(!voiceStatus)
+        localStreamStatus.voice = !voiceStatus
+    }
+    if (handleType === 'video') {
+        const videoStatus = localStreamStatus.video
+        localVideoTrack.setEnabled(!videoStatus)
+        localStreamStatus.video = !videoStatus
     }
 }
 //组件卸载
@@ -182,10 +278,18 @@ onUnmounted(() => {
 <template>
     <div ref="singleContainer" class="app_container" :style="style" style="position: fixed">
         <div class="stream_container" ref="streamContainer">
-            <div class="myContainer" ref="myContainer">
+            <div class="myContainer" v-for="item in inChannelUsersList" :key="item.agoraUserId" :id="item.agoraUserId">
+                <div class="userInfo">
+                    <span class="userIMId">{{item.easeimUserId}}</span>
+                    <span class="muteStatus" v-if="item.muteStatus">已闭麦</span>
+                    <span class="volumeStatus" v-if="item.volume>0">📢</span>
+
+                </div>
             </div>
             <div v-show="!isOutside" class="stream_control">
+                <button @click="handleLocalStreamPublish('voice')">{{localStreamStatus.voice?'开启静音':'关闭静音'}}</button>
                 <button @click="leaveChannel">挂断</button>
+                <button @click="handleLocalStreamPublish('video')">{{localStreamStatus.video?'关闭摄像头':'开启摄像头'}}</button>
             </div>
         </div>
     </div>
@@ -212,10 +316,26 @@ onUnmounted(() => {
 }
 
 .myContainer {
+    position: relative;
     width: 150px;
     height: 150px;
     background: #000;
     margin: 5px 0;
+}
+
+.userInfo {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 99;
+    background: rgba(255, 255, 255, 0.234);
+    height: 35px;
+    color: #FFF;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .stream_control {
