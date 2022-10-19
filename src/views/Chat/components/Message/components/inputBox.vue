@@ -10,6 +10,10 @@ import _ from 'lodash'
 import EaseIM from '@/IM/initwebsdk'
 /* 组件 */
 import CollectAudio from './suit/audio.vue'
+//EaseCallKit Invite
+import InviteCall from '@/components/EaseCallKit/inviteCall.vue';
+//inviteMembers modal
+import InviteCallMembers from '@/components/InviteCallMembers'
 const store = useStore()
 const props = defineProps({
     nowPickInfo: {
@@ -18,7 +22,7 @@ const props = defineProps({
         default: () => ({})
     }
 })
-const { ALL_MESSAGE_TYPE } = messageType
+const { ALL_MESSAGE_TYPE, CHAT_TYPE } = messageType
 const { nowPickInfo } = toRefs(props)
 //加载状态
 const loadingBox = ref(null)
@@ -185,10 +189,10 @@ const sendAudioMessages = async (audioData) => {
 const clearScreen = () => {
     ElMessageBox.confirm('确认清空当前消息内容？',
         '消息清屏', {
-            confirmButtonText: '确认',
-            cancelButtonText: '取消',
-            type: 'warning',
-        }).then(() => {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+    }).then(() => {
         const key = nowPickInfo.value.id
         store.commit('CLEAR_SOMEONE_MESSAGE', key)
     }).catch(() => {
@@ -205,6 +209,33 @@ const all_func = [
     { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen },
 ]
 
+/* About EaseCallKit */
+const inviteCallComp = ref(null)
+//处理发起的音视频呼叫类型
+const handleInviteCall = (handleType) => {
+    const toId = nowPickInfo.value.id
+    //语音类型
+    if (handleType === 'voice') {
+        const callType = 0
+        inviteCallComp.value.handleInviteMessage(toId, callType)
+    }
+    if (handleType === 'video') {
+        if (nowPickInfo.value?.chatType === CHAT_TYPE.SINGLE) {
+            const callType = 1
+            inviteCallComp.value.handleInviteMessage(toId, callType)
+        } else if (nowPickInfo.value?.chatType === CHAT_TYPE.GROUP) {
+            const callType = 2
+            showInviteCallMembersModal()
+            // inviteCallComp.value.handleInviteMessage(toId, callType)
+        }
+    }
+}
+const inviteCallMembersComp = ref(null)
+//调起多人邀请组件
+const showInviteCallMembersModal = () => {
+    console.log('>>>>>>>邀请多人modal弹出');
+    inviteCallMembersComp.value.dialogVisible = true;
+}
 defineExpose({
     textContent
 })
@@ -213,6 +244,11 @@ defineExpose({
     <div class="chat_func_box">
         <span v-for="iconItem in all_func" :class="['iconfont', iconItem.className]" :key="iconItem.className"
             :style="iconItem.style" :title="iconItem.title" @click.stop="iconItem.methodName"></span>
+        <!-- EaseCallKit 音视频邀请icon【不需要可移除】 -->
+        <!-- 群组没有语音发起 -->
+        <span v-show="nowPickInfo.chatType === CHAT_TYPE.SINGLE"><button
+                @click="handleInviteCall('voice')">语音</button></span>
+        <span><button @click="handleInviteCall('video')">视频</button></span>
         <!-- 表情框 -->
         <el-scrollbar ref="emojisBox" v-if="isShowEmojisBox" class="emojis_box" tag="div">
             <span class="emoji" v-for="(emoji, index) in emojis" :key="index" @click="addOneEmoji(emoji)">{{ emoji
@@ -236,6 +272,8 @@ defineExpose({
     </textarea>
     <el-button :class="[textContent === ''?'no_content_send_btn': 'chat_send_btn']" type="primary"
         @click="sendTextMessage">发送</el-button>
+    <InviteCall ref="inviteCallComp" />
+    <InviteCallMembers ref="inviteCallMembersComp" :groupId="nowPickInfo.id" />
 </template>
 
 <style lang="scss" scoped>

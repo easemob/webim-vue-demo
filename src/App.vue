@@ -8,6 +8,8 @@ import { usePlayRing } from '@/hooks'
 import ring from '@/assets/ring.mp3'
 /* callkit */
 import EaseCallKit from '@/components/EaseCallKit'
+import InviteCallMembers from '@/components/InviteCallMembers'
+import { ref } from 'vue'
 const store = useStore()
 const { isOpenPlayRing, clickRing } = usePlayRing()
 EaseIM.logger.disableAll()
@@ -141,13 +143,13 @@ const { INFORM_FROM } = informType
 EaseIM.conn.addEventHandler('friendListen', {
     // 收到好友邀请触发此方法。
     onContactInvited: (data) => {
-    //写入INFORM
+        //写入INFORM
         console.log('>>>>>>收到好友申请', data)
         submitInformData(INFORM_FROM.FRIEND, data)
     },
     // 联系人被删除时触发此方法。
     onContactDeleted: (data) => {
-    //写入INFORM
+        //写入INFORM
         console.log('>>>>收到好友关系解散', data)
         submitInformData(INFORM_FROM.FRIEND, data)
         //取消针对好友的在线状态订阅
@@ -165,14 +167,14 @@ EaseIM.conn.addEventHandler('friendListen', {
     },
     // 好友请求被拒绝时触发此方法。
     onContactRefuse: (data) => {
-    //写入INFORM
+        //写入INFORM
         console.log('>>>>>>好友申请被拒绝', data)
         data.type = 'other_person_refuse'
         submitInformData(INFORM_FROM.FRIEND, data)
     },
     // 好友请求被同意时触发此方法。
     onContactAgreed: (data) => {
-    //写入INFORM
+        //写入INFORM
         console.log('>>>>>对方同意了好友申请', data)
         //改掉data中的type
         data.type = 'other_person_agree'
@@ -210,18 +212,28 @@ const handleRelogin = () => {
 if (loginUserFromStorage?.user && loginUserFromStorage?.accessToken) {
     handleRelogin()
 }
-
+/* EaseCallKit 相关 */
+const easeCallKit = ref(null);
+const inviteCallComp = ref(null)
+const showModal = (params) => {
+    console.log('可以弹出邀请框')
+    inviteCallComp.value.dialogVisible = true
+}
+const sendMulitInviteMsg = (params) => {
+    easeCallKit.value.sendInviteMessage()
+}
 </script>
 <template>
-  <router-view v-slot="{ Component }">
-    <transition name="slide-fade" mode="out-in" :duration="{ enter: 500, leave: 300 }">
-      <component :is="Component" />
-    </transition>
-  </router-view>
-  <!-- 铃声标签 -->
-  <audio id="ring" :src="ring" controls hidden></audio>
-  <!-- EaseCallKit -->
-  <EaseCallKit :EaseIM="EaseIM" :connectionName="'conn'"/>
+    <router-view v-slot="{ Component }">
+        <transition name="slide-fade" mode="out-in" :duration="{ enter: 500, leave: 300 }">
+            <component :is="Component" />
+        </transition>
+    </router-view>
+    <!-- 铃声标签 -->
+    <audio id="ring" :src="ring" controls hidden></audio>
+    <!-- About EaseCallKit -->
+    <EaseCallKit ref="easeCallKit" :EaseIM="EaseIM" :connectionName="'conn'" @onInviteMembers="showModal"  />
+    <InviteCallMembers ref="inviteCallComp" @sendMulitInviteMsg="sendMulitInviteMsg" />
 </template>
 
 <style type="scss">

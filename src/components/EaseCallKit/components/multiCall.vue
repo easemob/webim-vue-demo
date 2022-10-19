@@ -22,7 +22,7 @@ const props = defineProps({
 })
 const { callKitStatus } = toRefs(props)
 /* emits */
-const emits = defineEmits(['getAgoraRtcToken', 'getAgoraChannelDetails', 'updateLocalStatus'])
+const emits = defineEmits(['getAgoraRtcToken', 'getAgoraChannelDetails', 'updateLocalStatus','onInviteMembers'])
 /* AgoraRTC */
 //client 初始化
 let CallKitClient = null
@@ -270,6 +270,11 @@ const handleLocalStreamPublish = (handleType) => {
         localStreamStatus.video = !videoStatus
     }
 }
+
+//邀请更多成员加入会议
+const inviteMoreMembers = ()=>{
+    emits('onInviteMembers')
+}
 //组件卸载
 onUnmounted(() => {
     console.log('>>>>>>监听到组件卸载')
@@ -289,6 +294,7 @@ onUnmounted(() => {
             <div v-show="!isOutside" class="stream_control">
                 <button @click="handleLocalStreamPublish('voice')">{{localStreamStatus.voice?'开启静音':'关闭静音'}}</button>
                 <button @click="leaveChannel">挂断</button>
+                <button @click="inviteMoreMembers">邀请</button>
                 <button @click="handleLocalStreamPublish('video')">{{localStreamStatus.video?'关闭摄像头':'开启摄像头'}}</button>
             </div>
         </div>

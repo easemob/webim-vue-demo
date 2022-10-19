@@ -34,6 +34,8 @@ const props = defineProps({
         required: true
     }
 })
+/* emits */
+const emits = defineEmits(['onInviteMembers'])
 /* 环信相关初始化配置 */
 const { EaseIM, connectionName } = toRefs(props)
 const conn = connectionName.value
@@ -272,6 +274,10 @@ const handleCallKitCommand = (msgBody) => {
             break
     }
 }
+//发送邀请信令
+const sendInviteMessage = (toId,inviteType)=>{
+
+}
 //发送接听挂断信令
 const handleSendAnswerMsg = (sendType) => {
     const channelInfos = callKitStatus.channelInfos
@@ -317,6 +323,15 @@ const getAgoraChannelDetails = async (callback) => {
     callback()
 
 }
+
+/* 对外通知触发邀请事件 */
+const onInviteMembers = () => {
+    emits('onInviteMembers')
+    console.log('可以对通知触发了邀请事件');
+}
+defineExpose({
+    sendInviteMessage
+})
 /* 组件卸载操作 */
 onUnmounted(() => {
     //移除消息监听
@@ -332,7 +347,7 @@ onUnmounted(() => {
         <!-- 音视频UI展示组件 -->
         <component :is="callCompsType[callComponents]" :callKitStatus="callKitStatus"
             @getAgoraRtcToken="getAgoraRtcToken" @getAgoraChannelDetails="getAgoraChannelDetails"
-            @updateLocalStatus="updateLocalStatus">
+            @updateLocalStatus="updateLocalStatus" @onInviteMembers="onInviteMembers">
         </component>
     </div>
 </template>
