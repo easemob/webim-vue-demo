@@ -449,7 +449,7 @@ export default{
 
 		]),
 		setReportMsgId(id){
-			this.$store.commit('setReportMsgId', {messageId: id});
+			this.$store.commit('setReportMsgId', { messageId: id });
 		},
 		getKey(item, type){
 			let key = '';
@@ -747,10 +747,12 @@ export default{
 		closeGroupMessage(){
 			// 退出群组或解散群组时关闭聊天框
 			this.$data.activedKey.group = '';
+			this.$emit('chatTypeChange', { key: 'group' })
 		},
 		closeContactMessage(){
 			// 删除好友时关闭当前聊天框
 			this.$data.activedKey.contact = '';
+			this.$emit('chatTypeChange', { key: 'contact' })
 		},
 		// changeIsVideoState(v) {
 		//   v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);

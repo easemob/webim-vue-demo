@@ -130,6 +130,7 @@
           @EmediaModalFun="EmediaModalFun"
           @show_add_member_modal="show_add_member_modal"
           @changeActiveFlag="changeActiveFlag"
+					@chatTypeChange="contactTypeChange"
         />
 
         <AddFriend ref="addFriendMethods" />
@@ -182,7 +183,7 @@ import GroupRequest from '../../components/group/groupRequest.vue';
 import GroupInvite from '../../components/group/groupInvite.vue';
 import PersonCard from '../../components/personCard/personCard';
 import SetPresece from '../../components/setPresence/setPresece';
-import ReportMessage from "../../components/reportMessage/index.vue"
+import ReportMessage from '../../components/reportMessage/index.vue'
 
 import EmediaModal from '../../components/emediaModal/index';
 // import MultiAVModal from "../../components/emediaModal/multiAVModal";
@@ -298,7 +299,7 @@ export default{
 		onSetCallStatus(){
 			return this.$store.state.agora.callStatus;
 		},
-		pushConfigData() {
+		pushConfigData(){
 			return this.$store.state.chat.pushConfig;
 		},
 		// 显隐主叫弹窗
@@ -494,10 +495,11 @@ export default{
 				for(const item in chatList){
 					chatList[item].map((v, k) => {
 						if(v.status === 'unread'){
-							if (this.pushConfigData.includes(v.chatId)) return
+							if(this.pushConfigData.includes(v.chatId)) return
 							else if(v.chatType === 'group'){
 								obj.group = true;
-							}else if(v.chatType === 'contact'){
+							}
+							else if(v.chatType === 'contact'){
 								obj.contact = true;
 							}
 						}

@@ -24,18 +24,18 @@ const FriendModule = {
 
 		// 接受好友请求
 		acceptSubscribe: function(context, payload){
-			WebIM.conn.acceptContactInvite({
-				to: payload
-			});
+			WebIM.conn.acceptContactInvite(
+				payload
+			);
 		},
 
 		// 拒绝好友请求
 		declineSubscribe: function(context, payload){
 			const username = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).userId;
 			const { id } = payload;
-			WebIM.conn.declineContactInvite({
-				to: id
-			});
+			WebIM.conn.declineContactInvite(
+				id
+			);
 		},
 		// 添加黑名单-单人
 		onAddBlack: function(context, payload){
@@ -67,12 +67,9 @@ const FriendModule = {
 		// 删除好友
 		onDelteFirend: function(context, payload){
 			let deleteName = payload.userId.name;
-			let option = {
-				to: deleteName,
-			};
 			payload.callback();
+			WebIM.conn.deleteContact(deleteName);
 			Vue.$router.push('/contact');
-			WebIM.conn.deleteContact(option);
 		}
 	},
 	getters: {
