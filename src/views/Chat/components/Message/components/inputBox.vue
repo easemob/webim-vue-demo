@@ -224,9 +224,7 @@ const handleInviteCall = (handleType) => {
             const callType = 1
             inviteCallComp.value.handleInviteMessage(toId, callType)
         } else if (nowPickInfo.value?.chatType === CHAT_TYPE.GROUP) {
-            const callType = 2
             showInviteCallMembersModal()
-            // inviteCallComp.value.handleInviteMessage(toId, callType)
         }
     }
 }
@@ -234,7 +232,14 @@ const inviteCallMembersComp = ref(null)
 //调起多人邀请组件
 const showInviteCallMembersModal = () => {
     console.log('>>>>>>>邀请多人modal弹出');
-    inviteCallMembersComp.value.dialogVisible = true;
+    const groupId = nowPickInfo.value.id
+    inviteCallMembersComp.value.alertDialog(groupId);
+}
+//发送邀请信息的方法
+const sendMulitInviteMsg = (targetIMId) => {
+    console.log('>>>>>要发送的用户列表', targetIMId);
+    const callType = 2
+    inviteCallComp.value.handleInviteMessage(targetIMId, callType)
 }
 defineExpose({
     textContent
@@ -273,7 +278,7 @@ defineExpose({
     <el-button :class="[textContent === ''?'no_content_send_btn': 'chat_send_btn']" type="primary"
         @click="sendTextMessage">发送</el-button>
     <InviteCall ref="inviteCallComp" />
-    <InviteCallMembers ref="inviteCallMembersComp" :groupId="nowPickInfo.id" />
+    <InviteCallMembers ref="inviteCallMembersComp" @sendMulitInviteMsg="sendMulitInviteMsg" />
 </template>
 
 <style lang="scss" scoped>
