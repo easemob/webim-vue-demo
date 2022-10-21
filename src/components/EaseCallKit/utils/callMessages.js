@@ -6,6 +6,10 @@ export default class CallKitMessages {
         this.IM = IM
         this.conn = IM[conn]
     }
+    //发送邀请信令
+    sendInviteMsg(targetId, callType) {
+        console.log('>>>正式发送', targetId, callType);
+    }
     //发送告知主叫方confim确认中
     //发送视频转语音信令
     //发送给对方确认后的结果

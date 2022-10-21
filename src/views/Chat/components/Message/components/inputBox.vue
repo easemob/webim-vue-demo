@@ -12,6 +12,7 @@ import EaseIM from '@/IM/initwebsdk'
 import CollectAudio from './suit/audio.vue'
 //EaseCallKit Invite
 import InviteCall from '@/components/EaseCallKit/inviteCall.vue';
+import { useManageChannel } from '@/components/EaseCallKit/hooks'
 //inviteMembers modal
 import InviteCallMembers from '@/components/InviteCallMembers'
 const store = useStore()
@@ -211,18 +212,19 @@ const all_func = [
 
 /* About EaseCallKit */
 const inviteCallComp = ref(null)
+const { sendInviteMessage } = useManageChannel(EaseIM, 'conn')
 //处理发起的音视频呼叫类型
 const handleInviteCall = (handleType) => {
     const toId = nowPickInfo.value.id
     //语音类型
     if (handleType === 'voice') {
         const callType = 0
-        inviteCallComp.value.handleInviteMessage(toId, callType)
+        sendInviteMessage(toId, callType)
     }
     if (handleType === 'video') {
         if (nowPickInfo.value?.chatType === CHAT_TYPE.SINGLE) {
             const callType = 1
-            inviteCallComp.value.handleInviteMessage(toId, callType)
+            sendInviteMessage(toId, callType)
         } else if (nowPickInfo.value?.chatType === CHAT_TYPE.GROUP) {
             showInviteCallMembersModal()
         }
@@ -239,7 +241,7 @@ const showInviteCallMembersModal = () => {
 const sendMulitInviteMsg = (targetIMId) => {
     console.log('>>>>>要发送的用户列表', targetIMId);
     const callType = 2
-    inviteCallComp.value.handleInviteMessage(targetIMId, callType)
+    sendInviteMessage(targetIMId, callType)
 }
 defineExpose({
     textContent

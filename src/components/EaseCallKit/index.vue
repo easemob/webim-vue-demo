@@ -2,6 +2,7 @@
 import { ref, reactive, toRefs, watch, onUnmounted } from 'vue'
 import { CALLSTATUS, CALL_ACTIONS_TYPE, ANSWER_TYPE } from './constants'
 import CallKitMessages from './utils/callMessages'
+import { useManageChannel } from './hooks';
 import getRtcToken from './utils/getRtcToken'
 import getChannelDetails from './utils/getChannelDetails'
 /* 组件 */
@@ -19,6 +20,7 @@ import MultiCall from './components/multiCall.vue'
                                         <-------------answerCall-----
             ----------confirmCallee---------->
 */
+
 /* props */
 const props = defineProps({
     //IMSDK对象
@@ -77,103 +79,18 @@ const callCompsType = {
     'singleCall': SingleCall,
     'multiCall': MultiCall,
 }
-const callComponents = ref('')
-const callKitStatus = reactive({
-    localClientStatus: CALLSTATUS.idle,//callkit状态
-    channelInfos: {
-        channelName: '',//频道名
-        agoraChannelToken: '', //频道token
-        agoraUserId: '', //频道用户id
-        callType: null, //0 语音 1 视频 2 多人音视频
-        callId: null,//会议ID
-        channelUsers: {}, //频道内用户
-        callerDevId: '',//主叫方设备ID
-        calleeDevId: '',//被叫方设备ID
-        callerIMName: '',//主叫方环信ID
-        calleeIMName: ''//被叫方环信ID
-    }
-
-})
-//初始化频道信息
-const initChannelInfos = () => {
-    callComponents.value = ''
-    callKitStatus.localClientStatus = CALLSTATUS.idle
-    callKitStatus.channelInfos = {
-        channelName: '',//频道名
-        agoraChannelToken: '', //频道token
-        agoraUid: '', //频道用户id
-        callType: null, //0 语音 1 视频 2 多人音视频
-        callId: null,//会议ID
-        channelUsers: {}, //频道内用户
-        callerDevId: '',//主叫方设备ID
-        calleeDevId: '',//被叫方设备ID
-        confrontId: '',//要处理的目标ID
-        callerIMName: '',//主叫方环信ID
-        calleeIMName: '',//被叫方环信ID
-
-    }
-}
-/* localClientStatus 监听处理 */
-watch(() => callKitStatus.localClientStatus, (newClientStatus, oldClientStatus) => {
-    console.log('%c 监听到本地客户端状态的改变', 'color:yellow', newClientStatus, oldClientStatus)
-    handleClientStatusForAction(newClientStatus)
-})
-//处理不同clientstatus执行不同的操作
-const handleClientStatusForAction = (clientStatus) => {
-    switch (clientStatus) {
-        case CALLSTATUS.idle:
-            console.log('%c >>>监听新状态为空闲处理，执行初始化', 'color:red')
-            initChannelInfos()
-            break
-        case CALLSTATUS.receivedConfirmRing:
-            console.log('>>>>新状态为弹出框，执行弹出待确认框')
-            break
-        case CALLSTATUS.answerCall:
-            console.log('>>>>>可以弹出通话接听UI组件')
-            if (callKitStatus.channelInfos.callType < 2 > 0) {
-                console.log('>>>>>>>展示单人音视频组件')
-                callComponents.value = 'singleCall'
-            }
-            if (callKitStatus.channelInfos.callType === 2) {
-                console.log('》》》》》展示多人音视频组件')
-                callComponents.value = 'multiCall'
-            }
-            break
-        case CALLSTATUS.confirmCallee: {
-            console.log('%c >>>>>可以加入房间了', 'color:green;')
-            console.log('++++++将入的频道类型是', callKitStatus.channelInfos.callType)
-
-        }
-            break
-        default:
-            break
-    }
-}
-/* CallKit status 管理 */
-//更新localStatus
-const updateLocalStatus = (typeCode) => {
-    console.log('>>>>>开始变更本地状态为 typeCode', typeCode)
-    callKitStatus.localClientStatus = typeCode
-}
-//更新频道信息
-const updateChannelInfos = (msgBody) => {
-    const { from, to, ext } = msgBody || {}
-    const params = {
-        channelName: ext.channelName || '',
-        callId: ext.callId || '',
-        callType: ext.type || 0,
-        callerDevId: ext.callerDevId || '',
-        calleeDevId: ext.calleeDevId || EaseIM.value[conn].context.jid.clientResource,
-        callerIMName: from,
-        calleeIMName: to
-    }
-    Object.assign(callKitStatus.channelInfos, params)
-}
+const {
+    callComponents,
+    callKitStatus,
+    updateLocalStatus,
+    updateChannelInfos,
+    sendInviteMessage
+} = useManageChannel(EaseIM.value, conn)
 /* 信令部分 */
 const SignalMsgs = new CallKitMessages({ IM: EaseIM.value, conn: conn })
 //处理收到为文本的邀请信息
 const handleCallKitInvite = (msgBody) => {
-    // console.log('>>>>>开始处理被邀请消息');
+    console.log('>>>>>开始处理被邀请消息');
     const { from, ext } = msgBody || {}
     //邀请消息发送者为自己则忽略
     if (from === EaseIM.value[conn].user) return
@@ -275,9 +192,9 @@ const handleCallKitCommand = (msgBody) => {
     }
 }
 //发送邀请信令
-const sendInviteMessage = (toId,inviteType)=>{
+// const sendInviteMessage = (targetId,callType) => {
 
-}
+// }
 //发送接听挂断信令
 const handleSendAnswerMsg = (sendType) => {
     const channelInfos = callKitStatus.channelInfos
