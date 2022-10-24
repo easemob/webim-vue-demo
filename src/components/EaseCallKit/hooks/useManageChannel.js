@@ -1,5 +1,6 @@
 import { ref, reactive, watch } from 'vue';
-import { CALLSTATUS, CALL_ACTIONS_TYPE, ANSWER_TYPE } from '../constants'
+import { CALLSTATUS, CALL_ACTIONS_TYPE, ANSWER_TYPE, CALL_INVITE_TEXT } from '../constants'
+import createUid from '../utils/createUid';
 import CallKitMessages from '../utils/callMessages'
 const callComponents = ref('')
 const callKitStatus = reactive({
@@ -99,12 +100,32 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
 
     //发送邀请信息功能
     const SignalMsgs = new CallKitMessages({ IM: EaseIM, conn: conn })
-    const sendInviteMessage = (targetId, callType) => {
+    const sendInviteMessage = async (targetId, callType) => {
         if (!targetId) throw 'targetId must pass！'
         if (callType === undefined || callType === null || callType < 0) throw 'callType must pass！'
         console.log('>>>>>>发送邀请信息', targetId, callType);
-        if (Array.isArray(targetId) && targetId.length > 15 < 1) throw 'targetId length  > 15 or length < 1'
-        SignalMsgs.sendInviteMsg(targetId, callType)
+        if (Array.isArray(targetId) && targetId.length < 1 || targetId.length > 15) throw 'targetId length  > 15 or length < 1'
+        console.log('>>>>要邀请的房间channel是', createUid());
+        const channelInfors = {
+            channelName: `${callType}_${createUid()}`,//频道名
+            callId: createUid(),
+            inviteMsgContent: CALL_INVITE_TEXT[callType]
+        }
+        try {
+            if (Array.isArray(targetId)) {
+                targetId.forEach(userId => {
+                    SignalMsgs.sendInviteMsg(userId, callType, channelInfors)
+                })
+                
+                console.log('>>>>>群组多人邀请开始遍历发消息');
+            } else {
+                await SignalMsgs.sendInviteMsg(targetId, callType, channelInfors)
+            }
+        } catch (error) {
+            console.log('%c邀请信息发送失败', 'color:red');
+        }
+
+
     }
     return {
         callComponents,

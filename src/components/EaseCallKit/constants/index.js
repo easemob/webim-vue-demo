@@ -1,4 +1,9 @@
 const MSG_TYPE = 'rtcCallWithAgora'
+const CALL_INVITE_TEXT = {
+    0: '邀请您进行语音通话~',
+    1: '邀请您进行视频通话~',
+    2: '邀请您进行多人会议~'
+}
 const CALLSTATUS = {
     idle: 0,//闲置
     inviting: 1,//邀请中
@@ -28,6 +33,7 @@ const ANSWER_TYPE = {
 }
 export {
     MSG_TYPE,
+    CALL_INVITE_TEXT,
     CALLSTATUS,
     CALL_ACTIONS_TYPE,
     ANSWER_TYPE

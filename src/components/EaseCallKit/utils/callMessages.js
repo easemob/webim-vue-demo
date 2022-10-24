@@ -7,8 +7,37 @@ export default class CallKitMessages {
         this.conn = IM[conn]
     }
     //发送邀请信令
-    sendInviteMsg(targetId, callType) {
-        console.log('>>>正式发送', targetId, callType);
+    sendInviteMsg(targetId, callType, channelInfors) {
+        const { channelName, callId, inviteMsgContent } = channelInfors
+        const option = {
+            type: 'txt',
+            chatType: 'singleChat',
+            msg: inviteMsgContent,
+            to: targetId,
+            ext: {
+                action: CALL_ACTIONS_TYPE.INVITE,
+                channelName: channelName,
+                type: callType, // 0为1v1音频，1为1v1视频，2为多人通话
+                callerDevId: this.conn.context.jid.clientResource, // 主叫方设备Id
+                callId: callId, // 随机uuid，每次呼叫都不同，代表一次呼叫
+                ts: Date.now(),
+                msgType: MSG_TYPE,
+                callerIMName: this.conn.context.jid.name,
+            }
+        }
+        return new Promise((resolve, reject) => {
+            const msg = this.IM.message.create(option)
+            // // 调用 `send` 方法发送该透传消息。
+            this.conn.send(msg).then((res) => {
+                // 消息成功发送回调。
+                console.log('invite Success', res)
+                resolve(res)
+            }).catch((e) => {
+                // 消息发送失败回调。
+                console.log('invite Fail', e)
+                reject(e)
+            })
+        })
     }
     //发送告知主叫方confim确认中
     //发送视频转语音信令
