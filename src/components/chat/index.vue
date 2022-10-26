@@ -35,6 +35,7 @@ import _ from 'lodash';
 import AddAVMemberModal from '../emediaModal/addAVMemberModal';
 import MultiAVModal from '../emediaModal/multiAVModal';
 import GetGroupInfo from '../group/groupInfo.vue';
+import emoji from '../../config/emoji';
 
 export default{
 	data(){
@@ -332,6 +333,7 @@ export default{
 		},
 
 		renderTxt(txt = ''){
+			debugger
 			let rnTxt = [];
 			let match = null;
 			const regex = /(\[.*?\])/g;

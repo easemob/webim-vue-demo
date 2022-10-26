@@ -549,7 +549,7 @@ const Chat = {
 								let time = Number(item.time);
 								let msg = {};
 								const bySelf = item.from == userId;
-								if (!item.filename) {
+								if (item.contentsType === "TEXT" || item.type === 'txt') {
 									msg = {
 										chatType: payload.isGroup ? 'group' : 'contact',
 										chatId: bySelf ? item.to : item.from,
@@ -569,7 +569,7 @@ const Chat = {
 										msg.chatId = bySelf ? item.to : item.from;
 									}
 								}
-								else if (!item.ext.file_length && item.filename !== 'audio' && item.filename.substring(item.filename.length - 3) !== 'mp4' && item.filename.substring(item.filename.length - 3) !== 'mp3' && item.filename.substring(item.filename.length - 3) !== 'amr') { // 为图片的情况
+								else if (item.contentsType === "IMAGE" || item.type === 'img') { // 为图片的情况
 									msg = {
 										msg: item.url,
 										chatType: payload.isGroup ? 'group' : 'contact',
@@ -589,7 +589,7 @@ const Chat = {
 										msg.chatId = bySelf ? item.to : item.from;
 									}
 								}
-								else if (item.filename === 'audio' || item.filename.substring(item.filename.length - 3) === 'mp3' || item.filename.substring(item.filename.length - 3) === 'amr') {
+								else if (item.contentsType === "AUDIO" || item.type === 'audio') {
 									msg = {
 										msg: item.url,
 										chatType: payload.isGroup ? 'group' : 'contact',
@@ -609,7 +609,7 @@ const Chat = {
 										msg.chatId = bySelf ? item.to : item.from;
 									}
 								}
-								else if (item.filename.substring(item.filename.length - 3) === 'mp4') {
+								else if (item.contentsType === "VIDEO" || item.type === 'video') {
 									msg = {
 										msg: item.url,
 										chatType: payload.isGroup ? 'group' : 'contact',
