@@ -118,11 +118,33 @@ const handleCallKitInvite = (msgBody) => {
 const handleCallKitCommand = (msgBody) => {
     console.log('>>>>开始处理command命令消息', msgBody)
     const cmdMsgBody = msgBody.ext || {}
-    const { calleeDevId } = cmdMsgBody
+    const { calleeDevId, callerDevId } = cmdMsgBody
     const clientResource = EaseIM.value[conn].context.jid.clientResource
     const { action } = cmdMsgBody
     switch (action) {
         case CALL_ACTIONS_TYPE.ALERT: //回复confirmring
+            const { localClientStatus, channelInfos } = callKitStatus
+            //当前有效会议ID
+            const currentCallKitCallId = callKitStatus.channelInfos.callId
+            //返回给对方的confirmRing状态
+            let status = true;
+            console.log('>>>>>收到alert信令', currentCallKitCallId);
+            if (cmdMsgBody.callId !== currentCallKitCallId) {
+                status = false;
+                console.warn('callId 于当前呼叫端callId 不一致')
+            };
+            if (localClientStatus > CALLSTATUS.receivedConfirmRing && channelInfos.callType !== 2)
+                status = false;
+            if (callerDevId !== clientResource) {
+                console.warn('callerDevId 设备不相同');
+                return;
+            }
+            let params = {
+                targetId: msgBody.from,
+                sendBody: cmdMsgBody,
+                status
+            }
+            SignalMsgs.sendConfirmRing(params)
             break
 
         case CALL_ACTIONS_TYPE.CONFIRM_RING: {//调起confirm待接听界面
@@ -137,8 +159,8 @@ const handleCallKitCommand = (msgBody) => {
         }
             break
         case CALL_ACTIONS_TYPE.ANSWER: {
-            console.log('>>>>>')
-            if (calleeDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
+            console.log('>>>>>cmdMsgBody', cmdMsgBody)
+            if (callerDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
             const params = {
                 targetId: msgBody.from,
                 sendBody: cmdMsgBody
@@ -148,8 +170,9 @@ const handleCallKitCommand = (msgBody) => {
                 updateChannelInfos(msgBody)
             } else if (callKitStatus.channelInfos.calleeDevId !== cmdMsgBody.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
                 //如果存在频道信息，但是与待呼叫确认的calleeDevId不一致直接发送拒绝应答。
-                params.sendBody.result = ANSWER_TYPE.REFUSE
+                params.sendBody.result = ANSWER_TYPE.ACCPET
             }
+            console.log('%c 即将发送的params', params);
             SignalMsgs.sendConfirmCallee(params)
             if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET) {
                 const resultStatus = {
@@ -165,7 +188,7 @@ const handleCallKitCommand = (msgBody) => {
         }
             break
         case CALL_ACTIONS_TYPE.CONFIRM_CALLEE: {
-            if (cmdMsgBody.calleeDevId !== EaseIM.value[conn].context.jid.clientResource) {
+            if (cmdMsgBody.calleeDevId !== clientResource) {
                 if (msgBody.to === EaseIM.value[conn].user) {
                     updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
                     console.log('%c 已在其他设备处理', 'color:red;')
@@ -185,16 +208,11 @@ const handleCallKitCommand = (msgBody) => {
             if (msgBody.from === EaseIM.value[conn].user) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
             if (msgBody.from === callKitStatus.channelInfos.callerIMName) return updateLocalStatus(CALLSTATUS.idle)
             break
-
         default:
             console.log('>>>其他未知状态')
             break
     }
 }
-//发送邀请信令
-// const sendInviteMessage = (targetId,callType) => {
-
-// }
 //发送接听挂断信令
 const handleSendAnswerMsg = (sendType) => {
     const channelInfos = callKitStatus.channelInfos

@@ -7,6 +7,5 @@ AgoraRTC.setLogLevel(3)
 
 export {
     AgoraAppId,
-    AgoraRTC,
-    // CallKitClient
+    AgoraRTC
 }

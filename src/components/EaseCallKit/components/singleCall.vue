@@ -85,7 +85,12 @@ watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
     if (newVal === CALLSTATUS.confirmCallee) {
         emitChannelToken()
     }
+    if (newVal === CALLSTATUS.inviting) {
+        setTimeout(() => {
+            emitChannelToken()
+        }, 500)
 
+    }
 }, {
     immediate: true
 })

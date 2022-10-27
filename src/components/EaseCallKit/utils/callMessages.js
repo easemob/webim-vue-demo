@@ -40,21 +40,19 @@ export default class CallKitMessages {
         })
     }
     //发送告知主叫方confim确认中
-    //发送视频转语音信令
-    //发送给对方确认后的结果
-    sendConfirmCallee(payload) {
-        const { targetId, sendBody } = payload
-        console.log('sendConfirmCalllee', payload)
+    sendConfirmRing(payload) {
+        const { status, targetId, sendBody } = payload
+        console.log('>>>>>告知对方确认响铃', payload);
         const option = {
             type: 'cmd',
             chatType: 'singleChat',
             to: targetId,
             action: this.action,
             ext: {
-                action: CALL_ACTIONS_TYPE.ANSWER,
-                result: sendBody.result,
+                action: CALL_ACTIONS_TYPE.CONFIRM_RING,
+                status: status,
                 callerDevId: sendBody.callerDevId,
-                calleeDevId: this.conn.context.jid.clientResource,
+                calleeDevId: sendBody.calleeDevId,
                 callId: sendBody.callId,
                 ts: Date.now(),
                 msgType: MSG_TYPE
@@ -64,11 +62,47 @@ export default class CallKitMessages {
         // // 调用 `send` 方法发送该透传消息。
         this.conn.send(msg).then((res) => {
             // 消息成功发送回调。
-            console.log('answer Success', res)
+            console.log('ConfirmRing Success', res)
         }).catch((e) => {
             // 消息发送失败回调。
-            console.log('anser Fail', e)
+            console.log('ConfirmRing Fail', e)
         })
+    }
+    //发送视频转语音信令
+    //发送给对方确认后的结果
+    sendConfirmCallee(payload) {
+        const { targetId, sendBody } = payload
+        console.log('sendConfirmCalllee', payload)
+        try {
+            const option = {
+                type: 'cmd',
+                chatType: 'singleChat',
+                to: targetId,
+                action: this.action,
+                ext: {
+                    action: CALL_ACTIONS_TYPE.CONFIRM_CALLEE,
+                    result: sendBody.result,
+                    callerDevId: this.conn.context.jid.clientResource,
+                    calleeDevId: sendBody.calleeDevId,
+                    callId: sendBody.callId,
+                    ts: Date.now(),
+                    msgType: MSG_TYPE
+                }
+            }
+            const msg = this.IM.message.create(option)
+            console.log('%ccallee msg', 'color:purple', msg);
+            // // 调用 `send` 方法发送该透传消息。
+            this.conn.send(msg).then((res) => {
+                // 消息成功发送回调。
+                console.log('Calllee Success', res)
+            }).catch((e) => {
+                // 消息发送失败回调。
+                console.log('Calllee Fail', e)
+            })
+        } catch (error) {
+            console.log('>>>>>失败', error);
+        }
+
     }
     //发送通知弹出待接听窗口信令
     sendAlertMsg(payload) {
