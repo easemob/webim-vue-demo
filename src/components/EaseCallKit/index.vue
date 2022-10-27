@@ -82,6 +82,7 @@ const callCompsType = {
 const {
     callComponents,
     callKitStatus,
+    callKitTimer,
     updateLocalStatus,
     updateChannelInfos,
     sendInviteMessage
@@ -146,7 +147,6 @@ const handleCallKitCommand = (msgBody) => {
             }
             SignalMsgs.sendConfirmRing(params)
             break
-
         case CALL_ACTIONS_TYPE.CONFIRM_RING: {//调起confirm待接听界面
             if (calleeDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
             if (!cmdMsgBody.status && callKitStatus.localClientStatus < CALLSTATUS.receivedConfirmRing) {
@@ -161,6 +161,7 @@ const handleCallKitCommand = (msgBody) => {
         case CALL_ACTIONS_TYPE.ANSWER: {
             console.log('>>>>>cmdMsgBody', cmdMsgBody)
             if (callerDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
+            callKitTimer.value && clearTimeout(callKitTimer.value)
             const params = {
                 targetId: msgBody.from,
                 sendBody: cmdMsgBody
@@ -170,7 +171,7 @@ const handleCallKitCommand = (msgBody) => {
                 updateChannelInfos(msgBody)
             } else if (callKitStatus.channelInfos.calleeDevId !== cmdMsgBody.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
                 //如果存在频道信息，但是与待呼叫确认的calleeDevId不一致直接发送拒绝应答。
-                params.sendBody.result = ANSWER_TYPE.ACCPET
+                params.sendBody.result = ANSWER_TYPE.REFUSE
             }
             console.log('%c 即将发送的params', params);
             SignalMsgs.sendConfirmCallee(params)
@@ -213,7 +214,7 @@ const handleCallKitCommand = (msgBody) => {
             break
     }
 }
-//发送接听挂断信令
+//发送接听或者挂断信令
 const handleSendAnswerMsg = (sendType) => {
     const channelInfos = callKitStatus.channelInfos
     const payload = {

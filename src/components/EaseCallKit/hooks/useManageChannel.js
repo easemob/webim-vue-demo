@@ -18,8 +18,9 @@ const callKitStatus = reactive({
         calleeDevId: '',//被叫方设备ID
         callerIMName: '',//主叫方环信ID
         calleeIMName: ''//被叫方环信ID
-    }
-
+    },
+    //被邀请对象 单人为string 多人为array
+    inviteTarget: null,
 })
 //CallKit timer
 const callKitTimer = ref(null);
@@ -50,6 +51,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             calleeIMName: '',//被叫方环信ID
 
         }
+        callKitStatus.inviteTarget = null;
     }
     //处理不同clientstatus执行不同的操作
     const handleClientStatusForAction = (clientStatus) => {
@@ -124,13 +126,13 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             callId: createUid(),
             inviteMsgContent: CALL_INVITE_TEXT[callType]
         }
+        callKitStatus.inviteTarget = targetId
         try {
             //如果为数组就遍历发送
             if (Array.isArray(targetId)) {
                 targetId.forEach(userId => {
                     SignalMsgs.sendInviteMsg(userId, callType, channelInfors)
                 })
-
                 console.log('>>>>>群组多人邀请开始遍历发消息');
             } else {
                 //非数组就单条发送
@@ -145,19 +147,29 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         callKitStatus.channelInfos.channelName = channelInfors.channelName
         callKitStatus.channelInfos.callId = channelInfors.callId
         callKitStatus.channelInfos.callType = callType
-
-
+        //单人邀请开启超时挂断，多人则忽略
+        if (callType !== 2) {
+            startCallKitTimer()
+        }
     }
-    /* 管理 CallKit Timer */
+    /* CallKit Timer */
+    //用作邀请信息发送之后发起计时30s。
     const startCallKitTimer = () => {
-        if (callKitTimer.value) clearInterval(callKitTimer.value)
-        callKitTimer.value = setInterval(() => {
-            console.log('>>>>>邀请开始计时');
-        }, 1000)
+        if (callKitTimer.value) {
+            clearTimeout(callKitTimer.value)
+            callKitTimer.value = null;
+        }
+        callKitTimer.value = setTimeout(() => {
+            const targetId = callKitStatus.inviteTarget
+            //发送cannel信令
+            SignalMsgs.sendCannelMsg({targetId})
+            updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
+        }, 30000)
     }
     return {
         callComponents,
         callKitStatus,
+        callKitTimer,
         initChannelInfos,
         updateLocalStatus,
         updateChannelInfos,

@@ -1,7 +1,6 @@
 <script setup>
 import { computed, toRefs, defineEmits } from 'vue'
 import { ANSWER_TYPE } from './constants'
-import CallKitMessages from './utils/callMessages'
 /* props */
 const props = defineProps({
     callKitStatus: {

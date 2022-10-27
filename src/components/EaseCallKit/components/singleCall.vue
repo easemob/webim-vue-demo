@@ -137,13 +137,15 @@ const joinChannel = async () => {
 //离开频道【挂断&对方挂断】
 const leaveChannel = async () => {
     console.log('》》》》》挂断')
-    localVoiceTrack && localVoiceTrack.close()
-    localVoiceTrack && localVideoTrack.close()
+    // localVoiceTrack && localVoiceTrack.close()
+    // localVoiceTrack && localVideoTrack.close()
     await CallKitClient.leave()
     emits('updateLocalStatus', CALLSTATUS.idle)
 }
 //组件卸载
 onUnmounted(() => {
+    localVoiceTrack && localVoiceTrack.close()
+    localVoiceTrack && localVideoTrack.close()
     console.log('>>>>>>监听到组件卸载')
 })
 </script>
