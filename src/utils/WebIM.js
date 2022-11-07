@@ -1,5 +1,5 @@
 import config from './WebIMConfig';
-import websdk from "easemob-websdk";
+import websdk from 'easemob-websdk';
 
 import _ from 'lodash';
 import emedia from 'easemob-emedia';
@@ -27,7 +27,7 @@ const rtc = {
 	localVideoTrack: null,
 };
 
-function onGetPushConfig(message) {
+function onGetPushConfig(message){
 	const { from, type, to } = message;
 	const option = {
 		conversationId: type === 'groupchat' ? to : from,
@@ -488,13 +488,6 @@ WebIM.conn.listen({
 		message.status = 'recall';
 		message.msg = '对方撤回了一条消息';
 		Vue.$store.commit('updateMessageStatus', message);
-	},
-	onBlacklistUpdate: function(list){ // 黑名单变动
-		// 查询黑名单，将好友拉黑，将好友从黑名单移除都会回调这个函数，list则是黑名单现有的所有好友信息
-		// 更新好友黑名单
-		console.log('黑名单变动', list);
-		let blackList = list;
-		Vue.$store.commit('updateBlackList', blackList);
 	},
 	onReceivedMessage: function(message){
 		console.log('onReceivedMessage', message);

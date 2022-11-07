@@ -1,4 +1,3 @@
-
 const FriendModule = {
 	state: {
 		friendRequest: [],
@@ -14,40 +13,47 @@ const FriendModule = {
 	},
 	actions: {
 		addfirend: function(context, payload){
-			const username = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).userId;
+			const username =
+        localStorage.getItem('userInfo') &&
+        JSON.parse(localStorage.getItem('userInfo')).userId;
 			const { id } = payload;
-			WebIM.conn.addContact(
-				id,
-				username + '请求添加你为好友'
-			);
+			WebIM.conn.addContact(id, username + '请求添加你为好友');
 		},
 
 		// 接受好友请求
 		acceptSubscribe: function(context, payload){
-			WebIM.conn.acceptContactInvite(
-				payload
-			);
+			WebIM.conn.acceptContactInvite(payload);
 		},
 
 		// 拒绝好友请求
 		declineSubscribe: function(context, payload){
-			const username = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo')).userId;
+			const username =
+        localStorage.getItem('userInfo') &&
+        JSON.parse(localStorage.getItem('userInfo')).userId;
 			const { id } = payload;
-			WebIM.conn.declineContactInvite(
-				id
-			);
+			WebIM.conn.declineContactInvite(id);
 		},
 		// 添加黑名单-单人
 		onAddBlack: function(context, payload){
 			let addName = payload.userId.name;
 			WebIM.conn.addUsersToBlocklist({
-				name: addName,
+				name: addName
 			});
-			Vue.$store.dispatch('onGetContactUserList', { type: 'addBlack', addName });
+			Vue.$store.dispatch('onGetContactUserList', {
+				type: 'addBlack',
+				addName
+			});
 		},
 		// 获取黑名单
 		onGetFirendBlack: function(context, payload){
-			WebIM.conn.getBlocklist();
+			WebIM.conn.getBlocklist().then(res => {
+				let dt = res.data.map(item => {
+					return {
+						name: item
+					};
+				});
+				Vue.$store.commit('updateBlackList', dt);
+			});
 		},
 
 		// 移除黑名单
@@ -77,6 +83,5 @@ const FriendModule = {
 			return state.firendList.myFirendList;
 		}
 	}
-
 };
 export default FriendModule;
