@@ -11,7 +11,7 @@
 					:key="item.member">
 					<a-checkbox
 						:value="item.member || item.owner"
-						:disabled="(item.member == username) || (item.owner == username?true:false)"
+						:disabled="item.member == username"
 						class="checkbox">
 						{{item.member || item.owner}}
 					</a-checkbox>
@@ -26,6 +26,7 @@
 
 <style>
     .checkboxGroup{
+				width: 100%;
         overflow: scroll;
         height: 150px;
     }
