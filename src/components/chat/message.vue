@@ -145,8 +145,8 @@
         <UpLoadImage :type="this.type" :chatId="activedKey[type]" />
         <!-- 上传文件组件 -->
         <UpLoadFile :type="this.type" :chatId="activedKey[type]" />
-		<!-- 历史记录 -->
-		<SearchModal :type="this.type" :chatId="activedKey[type]"/>
+				<!-- 历史记录 -->
+				<SearchModal v-if="this.type !== 'chatroom'" :type="this.type" :chatId="activedKey[type]"/>
         <!-- 发送语音 -->
         <RecordAudio v-show="isHttps" />
         <!-- 发视频通话 -->
