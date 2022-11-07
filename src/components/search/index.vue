@@ -63,7 +63,7 @@
                 </a-card>
               </div>
               <!-- 音频消息 -->
-              <div v-else-if="item.type === 'audio'" :style="{ float: 'left' }">
+              <div v-else-if="item.type === 'audio'">
                 <audio :src="item.msg" controls></audio>
               </div>
               <!-- 视频消息 -->
