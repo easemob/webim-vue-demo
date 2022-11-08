@@ -10,9 +10,6 @@
 // var location = {
 //     protocol: "https"
 // }
-
-
-
 var config = {
 	/*
      * Application AppKey

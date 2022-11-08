@@ -61,6 +61,8 @@ WebIM.conn = new WebIM.connection({
 	// apiUrl: WebIM.config.apiUrl,
 
 	// 私有云设置，详细文档：http://docs-im.easemob.com/im/web/other/privatedeploy
+
+	isHttpDNS: true,
 	// isHttpDNS: false,
 	// url: 'https://im-api-v2.easecdn.com/ws', // 设置为私有云的websocket server url
 	// apiUrl: 'https://a1.easecdn.com', // 设置为私有云的rest server url
@@ -103,7 +105,7 @@ WebIM.conn.listen({
 	onTextMessage: function(message){
 		console.log('onTextMessage', message);
 		const { from, to, type, time } = message;
-		const chatId = type !== 'chat' ? to : from;
+		const chatId = type === 'chat' ? WebIM.conn.user === from ? to : from : to;
 		const typeMap = {
 			chat: 'contact',
 			groupchat: 'group',
@@ -113,7 +115,7 @@ WebIM.conn.listen({
 			chatType: typeMap[message.type],
 			chatId: chatId,
 			msg: message.data,
-			bySelf: false,
+			bySelf: WebIM.conn.user === from,
 			from: message.from,
 			mid: message.id,
 			time: time
@@ -165,7 +167,7 @@ WebIM.conn.listen({
 	}, // 收到表情消息
 	onPictureMessage: function(message){
 		const { from, to, type, time } = message;
-		const chatId = type !== 'chat' ? to : from;
+		const chatId = type === 'chat' ? WebIM.conn.user === from ? to : from : to;
 		const typeMap = {
 			chat: 'contact',
 			groupchat: 'group',
@@ -175,7 +177,7 @@ WebIM.conn.listen({
 			chatType: typeMap[message.type],
 			chatId: chatId,
 			msg: message.url,
-			bySelf: false,
+			bySelf: WebIM.conn.user === from,
 			type: 'img',
 			from: message.from,
 			time: time
@@ -292,7 +294,8 @@ WebIM.conn.listen({
 			groupchat: 'group',
 			chatroom: 'chatroom'
 		};
-		const chatId = message.type !== 'chat' ? message.to : message.from;
+		const { from, to, type } = message;
+		const chatId = type === 'chat' ? WebIM.conn.user === from ? to : from : to;
 		let options = {
 			url: message.url,
 			headers: { Accept: 'audio/mp3' },
@@ -302,7 +305,7 @@ WebIM.conn.listen({
 					chatType: typeMap[message.type],
 					chatId: chatId,
 					msg: objectUrl,
-					bySelf: false,
+					bySelf: WebIM.conn.user === from,
 					type: 'audio',
 					from: message.from,
 					time: message.time
@@ -323,7 +326,7 @@ WebIM.conn.listen({
 	}, // 收到位置消息
 	onFileMessage: function(message){
 		const { from, to, type, time } = message;
-		const chatId = type !== 'chat' ? to : from;
+		const chatId = type === 'chat' ? WebIM.conn.user === from ? to : from : to;
 		const typeMap = {
 			chat: 'contact',
 			groupchat: 'group',
@@ -333,7 +336,7 @@ WebIM.conn.listen({
 			chatType: typeMap[message.type],
 			chatId: chatId,
 			msg: message.url,
-			bySelf: false,
+			bySelf: WebIM.conn.user === from,
 			type: 'file',
 			filename: message.filename,
 			file_length: message.file_length,
@@ -346,7 +349,7 @@ WebIM.conn.listen({
 	onVideoMessage: function(message){
 		console.log('onVideoMessage', message);
 		const { from, to, type, time } = message;
-		const chatId = type !== 'chat' ? to : from;
+		const chatId = type === 'chat' ? WebIM.conn.user === from ? to : from : to;
 		const typeMap = {
 			chat: 'contact',
 			groupchat: 'group',
@@ -363,7 +366,7 @@ WebIM.conn.listen({
 					chatType: typeMap[message.type],
 					chatId: chatId,
 					msg: objectURL,
-					bySelf: false,
+					bySelf: WebIM.conn.user === from,
 					type: 'video',
 					filename: message.filename,
 					file_length: message.file_length,
@@ -393,7 +396,7 @@ WebIM.conn.listen({
 			break;
 		case 'subscribed':
 			Vue.$store.dispatch('onGetContactUserList');
-			// Vue.$store.dispatch('getAllFriendsStatus');
+			Vue.$store.dispatch('getAllFriendsStatus');
 			Message.success(`${message.from} 已订阅`);
 			break;
 		case 'unsubscribed':
@@ -407,7 +410,6 @@ WebIM.conn.listen({
 				Message.success(`${message.from} 已退订`);
 			}
 			break;
-
 		case 'direct_joined': // 被拉进群--不需要同意
 			Vue.$store.dispatch('onGetGroupUserList');
 			Message.success(`${message.from}邀请您加入群：${message.gid}`);
