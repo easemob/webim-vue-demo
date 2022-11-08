@@ -11,7 +11,7 @@
 					:key="item.member">
 					<a-checkbox
 						:value="item.member || item.owner"
-						:disabled="item.member == username"
+						:disabled="(item.member || item.owner) == username"
 						class="checkbox">
 						{{item.member || item.owner}}
 					</a-checkbox>
