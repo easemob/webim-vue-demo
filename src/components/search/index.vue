@@ -141,7 +141,7 @@ export default{
 					newMsgs.push(item)
 				}
 			});
-			this.msgObj = newMsgs.filter(item => item.msg.includes(e));
+			this.msgObj = newMsgs.filter(item => item.msg && item.msg.includes(e));
 		},
 		onChangeInput(e){
 			const { value } = e.target

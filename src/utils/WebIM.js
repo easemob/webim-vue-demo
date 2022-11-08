@@ -62,8 +62,6 @@ WebIM.conn = new WebIM.connection({
 
 	// 私有云设置，详细文档：http://docs-im.easemob.com/im/web/other/privatedeploy
 
-	isHttpDNS: true,
-	// isHttpDNS: false,
 	// url: 'https://im-api-v2.easecdn.com/ws', // 设置为私有云的websocket server url
 	// apiUrl: 'https://a1.easecdn.com', // 设置为私有云的rest server url
 
