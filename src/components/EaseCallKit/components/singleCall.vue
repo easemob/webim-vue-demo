@@ -28,7 +28,7 @@ const isStreamPlay = ref(false)
 const smallContainer = ref(null)
 const mainContainer = ref(null)
 /* emits */
-const emits = defineEmits(['getAgoraRtcToken', 'updateLocalStatus'])
+const emits = defineEmits(['getAgoraRtcToken', 'updateLocalStatus','handleCancelCall'])
 /* AgoraRTC */
 //client 初始化
 let CallKitClient = null
@@ -89,7 +89,6 @@ watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
         setTimeout(() => {
             emitChannelToken()
         }, 500)
-
     }
 }, {
     immediate: true
@@ -103,6 +102,10 @@ const emitChannelToken = () => {
     }
     emits('getAgoraRtcToken', callback)
 
+}
+//取消呼叫
+const cancelCall = () => {
+    emits('handleCancelCall')
 }
 //加入频道【接听】
 const joinChannel = async () => {
@@ -159,7 +162,11 @@ onUnmounted(() => {
             <div class="mainContainer" ref="mainContainer">
             </div>
             <div v-show="!isOutside" class="stream_control">
-                <button @click="leaveChannel">挂断</button>
+                <button v-if="callKitStatus.localClientStatus > CALLSTATUS.inviting"
+                    @click="leaveChannel">挂断</button>
+                <button
+                    v-if="callKitStatus.localClientStatus  === CALLSTATUS.inviting"
+                    @click="cancelCall">取消呼叫</button>
             </div>
         </div>
     </div>

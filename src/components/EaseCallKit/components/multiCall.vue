@@ -22,7 +22,7 @@ const props = defineProps({
 })
 const { callKitStatus } = toRefs(props)
 /* emits */
-const emits = defineEmits(['getAgoraRtcToken', 'getAgoraChannelDetails', 'updateLocalStatus','onInviteMembers'])
+const emits = defineEmits(['getAgoraRtcToken', 'getAgoraChannelDetails', 'updateLocalStatus', 'onInviteMembers'])
 /* AgoraRTC */
 //client 初始化
 let CallKitClient = null
@@ -117,6 +117,11 @@ watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
     if (newVal === CALLSTATUS.confirmCallee) {
         emitChannelToken()
     }
+    if (newVal === CALLSTATUS.inviting) {
+        setTimeout(() => {
+            emitChannelToken()
+        }, 500)
+    }
 
 }, {
     immediate: true
@@ -136,11 +141,10 @@ const joinChannel = async () => {
     const channelName = channelInfos.channelName
     const agoraChannelToken = channelInfos.agoraChannelToken
     const agoraUserId = channelInfos.agoraUserId
-    const calleeIMName = channelInfos.calleeIMName
     try {
         await CallKitClient.join(AgoraAppId, channelName, agoraChannelToken, agoraUserId)
         inChannelUsersList.push({
-            easeimUserId: calleeIMName,
+            easeimUserId: '',
             agoraUserId: agoraUserId.toString(),
             volume: 0,//音量
             muteStatus: false,
@@ -163,9 +167,10 @@ const joinChannel = async () => {
 }
 //离开频道【挂断&对方挂断】
 const leaveChannel = async () => {
-    console.log('》》》》》挂断')
-    localVoiceTrack && localVoiceTrack.close()
-    localVoiceTrack && localVideoTrack.close()
+    console.log('》》》》》挂断', callKitStatus.value.localClientStatus)
+    if ([CALLSTATUS.inviting, CALLSTATUS.confirmRing].includes(callKitStatus.value.localClientStatus)) {
+        console.log('>>>>>>调用发送取消信令');
+    }
     await CallKitClient.leave()
     emits('updateLocalStatus', CALLSTATUS.idle)
 }
@@ -272,11 +277,14 @@ const handleLocalStreamPublish = (handleType) => {
 }
 
 //邀请更多成员加入会议
-const inviteMoreMembers = ()=>{
+const inviteMoreMembers = () => {
     emits('onInviteMembers')
 }
 //组件卸载
 onUnmounted(() => {
+    //释放调用的媒体硬件权限
+    localVoiceTrack && localVoiceTrack.close()
+    localVoiceTrack && localVideoTrack.close()
     console.log('>>>>>>监听到组件卸载')
 })
 </script>
@@ -285,17 +293,17 @@ onUnmounted(() => {
         <div class="stream_container" ref="streamContainer">
             <div class="myContainer" v-for="item in inChannelUsersList" :key="item.agoraUserId" :id="item.agoraUserId">
                 <div class="userInfo">
-                    <span class="userIMId">{{item.easeimUserId}}</span>
+                    <span class="userIMId">{{ item.easeimUserId }}</span>
                     <span class="muteStatus" v-if="item.muteStatus">已闭麦</span>
-                    <span class="volumeStatus" v-if="item.volume>0">📢</span>
+                    <span class="volumeStatus" v-if="item.volume > 0">📢</span>
 
                 </div>
             </div>
             <div v-show="!isOutside" class="stream_control">
-                <button @click="handleLocalStreamPublish('voice')">{{localStreamStatus.voice?'开启静音':'关闭静音'}}</button>
+                <button @click="handleLocalStreamPublish('voice')">{{ localStreamStatus.voice ? '开启静音' : '关闭静音' }}</button>
                 <button @click="leaveChannel">挂断</button>
                 <button @click="inviteMoreMembers">邀请</button>
-                <button @click="handleLocalStreamPublish('video')">{{localStreamStatus.video?'关闭摄像头':'开启摄像头'}}</button>
+                <button @click="handleLocalStreamPublish('video')">{{ localStreamStatus.video ? '关闭摄像头' : '开启摄像头' }}</button>
             </div>
         </div>
     </div>

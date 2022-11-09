@@ -102,14 +102,14 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
     }
     //更新频道信息
     const updateChannelInfos = (msgBody) => {
-        console.log('触发更新频道信息');
+        console.log('触发更新频道信息', msgBody);
         const { from, to, ext } = msgBody || {}
         const params = {
             channelName: ext.channelName || '',
             callId: ext.callId || '',
             callType: ext.type || 0,
             callerDevId: ext.callerDevId || '',
-            calleeDevId: ext.calleeDevId || EaseIM[conn].context.jid.clientResource,
+            calleeDevId: ext.calleeDevId,
             callerIMName: from,
             calleeIMName: to
         }
@@ -118,6 +118,8 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
     //发送邀请信息功能
     const SignalMsgs = new CallKitMessages({ IM: EaseIM, conn: conn })
     const sendInviteMessage = async (targetId, callType) => {
+        //非空闲状态直接拒绝发送邀请信息
+        if (callKitStatus.localClientStatus !== CALLSTATUS.idle) return
         if (!targetId) throw 'targetId must pass！'
         if (callType === undefined || callType === null || callType < 0) throw 'callType must pass！'
         if (Array.isArray(targetId) && targetId.length < 1 || targetId.length > 15) throw 'targetId length  > 15 or length < 1'
@@ -144,9 +146,21 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             console.log('%c邀请信息发送失败', 'color:red');
         }
         //更改部分ChannelInfos
-        callKitStatus.channelInfos.channelName = channelInfors.channelName
-        callKitStatus.channelInfos.callId = channelInfors.callId
-        callKitStatus.channelInfos.callType = callType
+        let params = {
+            from: EaseIM[conn].user,
+            to: callType === 2 ? '' : targetId,
+            ext: {
+                channelName: channelInfors.channelName,
+                callId: channelInfors.callId,
+                type: callType,
+                callerDevId: EaseIM[conn].context.jid.clientResource
+            },
+        }
+        console.log('邀请发送 callType为', callType);
+        updateChannelInfos(params)
+        // callKitStatus.channelInfos.channelName = channelInfors.channelName
+        // callKitStatus.channelInfos.callId = channelInfors.callId
+        // callKitStatus.channelInfos.callType = callType
         //单人邀请开启超时挂断，多人则忽略
         if (callType !== 2) {
             startCallKitTimer()
@@ -162,7 +176,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         callKitTimer.value = setTimeout(() => {
             const targetId = callKitStatus.inviteTarget
             //发送cannel信令
-            SignalMsgs.sendCannelMsg({targetId})
+            SignalMsgs.sendCannelMsg({ targetId, callId: callKitStatus.channelInfos.callId })
             updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
         }, 30000)
     }

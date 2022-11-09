@@ -118,7 +118,7 @@ const handleCallKitInvite = (msgBody) => {
 //处理接收到通话交互过程的CMD命令消息
 const handleCallKitCommand = (msgBody) => {
     console.log('>>>>开始处理command命令消息', msgBody)
-    const cmdMsgBody = msgBody.ext || {}
+    const cmdMsgBody = Object.assign({}, msgBody.ext) || {}
     const { calleeDevId, callerDevId } = cmdMsgBody
     const clientResource = EaseIM.value[conn].context.jid.clientResource
     const { action } = cmdMsgBody
@@ -146,6 +146,7 @@ const handleCallKitCommand = (msgBody) => {
                 status
             }
             SignalMsgs.sendConfirmRing(params)
+            updateLocalStatus(CALLSTATUS.inviting)
             break
         case CALL_ACTIONS_TYPE.CONFIRM_RING: {//调起confirm待接听界面
             if (calleeDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
@@ -170,18 +171,15 @@ const handleCallKitCommand = (msgBody) => {
                 //如果calleeDevId不存在，并且非多人音视频模式，主动更新频道信息
                 updateChannelInfos(msgBody)
             } else if (callKitStatus.channelInfos.calleeDevId !== cmdMsgBody.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
+                console.log('callKitStatus.channelInfos.calleeDevId', callKitStatus.channelInfos.calleeDevId);
                 //如果存在频道信息，但是与待呼叫确认的calleeDevId不一致直接发送拒绝应答。
                 params.sendBody.result = ANSWER_TYPE.REFUSE
             }
-            console.log('%c 即将发送的params', params);
             SignalMsgs.sendConfirmCallee(params)
             if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET) {
-                const resultStatus = {
-                    '忙碌': ANSWER_TYPE.BUSY,
-                    '拒绝': ANSWER_TYPE.REFUSE
-                }
-                console.log('>>>>>>对方应答结果为：', Object.values(resultStatus[cmdMsgBody.result]))
-                if (callKitStatus.localClientStatus.callType !== 2) { //无论对方是忙碌还是拒接都讲通话状态更改为闲置。
+                console.log('callKitStatus.channelInfos.callType ', callKitStatus.channelInfos.callType);
+                if (callKitStatus.channelInfos.callType !== 2) { //无论对方是忙碌还是拒接都讲通话状态更改为闲置。
+                    console.log('>>>>>修改当前状态为空闲');
                     return updateLocalStatus(CALLSTATUS.idle)
                 }
             }
@@ -214,7 +212,7 @@ const handleCallKitCommand = (msgBody) => {
             break
     }
 }
-//发送接听或者挂断信令
+//发送接听或者拒接信令
 const handleSendAnswerMsg = (sendType) => {
     const channelInfos = callKitStatus.channelInfos
     const payload = {
@@ -235,7 +233,13 @@ const handleSendAnswerMsg = (sendType) => {
         console.log('>>>>开始发送挂断信令')
     }
 }
-
+//挂断信令
+const handleCancelCall = () => {
+    const targetId = callKitStatus.inviteTarget
+    if (!targetId) return console.log('>>>挂断目标ID为空');
+    SignalMsgs.sendCannelMsg({ targetId, callId: callKitStatus.channelInfos.callId })
+    updateLocalStatus(CALLSTATUS.idle)
+}
 /* 获取agoraToken */
 const getAgoraRtcToken = async (callback) => {
     const username = EaseIM.value[conn].user
@@ -283,7 +287,8 @@ onUnmounted(() => {
         <!-- 音视频UI展示组件 -->
         <component :is="callCompsType[callComponents]" :callKitStatus="callKitStatus"
             @getAgoraRtcToken="getAgoraRtcToken" @getAgoraChannelDetails="getAgoraChannelDetails"
-            @updateLocalStatus="updateLocalStatus" @onInviteMembers="onInviteMembers">
+            @updateLocalStatus="updateLocalStatus" @onInviteMembers="onInviteMembers"
+            @handleCancelCall="handleCancelCall">
         </component>
     </div>
 </template>

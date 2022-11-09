@@ -165,9 +165,9 @@ export default class CallKitMessages {
         })
     }
     //发送取消呼叫消息
-    sendCannelMsg(payload){
-        console.log('>>>>>>>发送取消通话信令',payload);
-        const { targetId } = payload
+    sendCannelMsg(payload) {
+        console.log('>>>>>>>发送取消通话信令', payload);
+        const { targetId, callId } = payload
         const option = {
             type: 'cmd',
             chatType: 'singleChat',
@@ -179,7 +179,7 @@ export default class CallKitMessages {
             ext: {
                 action: CALL_ACTIONS_TYPE.CANCEL,
                 callerDevId: this.conn.context.jid.clientResource,
-                callId: "",
+                callId: callId || "",
                 ts: Date.now(),
                 msgType: MSG_TYPE
             }
