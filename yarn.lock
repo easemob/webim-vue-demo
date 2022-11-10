@@ -83,11 +83,6 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@popperjs/core@^2.9.2":
-  version "2.11.5"
-  resolved "https://registry.npmmirror.com/@popperjs/core/-/core-2.11.5.tgz#db5a11bf66bdab39569719555b0f76e138d7bd64"
-  integrity sha512-9X2obfABZuDVLCgPK9aX0a/x4jaOEweTTWE2+9sr0Qqqevj2Uv5XorvusThmc9XGYpS9yI+fhh8RTafBtGposw==
-
 "@simonwep/pickr@~1.7.0":
   version "1.7.4"
   resolved "https://registry.yarnpkg.com/@simonwep/pickr/-/pickr-1.7.4.tgz#b14fcd945890388b870cd6db4d6c78d531f25141"
@@ -158,10 +153,17 @@ add-dom-event-listener@^1.0.2:
   dependencies:
     object-assign "4.x"
 
-agora-rtc-sdk-ng@^4.4.0:
-  version "4.8.1"
-  resolved "https://registry.yarnpkg.com/agora-rtc-sdk-ng/-/agora-rtc-sdk-ng-4.8.1.tgz#1228c92ee0ab500629cf7dbd4c6213eec7303ffd"
-  integrity sha512-hAYb7quX2cUoURnCobYBXtdfjbuec3zuZupkfmroh5IXLihRRNPzEhT51QUuiSxgsAJG2Yr4XB6g6BR0aRGxrg==
+agora-rtc-sdk-ng@^4.7.3:
+  version "4.14.2"
+  resolved "https://registry.yarnpkg.com/agora-rtc-sdk-ng/-/agora-rtc-sdk-ng-4.14.2.tgz#af3823744531acb1bad798720277f2713ae6b107"
+  integrity sha512-i3xy4wks8webXh0IAYcurIYD/6mqnonw0n+vBS3JcxcqPi38ksrADCBO0BKw+mhB9PNPP3yGG45SaUBqTxGYBw==
+  dependencies:
+    agora-rte-extension "^1.0.22"
+
+agora-rte-extension@^1.0.22:
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/agora-rte-extension/-/agora-rte-extension-1.2.3.tgz#979b96df0146300296f9f37212ffa67656c698ef"
+  integrity sha512-k3yNrYVyzJRoQJjaJUktKUI1XRtf8J1XsW8OzYKFqGlS8WQRMsES1+Phj2rfuEriiLObfuyuCimG6KHQCt5tiw==
 
 ajv-keywords@^3.1.0:
   version "3.5.2"
@@ -1143,9 +1145,9 @@ balanced-match@^0.4.2:
   integrity sha1-yz8+PHMtwPAe5wtAPzAuYddwmDg=
 
 balanced-match@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
-  integrity sha1-ibTRmasr7kneFk6gK4nORi1xt2c=
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.2.tgz#e83e3a7e3f300b34cb9d87f615fa0cbf357690ee"
+  integrity sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
 
 base64-js@^1.0.2:
   version "1.3.1"
@@ -1906,7 +1908,7 @@ compression@^1.7.3:
 concat-map@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
-  integrity sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=
+  integrity sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==
 
 concat-stream@^1.5.0:
   version "1.6.2"
@@ -2665,10 +2667,10 @@ easemob-webrtc@^3.2.2:
   resolved "https://registry.yarnpkg.com/easemob-webrtc/-/easemob-webrtc-3.2.2.tgz#03e46093cb0ce4168bddf23e61069ed6bfe221af"
   integrity sha512-uScTb2kLKH3pST/eDpjuSFGL+EYpEnogWaRw7Tsyl7b+kEQQZ2xtleIoIunCCZqSCattPBnZ1evDY+7J/wiYfw==
 
-easemob-websdk@^4.0.3:
-  version "4.0.3"
-  resolved "https://registry.npmmirror.com/easemob-websdk/-/easemob-websdk-4.0.3.tgz#b8dfede7664b7bc0662c80514587d95b6693ec13"
-  integrity sha512-M7dN5lXt7di7EA+7WQ/A7fe+uxeUALufouTnEttVgx3cpPlGj2BTL+4JntxJHIu716W5j8jXlXNh9ZOOTQigUA==
+easemob-websdk@^4.0.5:
+  version "4.1.2"
+  resolved "https://registry.yarnpkg.com/easemob-websdk/-/easemob-websdk-4.1.2.tgz#162c5784b006fe230fedc82c730f7c0068eb1786"
+  integrity sha512-0qqMsprSCLaZ+7tia8gfFhiV0L94YGD6TmY2SySPWnevle7UH8XqSzXNG8cUW7jIOJGe7hSffUw577ww40F6aA==
 
 ee-first@1.1.1:
   version "1.1.1"
@@ -4889,9 +4891,9 @@ minimalistic-crypto-utils@^1.0.0, minimalistic-crypto-utils@^1.0.1:
   integrity sha1-9sAMHAsIIkblxNmd+4x8CDsrWCo=
 
 minimatch@^3.0.4:
-  version "3.0.4"
-  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
-  integrity sha512-yJHVQEhyqPLUTgt9B83PXu6W3rx4MvvHvSUvToogpwoGDOUQ+yDrR0HRot+yOCdCO7u4hX3pWft6kWBBcqh0UA==
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.1.2.tgz#19cd194bfd3e428f049a70817c038d89ab4be35b"
+  integrity sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==
   dependencies:
     brace-expansion "^1.1.7"
 
