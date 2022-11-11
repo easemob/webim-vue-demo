@@ -29,12 +29,9 @@
 <script>
 import './index.less';
 import { mapActions, mapGetters } from 'vuex';
-import EmediaModal from '../emediaModal/index';
-import moment from 'moment';
+import emoji from '../../config/emoji'
 import _ from 'lodash';
-import AddAVMemberModal from '../emediaModal/addAVMemberModal';
-import MultiAVModal from '../emediaModal/multiAVModal';
-import GetGroupInfo from '../group/groupInfo.vue';
+
 
 export default{
 	data(){
@@ -69,7 +66,7 @@ export default{
 			isCollapse: true,
 			unRead: '',
 			dataFlag: false,
-			pushConfigData: [] 
+			pushConfigData: []
 			// selectedKeys: [ this.getKey(this.activedKey[this.type]) ]
 		};
 	},
@@ -151,11 +148,11 @@ export default{
 			deep: true
 		},
 		pushConfig: {
-            handler(newVal, oldVal){
+			handler(newVal, oldVal){
             	this.pushConfigData = newVal
 			},
 			deep: true
-        }
+		}
 	},
 	computed: {
 		...mapGetters({
@@ -481,7 +478,7 @@ export default{
 		},
 		getUserOnlineStatus(val){
 			const { ext } = val
-			console.log(ext==='', 'getUserOnlineStatus')
+			console.log(ext === '', 'getUserOnlineStatus')
 			switch(ext){
 			case 'Offline':
 				return require('../../assets/Offline.png')

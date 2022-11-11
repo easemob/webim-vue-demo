@@ -233,7 +233,7 @@ const Chat = {
 	actions: {
 		onGetContactUserList: function (context, payload) {
 			try {
-				WebIM.conn.getRoster({
+				WebIM.conn.getContacts({
 					success: function (roster) {
 						const userList = roster.filter(user => ['both', 'to'].includes(user.subscription));
 						const userInfoList = [];
@@ -246,28 +246,6 @@ const Chat = {
 								type: 'contactUserList',
 								black: payload
 							});
-							// WebIM.conn.fetchSubscribedListWithCompletion().then(res => {
-							// 	const { data, type } = res
-							// 	if (type === 200 && data.length) {
-							// 		data.forEach(val => {
-							// 			userList.forEach(item => {
-							// 				if (item.name === val.name) {
-							// 					item.presence = data.status
-							// 				}
-							// 			})
-							// 		})
-							// 		console.log(userList)
-							// 		context.commit("updateUserList", {
-							// 			userList,
-							// 			type: "contactUserList",
-							// 			black: payload
-							// 		})
-							// 	} else {
-							// 		WebIM.conn.subscribePresence({ members: userInfoList }).then(res => {
-							// 			console.log(res)
-							// 		})
-							// 	}
-							// })
 						})['catch'](err => {
 							context.commit('updateUserList', {
 								userList,
@@ -286,22 +264,18 @@ const Chat = {
 			console.log(payload);
 		},
 		onGetGroupUserList: function (context, payload) {
-			var options = {
-				success: function (resp) {
-					let userList = resp.data;
-					userList.forEach((user, index) => {
-						userList[index].name = user.groupname;
-					});
-					const userInfoList = [];
-					userList && userList.forEach(item => { userInfoList.push(item.name); });
-					context.commit('updateUserList', {
-						userList,
-						type: 'groupUserList'
-					});
-				},
-				error: function (e) { },
-			};
-			WebIM.conn.getGroup(options);
+			WebIM.conn.getJoinedGroups({pageNum:1, pageSize: 500}).then((res)=>{
+				let userList = res.data;
+				userList.forEach((user, index) => {
+					userList[index].name = user.groupname;
+				});
+				const userInfoList = [];
+				userList && userList.forEach(item => { userInfoList.push(item.name); });
+				context.commit('updateUserList', {
+					userList,
+					type: 'groupUserList'
+				});
+			});
 		},
 		onGetChatroomUserList: function (context, payload) {
 			var option = {

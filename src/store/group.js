@@ -62,7 +62,7 @@ const Group = {
 					console.log('获取群组失败', e);
 				}
 			};
-			WebIM.conn.listGroups(options);
+			WebIM.conn.getPublicGroups(options);
 		},
 		// 获取群组详情
 		onGetGroupinfo: function(context, payload){
@@ -130,7 +130,7 @@ const Group = {
 				},
 				error: function(){ }
 			};
-			WebIM.conn.createGroupNew(options);
+			WebIM.conn.createGroup(options);
 		},
 		// 将好友加入群组
 		onInviteGroup: function(context, payload){
@@ -148,7 +148,7 @@ const Group = {
 
 				}
 			};
-			WebIM.conn.inviteToGroup(option);
+			WebIM.conn.inviteUsersToGroup(option);
 		},
 		// 收到群组申请,同意进群
 		onAgreeJoinGroup: function(context, payload){
@@ -162,7 +162,7 @@ const Group = {
 				},
 				error: function(e){ }
 			};
-			WebIM.conn.agreeJoinGroup(options);
+			WebIM.conn.acceptGroupJoinRequest(options);
 		},
 		// 收到群组申请，拒绝进群
 		onRejectJoinGroup: function(context, payload){
@@ -175,7 +175,7 @@ const Group = {
 				},
 				error: function(e){ }
 			};
-			WebIM.conn.rejectJoinGroup(options);
+			WebIM.conn.rejectGroupJoinRequest(options);
 		},
 		// 收到邀请进群通知，同意
 		onAgreeInviteGroup: function(context, payload){
@@ -190,7 +190,7 @@ const Group = {
 				},
 				error: function(e){ }
 			};
-			WebIM.conn.agreeInviteIntoGroup(options);
+			WebIM.conn.acceptGroupInvite(options);
 		},
 		// 收到邀请进群通知，拒绝
 		onRejectInviteGroup: function(context, payload){
@@ -203,7 +203,7 @@ const Group = {
 				},
 				error: function(e){ }
 			};
-			WebIM.conn.rejectInviteIntoGroup(options);
+			WebIM.conn.rejectGroupInvite(options);
 		},
 		// 修改群组详情
 		onUpdataGroupInfo: function(context, payload){
@@ -231,7 +231,7 @@ const Group = {
 				},
 				error: function(e){ }
 			};
-			WebIM.conn.setAdmin(options);
+			WebIM.conn.setGroupAdmin(options);
 		},
 		// 取消管理员
 		onRemoveAdmin: function(context, payload){
@@ -244,7 +244,7 @@ const Group = {
 				},
 				error: function(e){ }
 			};
-			WebIM.conn.removeAdmin(options);
+			WebIM.conn.removeGroupAdmin(options);
 		},
 		// 获取管理员列表
 		getGroupAdmin: function(context, payload){
@@ -271,7 +271,7 @@ const Group = {
 				},
 				error: function(e){ }
 			};
-			WebIM.conn.mute(options);
+			WebIM.conn.muteGroupMember(options);
 		},
 		// 移除禁言
 		onRemoveMute: function(context, payload){
@@ -285,7 +285,7 @@ const Group = {
 				},
 				error: function(e){ }
 			};
-			WebIM.conn.removeMute(options);
+			WebIM.conn.unmuteGroupMember(options);
 		},
 		// 获取禁言列表
 		getMuted: function(context, payload){
@@ -298,7 +298,7 @@ const Group = {
 				},
 				error: function(e){ }
 			};
-			WebIM.conn.getMuted(options);
+			WebIM.conn.getGroupMutelist(options);
 		},
 		// 添加群组黑名单
 		onAddGroupBlack: function(context, payload){
@@ -313,7 +313,7 @@ const Group = {
 				},
 				error: function(e){ }
 			};
-			WebIM.conn.groupBlockSingle(options);
+			WebIM.conn.blockGroupMember(options);
 		},
 		// 移除群组黑名单
 		onRemoveGroupBlack: function(context, payload){
@@ -328,7 +328,7 @@ const Group = {
 				},
 				error: function(e){ }
 			};
-			WebIM.conn.removeGroupBlockSingle(options);
+			WebIM.conn.unblockGroupMember(options);
 		},
 		// 获取群组黑名单
 		onGetGroupBlack: function(context, payload){
@@ -343,7 +343,7 @@ const Group = {
 					console.log('Get group black list error.');
 				}
 			};
-			WebIM.conn.getGroupBlacklistNew(option);
+			WebIM.conn.getGroupBlocklist(option);
 		},
 		// 移除群组成员
 		onRemoveGroupUser: function(context, payload){
@@ -355,7 +355,7 @@ const Group = {
 				},
 				error: {}
 			};
-			WebIM.conn.removeSingleGroupMember(options);
+			WebIM.conn.removeGroupMember(options);
 		},
 		// 退出群组
 		onQuitGroup: function(context, payload){
@@ -370,7 +370,7 @@ const Group = {
 					console.log('Leave room faild');
 				}
 			};
-			WebIM.conn.quitGroup(option);
+			WebIM.conn.leaveGroup(option);
 		},
 		// 解散群组
 		onDissolveGroup: function(context, payload){
@@ -382,7 +382,7 @@ const Group = {
 					Vue.$forceUpdate();
 				}
 			};
-			WebIM.conn.dissolveGroup(option);
+			WebIM.conn.destroyGroup(option);
 		}
 	},
 	getters: {

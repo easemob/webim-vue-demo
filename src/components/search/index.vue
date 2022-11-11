@@ -63,7 +63,7 @@
                 </a-card>
               </div>
               <!-- 音频消息 -->
-              <div v-else-if="item.type === 'audio'" :style="{ float: 'left' }">
+              <div v-else-if="item.type === 'audio'">
                 <audio :src="item.msg" controls></audio>
               </div>
               <!-- 视频消息 -->
@@ -86,90 +86,97 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from "vuex";
+import { mapActions, mapGetters } from 'vuex';
 import _ from 'lodash'
-import WebIM from "../../utils/WebIM";
-import { renderTime,readablizeBytes } from "../../utils/index";
-export default {
-  data() {
-    return {
-      renderTime,
-      readablizeBytes,
-      showModal: false,
-      showPopover: false,
-      searchValue:'',
-      msgObj: [],
-    };
-  },
-  watch: {
-    historyList: {
-      handler(msgNewVal, msgOldVal) {
-        this.msgObj = _.reverse(msgNewVal);
-      }
-    }
-  },
-  computed: {
-    ...mapGetters({
-      historyList: "fetchHistoryMessages"
-    })
-  },
-  methods: {
-    ...mapActions(["getHistoryMessage"]),
-    handleHistory() {
-      this.showModal = !this.showModal;
-      WebIM.conn.mr_cache = [];
-      this.getHistoryMessage({
-        name: this.type === "contact" ? this.chatId.name : this.chatId.groupid,
-        isGroup: this.type === "contact" ? false : true,
-        isSearch: true
-      });
-    },
-    handlerClose() {
-      this.showModal = false;
-      this.searchValue = ''
-    },
-    onSearch (e) {
-      let newMsgs = [];
-      this.historyList.length && this.historyList.forEach(item => {
-          if (item.type === 'txt') {
-            newMsgs.push(item)
-          }
-      });
-      this.msgObj = newMsgs.filter(item => item.msg.includes(e));
-    },
-    onChangeInput(e) {
-      const {value} = e.target
-      if (value.length === 0) {
-        this.msgObj = this.historyList;
-      }
-    },
-    renderTxt(txt = "") {
-      let rnTxt = [];
-      let match = null;
-      const regex = /(\[.*?\])/g;
-      let start = 0;
-      let index = 0;
-      while ((match = regex.exec(txt))) {
-        index = match.index;
-        if (index > start) {
-          rnTxt.push(txt.substring(start, index));
-        }
-        if (match[1] in emoji.obj) {
-          const v = emoji.obj[match[1]];
-          rnTxt.push(this.customEmoji(v));
-        } else {
-          rnTxt.push(match[1]);
-        }
-        start = index + match[1].length;
-      }
-      rnTxt.push(txt.substring(start, txt.length));
-      return rnTxt.toString().replace(/,/g, "");
-    }
-  },
-  props: [
-    "type", // 聊天类型 contact, group, chatroom
-    "chatId" // 选中的聊天对象
-  ]
+import WebIM from '../../utils/WebIM';
+import emoji from '../../config/emoji';
+import { renderTime, readablizeBytes } from '../../utils/index';
+export default{
+	data(){
+		return {
+			renderTime,
+			readablizeBytes,
+			showModal: false,
+			showPopover: false,
+			searchValue: '',
+			msgObj: [],
+		};
+	},
+	watch: {
+		historyList: {
+			handler(msgNewVal, msgOldVal){
+				this.msgObj = _.reverse(msgNewVal);
+			}
+		}
+	},
+	computed: {
+		...mapGetters({
+			historyList: 'fetchHistoryMessages'
+		})
+	},
+	methods: {
+		...mapActions(['getHistoryMessage']),
+		handleHistory(){
+			this.showModal = !this.showModal;
+			WebIM.conn.mr_cache = [];
+			this.getHistoryMessage({
+				name: this.type === 'contact' ? this.chatId.name : this.chatId.groupid,
+				isGroup: this.type !== 'contact',
+				isSearch: true
+			});
+		},
+		handlerClose(){
+			this.showModal = false;
+			this.searchValue = ''
+		},
+
+		customEmoji(value){
+			return `<img src="../../../static/faces/${value}" style="width:20px"/>`;
+		},
+
+		onSearch(e){
+			let newMsgs = [];
+			this.historyList.length && this.historyList.forEach(item => {
+				if(item.type === 'txt'){
+					newMsgs.push(item)
+				}
+			});
+			this.msgObj = newMsgs.filter(item => item.msg && item.msg.includes(e));
+		},
+		onChangeInput(e){
+			const { value } = e.target
+			if(value.length === 0){
+				this.msgObj = this.historyList;
+			}
+		},
+		renderTxt(txt = ''){
+			let rnTxt = [];
+			let match = null;
+			const regex = /(\[.*?\])/g;
+			let start = 0;
+			let index = 0;
+			while((match = regex.exec(txt))){
+				index = match.index;
+				if(index > start){
+					rnTxt.push(txt.substring(start, index));
+				}
+				if(match[1] in emoji.obj){
+					const v = emoji.obj[match[1]];
+					rnTxt.push(this.customEmoji(v));
+				}
+				else{
+					rnTxt.push(match[1]);
+				}
+				start = index + match[1].length;
+			}
+			rnTxt.push(txt.substring(start, txt.length));
+			return rnTxt.toString().replace(/,/g, '');
+		}
+	},
+	props: [
+		'type', // 聊天类型 contact, group, chatroom
+		'chatId' // 选中的聊天对象
+	]
 };
 </script>
 <style scoped>

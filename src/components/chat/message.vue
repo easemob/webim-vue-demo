@@ -145,8 +145,8 @@
         <UpLoadImage :type="this.type" :chatId="activedKey[type]" />
         <!-- 上传文件组件 -->
         <UpLoadFile :type="this.type" :chatId="activedKey[type]" />
-		<!-- 历史记录 -->
-		<SearchModal :type="this.type" :chatId="activedKey[type]"/>
+				<!-- 历史记录 -->
+				<SearchModal v-if="this.type !== 'chatroom'" :type="this.type" :chatId="activedKey[type]"/>
         <!-- 发送语音 -->
         <RecordAudio v-show="isHttps" />
         <!-- 发视频通话 -->
@@ -181,7 +181,7 @@
       </div>
     </div>
     <GetGroupInfo ref="groupInfoModel" @closeGroupMessage="closeGroupMessage" />
-	<DisturbConfig ref="disturbConfigModel" :userId="this.userId"/> 
+	<DisturbConfig ref="disturbConfigModel" :userId="this.userId"/>
 
     <!-- fix 移动到全局 -->
     <!-- <AddAVMemberModal ref="addAvMembertModal" :to="activedKey[type]" @start="start_multi"/> -->
@@ -206,7 +206,7 @@ import _ from 'lodash';
 import GetGroupInfo from '../group/groupInfo.vue';
 import DisturbConfig from '../pushConfig/index.vue'
 import SearchModal from '../search/index.vue'
-import {readablizeBytes, renderTime} from '../../utils/index'
+import { readablizeBytes, renderTime } from '../../utils/index'
 export default{
 	data(){
 		return {
@@ -248,7 +248,7 @@ export default{
 			globalHistoryMsg: {},
 			conversationId: '',
 			userId: '',
-			readablizeBytes, 
+			readablizeBytes,
 			renderTime
 		};
 	},
@@ -449,7 +449,7 @@ export default{
 
 		]),
 		setReportMsgId(id){
-			this.$store.commit('setReportMsgId', {messageId: id});
+			this.$store.commit('setReportMsgId', { messageId: id });
 		},
 		getKey(item, type){
 			let key = '';
@@ -504,7 +504,7 @@ export default{
 			const me = this;
 			me.$data.loadText = '加载更多';
 			// if( me.roomId){
-			//     WebIM.conn.quitChatRoom({
+			//     WebIM.conn.leaveChatRoom({
 			//         roomId: me.roomId // 聊天室id
 			//     });
 			//     me.roomId = ''
@@ -627,7 +627,7 @@ export default{
 					},
 				});
 				break;
-				case '3': 
+			case '3':
 				this.$refs.disturbConfigModel.changeModal();
 				this.onGetSilentConfig();
 				break;
@@ -747,10 +747,12 @@ export default{
 		closeGroupMessage(){
 			// 退出群组或解散群组时关闭聊天框
 			this.$data.activedKey.group = '';
+			this.$emit('chatTypeChange', { key: 'group' })
 		},
 		closeContactMessage(){
 			// 删除好友时关闭当前聊天框
 			this.$data.activedKey.contact = '';
+			this.$emit('chatTypeChange', { key: 'contact' })
 		},
 		// changeIsVideoState(v) {
 		//   v ? (this.$data.nowIsVideo = true) : (this.$data.nowIsVideo = false);

@@ -88,7 +88,7 @@ const Login = {
 		},
 		updateOwnUserInfo: ({ commit }, payload)=>{
 			const { infoValue, type } = payload;
-			WebIM.conn.updateOwnUserInfo(type, infoValue).then((res) => {
+			WebIM.conn.updateUserInfo(type, infoValue).then((res) => {
 				res.data && commit('setUserDetaild', res.data);
 			});
 		},
