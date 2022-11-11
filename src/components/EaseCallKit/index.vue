@@ -70,10 +70,14 @@ const setMessageListener = () => {
     //防止重复设置监听，设置之前先执行移除
     removeMessageListener()
     EaseIM.value[conn].addEventHandler(msgLisnnerName, msgListener)
+    //初始化当前登录ID
+    setLoginUserHxId()
 }
 //移除信令监听
 const removeMessageListener = () => EaseIM.value[conn].removeEventHandler(msgLisnnerName)
-
+//当前登录用户ID
+const loginUserHxId = ref('')
+const setLoginUserHxId = () => loginUserHxId.value = EaseIM.value[conn].user || ''
 /* CallKit status */
 const callCompsType = {
     'singleCall': SingleCall,
@@ -87,6 +91,8 @@ const {
     updateChannelInfos,
     sendInviteMessage
 } = useManageChannel(EaseIM.value, conn)
+//将当前登录ID初始化进callKitStatus缓存内
+
 /* 信令部分 */
 const SignalMsgs = new CallKitMessages({ IM: EaseIM.value, conn: conn })
 //处理收到为文本的邀请信息
@@ -124,6 +130,7 @@ const handleCallKitCommand = (msgBody) => {
     const { action } = cmdMsgBody
     switch (action) {
         case CALL_ACTIONS_TYPE.ALERT: //回复confirmring
+            updateLocalStatus(CALLSTATUS.alerting)
             const { localClientStatus, channelInfos } = callKitStatus
             //当前有效会议ID
             const currentCallKitCallId = callKitStatus.channelInfos.callId
@@ -162,6 +169,7 @@ const handleCallKitCommand = (msgBody) => {
         case CALL_ACTIONS_TYPE.ANSWER: {
             console.log('>>>>>cmdMsgBody', cmdMsgBody)
             if (callerDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
+            updateLocalStatus(CALLSTATUS.receivedAnswerCall)
             callKitTimer.value && clearTimeout(callKitTimer.value)
             const params = {
                 targetId: msgBody.from,
@@ -176,6 +184,7 @@ const handleCallKitCommand = (msgBody) => {
                 params.sendBody.result = ANSWER_TYPE.REFUSE
             }
             SignalMsgs.sendConfirmCallee(params)
+            updateLocalStatus(CALLSTATUS.confirmCallee)
             if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET) {
                 console.log('callKitStatus.channelInfos.callType ', callKitStatus.channelInfos.callType);
                 if (callKitStatus.channelInfos.callType !== 2) { //无论对方是忙碌还是拒接都讲通话状态更改为闲置。
@@ -203,10 +212,16 @@ const handleCallKitCommand = (msgBody) => {
             updateLocalStatus(CALLSTATUS.confirmCallee)
         }
             break
-        case CALL_ACTIONS_TYPE.CANCEL:
+        case CALL_ACTIONS_TYPE.CANCEL: {
             if (msgBody.from === EaseIM.value[conn].user) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
             if (msgBody.from === callKitStatus.channelInfos.callerIMName) return updateLocalStatus(CALLSTATUS.idle)
             break
+        }
+        case CALL_ACTIONS_TYPE.Video_TO_VOICE: {
+            console.log('语音转通话通知');
+            break;
+        }
+
         default:
             console.log('>>>其他未知状态')
             break
@@ -285,7 +300,7 @@ onUnmounted(() => {
             :callKitStatus="callKitStatus" @updateLocalStatus="updateLocalStatus"
             @handleSendAnswerMsg="handleSendAnswerMsg" />
         <!-- 音视频UI展示组件 -->
-        <component :is="callCompsType[callComponents]" :callKitStatus="callKitStatus"
+        <component :is="callCompsType[callComponents]" :callKitStatus="callKitStatus" :loginUserHxId="loginUserHxId"
             @getAgoraRtcToken="getAgoraRtcToken" @getAgoraChannelDetails="getAgoraChannelDetails"
             @updateLocalStatus="updateLocalStatus" @onInviteMembers="onInviteMembers"
             @handleCancelCall="handleCancelCall">

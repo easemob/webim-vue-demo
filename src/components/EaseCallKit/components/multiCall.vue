@@ -18,9 +18,14 @@ const props = defineProps({
         type: Object,
         default: () => ({}),
         required: true,
+    },
+    loginUserHxId: {
+        type: String,
+        default: '',
+        required: true,
     }
 })
-const { callKitStatus } = toRefs(props)
+const { callKitStatus, loginUserHxId } = toRefs(props)
 /* emits */
 const emits = defineEmits(['getAgoraRtcToken', 'getAgoraChannelDetails', 'updateLocalStatus', 'onInviteMembers'])
 /* AgoraRTC */
@@ -62,7 +67,6 @@ const setAgoraRtcListener = () => {
                     remoteVideoTrack.play(remotePlayerContainer)
                 }, 300)
             }
-            console.log('remoteVideoTrack', remoteVideoTrack)
             updateInChannelUserStatus('videoPlay', remoteUserId, true)
 
         }
@@ -101,7 +105,7 @@ const setAgoraRtcListener = () => {
         const remoteUserId = user.uid.toString();
         handleRemoteContainer('remove', remoteUserId)
         //如果频道内人数小于等于1则直接离开该频道
-        if (inChannelUsersList.length <= 1) {
+        if (inChannelUsersList.length === 0) {
             leaveChannel(remoteUserId)
         }
     })
@@ -143,8 +147,9 @@ const joinChannel = async () => {
     const agoraUserId = channelInfos.agoraUserId
     try {
         await CallKitClient.join(AgoraAppId, channelName, agoraChannelToken, agoraUserId)
+        console.log('%c加入channel当中', 'color:green');
         inChannelUsersList.push({
-            easeimUserId: '',
+            easeimUserId: loginUserHxId.value,
             agoraUserId: agoraUserId.toString(),
             volume: 0,//音量
             muteStatus: false,
@@ -223,40 +228,54 @@ const handleRemoteContainer = (handleType, userUid) => {
         };
     }
 }
+//更新频道内用户推流以及音量状态
+const updateInChannelUserStatus = (handleType, userUid, data) => {
+    const channelUsers = callKitStatus.value.channelInfos.channelUsers
+    const mapHxId = channelUsers[userUid]
+    if (mapHxId) {
+        let _index = inChannelUsersList.length > 0 && inChannelUsersList.findIndex(item => item.easeimUserId === mapHxId);
+        if (handleType === 'volume') {
+            console.log('>>>>>更改音量状态', userUid, data);
+            if (_index !== -1) { inChannelUsersList[_index].volume = data }
+        }
+        if (handleType === 'muteStatus') {
+            if (_index !== -1) { inChannelUsersList[_index].muteStatus = data }
+        }
+        if (handleType === 'videoPlay') {
+            if (_index !== -1) { inChannelUsersList[_index].videoPlay = data }
+        }
+    }
+    // console.log('>>>>>开始更改状态', handleType, userUid, data);
+
+}
 //检查房间内音量
 const checkVolume = (result) => {
+    const channelUsers = callKitStatus.value.channelInfos.channelUsers
     result.forEach((volume, index) => {
         const { level } = volume
         const uid = volume.uid.toString()
-        console.log(`${index} UID ${uid} Level ${level}`);
-        const nowUidChannelInfo = inChannelUsersList.filter(item => item.agoraUserId === uid)
-        console.log('nowUidChannelInfo', toRaw(nowUidChannelInfo[0]));
-        if (toRaw(nowUidChannelInfo[0]).volume === 1 && level * 1 >= 5) return
-        if (nowUidChannelInfo[0].muteStatus === true) {
-            updateInChannelUserStatus('volume', uid, 0)
+        //uid对应的环信ID
+        const mapHxId = channelUsers[uid]
+        // console.log(`${index} UID ${uid} Level ${level}`);
+        console.log('%c inChannelUsersList', 'color:blue', toRaw(inChannelUsersList), 'uid+', uid);
+        console.log('channelUsers', Object.keys(channelUsers));
+        if (mapHxId) {
+            console.log('+++++拿到具体的值', channelUsers[uid], loginUserHxId.value);
+            const nowUidChannelInfo = inChannelUsersList.filter(item => item.easeimUserId === mapHxId)
+            console.log('nowUidChannelInfo', toRaw(nowUidChannelInfo[0]));
+            if (toRaw(nowUidChannelInfo[0]).volume === 1 && level * 1 >= 5) return
+            if (nowUidChannelInfo[0].muteStatus === true) {
+                updateInChannelUserStatus('volume', uid, 0)
+            }
+            if (toRaw(nowUidChannelInfo[0]).volume === 0 && level * 1 >= 5) {
+                updateInChannelUserStatus('volume', uid, 1)
+            }
+            if (toRaw(nowUidChannelInfo[0]).volume === 1 && level * 1 === 0) {
+                updateInChannelUserStatus('volume', uid, 0)
+            }
         }
-        if (toRaw(nowUidChannelInfo[0]).volume === 0 && level * 1 >= 5) {
-            updateInChannelUserStatus('volume', uid, 1)
-        }
-        if (toRaw(nowUidChannelInfo[0]).volume === 1 && level * 1 === 0) {
-            updateInChannelUserStatus('volume', uid, 0)
-        }
+
     });
-}
-//更新频道内用户推流以及音量状态
-const updateInChannelUserStatus = (handleType, userUid, data) => {
-    // console.log('>>>>>开始更改状态', handleType, userUid, data);
-    let _index = inChannelUsersList.length > 0 && inChannelUsersList.findIndex(item => item.agoraUserId === userUid);
-    if (handleType === 'volume') {
-        console.log('>>>>>更改音量状态', userUid, data);
-        if (_index !== -1) { inChannelUsersList[_index].volume = data }
-    }
-    if (handleType === 'muteStatus') {
-        if (_index !== -1) { inChannelUsersList[_index].muteStatus = data }
-    }
-    if (handleType === 'videoPlay') {
-        if (_index !== -1) { inChannelUsersList[_index].videoPlay = data }
-    }
 }
 //操纵publish & unpublish voiceStream videoStream
 const handleLocalStreamPublish = (handleType) => {
@@ -300,10 +319,12 @@ onUnmounted(() => {
                 </div>
             </div>
             <div v-show="!isOutside" class="stream_control">
-                <button @click="handleLocalStreamPublish('voice')">{{ localStreamStatus.voice ? '开启静音' : '关闭静音' }}</button>
+                <button @click="handleLocalStreamPublish('voice')">{{ localStreamStatus.voice ? '开启静音' : '关闭静音'
+                }}</button>
                 <button @click="leaveChannel">挂断</button>
                 <button @click="inviteMoreMembers">邀请</button>
-                <button @click="handleLocalStreamPublish('video')">{{ localStreamStatus.video ? '关闭摄像头' : '开启摄像头' }}</button>
+                <button @click="handleLocalStreamPublish('video')">{{ localStreamStatus.video ? '关闭摄像头' : '开启摄像头'
+                }}</button>
             </div>
         </div>
     </div>

@@ -10,7 +10,7 @@ const callKitStatus = reactive({
     channelInfos: {
         channelName: '',//频道名
         agoraChannelToken: '', //频道token
-        agoraUserId: '', //频道用户id
+        agoraUserId: '', //频道用户id,
         callType: null, //0 语音 1 视频 2 多人音视频
         callId: null,//会议ID
         channelUsers: {}, //频道内用户

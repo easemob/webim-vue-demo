@@ -60,7 +60,7 @@ const Message = {
         },
     },
     actions: {
-    //添加新消息
+        //添加新消息
         createNewMessage: ({ dispatch, commit }, params) => {
             const { isOpenPlayRing, playRing } = usePlayRing()
             const key = setMessageKey(params)
@@ -85,9 +85,9 @@ const Message = {
                         options
                     )
                     messages.length > 0 &&
-            messages.forEach((item) => {
-                item.read = true
-            })
+                        messages.forEach((item) => {
+                            item.read = true
+                        })
                     resolve({ messages, cursor })
                     commit('UPDATE_HISTORY_MESSAGE', {
                         listKey: id,
@@ -127,6 +127,14 @@ const Message = {
         },
         //添加通知类消息
         createInformMessage: ({ dispatch, commit }, params) => {
+            /** 
+               const params = {
+                    from: '',
+                    to: '',
+                    chatType: '',
+                    msg:''
+                }
+            */
             const msgBody = _.cloneDeep(params)
             msgBody.type = ALL_MESSAGE_TYPE.INFORM
             const key = setMessageKey(params)
