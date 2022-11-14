@@ -54,6 +54,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
 
         }
         callKitStatus.inviteTarget = null;
+        callKitTimer.value && clearTimeout(callKitTimer.value)
     }
     //处理不同clientstatus执行不同的操作
     const handleClientStatusForAction = (clientStatus) => {
@@ -90,6 +91,8 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             case CALLSTATUS.confirmCallee: {
                 console.log('%c >>>>>可以加入房间了', 'color:green;')
                 console.log('++++++将入的频道类型是', callKitStatus.channelInfos.callType)
+                console.log('++++++频道名是', callKitStatus.channelInfos.channelName)
+
 
             }
                 break
@@ -107,8 +110,8 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         console.log('触发更新频道信息', msgBody);
         const { from, to, ext } = msgBody || {}
         const params = {
-            channelName: ext.channelName || '',
-            callId: ext.callId || '',
+            channelName: ext.channelName || callKitStatus.channelInfos.channelName,
+            callId: ext.callId || callKitStatus.channelInfos.callId,
             callType: ext.type || 0,
             callerDevId: ext.callerDevId || '',
             calleeDevId: ext.calleeDevId,

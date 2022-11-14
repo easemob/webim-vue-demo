@@ -194,7 +194,7 @@ export default class CallKitMessages {
             console.log('Cannel Success', res)
         }).catch((e) => {
             // 消息发送失败回调。
-            console.log('Cannel Fail', e)
+            console.log('Cannel Fail', e,option)
         })
     }
 }

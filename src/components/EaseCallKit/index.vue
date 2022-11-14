@@ -260,6 +260,7 @@ const handleCancelCall = () => {
 const getAgoraRtcToken = async (callback) => {
     const username = EaseIM.value[conn].user
     const channelName = callKitStatus.channelInfos.channelName
+    console.log('channelNamechannelNamechannelName', channelName);
     if (!username && !channelName) return
     const { accessToken, agoraUserId } = await getRtcToken(EaseIM.value[conn], { username, channelName })
     console.log('+_+_+_+_+_+获取房间token成功', accessToken, agoraUserId)

@@ -28,7 +28,7 @@ const isStreamPlay = ref(false)
 const smallContainer = ref(null)
 const mainContainer = ref(null)
 /* emits */
-const emits = defineEmits(['getAgoraRtcToken', 'updateLocalStatus','handleCancelCall'])
+const emits = defineEmits(['getAgoraRtcToken', 'updateLocalStatus', 'handleCancelCall'])
 /* AgoraRTC */
 //client 初始化
 let CallKitClient = null
@@ -85,11 +85,12 @@ watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
     if (newVal === CALLSTATUS.confirmCallee) {
         emitChannelToken()
     }
-    if (newVal === CALLSTATUS.inviting) {
-        setTimeout(() => {
-            emitChannelToken()
-        }, 500)
-    }
+    //单人一对一通话，对方应答之后再选择加入频道中
+    // if (newVal === CALLSTATUS.inviting) {
+    //     setTimeout(() => {
+    //         emitChannelToken()
+    //     }, 500)
+    // }
 }, {
     immediate: true
 })
@@ -154,19 +155,21 @@ onUnmounted(() => {
 </script>
 <template>
     <div ref="singleContainer" class="app_container" :style="style" style="position: fixed">
-        <div v-show="!isStreamPlay" class="wait_stream_play_container">
-            通话接听中...
-        </div>
-        <div v-show="isStreamPlay" class="stream_container" ref="streamContainer">
-            <div class="smallContainer" ref="smallContainer"></div>
-            <div class="mainContainer" ref="mainContainer">
+        <!-- <div v-show="!isStreamPlay" class="wait_stream_play_container">
+            呼叫建立中...
+        </div> -->
+        <div class="stream_container" ref="streamContainer">
+            <div v-show="callKitStatus.channelInfos.callType === 0">
+                <p>语音通话中...</p>
+            </div>
+            <div v-show="callKitStatus.channelInfos.callType === 1">
+                <div class="smallContainer" ref="smallContainer"></div>
+                <div class="mainContainer" ref="mainContainer">
+                </div>
             </div>
             <div v-show="!isOutside" class="stream_control">
-                <button v-if="callKitStatus.localClientStatus > CALLSTATUS.inviting"
-                    @click="leaveChannel">挂断</button>
-                <button
-                    v-if="callKitStatus.localClientStatus  === CALLSTATUS.inviting"
-                    @click="cancelCall">取消呼叫</button>
+                <button v-if="callKitStatus.localClientStatus > CALLSTATUS.inviting" @click="leaveChannel">挂断</button>
+                <button v-if="callKitStatus.localClientStatus === CALLSTATUS.inviting" @click="cancelCall">取消呼叫</button>
             </div>
         </div>
     </div>
