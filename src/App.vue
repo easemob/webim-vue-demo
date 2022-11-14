@@ -215,12 +215,14 @@ if (loginUserFromStorage?.user && loginUserFromStorage?.accessToken) {
 /* EaseCallKit 相关 */
 const easeCallKit = ref(null);
 const inviteCallComp = ref(null)
-const showModal = (params) => {
-    console.log('可以弹出邀请框')
-    inviteCallComp.value.dialogVisible = true
+const showModal = ({groupId}) => {
+    console.log('可以弹出邀请框',groupId)
+    inviteCallComp.value.alertDialog(groupId)
 }
-const sendMulitInviteMsg = (params) => {
-    easeCallKit.value.sendInviteMessage()
+const sendMulitInviteMsg = (targetIMId) => {
+    console.log('targetIMIdtargetIMIdtargetIMId',targetIMId);
+    const callType = 2
+    easeCallKit.value.inMultiChanelSendInviteMsg(targetIMId, callType)
 }
 </script>
 <template>
@@ -232,7 +234,7 @@ const sendMulitInviteMsg = (params) => {
     <!-- 铃声标签 -->
     <audio id="ring" :src="ring" controls hidden></audio>
     <!-- About EaseCallKit -->
-    <EaseCallKit ref="easeCallKit" :EaseIM="EaseIM" :connectionName="'conn'" @onInviteMembers="showModal"  />
+    <EaseCallKit ref="easeCallKit" :EaseIM="EaseIM" :connectionName="'conn'" @onInviteMembers="showModal" />
     <InviteCallMembers ref="inviteCallComp" @sendMulitInviteMsg="sendMulitInviteMsg" />
 </template>
 

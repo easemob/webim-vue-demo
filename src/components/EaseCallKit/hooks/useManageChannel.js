@@ -17,7 +17,8 @@ const callKitStatus = reactive({
         callerDevId: '',//主叫方设备ID
         calleeDevId: '',//被叫方设备ID
         callerIMName: '',//主叫方环信ID
-        calleeIMName: ''//被叫方环信ID
+        calleeIMName: '',//被叫方环信ID
+        groupId: '' //群组ID
     },
     //被邀请对象 单人为string 多人为array
     inviteTarget: null,
@@ -49,6 +50,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             confrontId: '',//要处理的目标ID
             callerIMName: '',//主叫方环信ID
             calleeIMName: '',//被叫方环信ID
+            groupId: '' //群组ID
 
         }
         callKitStatus.inviteTarget = null;
@@ -111,22 +113,26 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             callerDevId: ext.callerDevId || '',
             calleeDevId: ext.calleeDevId,
             callerIMName: from,
-            calleeIMName: to
+            calleeIMName: to,
+            groupId: ext?.ext?.groupId ? ext.ext.groupId : ''
         }
         Object.assign(callKitStatus.channelInfos, params)
     }
-    //发送邀请信息功能
+    /* 邀请部分 */
     const SignalMsgs = new CallKitMessages({ IM: EaseIM, conn: conn })
-    const sendInviteMessage = async (targetId, callType) => {
-        //非空闲状态直接拒绝发送邀请信息
-        if (callKitStatus.localClientStatus !== CALLSTATUS.idle) return
+    //发起类邀请
+    const sendInviteMessage = async (targetId, callType, groupId) => {
+        console.log('groupId', groupId);
+        //非空闲状态直接拒绝发送邀请信息[除了多人，因为涉及到多人通话中需要邀请他人入会]
+        if (callType !== 2 && (callKitStatus.localClientStatus !== CALLSTATUS.idle)) return
         if (!targetId) throw 'targetId must pass！'
         if (callType === undefined || callType === null || callType < 0) throw 'callType must pass！'
         if (Array.isArray(targetId) && targetId.length < 1 || targetId.length > 15) throw 'targetId length  > 15 or length < 1'
         const channelInfors = {
             channelName: `${callType}_${createUid()}`,//频道名
             callId: createUid(),
-            inviteMsgContent: CALL_INVITE_TEXT[callType]
+            inviteMsgContent: CALL_INVITE_TEXT[callType],
+            groupId: groupId //只有为群聊多人邀请时这个参数才有用
         }
         callKitStatus.inviteTarget = targetId
         try {
@@ -143,7 +149,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             console.log('channelInforschannelInfors', channelInfors);
             updateLocalStatus(CALLSTATUS.inviting)
         } catch (error) {
-            console.log('%c邀请信息发送失败', 'color:red');
+            console.log('%c邀请信息发送失败', 'color:red', error);
         }
         //更改部分ChannelInfos
         let params = {
@@ -153,9 +159,11 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
                 channelName: channelInfors.channelName,
                 callId: channelInfors.callId,
                 type: callType,
-                callerDevId: EaseIM[conn].context.jid.clientResource
+                callerDevId: EaseIM[conn].context.jid.clientResource,
             },
         }
+        //如果存在群组ID则增加ext字段进入到groupId
+        if (callType === 2 && groupId) params.ext.ext = { groupId };
         console.log('邀请发送 callType为', callType);
         updateChannelInfos(params)
         // callKitStatus.channelInfos.channelName = channelInfors.channelName
@@ -165,6 +173,32 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         if (callType !== 2) {
             startCallKitTimer()
         }
+    }
+    //【多人】在会议中邀请邀请--会议中邀请不生成新的频道信息
+    const inMultiChanelSendInviteMsg = async (targetId, callType) => {
+        if (!targetId) throw 'targetId must pass！'
+        if (callType === undefined || callType === null || callType < 0) throw 'callType must pass！'
+        if (Array.isArray(targetId) && targetId.length < 1 || targetId.length > 15) throw 'targetId length  > 15 or length < 1'
+
+        const channelInfors = {
+            channelName: callKitStatus.channelInfos.channelName,//频道名
+            callId: callKitStatus.channelInfos.callId,
+            inviteMsgContent: CALL_INVITE_TEXT[callType],
+            groupId: callKitStatus.channelInfos.groupId //只有为群聊多人邀请时这个参数才有用
+        }
+        callKitStatus.inviteTarget = targetId
+        try {
+            //如果为数组就遍历发送
+            if (Array.isArray(targetId)) {
+                targetId.forEach(userId => {
+                    SignalMsgs.sendInviteMsg(userId, callType, channelInfors)
+                })
+                console.log('>>>>>群组多人邀请开始遍历发消息');
+            }
+        } catch (error) {
+            console.log('%c邀请信息发送失败', 'color:red', error);
+        }
+
     }
     /* CallKit Timer */
     //用作邀请信息发送之后发起计时30s。
@@ -187,6 +221,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         initChannelInfos,
         updateLocalStatus,
         updateChannelInfos,
-        sendInviteMessage
+        sendInviteMessage,
+        inMultiChanelSendInviteMsg
     }
 }

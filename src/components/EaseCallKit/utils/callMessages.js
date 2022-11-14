@@ -25,6 +25,8 @@ export default class CallKitMessages {
                 callerIMName: this.conn.context.jid.name,
             }
         }
+        //如果是多人邀请并且groupId有参数时，在ext扩展字段中再增加一个ext并传入groupId
+        if (callType === 2 && channelInfors.groupId) { option.ext.ext = { groupId: channelInfors.groupId } }
         return new Promise((resolve, reject) => {
             const msg = this.IM.message.create(option)
             // // 调用 `send` 方法发送该透传消息。

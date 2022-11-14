@@ -241,7 +241,8 @@ const showInviteCallMembersModal = () => {
 const sendMulitInviteMsg = (targetIMId) => {
     console.log('>>>>>要发送的用户列表', targetIMId);
     const callType = 2
-    sendInviteMessage(targetIMId, callType)
+    const groupId = nowPickInfo.value.id
+    sendInviteMessage(targetIMId, callType, groupId)
 }
 defineExpose({
     textContent
@@ -277,7 +278,7 @@ defineExpose({
         contenteditable="true" placeholder="请输入消息内容..." onkeydown="if (event.keyCode === 13) event.preventDefault();"
         @keyup.enter="sendTextMessage">
     </textarea>
-    <el-button :class="[textContent === ''?'no_content_send_btn': 'chat_send_btn']" type="primary"
+    <el-button :class="[textContent === '' ? 'no_content_send_btn' : 'chat_send_btn']" type="primary"
         @click="sendTextMessage">发送</el-button>
     <InviteCall ref="inviteCallComp" />
     <InviteCallMembers ref="inviteCallMembersComp" @sendMulitInviteMsg="sendMulitInviteMsg" />

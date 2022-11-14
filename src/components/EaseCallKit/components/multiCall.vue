@@ -5,8 +5,8 @@ import { CALLSTATUS } from '../constants'
 /* vueUse */
 //Draggable
 import { useDraggable, useMouseInElement } from '@vueuse/core'
-const singleContainer = ref(null)
-const { style } = useDraggable(singleContainer, {
+const multiContainer = ref(null)
+const { style } = useDraggable(multiContainer, {
     initialValue: { x: 600, y: 40 },
 })
 //streamContral显隐
@@ -257,12 +257,12 @@ const checkVolume = (result) => {
         //uid对应的环信ID
         const mapHxId = channelUsers[uid]
         // console.log(`${index} UID ${uid} Level ${level}`);
-        console.log('%c inChannelUsersList', 'color:blue', toRaw(inChannelUsersList), 'uid+', uid);
-        console.log('channelUsers', Object.keys(channelUsers));
+        // console.log('%c inChannelUsersList', 'color:blue', toRaw(inChannelUsersList), 'uid+', uid);
+        // console.log('channelUsers', Object.keys(channelUsers));
         if (mapHxId) {
-            console.log('+++++拿到具体的值', channelUsers[uid], loginUserHxId.value);
+            // console.log('+++++拿到具体的值', channelUsers[uid], loginUserHxId.value);
             const nowUidChannelInfo = inChannelUsersList.filter(item => item.easeimUserId === mapHxId)
-            console.log('nowUidChannelInfo', toRaw(nowUidChannelInfo[0]));
+            // console.log('nowUidChannelInfo', toRaw(nowUidChannelInfo[0]));
             if (toRaw(nowUidChannelInfo[0]).volume === 1 && level * 1 >= 5) return
             if (nowUidChannelInfo[0].muteStatus === true) {
                 updateInChannelUserStatus('volume', uid, 0)
@@ -297,7 +297,8 @@ const handleLocalStreamPublish = (handleType) => {
 
 //邀请更多成员加入会议
 const inviteMoreMembers = () => {
-    emits('onInviteMembers')
+    const groupId = callKitStatus.value.channelInfos.groupId
+    emits('onInviteMembers', { groupId })
 }
 //组件卸载
 onUnmounted(() => {
@@ -308,8 +309,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div ref="singleContainer" class="app_container" :style="style" style="position: fixed">
-        <div class="stream_container" ref="streamContainer">
+    <div ref="multiContainer" class="app_container" :style="style" style="position: fixed">
+        <div  class="stream_container" ref="streamContainer">
             <div class="myContainer" v-for="item in inChannelUsersList" :key="item.agoraUserId" :id="item.agoraUserId">
                 <div class="userInfo">
                     <span class="userIMId">{{ item.easeimUserId }}</span>

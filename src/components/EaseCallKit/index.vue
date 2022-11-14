@@ -89,7 +89,8 @@ const {
     callKitTimer,
     updateLocalStatus,
     updateChannelInfos,
-    sendInviteMessage
+    sendInviteMessage,
+    inMultiChanelSendInviteMsg
 } = useManageChannel(EaseIM.value, conn)
 //将当前登录ID初始化进callKitStatus缓存内
 
@@ -280,12 +281,13 @@ const getAgoraChannelDetails = async (callback) => {
 }
 
 /* 对外通知触发邀请事件 */
-const onInviteMembers = () => {
-    emits('onInviteMembers')
+const onInviteMembers = ({ groupId }) => {
+    emits('onInviteMembers', { groupId })
     console.log('可以对通知触发了邀请事件');
 }
 defineExpose({
-    sendInviteMessage
+    sendInviteMessage,
+    inMultiChanelSendInviteMsg
 })
 /* 组件卸载操作 */
 onUnmounted(() => {

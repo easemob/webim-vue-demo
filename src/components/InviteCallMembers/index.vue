@@ -17,6 +17,7 @@ const alertDialog = (groupId) => {
 }
 //获取该群对应的群成员
 const getGroupMemberList = async (groupId) => {
+    console.log('getGroupMemberList',groupId);
     if (!groupId) return
     let memberList = []
     const sourceMembers = store.state.Groups.groupsInfos[groupId].members
