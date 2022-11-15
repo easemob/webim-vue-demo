@@ -112,7 +112,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         const params = {
             channelName: ext.channelName || callKitStatus.channelInfos.channelName,
             callId: ext.callId || callKitStatus.channelInfos.callId,
-            callType: CALL_TYPE[ext.type],
+            callType: CALL_TYPE[ext.type] || callKitStatus.channelInfos.callType,
             callerDevId: ext.callerDevId || 0,
             calleeDevId: ext.calleeDevId,
             callerIMName: from,
