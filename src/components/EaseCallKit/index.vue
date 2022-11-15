@@ -185,6 +185,7 @@ const handleCallKitCommand = (msgBody) => {
             }
             if (!callKitStatus.channelInfos.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
                 //如果calleeDevId不存在，并且非多人音视频模式，主动更新频道信息
+                if (cmdMsgBody.videoToVoice) { callKitStatus.channelInfos.callType = 0 }
                 updateChannelInfos(msgBody)
             } else if (callKitStatus.channelInfos.calleeDevId !== cmdMsgBody.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
                 console.log('callKitStatus.channelInfos.calleeDevId', callKitStatus.channelInfos.calleeDevId);
@@ -225,8 +226,9 @@ const handleCallKitCommand = (msgBody) => {
             if (msgBody.from === callKitStatus.channelInfos.callerIMName) return updateLocalStatus(CALLSTATUS.idle)
             break
         }
-        case CALL_ACTIONS_TYPE.Video_TO_VOICE: {
+        case CALL_ACTIONS_TYPE.VIDEO_TO_VOICE: {
             console.log('语音转通话通知');
+            callKitStatus.channelInfos.callType = 0
             break;
         }
 
