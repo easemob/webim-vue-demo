@@ -4,6 +4,11 @@ const CALL_INVITE_TEXT = {
     1: '邀请您进行视频通话~',
     2: '邀请您进行多人会议~'
 }
+const CALL_TYPE = {
+    0: 0,
+    1: 1,
+    2: 2
+}
 const CALLSTATUS = {
     idle: 0,//闲置
     inviting: 1,//邀请中
@@ -33,6 +38,7 @@ const ANSWER_TYPE = {
 }
 export {
     MSG_TYPE,
+    CALL_TYPE,
     CALL_INVITE_TEXT,
     CALLSTATUS,
     CALL_ACTIONS_TYPE,

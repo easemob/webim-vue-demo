@@ -46,6 +46,7 @@ const setAgoraRtcListener = () => {
             console.log('remoteVideoTrack', remoteVideoTrack)
             setTimeout(() => {
                 remoteVideoTrack.play(mainContainer.value)
+                console.log('%c 远端流已播放', 'color:green');
             }, 300)
 
         }
@@ -123,18 +124,18 @@ const joinChannel = async () => {
         console.log('>>>>加入频道成功')
         if (callType === 0) {
             localVoiceTrack && await CallKitClient.publish(localVoiceTrack)
-            console.log('>>>>>>音频---本地轨道推流成功')
+            console.log('%c---本地轨道音频推流成功', 'color:green')
         }
         if (callType === 1) {
             if (localVoiceTrack && localVideoTrack) await CallKitClient.publish([localVoiceTrack, localVideoTrack])
             setTimeout(() => {
                 localVideoTrack.play(smallContainer.value)
             }, 300)
-            console.log('>>>>>>音视频---本地轨道推流成功')
+            console.log('%c---本地轨道音频以及视频推流成功', 'color:green')
         }
         isStreamPlay.value = true
     } catch (error) {
-        console.log('>>>>加入频道失败', error)
+        console.log('%c>>>>加入频道失败', 'color:red', error)
     }
 
 }
@@ -146,6 +147,9 @@ const leaveChannel = async () => {
     await CallKitClient.leave()
     emits('updateLocalStatus', CALLSTATUS.idle)
 }
+//切换视频流容器
+const defaultStreamContainerClass = ref(true)
+const changeStreamContainer = () => defaultStreamContainerClass.value = !defaultStreamContainerClass.value
 //组件卸载
 onUnmounted(() => {
     localVoiceTrack && localVoiceTrack.close()
@@ -159,16 +163,27 @@ onUnmounted(() => {
             呼叫建立中...
         </div> -->
         <div class="stream_container" ref="streamContainer">
-            <div v-show="callKitStatus.channelInfos.callType === 0">
-                <p>语音通话中...</p>
-            </div>
-            <div v-show="callKitStatus.channelInfos.callType === 1">
-                <div class="smallContainer" ref="smallContainer"></div>
-                <div class="mainContainer" ref="mainContainer">
+            <template v-if="callKitStatus.localClientStatus === CALLSTATUS.confirmCallee">
+                <div class="stream_audio_container" v-show="callKitStatus.channelInfos.callType === 0">
+                    <p>语音通话中...</p>
                 </div>
-            </div>
+                <div class="stream_video_container" v-show="callKitStatus.channelInfos.callType === 1">
+                    <!-- mainContainer smallContainer-->
+                    <div :class="[defaultStreamContainerClass ? 'smallContainer' : 'mainContainer']"
+                        ref="smallContainer" @click="() => defaultStreamContainerClass && changeStreamContainer()">
+                    </div>
+                    <div :class="[!defaultStreamContainerClass ? 'smallContainer' : 'mainContainer']"
+                        ref="mainContainer" @click="() => !defaultStreamContainerClass && changeStreamContainer()">
+                    </div>
+                </div>
+            </template>
+            <template v-if="callKitStatus.localClientStatus === CALLSTATUS.inviting">
+                <p>等待对方接受邀请中...</p>
+                <p>{{ callKitStatus.inviteTarget }}</p>
+            </template>
             <div v-show="!isOutside" class="stream_control">
-                <button v-if="callKitStatus.localClientStatus > CALLSTATUS.inviting" @click="leaveChannel">挂断</button>
+                <button v-if="callKitStatus.localClientStatus === CALLSTATUS.confirmCallee"
+                    @click="leaveChannel">挂断</button>
                 <button v-if="callKitStatus.localClientStatus === CALLSTATUS.inviting" @click="cancelCall">取消呼叫</button>
             </div>
         </div>
@@ -192,8 +207,19 @@ onUnmounted(() => {
 .stream_container {
     width: 100%;
     height: 100%;
-    background: green;
     border-radius: 4px;
+}
+
+.stream_audio_container {
+    width: 100%;
+    height: 100%;
+    background: pink;
+}
+
+.stream_video_container {
+    width: 100%;
+    height: 100%;
+    background: green;
 }
 
 .smallContainer {

@@ -153,8 +153,15 @@ const handleCallKitCommand = (msgBody) => {
                 sendBody: cmdMsgBody,
                 status
             }
-            SignalMsgs.sendConfirmRing(params)
-            updateLocalStatus(CALLSTATUS.inviting)
+            //如果status为true表明为有效的邀请，再更改为inviting,false表示无效邀请则更改为空闲状态。
+            if (status) {
+                SignalMsgs.sendConfirmRing(params)
+                updateLocalStatus(CALLSTATUS.inviting)
+            } else {
+                SignalMsgs.sendConfirmRing(params)
+                updateLocalStatus(CALLSTATUS.idle)
+            }
+
             break
         case CALL_ACTIONS_TYPE.CONFIRM_RING: {//调起confirm待接听界面
             if (calleeDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。

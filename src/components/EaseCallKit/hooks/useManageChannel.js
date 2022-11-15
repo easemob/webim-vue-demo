@@ -1,5 +1,5 @@
 import { ref, reactive, watch } from 'vue';
-import { CALLSTATUS, CALL_ACTIONS_TYPE, ANSWER_TYPE, CALL_INVITE_TEXT } from '../constants'
+import { CALLSTATUS, CALL_TYPE, CALL_INVITE_TEXT } from '../constants'
 import createUid from '../utils/createUid';
 import CallKitMessages from '../utils/callMessages'
 //弹出组件类型
@@ -11,7 +11,7 @@ const callKitStatus = reactive({
         channelName: '',//频道名
         agoraChannelToken: '', //频道token
         agoraUserId: '', //频道用户id,
-        callType: null, //0 语音 1 视频 2 多人音视频
+        callType: 0, //0 语音 1 视频 2 多人音视频
         callId: null,//会议ID
         channelUsers: {}, //频道内用户
         callerDevId: '',//主叫方设备ID
@@ -42,7 +42,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             channelName: '',//频道名
             agoraChannelToken: '', //频道token
             agoraUid: '', //频道用户id
-            callType: null, //0 语音 1 视频 2 多人音视频
+            callType: 0, //0 语音 1 视频 2 多人音视频
             callId: null,//会议ID
             channelUsers: {}, //频道内用户
             callerDevId: '',//主叫方设备ID
@@ -112,14 +112,16 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         const params = {
             channelName: ext.channelName || callKitStatus.channelInfos.channelName,
             callId: ext.callId || callKitStatus.channelInfos.callId,
-            callType: ext.type || 0,
-            callerDevId: ext.callerDevId || '',
+            callType: CALL_TYPE[ext.type],
+            callerDevId: ext.callerDevId || 0,
             calleeDevId: ext.calleeDevId,
             callerIMName: from,
             calleeIMName: to,
             groupId: ext?.ext?.groupId ? ext.ext.groupId : ''
         }
+        console.log('%c将要更新的信息内容为', 'color:red', params);
         Object.assign(callKitStatus.channelInfos, params)
+
     }
     /* 邀请部分 */
     const SignalMsgs = new CallKitMessages({ IM: EaseIM, conn: conn })
@@ -169,9 +171,6 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         if (callType === 2 && groupId) params.ext.ext = { groupId };
         console.log('邀请发送 callType为', callType);
         updateChannelInfos(params)
-        // callKitStatus.channelInfos.channelName = channelInfors.channelName
-        // callKitStatus.channelInfos.callId = channelInfors.callId
-        // callKitStatus.channelInfos.callType = callType
         //单人邀请开启超时挂断，多人则忽略
         if (callType !== 2) {
             startCallKitTimer()
