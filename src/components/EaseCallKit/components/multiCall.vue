@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch, toRaw, toRefs, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, watch, toRaw, toRefs, onMounted, onBeforeUnmount } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
 import { CALLSTATUS } from '../constants'
 /* vueUse */
@@ -301,7 +301,7 @@ const inviteMoreMembers = () => {
     emits('onInviteMembers', { groupId })
 }
 //组件卸载
-onUnmounted(() => {
+onBeforeUnmount(() => {
     //释放调用的媒体硬件权限
     localVoiceTrack && localVoiceTrack.close()
     localVoiceTrack && localVideoTrack.close()

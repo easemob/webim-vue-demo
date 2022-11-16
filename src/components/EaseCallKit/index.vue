@@ -2,7 +2,7 @@
 import { ref, toRefs, onUnmounted } from 'vue'
 import { CALLSTATUS, CALL_ACTIONS_TYPE, ANSWER_TYPE } from './constants'
 import CallKitMessages from './utils/callMessages'
-import { useManageChannel } from './hooks';
+import { useManageChannel, useChannelEvent } from './hooks';
 import getRtcToken from './utils/getRtcToken'
 import getChannelDetails from './utils/getChannelDetails'
 /* 组件 */
@@ -78,6 +78,14 @@ const removeMessageListener = () => EaseIM.value[conn].removeEventHandler(msgLis
 //当前登录用户ID
 const loginUserHxId = ref('')
 const setLoginUserHxId = () => loginUserHxId.value = EaseIM.value[conn].user || ''
+//频道事件发布相关
+const EVENT_NAME = 'EASECALLKIT'
+const EVENT_LEVEL = {
+    0: 'SUCCESS',
+    1: "WARNING",
+    2: "FAIL",
+    3: "INFO"
+}
 /* CallKit status */
 const callCompsType = {
     'singleCall': SingleCall,
@@ -92,8 +100,7 @@ const {
     sendInviteMessage,
     inMultiChanelSendInviteMsg
 } = useManageChannel(EaseIM.value, conn)
-//将当前登录ID初始化进callKitStatus缓存内
-
+const { PUB_CHANNEL_ENENT } = useChannelEvent()
 /* 信令部分 */
 const SignalMsgs = new CallKitMessages({ IM: EaseIM.value, conn: conn })
 //处理收到为文本的邀请信息
@@ -197,6 +204,11 @@ const handleCallKitCommand = (msgBody) => {
             if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET) {
                 console.log('callKitStatus.channelInfos.callType ', callKitStatus.channelInfos.callType);
                 if (callKitStatus.channelInfos.callType !== 2) { //无论对方是忙碌还是拒接都讲通话状态更改为闲置。
+                    let msgText = {
+                        'busy': '对方忙碌中',
+                        'refuse': '对方拒绝接听'
+                    }
+                    PUB_CHANNEL_ENENT(EVENT_NAME, { type: EVENT_LEVEL[2], message: `${msgText[cmdMsgBody.result] || '未接听...'}` })
                     console.log('>>>>>修改当前状态为空闲');
                     return updateLocalStatus(CALLSTATUS.idle)
                 }

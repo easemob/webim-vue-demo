@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed, toRefs, onMounted, onUnmounted } from 'vue'
+import { ref, watch, computed, toRefs, onMounted, onBeforeUnmount } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
 import { CALLSTATUS } from '../constants'
 /* vueUse */
@@ -173,7 +173,7 @@ const leaveChannel = async () => {
 const defaultStreamContainerClass = ref(true)
 const changeStreamContainer = () => defaultStreamContainerClass.value = !defaultStreamContainerClass.value
 //组件卸载
-onUnmounted(() => {
+onBeforeUnmount(() => {
     console.log('>>>>>>监听到组件卸载')
     localVoiceTrack && localVoiceTrack.close()
     localVoiceTrack && localVideoTrack.close()

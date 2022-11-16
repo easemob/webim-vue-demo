@@ -215,6 +215,7 @@ if (loginUserFromStorage?.user && loginUserFromStorage?.accessToken) {
 /* EaseCallKit 相关 */
 const easeCallKit = ref(null);
 const inviteCallComp = ref(null)
+
 const showModal = ({ groupId }) => {
     console.log('可以弹出邀请框', groupId)
     inviteCallComp.value.alertDialog(groupId)
@@ -224,6 +225,7 @@ const sendMulitInviteMsg = (targetIMId) => {
     const callType = 2
     easeCallKit.value.inMultiChanelSendInviteMsg(targetIMId, callType)
 }
+
 </script>
 <template>
     <router-view v-slot="{ Component }">

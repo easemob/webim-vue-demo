@@ -1,8 +1,30 @@
 <script setup>
+import { onBeforeUnmount } from 'vue';
+import { ElMessage } from 'element-plus'
 import EaseIM from '@/IM/initwebsdk'
 import NavBar from '@/views/Chat/components/NavBar'
 // /* CallKit */
 // import EaseCallKit from '@/components/EaseCallKit'
+import { useChannelEvent } from '@/components/EaseCallKit/hooks';
+const { SUB_CHANNEL_EVENT, UN_SUB_CHANNEL_ENENT } = useChannelEvent()
+SUB_CHANNEL_EVENT('EASECALLKIT', (param) => {
+  console.log('%c>>>>>>订阅事件触发', 'color:blue', param);
+  const { type, message } = param;
+  const MESSAGE_TYPE = {
+    'SUCCESS': 'success',
+    'WARNING': 'warning',
+    'FAIL': 'error',
+    'INFO': 'info'
+  }
+  ElMessage({
+    type: MESSAGE_TYPE[type],
+    message: message,
+    center:true
+  })
+})
+onBeforeUnmount(() => {
+  UN_SUB_CHANNEL_ENENT('EASECALLKIT')
+})
 </script>
 <template>
   <div class="app-container">
