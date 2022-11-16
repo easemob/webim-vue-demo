@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, toRefs, watch, onUnmounted } from 'vue'
+import { ref, toRefs, onUnmounted } from 'vue'
 import { CALLSTATUS, CALL_ACTIONS_TYPE, ANSWER_TYPE } from './constants'
 import CallKitMessages from './utils/callMessages'
 import { useManageChannel } from './hooks';

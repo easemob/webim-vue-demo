@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, toRefs, onMounted, onUnmounted } from 'vue'
+import { ref, watch, computed, toRefs, onMounted, onUnmounted } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
 import { CALLSTATUS } from '../constants'
 /* vueUse */
@@ -109,6 +109,25 @@ const emitChannelToken = () => {
 const cancelCall = () => {
     emits('handleCancelCall')
 }
+//开启通话计时
+const inChannelTimer = ref(null)
+let timeCount = ref(0)
+const startInChannelTimer = () => {
+    inChannelTimer.value && clearInterval(inChannelTimer.value)
+    inChannelTimer.value = setInterval(() => {
+        timeCount.value++;
+        console.log('%c通话计时开启中...', 'color:green', timeCount);
+    }, 1000)
+    return
+}
+const formatTime = computed(() => {
+    let m = Math.floor(timeCount.value / 60)
+    let s = timeCount.value % 60
+    let h = Math.floor(m / 60)
+    let remMin = m % 60
+    console.log('remMin', remMin);
+    return `${h > 0 ? h + ':' : ''}${remMin < 10 ? '0' + remMin : remMin}:${s < 10 ? '0' + s : s}`
+})
 //加入频道【接听】
 const joinChannel = async () => {
     const channelInfos = callKitStatus.value.channelInfos
@@ -118,10 +137,13 @@ const joinChannel = async () => {
     const callType = channelInfos.callType
     try {
         await CallKitClient.join(AgoraAppId, channelName, agoraChannelToken, agoraUserId)
+        console.log('>>>>加入频道成功')
+        //开启房间通话计时
+        startInChannelTimer()
         localVoiceTrack = await AgoraRTC.createMicrophoneAudioTrack()
         // Create a local video track from the video captured by a camera.
         localVideoTrack = await AgoraRTC.createCameraVideoTrack()
-        console.log('>>>>加入频道成功')
+
         if (callType === 0) {
             localVoiceTrack && await CallKitClient.publish(localVoiceTrack)
             console.log('%c---本地轨道音频推流成功', 'color:green')
@@ -152,9 +174,11 @@ const defaultStreamContainerClass = ref(true)
 const changeStreamContainer = () => defaultStreamContainerClass.value = !defaultStreamContainerClass.value
 //组件卸载
 onUnmounted(() => {
+    console.log('>>>>>>监听到组件卸载')
     localVoiceTrack && localVoiceTrack.close()
     localVoiceTrack && localVideoTrack.close()
-    console.log('>>>>>>监听到组件卸载')
+    //清除通话计时
+    inChannelTimer.value && clearInterval(inChannelTimer.value)
 })
 </script>
 <template>
@@ -166,6 +190,7 @@ onUnmounted(() => {
             <template v-if="callKitStatus.localClientStatus === CALLSTATUS.confirmCallee">
                 <div class="stream_audio_container" v-show="callKitStatus.channelInfos.callType === 0">
                     <p>语音通话中...</p>
+                    <p>{{ formatTime }}</p>
                 </div>
                 <div class="stream_video_container" v-show="callKitStatus.channelInfos.callType === 1">
                     <!-- mainContainer smallContainer-->
