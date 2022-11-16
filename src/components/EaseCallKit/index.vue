@@ -239,7 +239,7 @@ const handleCallKitCommand = (msgBody) => {
             break
         }
         case CALL_ACTIONS_TYPE.VIDEO_TO_VOICE: {
-            console.log('语音转通话通知');
+            console.log('视频转语音通知');
             callKitStatus.channelInfos.callType = 0
             break;
         }

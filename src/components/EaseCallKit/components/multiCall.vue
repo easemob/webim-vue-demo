@@ -139,6 +139,25 @@ const emitChannelToken = () => {
     emits('getAgoraRtcToken', callback)
 
 }
+//开启通话计时
+const inChannelTimer = ref(null)
+let timeCount = ref(0)
+const startInChannelTimer = () => {
+    inChannelTimer.value && clearInterval(inChannelTimer.value)
+    inChannelTimer.value = setInterval(() => {
+        timeCount.value++;
+        console.log('%c通话计时开启中...', 'color:green', timeCount);
+    }, 1000)
+    return
+}
+const formatTime = computed(() => {
+    let m = Math.floor(timeCount.value / 60)
+    let s = timeCount.value % 60
+    let h = Math.floor(m / 60)
+    let remMin = m % 60
+    console.log('remMin', remMin);
+    return `${h > 0 ? h + ':' : ''}${remMin < 10 ? '0' + remMin : remMin}:${s < 10 ? '0' + s : s}`
+})
 //加入频道【接听】
 const joinChannel = async () => {
     const channelInfos = callKitStatus.value.channelInfos
@@ -294,7 +313,6 @@ const handleLocalStreamPublish = (handleType) => {
         localStreamStatus.video = !videoStatus
     }
 }
-
 //邀请更多成员加入会议
 const inviteMoreMembers = () => {
     const groupId = callKitStatus.value.channelInfos.groupId
@@ -306,11 +324,13 @@ onBeforeUnmount(() => {
     localVoiceTrack && localVoiceTrack.close()
     localVoiceTrack && localVideoTrack.close()
     console.log('>>>>>>监听到组件卸载')
+    //清除通话计时
+    inChannelTimer.value && clearInterval(inChannelTimer.value)
 })
 </script>
 <template>
     <div ref="multiContainer" class="app_container" :style="style" style="position: fixed">
-        <div  class="stream_container" ref="streamContainer">
+        <div class="stream_container" ref="streamContainer">
             <div class="myContainer" v-for="item in inChannelUsersList" :key="item.agoraUserId" :id="item.agoraUserId">
                 <div class="userInfo">
                     <span class="userIMId">{{ item.easeimUserId }}</span>
