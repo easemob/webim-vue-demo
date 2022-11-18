@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch, toRaw, toRefs, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive,computed, watch, toRaw, toRefs, onMounted, onBeforeUnmount } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
 import { CALLSTATUS } from '../constants'
 /* vueUse */
@@ -35,12 +35,12 @@ CallKitClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
 //本地音视频轨道
 let localVoiceTrack = null
 let localVideoTrack = null
-let localStreamStatus = reactive({
+const localStreamStatus = reactive({
     voice: false,
     video: false
 })
 //已在频道中的用户list
-let inChannelUsersList = reactive([])
+const inChannelUsersList = reactive([])
 const setAgoraRtcListener = () => {
     console.log('>>>>>AgoraRtc监听挂载完毕')
     //监听到用用户加入了频道
@@ -141,7 +141,7 @@ const emitChannelToken = () => {
 }
 //开启通话计时
 const inChannelTimer = ref(null)
-let timeCount = ref(0)
+const timeCount = ref(0)
 const startInChannelTimer = () => {
     inChannelTimer.value && clearInterval(inChannelTimer.value)
     inChannelTimer.value = setInterval(() => {
