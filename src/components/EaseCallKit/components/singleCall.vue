@@ -9,7 +9,6 @@ import microphone from '@/assets/callkit/microphone@2x.png'
 import mutemicrophone from '@/assets/callkit/microphone-mute@2x.png'
 import camera from '@/assets/callkit/camera@2x.png'
 import closecamera from '@/assets/callkit/camera-close@2x.png'
-import miniStremContainer from '@/assets/callkit/narrow@2x.png'
 /* vueUse */
 //Draggable
 import { useDraggable, useMouseInElement, useWindowSize } from '@vueuse/core'
@@ -31,7 +30,8 @@ const { style } = useDraggable(singleContainer, {
     if (position.y < 0) {
       position.y = 0
     }
-  }
+  },
+  stopPropagation: true
 })
 //streamContral显隐
 const streamContainer = ref(null)
@@ -48,6 +48,9 @@ const { callKitStatus } = toRefs(props)
 /* 视频UI控制 */
 //是否最小化
 const isMiniSize = ref(false)
+const changeMiniSize = (bol) => {
+  isMiniSize.value = bol
+}
 //channel是否接通
 const isStreamPlay = ref(false)
 //流播放容器
@@ -227,69 +230,67 @@ onBeforeUnmount(() => {
 })
 </script>
 <template>
-  <div v-show="!isMiniSize" ref="singleContainer" class="app_container" :style="style" style="position: fixed">
-    <div class="mini_stream_icon" @click="isMiniSize = true">
-      <img :src="miniStremContainer" alt="mini" />
-    </div>
-    <div class="stream_container" ref="streamContainer">
-      <!--  邀请页面    -->
-      <template v-if="callKitStatus.localClientStatus === CALLSTATUS.inviting">
-        <div class="stream_invite_box" title="取消呼叫">
-          <img class="invite_avatar" src="@/assets/callkit/avatar-big@2x.png" alt="头像">
-          <p class="invite_name">{{ callKitStatus.inviteTarget || '' }}</p>
-          <p class="invite_text">正在等待对方接收邀请<span class="dot"> ...</span></p>
-        </div>
-      </template>
-      <!-- 通话容器页面 -->
-      <template v-if="callKitStatus.localClientStatus === CALLSTATUS.confirmCallee">
-        <div class="time">{{ formatTime }}</div>
-        <!--  语音通话      -->
-        <div class="stream_audio_container" v-show="callKitStatus.channelInfos.callType === 0">
-          <img class="audio_avatar" src="@/assets/callkit/avatar-big@2x.png" alt="头像">
-          <p class="audio_name">{{ callKitStatus.inviteTarget || callKitStatus.channelInfos.callerIMName }}</p>
-        </div>
-        <!--  视频通话      -->
-        <div class="stream_video_container" v-show="callKitStatus.channelInfos.callType === 1">
-          <div :class="[defaultStreamContainerClass ? 'smallContainer' : 'mainContainer']" ref="smallContainer"
-            @click="() => defaultStreamContainerClass && changeStreamContainer()">
-          </div>
-          <div :class="[!defaultStreamContainerClass ? 'smallContainer' : 'mainContainer']" ref="mainContainer"
-            @click="() => !defaultStreamContainerClass && changeStreamContainer()">
-          </div>
-        </div>
-      </template>
-      <!--      通话聊天控制按钮-->
-      <div v-show="!isOutside" class="stream_control">
+  <div>
+    <div v-show="!isMiniSize" ref="singleContainer" class="app_container" :style="style" style="position: fixed">
+      <div class="mini_stream_icon" @click="changeMiniSize(true)">
+      </div>
+      <div class="stream_container" ref="streamContainer">
+        <!--  邀请页面    -->
         <template v-if="callKitStatus.localClientStatus === CALLSTATUS.inviting">
-          <div class="stream_invite_btn" @click="cancelCall">
-            <img src="@/assets/callkit/hangupCall@2x.png" alt="">
-            <p class="btn_text">取消</p>
+          <div class="stream_invite_box" title="取消呼叫">
+            <img class="invite_avatar" src="@/assets/callkit/avatar-big@2x.png" alt="头像" draggable="false">
+            <p class="invite_name">{{ callKitStatus.inviteTarget || '' }}</p>
+            <p class="invite_text">正在等待对方接收邀请<span class="dot"> ...</span></p>
           </div>
         </template>
+        <!-- 通话容器页面 -->
         <template v-if="callKitStatus.localClientStatus === CALLSTATUS.confirmCallee">
-          <div class="stream_calling_btn" @click="handleLocalStreamPublish('voice')">
-            <img :src="localStreamStatus.voice ? microphone : mutemicrophone" alt="">
-            <p class="btn_text">语音</p>
+          <div class="time">{{ formatTime }}</div>
+          <!--  语音通话      -->
+          <div class="stream_audio_container" v-show="callKitStatus.channelInfos.callType === 0">
+            <img class="audio_avatar" src="@/assets/callkit/avatar-big@2x.png" alt="头像">
+            <p class="audio_name">{{ callKitStatus.inviteTarget || callKitStatus.channelInfos.callerIMName }}</p>
           </div>
-          <div class="stream_calling_btn" @click="leaveChannel">
-            <img src="@/assets/callkit/hangupCall@2x.png" alt="">
-            <p class="btn_text">挂断</p>
-          </div>
-          <div v-show="callKitStatus.channelInfos.callType === 1" class="stream_calling_btn"
-            @click="handleLocalStreamPublish('video')">
-            <img :src="localStreamStatus.video ? camera : closecamera" alt="">
-            <p class="btn_text">视频</p>
+          <!--  视频通话      -->
+          <div class="stream_video_container" v-show="callKitStatus.channelInfos.callType === 1">
+            <div :class="[defaultStreamContainerClass ? 'smallContainer' : 'mainContainer']" ref="smallContainer"
+              @click="() => defaultStreamContainerClass && changeStreamContainer()">
+            </div>
+            <div :class="[!defaultStreamContainerClass ? 'smallContainer' : 'mainContainer']" ref="mainContainer"
+              @click="() => !defaultStreamContainerClass && changeStreamContainer()">
+            </div>
           </div>
         </template>
+        <!--      通话聊天控制按钮-->
+        <div v-show="!isOutside" class="stream_control">
+          <template v-if="callKitStatus.localClientStatus === CALLSTATUS.inviting">
+            <div class="stream_invite_btn" @click="cancelCall">
+              <img src="@/assets/callkit/hangupCall@2x.png" alt="" draggable="false">
+              <p class="btn_text">取消</p>
+            </div>
+          </template>
+          <template v-if="callKitStatus.localClientStatus === CALLSTATUS.confirmCallee">
+            <div class="stream_calling_btn" @click="handleLocalStreamPublish('voice')">
+              <img :src="localStreamStatus.voice ? microphone : mutemicrophone" alt="" draggable="false">
+              <p class="btn_text">语音</p>
+            </div>
+            <div class="stream_calling_btn" @click="leaveChannel">
+              <img src="@/assets/callkit/hangupCall@2x.png" alt="" draggable="false">
+              <p class="btn_text">挂断</p>
+            </div>
+            <div v-show="callKitStatus.channelInfos.callType === 1" class="stream_calling_btn"
+              @click="handleLocalStreamPublish('video')">
+              <img :src="localStreamStatus.video ? camera : closecamera" alt="" draggable="false">
+              <p class="btn_text">视频</p>
+            </div>
+          </template>
+        </div>
       </div>
     </div>
+    <!--    mini通话容器-->
+    <MiniStreamContainer v-show="isMiniSize" :show-type="isStreamPlay ? 1 : 0" :call-time="formatTime"
+      @changeMiniSize="changeMiniSize" />
   </div>
-  <!--    mini通话容器-->
-
-  <MiniStreamContainer v-show="isMiniSize" @click.prevent.stop="isMiniSize = false" :show-type="isStreamPlay ? 1 : 0"
-    :call-time="formatTime" />
-
-
 
 </template>
 
@@ -302,12 +303,20 @@ onBeforeUnmount(() => {
   overflow: hidden;
   background: url('../../../assets/callkit/rtc-bg@2x.png') no-repeat;
   background-size: 100% 100%;
+  cursor: move;
 }
 
-.mini_stream_icon>img {
+.mini_stream_icon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 9999;
   width: 35px;
   height: 35px;
+  background: url('../../../assets/callkit/narrow@2x.png');
+  background-size: 100% 100%;
   cursor: pointer;
+
 }
 
 .stream_container {
@@ -393,6 +402,7 @@ onBeforeUnmount(() => {
   height: 100px;
   background: url('../../../assets/callkit/video-bg@2x.png') no-repeat;
   background-size: 100% 100%;
+  cursor: pointer;
 }
 
 .mainContainer {
@@ -461,27 +471,6 @@ onBeforeUnmount(() => {
 
 .stream_calling_btn>img:hover {
   transform: scale(1.2);
-}
-
-/*mini 流播放样式*/
-.mini_stream_container {
-  position: absolute;
-  right: 0;
-  top: 50px;
-  z-index: 999;
-  width: 136px;
-  height: 116px;
-  background: url('../../../assets/callkit/minimodal@2x.png') no-repeat;
-  background-size: contain;
-}
-
-.mini_stream_text {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-  align-items: flex-end;
-  color: #5DB47F;
 }
 
 .dot {

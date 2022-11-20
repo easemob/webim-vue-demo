@@ -153,7 +153,7 @@ const handleCallKitCommand = (msgBody) => {
                 status = false
             if (callerDevId !== clientResource) {
                 console.warn('callerDevId 设备不相同')
-                return
+                status = false
             }
             const params = {
                 targetId: msgBody.from,

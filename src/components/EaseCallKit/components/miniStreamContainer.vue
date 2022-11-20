@@ -1,50 +1,56 @@
 <script setup>
-import { ref, toRefs } from 'vue'
-import { useDraggable, useWindowSize } from '@vueuse/core'
+import { ref, toRefs } from "vue";
+import { useDraggable, useWindowSize } from "@vueuse/core";
 const props = defineProps({
   showType: {
     type: Number,
     default: 0, //0 待接听 1为通话中
-    required: true
+    required: true,
   },
   callTime: {
     type: String,
-    default: '00:00',
-    required: true
-  }
-})
-const { showType, callTime } = toRefs(props)
+    default: "00:00",
+    required: true,
+  },
+});
+const { showType, callTime } = toRefs(props);
 
 /* emit */
-const $emit = defineEmits(['changeMiniSize'])
-const { width, height } = useWindowSize()
-const miniStreamContainer = ref(null)
+const $emit = defineEmits(["changeMiniSize"]);
+const { width, height } = useWindowSize();
+const miniStreamContainer = ref(null);
 const { style } = useDraggable(miniStreamContainer, {
   initialValue: { x: width.value - 136, y: 0 },
   onMove: (position) => {
     if (position.x > width.value - 136) {
-      position.x = width.value - 136
+      position.x = width.value - 136;
     }
     if (position.x < 0) {
-      position.x = 0
+      position.x = 0;
     }
     if (position.y > height.value - 116) {
-      position.y = height.value - 116
+      position.y = height.value - 116;
     }
     if (position.y < 0) {
-      position.y = 0
+      position.y = 0;
     }
-  }
-})
+  },
+  preventDefault: true,
+  stopPropagation: true,
+});
+const clickChanageMiniSizeModal = () => {
+  $emit('changeMiniSize', false)
+};
 </script>
 
 <template>
   <div class="mini_stream_container" ref="miniStreamContainer" :style="style" style="position: fixed">
-    <div @click="">
-      <span class="mini_stream_text" v-show="showType === 0">等待接听中<span class="dot">...</span></span>
+    <div class="minimodal" @click.prevent.stop="clickChanageMiniSizeModal"></div>
+    <div>
+      <span class="mini_stream_text" style="margin-left: 5px;" v-show="showType === 0">等待接听中<span
+          class="dot">...</span></span>
       <span class="mini_stream_text" v-show="showType === 1">{{ callTime }}</span>
     </div>
-
   </div>
 </template>
 <style scoped>
@@ -55,8 +61,24 @@ const { style } = useDraggable(miniStreamContainer, {
   z-index: 999;
   width: 136px;
   height: 116px;
+  cursor: move;
+  background: #fff;
+  border-radius: 5px;
+  box-shadow: 0px 0px 20px 10px rgba(0, 0, 0, 0.127);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 5px;
+}
+
+.minimodal {
+  width: 100px;
+  height: 100px;
   background: url('../../../assets/callkit/minimodal@2x.png') no-repeat;
   background-size: contain;
+  cursor: pointer;
 }
 
 .mini_stream_text {
@@ -84,13 +106,13 @@ const { style } = useDraggable(miniStreamContainer, {
   }
 
   33% {
-    width: .5em;
+    width: 0.5em;
     margin-right: 1em;
   }
 
   66% {
     width: 1em;
-    margin-right: .5em;
+    margin-right: 0.5em;
   }
 
   100% {
