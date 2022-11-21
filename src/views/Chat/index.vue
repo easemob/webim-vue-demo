@@ -1,11 +1,21 @@
 <script setup>
 import { onBeforeUnmount } from 'vue';
+import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 import EaseIM from '@/IM/initwebsdk'
 import NavBar from '@/views/Chat/components/NavBar'
+import { messageType } from '@/constant'
 // /* CallKit */
 // import EaseCallKit from '@/components/EaseCallKit'
 import { useChannelEvent } from '@/components/EaseCallKit/hooks';
+/* store */
+const store = useStore()
+/* constants */
+const { CHAT_TYPE } = messageType
+/**
+ * 此处为Callkit中对外暴露的其内部对外抛出的事件通知，
+ * 可通过引入useChannelEvent，订阅其通知处理一些UI层面的提示。
+ */
 const { SUB_CHANNEL_EVENT, UN_SUB_CHANNEL_ENENT } = useChannelEvent()
 SUB_CHANNEL_EVENT('EASECALLKIT', (param) => {
   console.log('%c>>>>>>订阅事件触发', 'color:blue', param);
@@ -16,11 +26,31 @@ SUB_CHANNEL_EVENT('EASECALLKIT', (param) => {
     'FAIL': 'error',
     'INFO': 'info'
   }
-  ElMessage({
-    type: MESSAGE_TYPE[type],
-    message: message,
-    center:true
-  })
+  if (type === 'FAIL' || type === 'SUCCESS') {
+    ElMessage({
+      type: MESSAGE_TYPE[type],
+      message: message,
+      center: true
+    })
+    const params = {
+      from: EaseIM.conn.user,
+      to: param.eventHxId,
+      chatType: param.callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
+      msg: message
+    }
+
+    store.dispatch('createInformMessage', params)
+  }
+  if (type === 'INFO') {
+    const params = {
+      from: EaseIM.conn.user,
+      to: param.eventHxId,
+      chatType: param.callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
+      msg: message
+    }
+
+    store.dispatch('createInformMessage', params)
+  }
 })
 onBeforeUnmount(() => {
   UN_SUB_CHANNEL_ENENT('EASECALLKIT')

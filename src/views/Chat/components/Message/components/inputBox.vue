@@ -220,12 +220,29 @@ const handleInviteCall = (handleType) => {
     if (handleType === 'voice') {
         const callType = 0
         sendInviteMessage(toId, callType)
+        //发送邀请信息后创建一条本地系统通知类消息上屏展示
+        const params = {
+            from: EaseIM.conn.user,
+            to: toId,
+            chatType: CHAT_TYPE.SINGLE,
+            msg: `邀请${toId}进行语音通话～`
+        }
+        store.dispatch('createInformMessage', params)
     }
     if (handleType === 'video') {
         if (nowPickInfo.value?.chatType === CHAT_TYPE.SINGLE) {
             const callType = 1
             sendInviteMessage(toId, callType)
+            //发送邀请信息后创建一条本地系统通知类消息上屏展示
+            const params = {
+                from: EaseIM.conn.user,
+                to: toId,
+                chatType: CHAT_TYPE.SINGLE,
+                msg: `邀请${toId}进行视频通话～`
+            }
+            store.dispatch('createInformMessage', params)
         } else if (nowPickInfo.value?.chatType === CHAT_TYPE.GROUP) {
+            //群组则弹出多人模态框
             showInviteCallMembersModal()
         }
     }
@@ -235,14 +252,26 @@ const inviteCallMembersComp = ref(null)
 const showInviteCallMembersModal = () => {
     console.log('>>>>>>>邀请多人modal弹出');
     const groupId = nowPickInfo.value.id
-    inviteCallMembersComp.value.alertDialog(groupId);
+    if (groupId) {
+        inviteCallMembersComp.value.alertDialog(groupId);
+    } else {
+        console.warn('请传入groupId');
+    }
+
 }
-//发送邀请信息的方法
+//发送多人场景邀请信息的方法
 const sendMulitInviteMsg = (targetIMId) => {
     console.log('>>>>>要发送的用户列表', targetIMId);
     const callType = 2
     const groupId = nowPickInfo.value.id
     sendInviteMessage(targetIMId, callType, groupId)
+    const params = {
+        from: EaseIM.conn.user,
+        to: groupId,
+        chatType: CHAT_TYPE.GROUP,
+        msg: `已发起多人音视频通话～`
+    }
+    store.dispatch('createInformMessage', params)
 }
 defineExpose({
     textContent

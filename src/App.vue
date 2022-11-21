@@ -214,11 +214,12 @@ if (loginUserFromStorage?.user && loginUserFromStorage?.accessToken) {
 /* EaseCallKit 相关 */
 const easeCallKit = ref(null);
 const inviteCallComp = ref(null)
-
+//多人会议使用-弹出邀请模态框
 const showModal = ({ groupId }) => {
     console.log('可以弹出邀请框', groupId)
     inviteCallComp.value.alertDialog(groupId)
 }
+//多人会议使用-传递给邀请组件发送邀请消息
 const sendMulitInviteMsg = (targetIMId) => {
     console.log('targetIMIdtargetIMIdtargetIMId', targetIMId);
     const callType = 2

@@ -2,6 +2,8 @@
 import { ref, reactive, computed, watch, nextTick, toRaw, toRefs, onMounted, onBeforeUnmount } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
 import { CALLSTATUS } from '../constants'
+/* hooks */
+import { useChannelEvent } from '../hooks'
 /*mini组件*/
 import MiniStreamContainer from './miniStreamContainer'
 /* image url */
@@ -57,7 +59,7 @@ const props = defineProps({
 })
 const { callKitStatus, loginUserHxId } = toRefs(props)
 /* emits */
-const emits = defineEmits(['getAgoraRtcToken', 'getAgoraChannelDetails', 'updateLocalStatus', 'onInviteMembers'])
+const emits = defineEmits(['getAgoraRtcToken', 'getAgoraChannelDetails', 'updateLocalStatus', 'onInviteMembers', 'handleCancelCall'])
 /* AgoraRTC */
 //client 初始化
 let CallKitClient = null
@@ -149,7 +151,8 @@ const setAgoraRtcListener = () => {
 onMounted(() => {
     setAgoraRtcListener()
 })
-
+/* 对外发布频道内事件 */
+const { EVENT_NAME, EVENT_LEVEL, PUB_CHANNEL_EVENT } = useChannelEvent()
 /* 频道控制 */
 //监听本地端状态
 watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
@@ -227,13 +230,24 @@ const joinChannel = async () => {
     }
 
 }
-//离开频道【挂断&对方挂断】
+//离开频道【挂断】
 const leaveChannel = async () => {
     console.log('》》》》》挂断', callKitStatus.value.localClientStatus)
     if ([CALLSTATUS.inviting, CALLSTATUS.confirmRing].includes(callKitStatus.value.localClientStatus)) {
         console.log('>>>>>>调用发送取消信令');
+        await CallKitClient.leave()
+        emits('handleCancelCall')
+
+    } else {
+        await CallKitClient.leave()
+        const eventParams = {
+            type: EVENT_LEVEL[3],
+            message: `通话结束【${formatTime.value}】`,
+            callType: callKitStatus.value.channelInfos.callType,
+            eventHxId: callKitStatus.value.channelInfos.groupId
+        }
+        PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
     }
-    await CallKitClient.leave()
     emits('updateLocalStatus', CALLSTATUS.idle)
 }
 //处理DOM容器【包含创建以及移除】

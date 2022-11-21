@@ -2,6 +2,8 @@
 import { ref, watch, reactive, computed, toRefs, onMounted, onBeforeUnmount } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
 import { CALLSTATUS } from '../constants'
+/* hooks */
+import { useChannelEvent } from '../hooks'
 /*mini组件*/
 import MiniStreamContainer from './miniStreamContainer'
 /* image url */
@@ -68,6 +70,7 @@ const localStreamStatus = reactive({
   video: false
 })
 CallKitClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
+//Agora listenner
 const setAgoraRtcListener = () => {
   console.log('>>>>>AgoraRtc监听挂载完毕')
   //监听用户发布流
@@ -107,24 +110,19 @@ const setAgoraRtcListener = () => {
     leaveChannel()
   })
 }
+//挂载Agora监听
 onMounted(() => {
   setAgoraRtcListener()
 })
-
+/* 对外发布频道内事件 */
+const { EVENT_NAME, EVENT_LEVEL, PUB_CHANNEL_EVENT } = useChannelEvent()
 /* 频道控制 */
-
 //监听本地端状态
 watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
   console.log('>>>>>>> single组件监听是否可加入房间', newVal, oldVal)
   if (newVal === CALLSTATUS.confirmCallee) {
     emitChannelToken()
   }
-  //单人一对一通话，对方应答之后再选择加入频道中
-  // if (newVal === CALLSTATUS.inviting) {
-  //     setTimeout(() => {
-  //         emitChannelToken()
-  //     }, 500)
-  // }
 }, {
   immediate: true
 })
@@ -137,10 +135,6 @@ const emitChannelToken = () => {
   }
   emits('getAgoraRtcToken', callback)
 
-}
-//取消呼叫
-const cancelCall = () => {
-  emits('handleCancelCall')
 }
 //开启通话计时
 const inChannelTimer = ref(null)
@@ -194,11 +188,24 @@ const joinChannel = async () => {
   }
 
 }
+//取消呼叫
+const cancelCall = () => {
+  //handleCancelCall 方法内会进行事件发送
+  emits('handleCancelCall')
+}
 //离开频道【挂断&对方挂断】
 const leaveChannel = async () => {
   console.log('》》》》》挂断')
   await CallKitClient.leave()
+  const eventParams = {
+    type: EVENT_LEVEL[0],
+    message: `通话结束【${formatTime.value}】`,
+    callType: callKitStatus.value.channelInfos.callType,
+    eventHxId: callKitStatus.value.channelInfos.callerIMName
+  }
+  PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
   emits('updateLocalStatus', CALLSTATUS.idle)
+
 }
 //操纵publish & unpublish voiceStream videoStream
 const handleLocalStreamPublish = (handleType) => {

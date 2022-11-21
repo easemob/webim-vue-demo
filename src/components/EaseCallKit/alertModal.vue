@@ -1,6 +1,6 @@
 <script setup>
 import { computed, toRefs, defineEmits } from 'vue'
-import { ANSWER_TYPE,CALL_INVITE_TEXT } from './constants'
+import { ANSWER_TYPE, CALL_INVITE_TEXT } from './constants'
 /* images */
 import avatarIcon from '@/assets/callkit/avatar-big@2x.png'
 import acceptIcon from '@/assets/callkit/acceptCall@2x.png';
@@ -37,7 +37,7 @@ const refuseJoinChannel = () => {
             <div class="name">{{ channelInfos.callerIMName || '未知呼叫' }}</div>
         </div>
         <div class="alert_footer">
-            <p>{{ CALL_INVITE_TEXT[ channelInfos.callType ] || '未知类型呼叫'}}</p>
+            <p>{{ CALL_INVITE_TEXT[channelInfos.callType] || '未知类型呼叫' }}</p>
             <div class="alert_btns">
                 <img :src="acceptIcon" @click="agreeJoinChannel" alt="接听">
                 <img :src="refuseIcon" @click="refuseJoinChannel" alt="挂断">

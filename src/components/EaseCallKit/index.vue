@@ -79,13 +79,13 @@ const removeMessageListener = () => EaseIM.value[conn].removeEventHandler(msgLis
 const loginUserHxId = ref('')
 const setLoginUserHxId = () => loginUserHxId.value = EaseIM.value[conn].user || ''
 //频道事件发布相关
-const EVENT_NAME = 'EASECALLKIT'
-const EVENT_LEVEL = {
-    0: 'SUCCESS',
-    1: 'WARNING',
-    2: 'FAIL',
-    3: 'INFO'
-}
+// const EVENT_NAME = 'EASECALLKIT'
+// const EVENT_LEVEL = {
+//     0: 'SUCCESS',
+//     1: 'WARNING',
+//     2: 'FAIL',
+//     3: 'INFO'
+// }
 /* CallKit status */
 const callCompsType = {
     'singleCall': SingleCall,
@@ -100,7 +100,7 @@ const {
     sendInviteMessage,
     inMultiChanelSendInviteMsg
 } = useManageChannel(EaseIM.value, conn)
-const { PUB_CHANNEL_ENENT } = useChannelEvent()
+const { EVENT_NAME, EVENT_LEVEL, PUB_CHANNEL_EVENT } = useChannelEvent()
 /* 信令部分 */
 const SignalMsgs = new CallKitMessages({ IM: EaseIM.value, conn: conn })
 //处理收到为文本的邀请信息
@@ -208,7 +208,15 @@ const handleCallKitCommand = (msgBody) => {
                         'busy': '对方忙碌中',
                         'refuse': '对方拒绝接听'
                     }
-                    PUB_CHANNEL_ENENT(EVENT_NAME, { type: EVENT_LEVEL[2], message: `${msgText[cmdMsgBody.result] || '未接听...'}` })
+                    //对外发布应答事件
+                    const eventParams = {
+                        type: EVENT_LEVEL[2],
+                        message: `${msgText[cmdMsgBody.result] || '未接听...'}`,
+                        callType: callKitStatus.channelInfos.callType,
+                        eventHxId: msgBody.from || ''
+                    }
+                    PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
+                    //修改当前状态为空闲
                     console.log('>>>>>修改当前状态为空闲')
                     return updateLocalStatus(CALLSTATUS.idle)
                 }
@@ -263,19 +271,69 @@ const handleSendAnswerMsg = (sendType) => {
         SignalMsgs.sendAnswerMsg(payload, ANSWER_TYPE.ACCPET)
         updateLocalStatus(CALLSTATUS.answerCall) //更改状态为已应答
         console.log('>>>>开始发送接听信令')
+        //对外频道接听事件发布事件
+        const eventParams = {
+            type: EVENT_LEVEL[0],
+            message: '通话已接听~',
+            callType: callKitStatus.channelInfos.callType,
+            eventHxId: channelInfos.callerIMName
+        }
+        //如果是多人就取对应群组ID
+        if (callKitStatus.channelInfos.callType === 2) {
+            eventParams.eventHxId = callKitStatus.channelInfos.groupId
+        }
+        PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
     }
     if (sendType === ANSWER_TYPE.REFUSE) {
         SignalMsgs.sendAnswerMsg(payload, ANSWER_TYPE.REFUSE)
         updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
         console.log('>>>>开始发送挂断信令')
+        //对外频道接听事件发布事件
+        const eventParams = {
+            type: EVENT_LEVEL[0],
+            message: '已拒绝通话邀请～',
+            callType: callKitStatus.channelInfos.callType,
+            eventHxId: channelInfos.callerIMName
+        }
+        //如果是多人就取对应群组ID
+        if (callKitStatus.channelInfos.callType === 2) {
+            eventParams.eventHxId = callKitStatus.channelInfos.groupId
+        }
+        PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
     }
 }
-//挂断信令
+//挂断信令[仅单人呼叫能用到]
 const handleCancelCall = () => {
     const targetId = callKitStatus.inviteTarget
-    if (!targetId) return console.log('>>>挂断目标ID为空')
-    SignalMsgs.sendCannelMsg({ targetId, callId: callKitStatus.channelInfos.callId })
-    updateLocalStatus(CALLSTATUS.idle)
+    if (!targetId) return console.log('>>>挂断目标ID为空', targetId)
+    //多人遍历发送取消
+    if (callKitStatus.channelInfos.callType === 2) {
+        targetId.length && targetId.forEach(userHxId => {
+            SignalMsgs.sendCannelMsg({ targetId: userHxId, callId: callKitStatus.channelInfos.callId })
+        })
+        //对外频道接听事件发布事件
+        const eventParams = {
+            type: EVENT_LEVEL[3],
+            message: '多人音视频通话已取消～',
+            callType: 2,
+            eventHxId: callKitStatus.channelInfos.groupId
+        }
+        PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
+        updateLocalStatus(CALLSTATUS.idle)
+    } else {
+        SignalMsgs.sendCannelMsg({ targetId, callId: callKitStatus.channelInfos.callId })
+        //对外频道接听事件发布事件
+        const eventParams = {
+            type: EVENT_LEVEL[3],
+            message: '通话已取消～',
+            callType: callKitStatus.channelInfos.callType,
+            eventHxId: targetId
+        }
+        PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
+        updateLocalStatus(CALLSTATUS.idle)
+    }
+
+
 }
 /* 获取agoraToken */
 const getAgoraRtcToken = async (callback) => {
