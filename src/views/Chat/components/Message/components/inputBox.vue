@@ -11,7 +11,6 @@ import EaseIM from '@/IM/initwebsdk'
 /* 组件 */
 import CollectAudio from './suit/audio.vue'
 //EaseCallKit Invite
-import InviteCall from '@/components/EaseCallKit/inviteCall.vue'
 import { useManageChannel } from '@/components/EaseCallKit/hooks'
 //inviteMembers modal
 import InviteCallMembers from '@/components/InviteCallMembers'
@@ -207,11 +206,10 @@ const all_func = [
     { 'className': 'icon-tuku', 'style': 'font-size: 26px;', 'title': '发送图片', 'methodName': chooseImages },
     { 'className': 'icon-wenjian', 'style': 'font-size: 20px;', 'title': '发送文件', 'methodName': chooseFiles },
     { 'className': 'icon-01', 'style': 'font-size: 20px;', 'title': '发送语音', 'methodName': showRecordBox },
-    { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen },
+    { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen }
 ]
 
 /* About EaseCallKit */
-const inviteCallComp = ref(null)
 const { sendInviteMessage } = useManageChannel(EaseIM, 'conn')
 //处理发起的音视频呼叫类型
 const handleInviteCall = (handleType) => {
@@ -283,9 +281,13 @@ defineExpose({
             :style="iconItem.style" :title="iconItem.title" @click.stop="iconItem.methodName"></span>
         <!-- EaseCallKit 音视频邀请icon【不需要可移除】 -->
         <!-- 群组没有语音发起 -->
-        <span v-show="nowPickInfo.chatType === CHAT_TYPE.SINGLE"><button
-                @click="handleInviteCall('voice')">语音</button></span>
-        <span><button @click="handleInviteCall('video')">视频</button></span>
+        <template v-if="isHttps">
+            <span class="iconfont icon-31dianhua" style="font-size:20px" title="语音通话"
+                v-show="nowPickInfo.chatType === CHAT_TYPE.SINGLE" @click="handleInviteCall('voice')"></span>
+            <span class="iconfont icon-video" style="font-size:20px" title="视频通话"
+                @click="handleInviteCall('video')"></span>
+        </template>
+
         <!-- 表情框 -->
         <el-scrollbar ref="emojisBox" v-if="isShowEmojisBox" class="emojis_box" tag="div">
             <span class="emoji" v-for="(emoji, index) in emojis" :key="index" @click="addOneEmoji(emoji)">{{ emoji
@@ -309,7 +311,6 @@ defineExpose({
     </textarea>
     <el-button :class="[textContent === '' ? 'no_content_send_btn' : 'chat_send_btn']" type="primary"
         @click="sendTextMessage">发送</el-button>
-    <InviteCall ref="inviteCallComp" />
     <InviteCallMembers ref="inviteCallMembersComp" @sendMulitInviteMsg="sendMulitInviteMsg" />
 </template>
 
