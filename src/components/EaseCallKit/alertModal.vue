@@ -3,8 +3,8 @@ import { computed, toRefs, defineEmits } from 'vue'
 import { ANSWER_TYPE, CALL_INVITE_TEXT } from './constants'
 /* images */
 import avatarIcon from '@/assets/callkit/avatar-big@2x.png'
-import acceptIcon from '@/assets/callkit/acceptCall@2x.png';
-import refuseIcon from '@/assets/callkit/hangupCall@2x.png';
+import acceptIcon from '@/assets/callkit/acceptCall@2x.png'
+import refuseIcon from '@/assets/callkit/hangupCall@2x.png'
 /* props */
 const props = defineProps({
     callKitStatus: {

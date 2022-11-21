@@ -11,7 +11,7 @@ import EaseIM from '@/IM/initwebsdk'
 /* 组件 */
 import CollectAudio from './suit/audio.vue'
 //EaseCallKit Invite
-import InviteCall from '@/components/EaseCallKit/inviteCall.vue';
+import InviteCall from '@/components/EaseCallKit/inviteCall.vue'
 import { useManageChannel } from '@/components/EaseCallKit/hooks'
 //inviteMembers modal
 import InviteCallMembers from '@/components/InviteCallMembers'
@@ -190,10 +190,10 @@ const sendAudioMessages = async (audioData) => {
 const clearScreen = () => {
     ElMessageBox.confirm('确认清空当前消息内容？',
         '消息清屏', {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'warning',
-    }).then(() => {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }).then(() => {
         const key = nowPickInfo.value.id
         store.commit('CLEAR_SOMEONE_MESSAGE', key)
     }).catch(() => {
@@ -250,18 +250,18 @@ const handleInviteCall = (handleType) => {
 const inviteCallMembersComp = ref(null)
 //调起多人邀请组件
 const showInviteCallMembersModal = () => {
-    console.log('>>>>>>>邀请多人modal弹出');
+    console.log('>>>>>>>邀请多人modal弹出')
     const groupId = nowPickInfo.value.id
     if (groupId) {
-        inviteCallMembersComp.value.alertDialog(groupId);
+        inviteCallMembersComp.value.alertDialog(groupId)
     } else {
-        console.warn('请传入groupId');
+        console.warn('请传入groupId')
     }
 
 }
 //发送多人场景邀请信息的方法
 const sendMulitInviteMsg = (targetIMId) => {
-    console.log('>>>>>要发送的用户列表', targetIMId);
+    console.log('>>>>>要发送的用户列表', targetIMId)
     const callType = 2
     const groupId = nowPickInfo.value.id
     sendInviteMessage(targetIMId, callType, groupId)
@@ -269,7 +269,7 @@ const sendMulitInviteMsg = (targetIMId) => {
         from: EaseIM.conn.user,
         to: groupId,
         chatType: CHAT_TYPE.GROUP,
-        msg: `已发起多人音视频通话～`
+        msg: '已发起多人音视频通话～'
     }
     store.dispatch('createInformMessage', params)
 }

@@ -90,7 +90,7 @@ const router = createRouter({
 })
 router.beforeEach((to, from, next) => {
     NProgress.start()
-    const loginState = store.state.loginState
+    // const loginState = store.state.loginState
     const EASEIM_loginUser = window.localStorage.getItem('EASEIM_loginUser')
     const loginUserFromStorage = JSON.parse(EASEIM_loginUser) || {}
     if (to.matched.some((record) => record.meta.requiresAuth)) {

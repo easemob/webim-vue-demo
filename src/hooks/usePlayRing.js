@@ -19,7 +19,10 @@ export default function () {
     const playRing = _.throttle(() => {
         const ringDom = document.querySelector('#ring')
         console.log('>>>>铃声播放执行')
-        ringDom.play().then(res => console.log('>>>>>成功播放')).catch(() => openRing())
+        ringDom
+            .play()
+            .then(() => console.log('>>>>>成功播放'))
+            .catch(() => openRing())
     }, 1000)
 
     //请求播放权限

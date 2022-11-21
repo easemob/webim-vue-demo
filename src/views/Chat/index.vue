@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeUnmount } from 'vue';
+import { onBeforeUnmount } from 'vue'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 import EaseIM from '@/IM/initwebsdk'
@@ -7,7 +7,7 @@ import NavBar from '@/views/Chat/components/NavBar'
 import { messageType } from '@/constant'
 // /* CallKit */
 // import EaseCallKit from '@/components/EaseCallKit'
-import { useChannelEvent } from '@/components/EaseCallKit/hooks';
+import { useChannelEvent } from '@/components/EaseCallKit/hooks'
 /* store */
 const store = useStore()
 /* constants */
@@ -18,42 +18,42 @@ const { CHAT_TYPE } = messageType
  */
 const { SUB_CHANNEL_EVENT, UN_SUB_CHANNEL_ENENT } = useChannelEvent()
 SUB_CHANNEL_EVENT('EASECALLKIT', (param) => {
-  console.log('%c>>>>>>订阅事件触发', 'color:blue', param);
-  const { type, message } = param;
-  const MESSAGE_TYPE = {
-    'SUCCESS': 'success',
-    'WARNING': 'warning',
-    'FAIL': 'error',
-    'INFO': 'info'
-  }
-  if (type === 'FAIL' || type === 'SUCCESS') {
-    ElMessage({
-      type: MESSAGE_TYPE[type],
-      message: message,
-      center: true
-    })
-    const params = {
-      from: EaseIM.conn.user,
-      to: param.eventHxId,
-      chatType: param.callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
-      msg: message
+    console.log('%c>>>>>>订阅事件触发', 'color:blue', param)
+    const { type, message } = param
+    const MESSAGE_TYPE = {
+        'SUCCESS': 'success',
+        'WARNING': 'warning',
+        'FAIL': 'error',
+        'INFO': 'info'
     }
+    if (type === 'FAIL' || type === 'SUCCESS') {
+        ElMessage({
+            type: MESSAGE_TYPE[type],
+            message: message,
+            center: true
+        })
+        const params = {
+            from: EaseIM.conn.user,
+            to: param.eventHxId,
+            chatType: param.callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
+            msg: message
+        }
 
-    store.dispatch('createInformMessage', params)
-  }
-  if (type === 'INFO') {
-    const params = {
-      from: EaseIM.conn.user,
-      to: param.eventHxId,
-      chatType: param.callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
-      msg: message
+        store.dispatch('createInformMessage', params)
     }
+    if (type === 'INFO') {
+        const params = {
+            from: EaseIM.conn.user,
+            to: param.eventHxId,
+            chatType: param.callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
+            msg: message
+        }
 
-    store.dispatch('createInformMessage', params)
-  }
+        store.dispatch('createInformMessage', params)
+    }
 })
 onBeforeUnmount(() => {
-  UN_SUB_CHANNEL_ENENT('EASECALLKIT')
+    UN_SUB_CHANNEL_ENENT('EASECALLKIT')
 })
 </script>
 <template>

@@ -136,125 +136,125 @@ const handleCallKitCommand = (msgBody) => {
     const { calleeDevId, callerDevId } = cmdMsgBody
     const clientResource = EaseIM.value[conn].context.jid.clientResource
     const { action } = cmdMsgBody
+    const { localClientStatus, channelInfos } = callKitStatus
+    //当前有效会议ID
+    const currentCallKitCallId = callKitStatus.channelInfos.callId
+    //返回给对方的confirmRing状态
+    let status = true
+    const params = {
+        targetId: msgBody.from,
+        sendBody: cmdMsgBody,
+        status
+    }
     switch (action) {
-        case CALL_ACTIONS_TYPE.ALERT: //回复confirmring
-            updateLocalStatus(CALLSTATUS.alerting)
-            const { localClientStatus, channelInfos } = callKitStatus
-            //当前有效会议ID
-            const currentCallKitCallId = callKitStatus.channelInfos.callId
-            //返回给对方的confirmRing状态
-            let status = true
-            console.log('>>>>>收到alert信令', currentCallKitCallId)
-            if (cmdMsgBody.callId !== currentCallKitCallId) {
-                status = false
-                console.warn('callId 于当前呼叫端callId 不一致')
-            }
-            if (localClientStatus > CALLSTATUS.receivedConfirmRing && channelInfos.callType !== 2)
-                status = false
-            if (callerDevId !== clientResource) {
-                console.warn('callerDevId 设备不相同')
-                status = false
-            }
-            const params = {
-                targetId: msgBody.from,
-                sendBody: cmdMsgBody,
-                status
-            }
-            //如果status为true表明为有效的邀请，再更改为inviting,false表示无效邀请则更改为空闲状态。
-            if (status) {
-                SignalMsgs.sendConfirmRing(params)
-                updateLocalStatus(CALLSTATUS.inviting)
-            } else {
-                SignalMsgs.sendConfirmRing(params)
-                updateLocalStatus(CALLSTATUS.idle)
-            }
-
-            break
-        case CALL_ACTIONS_TYPE.CONFIRM_RING: {//调起confirm待接听界面
-            if (calleeDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
-            if (!cmdMsgBody.status && callKitStatus.localClientStatus < CALLSTATUS.receivedConfirmRing) {
-                updateLocalStatus(CALLSTATUS.idle) //重置为闲置状态
-                //todo 设置为初始化状态
-            } //邀请失效，不弹出接听确认框
-            //有效邀请则设置状态为收到confirmRing
-            console.log('%chandle confimring', 'color:blue;')
-            updateLocalStatus(CALLSTATUS.receivedConfirmRing)
+    case CALL_ACTIONS_TYPE.ALERT: //回复confirmring
+        updateLocalStatus(CALLSTATUS.alerting)
+        console.log('>>>>>收到alert信令', currentCallKitCallId)
+        if (cmdMsgBody.callId !== currentCallKitCallId) {
+            status = false
+            console.warn('callId 于当前呼叫端callId 不一致')
         }
-            break
-        case CALL_ACTIONS_TYPE.ANSWER: {
-            console.log('>>>>>cmdMsgBody', cmdMsgBody)
-            if (callerDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
-            updateLocalStatus(CALLSTATUS.receivedAnswerCall)
-            callKitTimer.value && clearTimeout(callKitTimer.value)
-            const params = {
-                targetId: msgBody.from,
-                sendBody: cmdMsgBody
-            }
-            if (!callKitStatus.channelInfos.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
-                //如果calleeDevId不存在，并且非多人音视频模式，主动更新频道信息
-                if (cmdMsgBody.videoToVoice) { callKitStatus.channelInfos.callType = 0 }
-                updateChannelInfos(msgBody)
-            } else if (callKitStatus.channelInfos.calleeDevId !== cmdMsgBody.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
-                console.log('callKitStatus.channelInfos.calleeDevId', callKitStatus.channelInfos.calleeDevId)
-                //如果存在频道信息，但是与待呼叫确认的calleeDevId不一致直接发送拒绝应答。
-                params.sendBody.result = ANSWER_TYPE.REFUSE
-            }
-            SignalMsgs.sendConfirmCallee(params)
-            updateLocalStatus(CALLSTATUS.confirmCallee)
-            if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET) {
-                console.log('callKitStatus.channelInfos.callType ', callKitStatus.channelInfos.callType)
-                if (callKitStatus.channelInfos.callType !== 2) { //无论对方是忙碌还是拒接都讲通话状态更改为闲置。
-                    const msgText = {
-                        'busy': '对方忙碌中',
-                        'refuse': '对方拒绝接听'
-                    }
-                    //对外发布应答事件
-                    const eventParams = {
-                        type: EVENT_LEVEL[2],
-                        message: `${msgText[cmdMsgBody.result] || '未接听...'}`,
-                        callType: callKitStatus.channelInfos.callType,
-                        eventHxId: msgBody.from || ''
-                    }
-                    PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
-                    //修改当前状态为空闲
-                    console.log('>>>>>修改当前状态为空闲')
-                    return updateLocalStatus(CALLSTATUS.idle)
-                }
-            }
-
+        if (localClientStatus > CALLSTATUS.receivedConfirmRing && channelInfos.callType !== 2)
+            status = false
+        if (callerDevId !== clientResource) {
+            console.warn('callerDevId 设备不相同')
+            status = false
         }
-            break
-        case CALL_ACTIONS_TYPE.CONFIRM_CALLEE: {
-            if (cmdMsgBody.calleeDevId !== clientResource) {
-                if (msgBody.to === EaseIM.value[conn].user) {
-                    updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
-                    console.log('%c 已在其他设备处理', 'color:red;')
-                    return
+        //如果status为true表明为有效的邀请，再更改为inviting,false表示无效邀请则更改为空闲状态。
+        if (status) {
+            SignalMsgs.sendConfirmRing(params)
+            updateLocalStatus(CALLSTATUS.inviting)
+        } else {
+            SignalMsgs.sendConfirmRing(params)
+            updateLocalStatus(CALLSTATUS.idle)
+        }
+
+        break
+    case CALL_ACTIONS_TYPE.CONFIRM_RING: {//调起confirm待接听界面
+        if (calleeDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
+        if (!cmdMsgBody.status && callKitStatus.localClientStatus < CALLSTATUS.receivedConfirmRing) {
+            updateLocalStatus(CALLSTATUS.idle) //重置为闲置状态
+            //todo 设置为初始化状态
+        } //邀请失效，不弹出接听确认框
+        //有效邀请则设置状态为收到confirmRing
+        console.log('%chandle confimring', 'color:blue;')
+        updateLocalStatus(CALLSTATUS.receivedConfirmRing)
+    }
+        break
+    case CALL_ACTIONS_TYPE.ANSWER: {
+        console.log('>>>>>cmdMsgBody', cmdMsgBody)
+        if (callerDevId !== clientResource) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
+        updateLocalStatus(CALLSTATUS.receivedAnswerCall)
+        callKitTimer.value && clearTimeout(callKitTimer.value)
+        const params = {
+            targetId: msgBody.from,
+            sendBody: cmdMsgBody
+        }
+        if (!callKitStatus.channelInfos.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
+            //如果calleeDevId不存在，并且非多人音视频模式，主动更新频道信息
+            if (cmdMsgBody.videoToVoice) { callKitStatus.channelInfos.callType = 0 }
+            updateChannelInfos(msgBody)
+        } else if (callKitStatus.channelInfos.calleeDevId !== cmdMsgBody.calleeDevId && callKitStatus.channelInfos.callType !== 2) {
+            console.log('callKitStatus.channelInfos.calleeDevId', callKitStatus.channelInfos.calleeDevId)
+            //如果存在频道信息，但是与待呼叫确认的calleeDevId不一致直接发送拒绝应答。
+            params.sendBody.result = ANSWER_TYPE.REFUSE
+        }
+        SignalMsgs.sendConfirmCallee(params)
+        updateLocalStatus(CALLSTATUS.confirmCallee)
+        if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET) {
+            console.log('callKitStatus.channelInfos.callType ', callKitStatus.channelInfos.callType)
+            if (callKitStatus.channelInfos.callType !== 2) { //无论对方是忙碌还是拒接都讲通话状态更改为闲置。
+                const msgText = {
+                    'busy': '对方忙碌中',
+                    'refuse': '对方拒绝接听'
                 }
+                //对外发布应答事件
+                const eventParams = {
+                    type: EVENT_LEVEL[2],
+                    message: `${msgText[cmdMsgBody.result] || '未接听...'}`,
+                    callType: callKitStatus.channelInfos.callType,
+                    eventHxId: msgBody.from || ''
+                }
+                PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
+                //修改当前状态为空闲
+                console.log('>>>>>修改当前状态为空闲')
+                return updateLocalStatus(CALLSTATUS.idle)
+            }
+        }
+
+    }
+        break
+    case CALL_ACTIONS_TYPE.CONFIRM_CALLEE: {
+        if (cmdMsgBody.calleeDevId !== clientResource) {
+            if (msgBody.to === EaseIM.value[conn].user) {
+                updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
+                console.log('%c 已在其他设备处理', 'color:red;')
                 return
             }
-            // 防止通话中收到 busy refuse时挂断
-            if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET && callKitStatus.localClientStatus !== CALLSTATUS.confirmCallee) {
-                return updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
-            }
-            //变更状态为confirmCallee
-            updateLocalStatus(CALLSTATUS.confirmCallee)
+            return
         }
-            break
-        case CALL_ACTIONS_TYPE.CANCEL: {
-            if (msgBody.from === EaseIM.value[conn].user) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
-            if (msgBody.from === callKitStatus.channelInfos.callerIMName) return updateLocalStatus(CALLSTATUS.idle)
-            break
+        // 防止通话中收到 busy refuse时挂断
+        if (cmdMsgBody.result !== ANSWER_TYPE.ACCPET && callKitStatus.localClientStatus !== CALLSTATUS.confirmCallee) {
+            return updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
         }
-        case CALL_ACTIONS_TYPE.VIDEO_TO_VOICE: {
-            console.log('视频转语音通知')
-            callKitStatus.channelInfos.callType = 0
-            break
-        }
+        //变更状态为confirmCallee
+        updateLocalStatus(CALLSTATUS.confirmCallee)
+    }
+        break
+    case CALL_ACTIONS_TYPE.CANCEL: {
+        if (msgBody.from === EaseIM.value[conn].user) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
+        if (msgBody.from === callKitStatus.channelInfos.callerIMName) return updateLocalStatus(CALLSTATUS.idle)
+        break
+    }
+    case CALL_ACTIONS_TYPE.VIDEO_TO_VOICE: {
+        console.log('视频转语音通知')
+        callKitStatus.channelInfos.callType = 0
+        break
+    }
 
-        default:
-            console.log('>>>其他未知状态')
-            break
+    default:
+        console.log('>>>其他未知状态')
+        break
     }
 }
 //发送接听或者拒接信令

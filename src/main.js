@@ -7,7 +7,7 @@ import ElementPlus from 'element-plus'
 import './styles/element/index.scss'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
-const app = createApp(App)
+createApp(App)
     .use(store)
     .use(router)
     .use(ElementPlus, { locale: zhCn })

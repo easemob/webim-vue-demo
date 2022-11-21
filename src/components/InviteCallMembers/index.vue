@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRaw } from 'vue';
+import { ref, toRaw } from 'vue'
 import { useStore } from 'vuex'
 import EaseIM from '@/IM/initwebsdk'
 /* store */
@@ -11,15 +11,15 @@ const members = ref([])
 
 /* 弹出dialog */
 const alertDialog = (groupId) => {
-    console.log('groupIdgroupId', groupId);
+    console.log('groupIdgroupId', groupId)
     dialogVisible.value = true
     getGroupMemberList(groupId)
 }
 //获取该群对应的群成员
 const getGroupMemberList = async (groupId) => {
-    console.log('getGroupMemberList', groupId);
+    console.log('getGroupMemberList', groupId)
     if (!groupId) return
-    let memberList = []
+    const memberList = []
     const sourceMembers = store.state.Groups.groupsInfos[groupId]?.members || []
     if (sourceMembers.length > 0) {
         sourceMembers.length > 0 && sourceMembers.forEach(item => {
@@ -27,7 +27,7 @@ const getGroupMemberList = async (groupId) => {
         })
         members.value = memberList
     } else {
-        console.log('>>>>>主动获取群成员数据');
+        console.log('>>>>>主动获取群成员数据')
         await store.dispatch('fetchGoupsMember', groupId)
         const sourceMembers = store.state.Groups.groupsInfos[groupId]?.members || []
         sourceMembers.length > 0 && sourceMembers.forEach(item => {

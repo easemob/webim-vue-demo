@@ -60,32 +60,32 @@ const Contacts = {
             //key(群id)，type（群详情对应要修改的字段）
             if (state.groupList[groupId] && state.groupList[groupId].groupDetail) {
                 switch (type) {
-                    //修改群名
-                    case 'groupName':
-                        {
-                            console.log('>>>>>>进入群组名称修改')
-                            state.groupList[groupId].groupDetail.name = params
-                        }
-                        break
-                    case 'groupDescription':
-                        {
-                            state.groupList[groupId].groupDetail.description = params
-                        }
-                        break
-                    case 'addAffiliationsCount':
-                        {
-                            state.groupList[groupId].groupDetail.affiliations_count =
+                //修改群名
+                case 'groupName':
+                    {
+                        console.log('>>>>>>进入群组名称修改')
+                        state.groupList[groupId].groupDetail.name = params
+                    }
+                    break
+                case 'groupDescription':
+                    {
+                        state.groupList[groupId].groupDetail.description = params
+                    }
+                    break
+                case 'addAffiliationsCount':
+                    {
+                        state.groupList[groupId].groupDetail.affiliations_count =
                                 state.groupList[groupId].groupDetail.affiliations_count + 1
-                        }
-                        break
-                    case 'delAffiliationsCount':
-                        {
-                            state.groupList[groupId].groupDetail.affiliations_count =
+                    }
+                    break
+                case 'delAffiliationsCount':
+                    {
+                        state.groupList[groupId].groupDetail.affiliations_count =
                                 state.groupList[groupId].groupDetail.affiliations_count - 1
-                        }
-                        break
-                    default:
-                        break
+                    }
+                    break
+                default:
+                    break
                 }
             }
         },

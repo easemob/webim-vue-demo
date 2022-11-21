@@ -1,46 +1,46 @@
 <script setup>
-import { ref, toRefs } from "vue";
-import { useDraggable, useWindowSize } from "@vueuse/core";
+import { ref, toRefs } from 'vue'
+import { useDraggable, useWindowSize } from '@vueuse/core'
 const props = defineProps({
-  showType: {
-    type: Number,
-    default: 0, //0 待接听 1为通话中
-    required: true,
-  },
-  callTime: {
-    type: String,
-    default: "00:00",
-    required: true,
-  },
-});
-const { showType, callTime } = toRefs(props);
+    showType: {
+        type: Number,
+        default: 0, //0 待接听 1为通话中
+        required: true,
+    },
+    callTime: {
+        type: String,
+        default: '00:00',
+        required: true,
+    },
+})
+const { showType, callTime } = toRefs(props)
 
 /* emit */
-const $emit = defineEmits(["changeMiniSize"]);
-const { width, height } = useWindowSize();
-const miniStreamContainer = ref(null);
+const $emit = defineEmits(['changeMiniSize'])
+const { width, height } = useWindowSize()
+const miniStreamContainer = ref(null)
 const { style } = useDraggable(miniStreamContainer, {
-  initialValue: { x: width.value - 136, y: 0 },
-  onMove: (position) => {
-    if (position.x > width.value - 136) {
-      position.x = width.value - 136;
-    }
-    if (position.x < 0) {
-      position.x = 0;
-    }
-    if (position.y > height.value - 116) {
-      position.y = height.value - 116;
-    }
-    if (position.y < 0) {
-      position.y = 0;
-    }
-  },
-  preventDefault: true,
-  stopPropagation: true,
-});
+    initialValue: { x: width.value - 136, y: 0 },
+    onMove: (position) => {
+        if (position.x > width.value - 136) {
+            position.x = width.value - 136
+        }
+        if (position.x < 0) {
+            position.x = 0
+        }
+        if (position.y > height.value - 116) {
+            position.y = height.value - 116
+        }
+        if (position.y < 0) {
+            position.y = 0
+        }
+    },
+    preventDefault: true,
+    stopPropagation: true,
+})
 const clickChanageMiniSizeModal = () => {
-  $emit('changeMiniSize', false)
-};
+    $emit('changeMiniSize', false)
+}
 </script>
 
 <template>

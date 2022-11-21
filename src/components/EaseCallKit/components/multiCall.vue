@@ -79,14 +79,14 @@ const setAgoraRtcListener = () => {
     CallKitClient.on('user-joined', user => {
         const remoteUserId = user.uid.toString()
         handleRemoteContainer('create', remoteUserId)
-        console.log('>>>>>加入频道的用户id', remoteUserId);
+        console.log('>>>>>加入频道的用户id', remoteUserId)
 
     })
     //监听用户发布流
     CallKitClient.on('user-published', async (user, mediaType) => {
-        console.log('%c监听用户发布流', 'color:green');
+        console.log('%c监听用户发布流', 'color:green')
         await CallKitClient.subscribe(user, mediaType)
-        const remoteUserId = user.uid.toString();
+        const remoteUserId = user.uid.toString()
         if (mediaType === 'video') {
             console.log('>>>>>>视频类型')
             const remoteVideoTrack = user.videoTrack
@@ -98,7 +98,7 @@ const setAgoraRtcListener = () => {
                     }, 300)
                 }
                 else {
-                    console.log('+++++没有取到流容器remotePlayerContainer', remotePlayerContainer);
+                    console.log('+++++没有取到流容器remotePlayerContainer', remotePlayerContainer)
                     setTimeout(() => {
                         remoteVideoTrack.play(document.getElementById(remoteUserId))
                     }, 500)
@@ -126,7 +126,7 @@ const setAgoraRtcListener = () => {
     //监听用户关闭推流
     CallKitClient.on('user-unpublished', (user, mediaType) => {
         console.log('>>>>>>监听到流移除', user, mediaType)
-        const remoteUserId = user.uid.toString();
+        const remoteUserId = user.uid.toString()
         if (mediaType === 'video') {
             console.log('>>>>>取消发布了视频流')
             updateInChannelUserStatus('videoPlay', remoteUserId, false)
@@ -140,7 +140,7 @@ const setAgoraRtcListener = () => {
     //监听用户离开回调
     CallKitClient.on('user-left', (user, reason) => {
         console.log('>>>>>>用户离开回调触发,离开原因', reason)
-        const remoteUserId = user.uid.toString();
+        const remoteUserId = user.uid.toString()
         handleRemoteContainer('remove', remoteUserId)
         //如果频道内人数小于等于1则直接离开该频道
         if (inChannelUsersList.length === 0) {
@@ -158,11 +158,11 @@ const { EVENT_NAME, EVENT_LEVEL, PUB_CHANNEL_EVENT } = useChannelEvent()
 watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
     console.log('>>>>>>> multiCall组件监听是否可加入房间', newVal, oldVal)
     if (newVal === CALLSTATUS.confirmCallee && oldVal !== CALLSTATUS.inviting) {
-        console.log('已应答加入');
+        console.log('已应答加入')
         emitChannelToken()
     }
     if (newVal === CALLSTATUS.inviting) {
-        console.log('邀请状态加入');
+        console.log('邀请状态加入')
         setTimeout(() => {
             emitChannelToken()
         }, 500)
@@ -185,16 +185,16 @@ const timeCount = ref(0)
 const startInChannelTimer = () => {
     inChannelTimer.value && clearInterval(inChannelTimer.value)
     inChannelTimer.value = setInterval(() => {
-        timeCount.value++;
+        timeCount.value++
         // console.log('%c通话计时开启中...', 'color:green', timeCount);
     }, 1000)
     return
 }
 const formatTime = computed(() => {
-    let m = Math.floor(timeCount.value / 60)
-    let s = timeCount.value % 60
-    let h = Math.floor(m / 60)
-    let remMin = m % 60
+    const m = Math.floor(timeCount.value / 60)
+    const s = timeCount.value % 60
+    const h = Math.floor(m / 60)
+    const remMin = m % 60
     // console.log('remMin', remMin);
     return `${h > 0 ? h + ':' : ''}${remMin < 10 ? '0' + remMin : remMin}:${s < 10 ? '0' + s : s}`
 })
@@ -207,7 +207,7 @@ const joinChannel = async () => {
     try {
         await CallKitClient.join(AgoraAppId, channelName, agoraChannelToken, agoraUserId)
         startInChannelTimer()
-        console.log('%c加入channel当中', 'color:green');
+        console.log('%c加入channel当中', 'color:green')
         inChannelUsersList.push({
             easeimUserId: loginUserHxId.value,
             agoraUserId: agoraUserId.toString(),
@@ -234,7 +234,7 @@ const joinChannel = async () => {
 const leaveChannel = async () => {
     console.log('》》》》》挂断', callKitStatus.value.localClientStatus)
     if ([CALLSTATUS.inviting, CALLSTATUS.confirmRing].includes(callKitStatus.value.localClientStatus)) {
-        console.log('>>>>>>调用发送取消信令');
+        console.log('>>>>>>调用发送取消信令')
         await CallKitClient.leave()
         emits('handleCancelCall')
 
@@ -253,14 +253,14 @@ const leaveChannel = async () => {
 //处理DOM容器【包含创建以及移除】
 const handleRemoteContainer = (handleType, userUid) => {
     if (handleType === 'create') {
-        console.log('调用了创建视频容器', handleType, userUid);
+        console.log('调用了创建视频容器', handleType, userUid)
         //查找该用户是否已在channellist中
         const isInChannel = inChannelUsersList.some(item => item.agoraUserId === userUid)
         if (isInChannel) return
         if (!isInChannel) {
             const channelUsers = callKitStatus.value.channelInfos.channelUsers
             if (channelUsers[userUid]) {
-                console.log('>>>>包含该用户的对应信息');
+                console.log('>>>>包含该用户的对应信息')
                 //包含直接进行添加
                 inChannelUsersList.push({
                     easeimUserId: channelUsers[userUid],
@@ -271,7 +271,7 @@ const handleRemoteContainer = (handleType, userUid) => {
                 })
                 return
             } else {
-                console.log('>>>>不包含该用户的对应信息');
+                console.log('>>>>不包含该用户的对应信息')
                 const callback = () => {
                     const channelUsers = callKitStatus.value.channelInfos.channelUsers
                     inChannelUsersList.push({
@@ -281,7 +281,7 @@ const handleRemoteContainer = (handleType, userUid) => {
                         muteStatus: false,
                         videoPlay: false,
                     })
-                    console.log('>>>>>执行添加一个新的容器', channelUsers);
+                    console.log('>>>>>执行添加一个新的容器', channelUsers)
                 }
                 emits('getAgoraChannelDetails', callback)
                 return
@@ -296,7 +296,7 @@ const handleRemoteContainer = (handleType, userUid) => {
             if (_index > -1) inChannelUsersList.splice(_index, 1)
             const toBeRemoveChild = document.getElementById(userUid)
             streamContainer.value.removeChild(toBeRemoveChild)
-        };
+        }
     }
 }
 //更新频道内用户推流以及音量状态
@@ -304,9 +304,9 @@ const updateInChannelUserStatus = (handleType, userUid, data) => {
     const channelUsers = callKitStatus.value.channelInfos.channelUsers
     const mapHxId = channelUsers[userUid]
     if (mapHxId) {
-        let _index = inChannelUsersList.length > 0 && inChannelUsersList.findIndex(item => item.easeimUserId === mapHxId);
+        const _index = inChannelUsersList.length > 0 && inChannelUsersList.findIndex(item => item.easeimUserId === mapHxId)
         if (handleType === 'volume') {
-            console.log('>>>>>更改音量状态', userUid, data);
+            console.log('>>>>>更改音量状态', userUid, data)
             if (_index !== -1) { inChannelUsersList[_index].volume = data }
         }
         if (handleType === 'muteStatus') {
@@ -322,7 +322,7 @@ const updateInChannelUserStatus = (handleType, userUid, data) => {
 //检查房间内音量
 const checkVolume = (result) => {
     const channelUsers = callKitStatus.value.channelInfos.channelUsers
-    result.forEach((volume, index) => {
+    result.forEach((volume) => {
         const { level } = volume
         const uid = volume.uid.toString()
         //uid对应的环信ID
@@ -346,7 +346,7 @@ const checkVolume = (result) => {
             }
         }
 
-    });
+    })
 }
 //操纵publish & unpublish voiceStream videoStream
 const handleLocalStreamPublish = (handleType) => {
