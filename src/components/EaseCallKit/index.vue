@@ -324,11 +324,6 @@ onUnmounted(() => {
             :callKitStatus="callKitStatus" @updateLocalStatus="updateLocalStatus"
             @handleSendAnswerMsg="handleSendAnswerMsg" />
         <!-- 音视频UI展示组件 -->
-        <!-- <component :is="callCompsType['singleCall']" :callKitStatus="callKitStatus" :loginUserHxId="loginUserHxId"
-            @getAgoraRtcToken="getAgoraRtcToken" @getAgoraChannelDetails="getAgoraChannelDetails"
-            @updateLocalStatus="updateLocalStatus" @onInviteMembers="onInviteMembers"
-            @handleCancelCall="handleCancelCall">
-        </component> -->
         <component :is="callCompsType[callComponents]" :callKitStatus="callKitStatus" :loginUserHxId="loginUserHxId"
             @getAgoraRtcToken="getAgoraRtcToken" @getAgoraChannelDetails="getAgoraChannelDetails"
             @updateLocalStatus="updateLocalStatus" @onInviteMembers="onInviteMembers"

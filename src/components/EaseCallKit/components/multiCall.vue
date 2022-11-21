@@ -1,14 +1,44 @@
 <script setup>
-import { ref, reactive,computed, watch, toRaw, toRefs, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, nextTick, toRaw, toRefs, onMounted, onBeforeUnmount } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
 import { CALLSTATUS } from '../constants'
+/*mini组件*/
+import MiniStreamContainer from './miniStreamContainer'
+/* image url */
+import inviteIcon from '@/assets/callkit/invite_member@2x.png'
+import microphone from '@/assets/callkit/microphone@2x.png'
+import mutemicrophone from '@/assets/callkit/microphone-mute@2x.png'
+import camera from '@/assets/callkit/camera@2x.png'
+import closecamera from '@/assets/callkit/camera-close@2x.png'
 /* vueUse */
 //Draggable
-import { useDraggable, useMouseInElement } from '@vueuse/core'
+import { useDraggable, useMouseInElement, useWindowSize } from '@vueuse/core'
 const multiContainer = ref(null)
+const { width, height } = useWindowSize()
 const { style } = useDraggable(multiContainer, {
     initialValue: { x: 600, y: 40 },
+    onMove: (position) => {
+        if (position.x > width.value - 500) {
+            position.x = width.value - 500
+        }
+        if (position.x < 0) {
+            position.x = 0
+        }
+        if (position.y > height.value - 350) {
+            position.y = height.value - 350
+        }
+        if (position.y < 0) {
+            position.y = 0
+        }
+    },
+    stopPropagation: true
 })
+/* 视频UI控制 */
+//是否最小化
+const isMiniSize = ref(false)
+const changeMiniSize = (bol) => {
+    isMiniSize.value = bol
+}
 //streamContral显隐
 const streamContainer = ref(null)
 const { isOutside } = useMouseInElement(streamContainer)
@@ -52,22 +82,28 @@ const setAgoraRtcListener = () => {
     })
     //监听用户发布流
     CallKitClient.on('user-published', async (user, mediaType) => {
+        console.log('%c监听用户发布流', 'color:green');
         await CallKitClient.subscribe(user, mediaType)
         const remoteUserId = user.uid.toString();
         if (mediaType === 'video') {
             console.log('>>>>>>视频类型')
             const remoteVideoTrack = user.videoTrack
-            const remotePlayerContainer = document.getElementById(remoteUserId)
-            if (remotePlayerContainer) {
-                setTimeout(() => {
-                    remoteVideoTrack.play(remotePlayerContainer)
-                }, 300)
-            } else {
-                setTimeout(() => {
-                    remoteVideoTrack.play(remotePlayerContainer)
-                }, 300)
-            }
-            updateInChannelUserStatus('videoPlay', remoteUserId, true)
+            nextTick(() => {
+                const remotePlayerContainer = document.getElementById(remoteUserId)
+                if (remotePlayerContainer) {
+                    setTimeout(() => {
+                        remoteVideoTrack.play(remotePlayerContainer)
+                    }, 300)
+                }
+                else {
+                    console.log('+++++没有取到流容器remotePlayerContainer', remotePlayerContainer);
+                    setTimeout(() => {
+                        remoteVideoTrack.play(document.getElementById(remoteUserId))
+                    }, 500)
+                }
+                updateInChannelUserStatus('videoPlay', remoteUserId, true)
+            })
+
 
         }
         if (mediaType === 'audio') {
@@ -117,14 +153,10 @@ onMounted(() => {
 /* 频道控制 */
 //监听本地端状态
 watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
-    console.log('>>>>>>> single组件监听是否可加入房间', newVal, oldVal)
+    console.log('>>>>>>> multiCall组件监听是否可加入房间', newVal, oldVal)
     if (newVal === CALLSTATUS.confirmCallee) {
+        console.log('%c已应答加入');
         emitChannelToken()
-    }
-    if (newVal === CALLSTATUS.inviting) {
-        setTimeout(() => {
-            emitChannelToken()
-        }, 500)
     }
 
 }, {
@@ -146,7 +178,7 @@ const startInChannelTimer = () => {
     inChannelTimer.value && clearInterval(inChannelTimer.value)
     inChannelTimer.value = setInterval(() => {
         timeCount.value++;
-        console.log('%c通话计时开启中...', 'color:green', timeCount);
+        // console.log('%c通话计时开启中...', 'color:green', timeCount);
     }, 1000)
     return
 }
@@ -155,7 +187,7 @@ const formatTime = computed(() => {
     let s = timeCount.value % 60
     let h = Math.floor(m / 60)
     let remMin = m % 60
-    console.log('remMin', remMin);
+    // console.log('remMin', remMin);
     return `${h > 0 ? h + ':' : ''}${remMin < 10 ? '0' + remMin : remMin}:${s < 10 ? '0' + s : s}`
 })
 //加入频道【接听】
@@ -166,6 +198,7 @@ const joinChannel = async () => {
     const agoraUserId = channelInfos.agoraUserId
     try {
         await CallKitClient.join(AgoraAppId, channelName, agoraChannelToken, agoraUserId)
+        startInChannelTimer()
         console.log('%c加入channel当中', 'color:green');
         inChannelUsersList.push({
             easeimUserId: loginUserHxId.value,
@@ -329,26 +362,53 @@ onBeforeUnmount(() => {
 })
 </script>
 <template>
-    <div ref="multiContainer" class="app_container" :style="style" style="position: fixed">
-        <div class="stream_container" ref="streamContainer">
-            <div class="myContainer" v-for="item in inChannelUsersList" :key="item.agoraUserId" :id="item.agoraUserId">
-                <div class="userInfo">
-                    <span class="userIMId">{{ item.easeimUserId }}</span>
-                    <span class="muteStatus" v-if="item.muteStatus">已闭麦</span>
-                    <span class="volumeStatus" v-if="item.volume > 0">📢</span>
-
+    <div>
+        <div v-show="!isMiniSize" ref="multiContainer" class="app_container" :style="style" style="position: fixed">
+            <div class="mini_stream_icon" @click="changeMiniSize(true)">
+            </div>
+            <div class="time">{{ formatTime }}</div>
+            <div class="stream_container" ref="streamContainer">
+                <!-- 会议中流容器 -->
+                <!-- inChannelUsersList -->
+                <div :class="[inChannelUsersList.length <= 2 ? 'stream_two_user_container' : 'stream_users_container']"
+                    v-for="item in inChannelUsersList" :key="item.agoraUserId" :id="item.agoraUserId">
+                    <div class="userInfo">
+                        <!-- 用户名 暂时选择展示为环信ID，具体可自己定义。 -->
+                        <span class="userIMId">{{ item.easeimUserId }}</span>
+                        <span class="muteStatus" v-show="item.muteStatus">已闭麦</span>
+                        <img class="volumeStatus" v-show="item.volume > 0" src="@/assets/callkit/talking@2x.png" />
+                    </div>
+                </div>
+                <!-- 会议中功能控制 -->
+                <div v-show="!isOutside" class="stream_control">
+                    <div class="stream_multiCall_btn">
+                        <img :src="inviteIcon" alt="" draggable="false" @click="inviteMoreMembers">
+                        <p class="btn_text">添加成员</p>
+                    </div>
+                    <div class="stream_multiCall_btn">
+                        <img :src="localStreamStatus.voice ? microphone : mutemicrophone"
+                            @click="handleLocalStreamPublish('voice')" alt="" draggable="false" />
+                        <p class="btn_text">语音</p>
+                    </div>
+                    <div class="stream_multiCall_btn">
+                        <img src="@/assets/callkit/hangupCall@2x.png" @click="leaveChannel" alt="" draggable="false" />
+                        <p class="btn_text">离开</p>
+                    </div>
+                    <div class="stream_multiCall_btn">
+                        <img :src="localStreamStatus.video ? camera : closecamera"
+                            @click="handleLocalStreamPublish('video')" alt="" draggable="false" />
+                        <p class="btn_text">摄像头</p>
+                    </div>
                 </div>
             </div>
-            <div v-show="!isOutside" class="stream_control">
-                <button @click="handleLocalStreamPublish('voice')">{{ localStreamStatus.voice ? '开启静音' : '关闭静音'
-                }}</button>
-                <button @click="leaveChannel">挂断</button>
-                <button @click="inviteMoreMembers">邀请</button>
-                <button @click="handleLocalStreamPublish('video')">{{ localStreamStatus.video ? '关闭摄像头' : '开启摄像头'
-                }}</button>
-            </div>
+        </div>
+        <div v-show="isMiniSize">
+            <!--    mini通话容器-->
+            <MiniStreamContainer v-show="isMiniSize" :show-type="1" :call-time="formatTime"
+                @changeMiniSize="changeMiniSize" />
         </div>
     </div>
+
 </template>
 
 
@@ -356,8 +416,36 @@ onBeforeUnmount(() => {
 .app_container {
     border-radius: 4px;
     overflow: hidden;
-    background-color: rgb(204, 204, 204);
     padding: 5px;
+    background: url('../../../assets/callkit/rtc-bg@2x.png') no-repeat;
+    background-size: cover;
+    cursor: move;
+}
+
+.mini_stream_icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9999;
+    width: 35px;
+    height: 35px;
+    background: url('../../../assets/callkit/narrow@2x.png');
+    background-size: 100% 100%;
+    cursor: pointer;
+
+}
+
+.time {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    margin-left: -250px;
+    width: 100%;
+    text-align: center;
+    color: #FFF;
+    font-size: 12px;
+    font-weight: 200;
+    z-index: 999;
 }
 
 .stream_container {
@@ -367,16 +455,28 @@ onBeforeUnmount(() => {
     justify-content: space-between;
     width: 500px;
     min-height: 350px;
-    // background: green;
     border-radius: 4px;
+    margin-top: 25px;
 }
 
-.myContainer {
+.stream_two_user_container {
     position: relative;
-    width: 150px;
-    height: 150px;
-    background: #000;
+    width: 248px;
+    height: 350px;
     margin: 5px 0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.stream_users_container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 5px 0;
+    border-radius: 3px;
+    background: url('../../../assets/callkit/video-bg@2x.png') no-repeat;
+    background-size: 100% 100%;
+    overflow: hidden;
 }
 
 .userInfo {
@@ -394,6 +494,12 @@ onBeforeUnmount(() => {
     justify-content: space-between;
 }
 
+.volumeStatus {
+    width: 15px;
+    height: 15px;
+    margin-right: 3px;
+}
+
 .stream_control {
     position: absolute;
     left: 0;
@@ -401,10 +507,35 @@ onBeforeUnmount(() => {
     bottom: 0;
     width: 100%;
     height: 100px;
-    background: #FFF;
+    background: rgba(255, 255, 255, 0.108);
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    border-radius: 10px 10px 0 0;
+    color: #FFF;
+}
+
+.btn_text {
+    color: #FFF;
+    font-size: 12px;
+    font-weight: 300;
+    margin-top: 5px;
+}
+
+.stream_multiCall_btn {
+    width: 100px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.stream_multiCall_btn>img {
+    width: 45px;
+    height: 45px;
+    transition: all 0.3s;
+    cursor: pointer;
 }
 </style>

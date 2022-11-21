@@ -17,10 +17,10 @@ const alertDialog = (groupId) => {
 }
 //获取该群对应的群成员
 const getGroupMemberList = async (groupId) => {
-    console.log('getGroupMemberList',groupId);
+    console.log('getGroupMemberList', groupId);
     if (!groupId) return
     let memberList = []
-    const sourceMembers = store.state.Groups.groupsInfos[groupId].members
+    const sourceMembers = store.state.Groups.groupsInfos[groupId]?.members || []
     if (sourceMembers.length > 0) {
         sourceMembers.length > 0 && sourceMembers.forEach(item => {
             memberList.push(item.member || item.owner)
@@ -28,8 +28,8 @@ const getGroupMemberList = async (groupId) => {
         members.value = memberList
     } else {
         console.log('>>>>>主动获取群成员数据');
-        await fetchGoupsMember(groupId)
-        const sourceMembers = store.state.Groups.groupsInfos[groupId].members
+        await store.dispatch('fetchGoupsMember', groupId)
+        const sourceMembers = store.state.Groups.groupsInfos[groupId]?.members || []
         sourceMembers.length > 0 && sourceMembers.forEach(item => {
             memberList.push(item.member || item.owner)
         })
@@ -54,7 +54,7 @@ defineExpose({
     <el-dialog v-model="dialogVisible" title="邀请入会" width="50%">
         <el-checkbox-group v-model="checkedMembers">
             <el-checkbox v-for="item in members" :key="item" :label="item" :disabled="item === EaseIM.conn.user">{{
-            item
+                    item
             }}</el-checkbox>
         </el-checkbox-group>
         <template #footer>

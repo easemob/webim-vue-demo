@@ -338,7 +338,7 @@ onBeforeUnmount(() => {
   z-index: 999;
 }
 
-/* 邀请页面 */
+/* 邀请中页面 */
 .stream_invite_box {
   width: 100%;
   display: flex;
