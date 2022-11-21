@@ -154,11 +154,16 @@ onMounted(() => {
 //监听本地端状态
 watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
     console.log('>>>>>>> multiCall组件监听是否可加入房间', newVal, oldVal)
-    if (newVal === CALLSTATUS.confirmCallee) {
-        console.log('%c已应答加入');
+    if (newVal === CALLSTATUS.confirmCallee && oldVal !== CALLSTATUS.inviting) {
+        console.log('已应答加入');
         emitChannelToken()
     }
-
+    if (newVal === CALLSTATUS.inviting) {
+        console.log('邀请状态加入');
+        setTimeout(() => {
+            emitChannelToken()
+        }, 500)
+    }
 }, {
     immediate: true
 })
