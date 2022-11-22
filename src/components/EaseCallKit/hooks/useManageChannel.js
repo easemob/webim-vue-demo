@@ -1,5 +1,10 @@
 import { ref, reactive, watch } from 'vue'
-import { CALLSTATUS, CALL_TYPE, CALL_INVITE_TEXT } from '../constants'
+import {
+    CALLSTATUS,
+    CALL_TYPES,
+    CALL_TYPE,
+    CALL_INVITE_TEXT,
+} from '../constants'
 import createUid from '../utils/createUid'
 import CallKitMessages from '../utils/callMessages'
 import useChannelEvent from './useChannelEvent'
@@ -13,7 +18,7 @@ const callKitStatus = reactive({
         channelName: '', //频道名
         agoraChannelToken: '', //频道token
         agoraUserId: '', //频道用户id,
-        callType: 0, //0 语音 1 视频 2 多人音视频
+        callType: CALL_TYPES.SINGLE_VOICE, //0 语音 1 视频 2 多人音视频
         callId: null, //会议ID
         channelUsers: {}, //频道内用户
         callerDevId: '', //主叫方设备ID
@@ -52,7 +57,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             channelName: '', //频道名
             agoraChannelToken: '', //频道token
             agoraUid: '', //频道用户id
-            callType: 0, //0 语音 1 视频 2 多人音视频
+            callType: CALL_TYPES.SINGLE_VOICE, //0 语音 1 视频 2 多人音视频
             callId: null, //会议ID
             channelUsers: {}, //频道内用户
             callerDevId: '', //主叫方设备ID
@@ -73,7 +78,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             initChannelInfos()
             break
         case CALLSTATUS.inviting:
-            if (callKitStatus.channelInfos.callType < 2 > 0) {
+            if (callKitStatus.channelInfos.callType <= 1) {
                 console.log('>>>>>>>展示单人音视频组件')
                 callComponents.value = 'singleCall'
             }
@@ -88,7 +93,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             break
         case CALLSTATUS.answerCall:
             console.log('>>>>>可以弹出通话接听UI组件')
-            if (callKitStatus.channelInfos.callType < 2 > 0) {
+            if (callKitStatus.channelInfos.callType <= 1) {
                 console.log('>>>>>>>展示单人音视频组件')
                 callComponents.value = 'singleCall'
             }
@@ -175,7 +180,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         //更改部分ChannelInfos
         const params = {
             from: EaseIM[conn].user,
-            to: callType === 2 ? '' : targetId,
+            to: callType === CALL_TYPES.MULTI_VIDEO ? '' : targetId,
             ext: {
                 channelName: channelInfors.channelName,
                 callId: channelInfors.callId,
@@ -184,11 +189,12 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
             },
         }
         //如果存在群组ID则增加ext字段进入到groupId
-        if (callType === 2 && groupId) params.ext.ext = { groupId }
+        if (callType === CALL_TYPES.MULTI_VIDEO && groupId)
+            params.ext.ext = { groupId }
         console.log('邀请发送 callType为', callType)
         updateChannelInfos(params)
         //单人邀请开启超时挂断，多人则忽略
-        if (callType !== 2) {
+        if (callType !== CALL_TYPES.MULTI_VIDEO) {
             startCallKitTimer()
         }
     }
@@ -248,6 +254,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         }, 30000)
     }
     return {
+        CALL_TYPES,
         callComponents,
         callKitStatus,
         callKitTimer,

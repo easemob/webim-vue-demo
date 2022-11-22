@@ -16,8 +16,8 @@ const { CHAT_TYPE } = messageType
  * 此处为Callkit中对外暴露的其内部对外抛出的事件通知，
  * 可通过引入useChannelEvent，订阅其通知处理一些UI层面的提示。
  */
-const { SUB_CHANNEL_EVENT, UN_SUB_CHANNEL_ENENT } = useChannelEvent()
-SUB_CHANNEL_EVENT('EASECALLKIT', (param) => {
+const { EVENT_NAME, SUB_CHANNEL_EVENT, UN_SUB_CHANNEL_ENENT } = useChannelEvent()
+SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
     console.log('%c>>>>>>订阅事件触发', 'color:blue', param)
     const { type, message } = param
     const MESSAGE_TYPE = {

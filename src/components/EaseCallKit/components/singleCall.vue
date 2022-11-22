@@ -201,7 +201,7 @@ const leaveChannel = async () => {
         type: EVENT_LEVEL[0],
         message: `通话结束【${formatTime.value}】`,
         callType: callKitStatus.value.channelInfos.callType,
-        eventHxId: callKitStatus.value.channelInfos.callerIMName
+        eventHxId: callKitStatus.value.channelInfos.callerIMName,
     }
     PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
     emits('updateLocalStatus', CALLSTATUS.idle)
