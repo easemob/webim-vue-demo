@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, nextTick, computed } from 'vue'
 import _ from 'lodash'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import { useStore } from 'vuex'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { messageType, warningText } from '@/constant'
@@ -31,7 +31,7 @@ const delTheFriend = () => {
     console.log(nowPickInfo.value)
     if (nowPickInfo.value?.id) {
         const targetId = nowPickInfo.value.id
-        EaseIM.conn.deleteContact(targetId)
+        EaseChatClient.deleteContact(targetId)
         ElMessage({ type: 'success', center: true, message: '好友已删除~' })
     }
 }

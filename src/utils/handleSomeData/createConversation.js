@@ -2,7 +2,7 @@
 import _ from 'lodash'
 import store from '@/store'
 import { messageType } from '@/constant'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png'
 import defaultSingleAvatarUrl from '@/assets/images/avatar/theme2x.png'
@@ -85,7 +85,7 @@ export default function (corresMessage) {
     latestMessageId: "", 最近消息的消息mid
     latestSendTime:"", 最近一条消息的发送时间,
    */
-        const loginUserId = EaseIM.conn.user
+        const loginUserId = EaseChatClient.user
         const listKey = setMessageKey(msgBody)
         const { chatType, from, ext, id, time, to, type } = msgBody
         //操作类型为新建

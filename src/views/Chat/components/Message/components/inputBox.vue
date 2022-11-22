@@ -7,7 +7,7 @@ import { onClickOutside } from '@vueuse/core'
 import { emojis } from '@/constant'
 import { messageType } from '@/constant'
 import _ from 'lodash'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
 /* 组件 */
 import CollectAudio from './suit/audio.vue'
 //EaseCallKit Invite
@@ -160,7 +160,7 @@ const showRecordBox = () => {
 }
 const sendAudioMessages = async (audioData) => {
     const file = {
-        url: EaseIM.utils.parseDownloadResponse(audioData.src),
+        url: EaseChatSDK.utils.parseDownloadResponse(audioData.src),
         filename: '录音',
         filetype: '.amr',
         data: audioData.src
@@ -210,7 +210,7 @@ const all_func = [
 ]
 
 /* About EaseCallKit */
-const { CALL_TYPES, sendInviteMessage } = useManageChannel(EaseIM, 'conn')
+const { CALL_TYPES, sendInviteMessage } = useManageChannel(EaseChatClient, 'conn')
 //处理发起的音视频呼叫类型
 const handleInviteCall = (handleType) => {
     const toId = nowPickInfo.value.id
@@ -220,7 +220,7 @@ const handleInviteCall = (handleType) => {
         sendInviteMessage(toId, callType)
         //发送邀请信息后创建一条本地系统通知类消息上屏展示
         const params = {
-            from: EaseIM.conn.user,
+            from: EaseChatClient.user,
             to: toId,
             chatType: CHAT_TYPE.SINGLE,
             msg: `邀请${toId}进行语音通话～`
@@ -233,7 +233,7 @@ const handleInviteCall = (handleType) => {
             sendInviteMessage(toId, callType)
             //发送邀请信息后创建一条本地系统通知类消息上屏展示
             const params = {
-                from: EaseIM.conn.user,
+                from: EaseChatClient.user,
                 to: toId,
                 chatType: CHAT_TYPE.SINGLE,
                 msg: `邀请${toId}进行视频通话～`
@@ -264,7 +264,7 @@ const sendMulitInviteMsg = (targetIMId) => {
     const groupId = nowPickInfo.value.id
     sendInviteMessage(targetIMId, callType, groupId)
     const params = {
-        from: EaseIM.conn.user,
+        from: EaseChatClient.user,
         to: groupId,
         chatType: CHAT_TYPE.GROUP,
         msg: '已发起多人音视频通话～'

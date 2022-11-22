@@ -2,7 +2,7 @@
 import { ref, toRaw, toRefs, computed, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 /* IMSDK */
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 /* components */
 import GroupsManagement from '../GroupsManagement'
 /* icons */
@@ -39,7 +39,7 @@ const memberRole = computed(() => {
     //管理员列表
     const groupAdmin = goupsInfos.value && toRaw(goupsInfos.value.admin) || []
     //登陆人id
-    const loginUser = EaseIM.conn.user
+    const loginUser = EaseChatClient.user
     //合并两者名单
     allGroupAdmin = [...groupAdmin, owner]
     //判断是否在权限名单内

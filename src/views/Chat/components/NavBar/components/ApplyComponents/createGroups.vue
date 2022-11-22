@@ -4,7 +4,7 @@ import { useStore } from 'vuex'
 import _ from 'lodash'
 import { ElNotification } from 'element-plus'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import { messageType } from '@/constant'
 import {
     Search,
@@ -107,7 +107,7 @@ const createNewGroups = async () => {
     groupCreateForm.members = checkedUserArr.value
     if (groupCreateForm.groupname === '') return ElNotification.error('请设置群组名称！')
     try {
-        const { data } = await EaseIM.conn.createGroup({ data: { ...groupCreateForm } })
+        const { data } = await EaseChatClient.createGroup({ data: { ...groupCreateForm } })
         //更新群组列表
         await store.dispatch('fetchGroupList', {
             pageNum: 1,
@@ -119,7 +119,7 @@ const createNewGroups = async () => {
             type: 'success',
         })
         router.push({ path: '/chat/conversation/message', query: { id: data.groupid, chatType: CHAT_TYPE.GROUP } })
-        store.dispatch('createInformMessage', { from: EaseIM.conn.user, to: data.groupid, chatType: CHAT_TYPE.GROUP, msg: `您的群组，【${groupCreateForm.groupname}】创建成功,聊两句吧！` })
+        store.dispatch('createInformMessage', { from: EaseChatClient.user, to: data.groupid, chatType: CHAT_TYPE.GROUP, msg: `您的群组，【${groupCreateForm.groupname}】创建成功,聊两句吧！` })
         resetTheModalStatus()
     }
     catch (error) {
@@ -159,7 +159,7 @@ defineExpose({ handleRenderFiendList })
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
                                 <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{`${item.name}(${item.hxId})` }}</b>
+                                <b class="friend_list_username">{{ `${item.name}(${item.hxId})` }}</b>
                             </div>
                             <el-icon class="checked_btn"
                                 @click="searchResultList[index].isChecked = !searchResultList[index].isChecked">

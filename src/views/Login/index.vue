@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import CustomImConfig from '@/views/Login/components/CustomImConfig'
 import LoginInput from './components/LoginInput'
 import RegisterInput from './components/RegisterInput'
@@ -29,7 +29,7 @@ const customImConfig = ref(null)
 // }
 
 //SDK-Version
-const IM_SDK_VERSION = EaseIM.conn.version
+const IM_SDK_VERSION = EaseChatClient.version
 </script>
 <template>
   <el-container class="app_container">

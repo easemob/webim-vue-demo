@@ -78,14 +78,6 @@ const removeMessageListener = () => EaseIM.value[conn].removeEventHandler(msgLis
 //当前登录用户ID
 const loginUserHxId = ref('')
 const setLoginUserHxId = () => loginUserHxId.value = EaseIM.value[conn].user || ''
-//频道事件发布相关
-// const EVENT_NAME = 'EASECALLKIT'
-// const EVENT_LEVEL = {
-//     0: 'SUCCESS',
-//     1: 'WARNING',
-//     2: 'FAIL',
-//     3: 'INFO'
-// }
 /* CallKit status */
 const callCompsType = {
     'singleCall': SingleCall,

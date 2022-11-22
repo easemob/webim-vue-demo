@@ -1,5 +1,5 @@
 import { ElMessage } from 'element-plus'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 const Groups = {
     state: {
         groupsInfos: {},
@@ -64,7 +64,7 @@ const Groups = {
         },
         //群管理员
         fetchGoupsAdmin: async ({ commit }, params) => {
-            const { data } = await EaseIM.conn.getGroupAdmin({ groupId: params })
+            const { data } = await EaseChatClient.getGroupAdmin({ groupId: params })
             commit('SET_GORUPS_ADMINS', { groupId: params, admin: data })
         },
         //群组成员
@@ -78,7 +78,7 @@ const Groups = {
                 pageSize: pageSize,
                 groupId: params,
             }
-            const { data } = await EaseIM.conn.listGroupMembers(options)
+            const { data } = await EaseChatClient.listGroupMembers(options)
             commit('SET_GOUPS_MEMBERS', { groupId: params, members: data })
         },
         //获取群公告
@@ -86,7 +86,7 @@ const Groups = {
             const option = {
                 groupId: params,
             }
-            const { data } = await EaseIM.conn.fetchGroupAnnouncement(option)
+            const { data } = await EaseChatClient.fetchGroupAnnouncement(option)
             commit('SET_GOUPS_ANNOUN', {
                 groupId: params,
                 announcement: data.announcement,
@@ -94,14 +94,18 @@ const Groups = {
         },
         //群黑名单
         fetchGoupsBlackList: async ({ dispatch, commit }, params) => {
-            const { data } = await EaseIM.conn.getGroupBlocklist({ groupId: params })
+            const { data } = await EaseChatClient.getGroupBlocklist({
+                groupId: params,
+            })
             commit('SET_GROUPS_BLIACK_LIST', { groupId: params, blacklist: data })
         },
         //群禁言列表
         fetchGoupsMuteList: async ({ dispatch, commit }, params) => {
             console.log('>>>>>>>成功触发拉取禁言列表', params)
             try {
-                const { data } = await EaseIM.conn.getGroupMuteList({ groupId: params })
+                const { data } = await EaseChatClient.getGroupMuteList({
+                    groupId: params,
+                })
                 commit('SET_GOUPS_MUTE_LIST', { groupId: params, mutelist: data })
             } catch (error) {
                 console.log('>>>>禁言接口获取失败', error)
@@ -116,14 +120,18 @@ const Groups = {
                     groupId: groupid,
                     groupName: content,
                 }
-                await EaseIM.conn.modifyGroup(option)
+                await EaseChatClient.modifyGroup(option)
                 //更新本地缓存数据
                 commit('UPDATE_GROUP_INFOS', {
                     groupId: groupid,
                     type: 'groupName',
                     params: content,
                 })
-                commit('UPDATE_GROUP_LIST', { type: 'updateGroupName', groupId: groupid, groupName: content })
+                commit('UPDATE_GROUP_LIST', {
+                    type: 'updateGroupName',
+                    groupId: groupid,
+                    groupName: content,
+                })
             }
             //1 是修改群详情
             if (modifyType === 1) {
@@ -131,7 +139,7 @@ const Groups = {
                     groupId: groupid,
                     description: content,
                 }
-                await EaseIM.conn.modifyGroup(option)
+                await EaseChatClient.modifyGroup(option)
                 //更新本地缓存数据
                 commit('UPDATE_GROUP_INFOS', {
                     groupId: groupid,
@@ -143,7 +151,7 @@ const Groups = {
         // 设置/修改群组公告
         modifyGroupAnnouncement: async ({ dispatch }, params) => {
             //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
-            await EaseIM.conn.updateGroupAnnouncement(params)
+            await EaseChatClient.updateGroupAnnouncement(params)
             dispatch('fetchAnnounment', params.groupId)
         },
         //邀请群成员
@@ -151,7 +159,7 @@ const Groups = {
             //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
             const { users, groupId } = params
             try {
-                await EaseIM.conn.inviteUsersToGroup({ users, groupId })
+                await EaseChatClient.inviteUsersToGroup({ users, groupId })
                 ElMessage({
                     message: '群组邀请成功送出~',
                     type: 'success',
@@ -169,7 +177,7 @@ const Groups = {
             //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
             const { username, groupId } = params
             try {
-                await EaseIM.conn.removeGroupMember({ username, groupId })
+                await EaseChatClient.removeGroupMember({ username, groupId })
                 ElMessage({
                     message: `已将${username}移出群组!`,
                     type: 'success',
@@ -195,7 +203,7 @@ const Groups = {
                 //     groupId: "groupId",
                 //     usernames: ["user1", "user2"]
                 // };
-                await EaseIM.conn.blockGroupMembers({ groupId, usernames })
+                await EaseChatClient.blockGroupMembers({ groupId, usernames })
                 ElMessage({
                     message: '黑名单添加成功~',
                     type: 'success',
@@ -218,7 +226,7 @@ const Groups = {
         removeTheMemberFromBlackList: async ({ dispatch }, params) => {
             const { groupId, usernames } = params
             try {
-                await EaseIM.conn.unblockGroupMembers({ groupId, usernames })
+                await EaseChatClient.unblockGroupMembers({ groupId, usernames })
                 ElMessage({
                     message: '黑名单移除成功~',
                     type: 'success',
@@ -243,7 +251,7 @@ const Groups = {
             try {
                 usernames.length > 0 &&
           usernames.map((userId) => {
-              requestTrack.push = EaseIM.conn.muteGroupMember({
+              requestTrack.push = EaseChatClient.muteGroupMember({
                   groupId,
                   username: userId,
                   muteDuration: 886400000,
@@ -269,7 +277,7 @@ const Groups = {
             //   username: 'user',
             //   muteDuration: 886400000, // 禁言时长，单位为毫秒。
             // };
-            // await EaseIM.conn.muteGroupMember(option);
+            // await EaseChatClient.muteGroupMember(option);
         },
         //从禁言列表中移出
         removeTheMemberFromMuteList: async ({ dispatch }, params) => {
@@ -279,7 +287,7 @@ const Groups = {
             try {
                 usernames.length > 0 &&
           usernames.map((userId) => {
-              requestTrack.push = EaseIM.conn.unmuteGroupMember({
+              requestTrack.push = EaseChatClient.unmuteGroupMember({
                   groupId,
                   username: userId,
               })

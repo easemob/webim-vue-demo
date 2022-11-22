@@ -1,4 +1,3 @@
-
 import _ from 'lodash'
 import { useLocalStorage } from '@vueuse/core'
 import {
@@ -7,7 +6,7 @@ import {
     createInform,
 } from '@/utils/handleSomeData'
 import Message from './message'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import { informType, messageType } from '@/constant'
 const { INFORM_FROM } = informType
 const { CHAT_TYPE } = messageType
@@ -19,7 +18,7 @@ const Conversation = {
     mutations: {
     //初始化会话列表的数据（根据登陆的id取其对应的会话数据）
         INIT_CONVERSATION_STATE: (state) => {
-            const storageId = EaseIM.conn.user
+            const storageId = EaseChatClient.user
             state.informDetail = useLocalStorage(`EASEIM_${storageId}_INFORM`, [])
             state.conversationListData = useLocalStorage(
                 `EASEIM_${storageId}_conversationList`,
@@ -91,7 +90,7 @@ const Conversation = {
                 const informMsg = {
                     from: informContent.from,
                     to: informContent.to,
-                    chatType: CHAT_TYPE.SINGLE
+                    chatType: CHAT_TYPE.SINGLE,
                 }
                 switch (informContent.type) {
                 case 'other_person_agree':
@@ -102,15 +101,17 @@ const Conversation = {
                     }
 
                     break
-                case 'unsubscribed': {
-                    informMsg.msg = '你俩的友尽了，可重新发起好友申请'
-                    dispatch('createInformMessage', informMsg)
-                }
+                case 'unsubscribed':
+                    {
+                        informMsg.msg = '你俩的友尽了，可重新发起好友申请'
+                        dispatch('createInformMessage', informMsg)
+                    }
                     break
-                case 'subscribed': {
-                    informMsg.msg = '已成为你的好友,开始聊天吧'
-                    dispatch('createInformMessage', informMsg)
-                }
+                case 'subscribed':
+                    {
+                        informMsg.msg = '已成为你的好友,开始聊天吧'
+                        dispatch('createInformMessage', informMsg)
+                    }
                     break
                 default:
                     break
@@ -120,7 +121,7 @@ const Conversation = {
                 const informMsg = {
                     from: informContent.from,
                     to: informContent.id,
-                    chatType: CHAT_TYPE.GROUP
+                    chatType: CHAT_TYPE.GROUP,
                 }
                 switch (informContent.operation) {
                 case 'memberPresence': //入群通知
@@ -134,81 +135,98 @@ const Conversation = {
                         dispatch('createInformMessage', informMsg)
                     }
                     break
-                case 'memberAbsence': {
-                    //退群通知
-                    commit('UPDATE_GROUP_INFOS', {
-                        groupId: informContent.id,
-                        type: 'delAffiliationsCount',
-                    })
-                    dispatch('fetchGoupsMember', informContent.id)
-                    informMsg.msg = `${informContent.from}退出了群组`
-                    dispatch('createInformMessage', informMsg)
-                }
-                    break
-                case 'updateAnnouncement': {
-                    //更新群公告
-                    dispatch('fetchAnnounment', informContent.id)
-                    informMsg.msg = `${informContent.from}更新了群组公告，去看看更新的什么吧~`
-                    dispatch('createInformMessage', informMsg)
-                }
-                    break
-                case 'setAdmin': {
-                    dispatch('fetchGoupsAdmin', informContent.id)
-                    informMsg.msg = `${informContent.from}设定${informContent.to}为管理员~`
-                    dispatch('createInformMessage', informMsg)
-                }
-                    break
-                case 'removeAdmin': {
-                    dispatch('fetchGoupsAdmin', informContent.id)
-                    informMsg.msg = `${informContent.from}移除了${informContent.to}的管理员身份~`
-                    dispatch('createInformMessage', informMsg)
-                }
-                    break
-                case 'muteMember': {
-                    informMsg.msg = `${informContent.from}禁言了${informContent.to ? informContent.to : '你'}~`
-                    dispatch('createInformMessage', informMsg)
-                }
-                    break
-                case 'unmuteMember': {
-                    informMsg.msg = `${informContent.from}取消了${informContent.to ? informContent.to : '你'}的禁言~`
-                    dispatch('createInformMessage', informMsg)
-                }
-                    break
-                case 'removeMember': {
-                    informMsg.msg = `${informContent.from}将你移出了群组${informContent.id}~`
-                    dispatch('createInformMessage', informMsg)
-                    //执行删除会话
-                    commit('DELETE_ONE_CONVERSATION', informContent.id)
-                    //从群组列表中移除
-                    commit('UPDATE_GROUP_LIST', { type: 'deleteFromList', groupId: informContent.id })
-                }
-                    break
-                case 'destroy': {
-                    informMsg.msg = `${informContent.from}解散了该群~`
-                    dispatch('createInformMessage', informMsg)
-                    setTimeout(() => {
-                        dispatch('fetchGroupList', {
-                            pageNum: 1,
-                            pageSize: 500
+                case 'memberAbsence':
+                    {
+                        //退群通知
+                        commit('UPDATE_GROUP_INFOS', {
+                            groupId: informContent.id,
+                            type: 'delAffiliationsCount',
                         })
-                    }, 300)
-                }
+                        dispatch('fetchGoupsMember', informContent.id)
+                        informMsg.msg = `${informContent.from}退出了群组`
+                        dispatch('createInformMessage', informMsg)
+                    }
                     break
-                case 'updateInfo': {
-                    informMsg.msg = `${informContent.from}更新了群组详情~`
-                    dispatch('createInformMessage', informMsg)
-                    dispatch('getAssignGroupDetail', informContent.id)
-                }
+                case 'updateAnnouncement':
+                    {
+                        //更新群公告
+                        dispatch('fetchAnnounment', informContent.id)
+                        informMsg.msg = `${informContent.from}更新了群组公告，去看看更新的什么吧~`
+                        dispatch('createInformMessage', informMsg)
+                    }
                     break
-                case 'acceptRequest': {
-                    console.log('>>>>>>>收到了群组同意加入事件')
-                    setTimeout(() => {
-                        dispatch('fetchGroupList', {
-                            pageNum: 1,
-                            pageSize: 500
+                case 'setAdmin':
+                    {
+                        dispatch('fetchGoupsAdmin', informContent.id)
+                        informMsg.msg = `${informContent.from}设定${informContent.to}为管理员~`
+                        dispatch('createInformMessage', informMsg)
+                    }
+                    break
+                case 'removeAdmin':
+                    {
+                        dispatch('fetchGoupsAdmin', informContent.id)
+                        informMsg.msg = `${informContent.from}移除了${informContent.to}的管理员身份~`
+                        dispatch('createInformMessage', informMsg)
+                    }
+                    break
+                case 'muteMember':
+                    {
+                        informMsg.msg = `${informContent.from}禁言了${
+                            informContent.to ? informContent.to : '你'
+                        }~`
+                        dispatch('createInformMessage', informMsg)
+                    }
+                    break
+                case 'unmuteMember':
+                    {
+                        informMsg.msg = `${informContent.from}取消了${
+                            informContent.to ? informContent.to : '你'
+                        }的禁言~`
+                        dispatch('createInformMessage', informMsg)
+                    }
+                    break
+                case 'removeMember':
+                    {
+                        informMsg.msg = `${informContent.from}将你移出了群组${informContent.id}~`
+                        dispatch('createInformMessage', informMsg)
+                        //执行删除会话
+                        commit('DELETE_ONE_CONVERSATION', informContent.id)
+                        //从群组列表中移除
+                        commit('UPDATE_GROUP_LIST', {
+                            type: 'deleteFromList',
+                            groupId: informContent.id,
                         })
-                    }, 300)
-                }
+                    }
+                    break
+                case 'destroy':
+                    {
+                        informMsg.msg = `${informContent.from}解散了该群~`
+                        dispatch('createInformMessage', informMsg)
+                        setTimeout(() => {
+                            dispatch('fetchGroupList', {
+                                pageNum: 1,
+                                pageSize: 500,
+                            })
+                        }, 300)
+                    }
+                    break
+                case 'updateInfo':
+                    {
+                        informMsg.msg = `${informContent.from}更新了群组详情~`
+                        dispatch('createInformMessage', informMsg)
+                        dispatch('getAssignGroupDetail', informContent.id)
+                    }
+                    break
+                case 'acceptRequest':
+                    {
+                        console.log('>>>>>>>收到了群组同意加入事件')
+                        setTimeout(() => {
+                            dispatch('fetchGroupList', {
+                                pageNum: 1,
+                                pageSize: 500,
+                            })
+                        }, 300)
+                    }
                     break
                 default:
                     break

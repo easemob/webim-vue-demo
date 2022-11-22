@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 const dialogVisible = ref(false)
 const isClearStorage = ref(true)
 
@@ -9,16 +9,16 @@ const logoutTheUser = () => {
         console.log('>>>>>选择清空本地缓存')
         clearLocalStorage()
         dialogVisible.value = false
-        EaseIM.conn.close()
+        EaseChatClient.close()
     } else {
         dialogVisible.value = false
-        EaseIM.conn.close()
+        EaseChatClient.close()
     }
 }
 
 const clearLocalStorage = () => {
     const storageType = ['INFORM', 'conversationList', 'search_hisory',]
-    const loginUserId = EaseIM.conn.user
+    const loginUserId = EaseChatClient.user
     const storageKey = `EASEIM_${loginUserId}`
     storageType.map((item) => {
         return window.localStorage.removeItem(`${storageKey}_${item}`)
@@ -30,7 +30,7 @@ defineExpose({
 })
 </script>
 <template>
-    <el-dialog custom-class="login_diglog"  v-model="dialogVisible" title="退出登录" width="480px" :destroy-on-close="true">
+    <el-dialog custom-class="login_diglog" v-model="dialogVisible" title="退出登录" width="480px" :destroy-on-close="true">
         <span class="logout_title">确认退出当前登录账号？</span>
         <br />
         <span class="logout_clear">

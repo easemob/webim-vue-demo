@@ -1,6 +1,6 @@
 <script setup>
 import { ref, toRefs, toRaw, computed, watch } from 'vue'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import {
     CircleClose,
     Search,
@@ -34,7 +34,7 @@ const { groupDetail, memberRole } = toRefs(props)
     * 中间涉及到一些权限判断，大量使用了 v-if 后续建议挪到计算属性中处理。
  **/
 /* 当前登陆的id */
-const loginUserId = computed(() => EaseIM.conn.user)
+const loginUserId = computed(() => EaseChatClient.user)
 /* 数据获取 */
 //群组成员
 const groupMembers = computed(() => {

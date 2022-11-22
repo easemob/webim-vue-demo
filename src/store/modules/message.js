@@ -1,4 +1,4 @@
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
 import {
     handleSDKErrorNotifi,
     setMessageKey,
@@ -19,9 +19,9 @@ const Message = {
             const listKey = setMessageKey(msgBody)
             if (!toUpdateMsgList[listKey]) {
                 toUpdateMsgList[listKey] = []
-                _.unionBy(toUpdateMsgList[listKey].push(msgBody), m => m.id)
+                _.unionBy(toUpdateMsgList[listKey].push(msgBody), (m) => m.id)
             } else {
-                _.unionBy(toUpdateMsgList[listKey].push(msgBody), m => m.id)
+                _.unionBy(toUpdateMsgList[listKey].push(msgBody), (m) => m.id)
             }
             state.messageList = toUpdateMsgList
         },
@@ -30,9 +30,15 @@ const Message = {
             const toUpdateMsgList = _.assign({}, state.messageList)
             if (!toUpdateMsgList[listKey]) {
                 toUpdateMsgList[listKey] = []
-                _.unionBy(toUpdateMsgList[listKey].push(...historyMessage), m => m.id)
+                _.unionBy(
+                    toUpdateMsgList[listKey].push(...historyMessage),
+                    (m) => m.id
+                )
             } else {
-                _.unionBy(toUpdateMsgList[listKey].unshift(...historyMessage), m => m.id)
+                _.unionBy(
+                    toUpdateMsgList[listKey].unshift(...historyMessage),
+                    (m) => m.id
+                )
             }
             state.messageList = toUpdateMsgList
         },
@@ -52,7 +58,10 @@ const Message = {
             if (type === 'deleteMsg') {
                 if (state.messageList[key]) {
                     const sourceData = state.messageList[key]
-                    const index = _.findIndex(state.messageList[key], (o) => o.id === mid)
+                    const index = _.findIndex(
+                        state.messageList[key],
+                        (o) => o.id === mid
+                    )
                     sourceData.splice(index, 1)
                     state.messageList[key] = _.assign([], sourceData)
                 }
@@ -60,7 +69,7 @@ const Message = {
         },
     },
     actions: {
-        //添加新消息
+    //添加新消息
         createNewMessage: ({ dispatch, commit }, params) => {
             const { isOpenPlayRing, playRing } = usePlayRing()
             const key = setMessageKey(params)
@@ -81,13 +90,13 @@ const Message = {
                     searchDirection: 'up',
                 }
                 try {
-                    const { cursor, messages } = await EaseIM.conn.getHistoryMessages(
+                    const { cursor, messages } = await EaseChatClient.getHistoryMessages(
                         options
                     )
                     messages.length > 0 &&
-                        messages.forEach((item) => {
-                            item.read = true
-                        })
+            messages.forEach((item) => {
+                item.read = true
+            })
                     resolve({ messages, cursor })
                     commit('UPDATE_HISTORY_MESSAGE', {
                         listKey: id,
@@ -102,18 +111,19 @@ const Message = {
         },
         //发送展示类型消息
         sendShowTypeMessage: async ({ dispatch, commit }, params) => {
-
             return new Promise(async (resolve, reject) => {
                 //主要作用为创建消息Options中附件会有上传失败的回调函数。
                 //传入errorCallback，让附件类型消息在上传失败时调用reject抛出error
-                const errorCallback = (error) => { reject(error) }
+                const errorCallback = (error) => {
+                    reject(error)
+                }
                 const options = createMessage.createOptions(params, errorCallback)
-                const msg = EaseIM.message.create(options)
+                const msg = EaseChatSDK.message.create(options)
                 try {
-                    const { serverMsgId } = await EaseIM.conn.send(msg)
+                    const { serverMsgId } = await EaseChatClient.send(msg)
                     console.log('>>>>发送成功', msg)
                     msg.id = serverMsgId
-                    msg.from = EaseIM.conn.user
+                    msg.from = EaseChatClient.user
                     const msgBody = createMessage.createMsgBody(msg)
                     commit('UPDATE_MESSAGE_LIST', msgBody)
                     // 提示会话列表更新
@@ -147,7 +157,7 @@ const Message = {
             const { mid, to, chatType } = params
             return new Promise(async (resolve, reject) => {
                 try {
-                    await EaseIM.conn.recallMessage({ mid, to, chatType })
+                    await EaseChatClient.recallMessage({ mid, to, chatType })
                     commit('CHANGE_MESSAGE_BODAY', { type: 'recall', key: to, mid })
                     dispatch('gatherConversation', to)
                     resolve('OK')

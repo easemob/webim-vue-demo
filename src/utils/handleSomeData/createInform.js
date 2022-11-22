@@ -1,6 +1,6 @@
 /* 构建inform通知 */
 import { informType } from '@/constant'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 const { INFORM_FROM, INFORM_TYPE } = informType
 export default function (fromType, informContnet) {
     const { type, from, to, status } = informContnet
@@ -31,7 +31,7 @@ export default function (fromType, informContnet) {
                 desc: status || INFORM_TYPE[type],
             }
         }
-        informBody.from === EaseIM.conn.user
+        informBody.from === EaseChatClient.user
             ? (informBody.untreated = 0)
             : (informBody.untreated = 1)
         return informBody
@@ -67,8 +67,7 @@ export default function (fromType, informContnet) {
                 isOpearationBtn: true, //是否显示操作按钮？
                 operationStatus: 0, //0未操作 1同意 2拒绝
             }
-        }
-        else {
+        } else {
             informBody = {
                 fromType,
                 operation,
@@ -81,7 +80,7 @@ export default function (fromType, informContnet) {
             }
         }
 
-        informBody.from === EaseIM.conn.user
+        informBody.from === EaseChatClient.user
             ? (informBody.untreated = 0)
             : (informBody.untreated = 1)
         return informBody

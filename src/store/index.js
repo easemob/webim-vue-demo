@@ -1,5 +1,5 @@
 import { createStore } from 'vuex'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import Conversation from './modules/conversation'
 import Contacts from './modules/contacts'
 import Message from './modules/message'
@@ -41,20 +41,20 @@ export default createStore({
     actions: {
     //获取登陆用户的用户属性
         getMyUserInfo: async ({ commit }, userId) => {
-            const { data } = await EaseIM.conn.fetchUserInfoById(userId)
+            const { data } = await EaseChatClient.fetchUserInfoById(userId)
             data[userId].hxId = userId
             commit('SET_LOGIN_USER_INFO', data[userId])
         },
         //修改登陆用户的用户属性
         updateMyUserInfo: async ({ commit }, params) => {
-            const { data } = await EaseIM.conn.updateUserInfo({ ...params })
+            const { data } = await EaseChatClient.updateUserInfo({ ...params })
             console.log('>>>>>>修改成功', data)
             commit('SET_LOGIN_USER_INFO', data)
         },
         //处理在线状态订阅变更（包含他人的用户状态）
         handlePresenceChanges: ({ commit }, status) => {
             const { userId, ext: statusType } = status || {}
-            if (userId === EaseIM.conn.user) {
+            if (userId === EaseChatClient.user) {
                 commit(
                     'SET_LOGIN_USER_ONLINE_STATUS',
                     statusType ? statusType : 'Unset'

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, toRaw, watch, defineProps, defineEmits } from 'vue'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import { Search } from '@element-plus/icons-vue'
 import { useLocalStorage } from '@vueuse/core'
 import _ from 'lodash'
@@ -28,7 +28,7 @@ const inputValue = ref('')
 //控制搜索结果展示
 const isShowResultContent = ref(false)
 //搜索本地记录
-const searchHistory = useLocalStorage(`EASEIM_${EaseIM.conn.user}_search_hisory`, [])
+const searchHistory = useLocalStorage(`EASEIM_${EaseChatClient.user}_search_hisory`, [])
 //点击非搜索部分关闭页面
 const searchBox = ref(null)
 onClickOutside(searchBox, () => (isShowResultContent.value = false))

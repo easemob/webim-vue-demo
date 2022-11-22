@@ -3,7 +3,7 @@ import { reactive, computed, toRefs } from 'vue'
 import { useStore } from 'vuex'
 import { useClipboard, usePermission } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import fileSizeFormat from '@/utils/fileSizeFormat'
 import dateFormat from '@/utils/dateFormater'
@@ -31,7 +31,7 @@ const { messageData } = toRefs(props)
 /* constant */
 const { ALL_MESSAGE_TYPE, CUSTOM_TYPE } = messageType
 /* login hxId */
-const loginUserId = EaseIM.conn.user
+const loginUserId = EaseChatClient.user
 
 /* computed-- 消息来源是否为自己 */
 const isMyself = computed(() => {
@@ -130,7 +130,7 @@ const recallMessage = async ({ id, to, chatType }) => {
 }
 //删除消息（非从服务器删除）
 const deleteMessage = ({ from, to, id: mid }) => {
-    const key = to === EaseIM.conn.user ? from : to
+    const key = to === EaseChatClient.user ? from : to
     store.commit('CHANGE_MESSAGE_BODAY', { type: 'deleteMsg', key, mid })
 }
 //父组件重新编辑方法
@@ -190,7 +190,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                                     fit="cover" />
                                 <!-- 昵称 -->
                                 <span class="nickname">{{ msgBody.customExts && msgBody.customExts.nickname ||
-                                msgBody.customExts.uid
+                                        msgBody.customExts.uid
                                 }}</span>
                             </div>
                             <el-divider style="margin:5px 0;  border-top:1px solid black;" />

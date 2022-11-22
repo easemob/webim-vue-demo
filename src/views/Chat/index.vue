@@ -2,7 +2,7 @@
 import { onBeforeUnmount } from 'vue'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import NavBar from '@/views/Chat/components/NavBar'
 import { messageType } from '@/constant'
 // /* CallKit */
@@ -33,7 +33,7 @@ SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
             center: true
         })
         const params = {
-            from: EaseIM.conn.user,
+            from: EaseChatClient.user,
             to: param.eventHxId,
             chatType: param.callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
             msg: message
@@ -43,7 +43,7 @@ SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
     }
     if (type === 'INFO') {
         const params = {
-            from: EaseIM.conn.user,
+            from: EaseChatClient.user,
             to: param.eventHxId,
             chatType: param.callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
             msg: message

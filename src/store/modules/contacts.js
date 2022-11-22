@@ -1,10 +1,10 @@
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 // import { useLocalStorage } from '@vueuse/core';
 import { sortPinyinFriendItem, handlePresence } from '@/utils/handleSomeData'
 import _ from 'lodash'
 const Contacts = {
     state: {
-        // friendList: useLocalStorage('friendList', {}),
+    // friendList: useLocalStorage('friendList', {}),
         friendList: {},
         // groupList: useLocalStorage('groupList', {}),
         groupList: {},
@@ -22,12 +22,12 @@ const Contacts = {
         SET_FRIEND_PRESENCE: (state, status) => {
             const friendList = state.friendList
             status.length > 0 &&
-                status.forEach((item) => {
-                    const commonStatus = handlePresence(item)
-                    if (friendList[commonStatus.uid]) {
-                        friendList[commonStatus.uid].userStatus = commonStatus
-                    }
-                })
+        status.forEach((item) => {
+            const commonStatus = handlePresence(item)
+            if (friendList[commonStatus.uid]) {
+                friendList[commonStatus.uid].userStatus = commonStatus
+            }
+        })
         },
         SET_SORDED_FRIEND_LIST: (state, payload) => {
             state.sortedFriendList = _.assign({}, payload)
@@ -75,13 +75,13 @@ const Contacts = {
                 case 'addAffiliationsCount':
                     {
                         state.groupList[groupId].groupDetail.affiliations_count =
-                                state.groupList[groupId].groupDetail.affiliations_count + 1
+                state.groupList[groupId].groupDetail.affiliations_count + 1
                     }
                     break
                 case 'delAffiliationsCount':
                     {
                         state.groupList[groupId].groupDetail.affiliations_count =
-                                state.groupList[groupId].groupDetail.affiliations_count - 1
+                state.groupList[groupId].groupDetail.affiliations_count - 1
                     }
                     break
                 default:
@@ -91,7 +91,6 @@ const Contacts = {
         },
         //示例优化方向--更改本地群组列表群名(或其他状态)
         UPDATE_GROUP_LIST: (state, payload) => {
-
             const { type, groupId, groupName } = payload
             if (type === 'updateGroupName') {
                 console.log('>>>>>更新本地群组列表群名')
@@ -99,20 +98,19 @@ const Contacts = {
             }
             if (type === 'deleteFromList') {
                 console.log('>>>>>从本地群组列表中删除某个群')
-                state.groupList[groupId] && (delete state.groupList[groupId])
+                state.groupList[groupId] && delete state.groupList[groupId]
             }
-
         },
     },
     actions: {
-        //获取好友列表
+    //获取好友列表
         fetchFriendList: async ({ dispatch, commit }) => {
             const friendListData = {}
             try {
                 //获取好友列表
-                const { data } = await EaseIM.conn.getContacts()
+                const { data } = await EaseChatClient.getContacts()
                 data.length > 0 &&
-                    data.map((item) => (friendListData[item] = { hxId: item }))
+          data.map((item) => (friendListData[item] = { hxId: item }))
                 //获取好友列表对应的用户属性
                 const friendListWithInfos = await dispatch('getOtherUserInfo', data)
                 //合并两对象
@@ -133,7 +131,7 @@ const Contacts = {
         },
         //获取黑名单列表
         fetchBlackList: async ({ dispatch, commit }, params) => {
-            const { data } = await EaseIM.conn.getBlocklist()
+            const { data } = await EaseChatClient.getBlocklist()
             data.length > 0 && commit('SET_BLACK_LIST', data)
         },
         //获取他人用户属性
@@ -148,15 +146,15 @@ const Contacts = {
                 const usersArr = _.chunk([...users], 99) //分拆users 用户属性获取一次不能超过100个
                 try {
                     usersArr.length > 0 &&
-                        usersArr.map((userItem) =>
-                            requestTask.push(EaseIM.conn.fetchUserInfoById(userItem))
-                        )
+            usersArr.map((userItem) =>
+                requestTask.push(EaseChatClient.fetchUserInfoById(userItem))
+            )
                     const result = await Promise.all(requestTask)
                     const usersInfos = _.map(result, 'data')
                     usersInfos.length > 0 &&
-                        usersInfos.map(
-                            (item) => (usersInfosObj = Object.assign(usersInfosObj, item))
-                        )
+            usersInfos.map(
+                (item) => (usersInfosObj = Object.assign(usersInfosObj, item))
+            )
                     resolve(usersInfosObj)
                 } catch (error) {
                     reject(error)
@@ -169,19 +167,19 @@ const Contacts = {
             const usersArr = _.chunk([...users], 5) //分拆users 订阅好友状态一次不能超过100个
             try {
                 usersArr.length > 0 &&
-                    usersArr.map((userItem) =>
-                        requestTask.push(
-                            EaseIM.conn.subscribePresence({
-                                usernames: userItem,
-                                expiry: 30 * 24 * 3600,
-                            })
-                        )
-                    )
+          usersArr.map((userItem) =>
+              requestTask.push(
+                  EaseChatClient.subscribePresence({
+                      usernames: userItem,
+                      expiry: 30 * 24 * 3600,
+                  })
+              )
+          )
                 const resultData = await Promise.all(requestTask)
                 const usersPresenceList = _.flattenDeep(_.map(resultData, 'result')) //返回值是个二维数组，flattenDeep处理为一维数组
                 const tobeCommitRes =
-                    usersPresenceList.length > 0 &&
-                    usersPresenceList.filter((p) => p.uid !== '')
+          usersPresenceList.length > 0 &&
+          usersPresenceList.filter((p) => p.uid !== '')
                 console.log('resultData', resultData)
                 commit('SET_FRIEND_PRESENCE', tobeCommitRes)
             } catch (error) {
@@ -193,13 +191,13 @@ const Contacts = {
             const option = {
                 usernames: [...user],
             }
-            EaseIM.conn.unsubscribePresence(option).then((res) => {
+            EaseChatClient.unsubscribePresence(option).then((res) => {
                 console.log('>>>>>>>成功取消订阅', res)
             })
         },
         //获取群组列表
         fetchGroupList: async ({ commit }, params) => {
-            const res = await EaseIM.conn.getJoinedGroups({
+            const res = await EaseChatClient.getJoinedGroups({
                 // needAffiliations: true,
                 // needRole: true,
                 ...params,
@@ -213,13 +211,13 @@ const Contacts = {
             const options = {
                 groupId: goupsId, // 群组id
             }
-            const result = await EaseIM.conn.getGroupInfo(options)
+            const result = await EaseChatClient.getGroupInfo(options)
             // console.log('>>>>>>>群详情获取成功result', result);
             result.data &&
-                commit('SET_GROUP_LIST', {
-                    setType: 'replenish',
-                    data: result.data[0],
-                })
+        commit('SET_GROUP_LIST', {
+            setType: 'replenish',
+            data: result.data[0],
+        })
         },
     },
 }

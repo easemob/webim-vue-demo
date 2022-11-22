@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, toRefs, watch, defineProps, defineEmits } from 'vue'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import { ElNotification } from 'element-plus'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 const props = defineProps({
@@ -19,7 +19,7 @@ const applyJoinGroupsForm = reactive({
 const getTheGroupIsPublic = async (groupId) => {
     console.log('groupId', groupId)
     try {
-        const res = await EaseIM.conn.getGroupInfo({ groupId: groupId + '' })
+        const res = await EaseChatClient.getGroupInfo({ groupId: groupId + '' })
         console.log('>>>>获取成功', res)
         if (res && res?.data && res.data[0]?.public === false) {
             Promise.resolve(false)
@@ -63,7 +63,7 @@ const joinGroups = async () => {
         message: applyJoinGroupsForm.applyJoinMessage       // 请求信息
     }
     try {
-        await EaseIM.conn.joinGroup(options)
+        await EaseChatClient.joinGroup(options)
         ElNotification({
             title: '群组操作',
             message: '群申请已发送！',

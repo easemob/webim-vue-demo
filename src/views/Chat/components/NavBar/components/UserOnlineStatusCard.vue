@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useStore } from 'vuex'
 import { onLineStatus } from '@/constant'
 import { ElNotification } from 'element-plus'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 
 const store = useStore()
 const loginUserOnlineStatus = computed(() => store.state.loginUserOnlineStatus)
@@ -14,7 +14,7 @@ const selectOnlineMode = async (statusType) => {
         description: statusType,
     }
     try {
-        await EaseIM.conn.publishPresence(option)
+        await EaseChatClient.publishPresence(option)
     } catch (error) {
         ElNotification({
             title: 'Easemob',

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, toRaw } from 'vue'
 import { useStore } from 'vuex'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 /* store */
 const store = useStore()
 /* emits */
@@ -53,7 +53,7 @@ defineExpose({
 <template>
     <el-dialog v-model="dialogVisible" title="邀请入会" width="50%">
         <el-checkbox-group v-model="checkedMembers">
-            <el-checkbox v-for="item in members" :key="item" :label="item" :disabled="item === EaseIM.conn.user">{{
+            <el-checkbox v-for="item in members" :key="item" :label="item" :disabled="item === EaseChatClient.user">{{
                     item
             }}</el-checkbox>
         </el-checkbox-group>

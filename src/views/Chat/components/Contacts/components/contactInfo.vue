@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import { useStore } from 'vuex'
 import router from '@/router'
 import { useRoute } from 'vue-router'
@@ -51,14 +51,14 @@ const changeBlackStatus = async () => {
     if (blackStatus.value && route.query.id) {
         console.log('>>>>>移除黑明单')
         // 当前 removeUserFromBlackList 以及 addUsersToBlacklist 暂不支持promise 返回所以暂时获取不到其请求状态。
-        EaseIM.conn.removeUserFromBlackList({
+        EaseChatClient.removeUserFromBlockList({
             name: [route.query.id]
         })
         blackStatus.value = false
         switchStatus.value = false
     } else {
         console.log('>>>>加入黑名单')
-        EaseIM.conn.addUsersToBlacklist({
+        EaseChatClient.addUsersToBlocklist({
             name: [route.query.id]
         })
         blackStatus.value = true
@@ -76,7 +76,7 @@ const delTheFriend = () => {
     console.log('>>>>>>>删除好友')
     if (!route.query.id) return
     const targetId = route.query.id
-    EaseIM.conn.deleteContact(targetId)
+    EaseChatClient.deleteContact(targetId)
     router.push('/chat/contacts')
 }
 
@@ -113,11 +113,11 @@ const toChatMessage = () => {
                     <div class="name">
                         <p v-if="$route.query.chatType === CHAT_TYPE.SINGLE">
                             {{ nowContactInfo.nickname ? `${nowContactInfo.nickname}(${nowContactInfo.hxId})` :
-                            nowContactInfo.hxId
+                                    nowContactInfo.hxId
                             }}</p>
                         <p v-if="$route.query.chatType === CHAT_TYPE.GROUP">
                             {{ nowContactInfo.groupname ? `${nowContactInfo.groupname}(${nowContactInfo.groupid})` :
-                            nowContactInfo.groupid
+                                    nowContactInfo.groupid
                             }}</p>
                     </div>
                     <div class="func_box">

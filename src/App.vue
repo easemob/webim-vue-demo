@@ -1,7 +1,7 @@
 <script setup>
 import { useStore } from 'vuex'
 import router from '@/router'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
 import { handleSDKErrorNotifi, setMessageKey } from '@/utils/handleSomeData'
 import { informType } from '@/constant'
 import { usePlayRing } from '@/hooks'
@@ -12,9 +12,10 @@ import InviteCallMembers from '@/components/InviteCallMembers'
 import { ref } from 'vue'
 const store = useStore()
 const { isOpenPlayRing, clickRing } = usePlayRing()
-EaseIM.logger.disableAll()
+EaseChatSDK.logger.disableAll()
 /* connect 相关监听 */
-EaseIM.conn.addEventHandler('connection', {
+console.log('APP EaseChatClient', EaseChatClient)
+EaseChatClient.addEventHandler('connection', {
     onConnected: () => {
         console.log('>>>>>环信连接成功')
         store.commit('CHANGE_LOGIN_STATUS', true)
@@ -48,7 +49,7 @@ const fetchLoginUsersInitData = () => {
 }
 //获取登陆用户属性
 const getMyUserInfos = () => {
-    const userId = EaseIM.conn.user
+    const userId = EaseChatClient.user
     store.dispatch('getMyUserInfo', userId)
 }
 //获取好友列表
@@ -77,7 +78,7 @@ const presenceStatus = (type, user) => {
 }
 
 /* presence 相关监听 */
-EaseIM.conn.addEventHandler('presenceStatusChange', {
+EaseChatClient.addEventHandler('presenceStatusChange', {
     onPresenceStatusChange: (status) => {
         console.log('>>>>>presenceStatusChange', status)
         getUserPresence(...status)
@@ -89,7 +90,7 @@ const getUserPresence = (status) => {
     store.dispatch('handlePresenceChanges', status)
 }
 /* message 相关监听 */
-EaseIM.conn.addEventHandler('messageListen', {
+EaseChatClient.addEventHandler('messageListen', {
     onTextMessage: function (message) {
         console.log('>>>>>>>App mesage', message)
         console.log('setMessageKey', setMessageKey(message))
@@ -132,14 +133,14 @@ const otherRecallMessage = (message) => {
     console.log('>>>>>收到他人撤回', message)
     const { from, to, mid } = message
     //单对单的撤回to必然为登陆的用户id，群组发起撤回to必然为群组id 所以key可以这样来区分群组或者单人。
-    const key = to === EaseIM.conn.user ? from : to
+    const key = to === EaseChatClient.user ? from : to
     console.log('>>>>>收到他人撤回', key)
     store.commit('CHANGE_MESSAGE_BODAY', { type: 'recall', key, mid })
     store.dispatch('gatherConversation', key)
 }
 /* 好友关系相关监听 */
 const { INFORM_FROM } = informType
-EaseIM.conn.addEventHandler('friendListen', {
+EaseChatClient.addEventHandler('friendListen', {
     // 收到好友邀请触发此方法。
     onContactInvited: (data) => {
         //写入INFORM
@@ -183,7 +184,7 @@ EaseIM.conn.addEventHandler('friendListen', {
     }
 })
 /* 群组相关监听 */
-EaseIM.conn.addEventHandler('groupEvent', {
+EaseChatClient.addEventHandler('groupEvent', {
     onGroupEvent: (groupevent) => {
         console.log('>>>>>>>收到群组事件', groupevent)
         submitInformData(INFORM_FROM.GROUP, groupevent)
@@ -202,7 +203,7 @@ const EASEIM_loginUser = window.localStorage.getItem('EASEIM_loginUser')
 const loginUserFromStorage = JSON.parse(EASEIM_loginUser) || {}
 const handleRelogin = () => {
     console.log('重新登陆')
-    EaseIM.conn.open({
+    EaseChatClient.open({
         user: loginUserFromStorage.user,
         accessToken: loginUserFromStorage.accessToken
     })
@@ -236,8 +237,8 @@ const sendMulitInviteMsg = (targetIMId) => {
     <!-- 铃声标签 -->
     <audio id="ring" :src="ring" controls hidden></audio>
     <!-- About EaseCallKit -->
-    <EaseCallKit ref="easeCallKit" :EaseIM="EaseIM" :connectionName="'conn'" @onInviteMembers="showModal" />
-    <InviteCallMembers ref="inviteCallComp" @sendMulitInviteMsg="sendMulitInviteMsg" />
+    <!-- <EaseCallKit ref="easeCallKit" :EaseIM="EaseIM" :connectionName="'conn'" @onInviteMembers="showModal" />
+    <InviteCallMembers ref="inviteCallComp" @sendMulitInviteMsg="sendMulitInviteMsg" /> -->
 </template>
 
 <style type="scss">

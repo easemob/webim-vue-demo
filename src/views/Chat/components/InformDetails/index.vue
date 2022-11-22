@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import dateFormater from '@/utils/dateFormater'
 import { informType, messageType } from '@/constant'
 import { ElMessageBox, ElMessage } from 'element-plus'
@@ -42,18 +42,18 @@ const clearAllInform = () => {
 //处理申请
 const handleClickBtn = ({ informData, index, type }) => {
     console.log('handleClick', informData)
-    const loginUserId = EaseIM.conn.user
+    const loginUserId = EaseChatClient.user
     const { fromType, from } = informData
     //好友申请操作相关
     if (fromType === INFORM_FROM.FRIEND) {
         const handleFriendApply = {
             'agree': () => {
                 console.log('agree')
-                EaseIM.conn.acceptContactInvite(from)
+                EaseChatClient.acceptContactInvite(from)
                 store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
             },
             'refuse': () => {
-                EaseIM.conn.declineContactInvite(from)
+                EaseChatClient.declineContactInvite(from)
                 //拒绝并更改当前通知卡片按钮状态
                 store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 })
 
@@ -67,7 +67,7 @@ const handleClickBtn = ({ informData, index, type }) => {
         const handleGroupInvite = {
             agree: async () => {
                 try {
-                    await EaseIM.conn.acceptGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
+                    await EaseChatClient.acceptGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
                     store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
                     await store.dispatch('fetchGroupList', {
                         pageNum: 1,
@@ -87,7 +87,7 @@ const handleClickBtn = ({ informData, index, type }) => {
 
             },
             refuse: async () => {
-                await EaseIM.conn.rejectGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
+                await EaseChatClient.rejectGroupInvite({ invitee: loginUserId, groupId: informData.groupId })
                 store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 })
             },
         }
@@ -99,7 +99,7 @@ const handleClickBtn = ({ informData, index, type }) => {
             agree: async () => {
                 console.log('>>>>>agree requestToJoin')
                 try {
-                    EaseIM.conn.acceptGroupJoinRequest({
+                    EaseChatClient.acceptGroupJoinRequest({
                         applicant: from,
                         groupId: informData.groupId,
                     })
@@ -115,7 +115,7 @@ const handleClickBtn = ({ informData, index, type }) => {
             },
             refuse: async () => {
                 console.log('>>>>>refuse requestToJoin')
-                EaseIM.conn.rejectGroupJoinRequest({
+                EaseChatClient.rejectGroupJoinRequest({
                     applicant: from,
                     groupId: informData.groupId,
                     reason: '不好意思，不同意你的入群申请！',
@@ -152,7 +152,7 @@ const handleClickBtn = ({ informData, index, type }) => {
             <template #header>
               <div class="card-header">
                 <span>{{ item.title }} {{ item.fromType === INFORM_FROM.GROUP &&
-                `(${item.groupId})` || ''
+                    `(${item.groupId})` || ''
                 }}</span>
               </div>
             </template>

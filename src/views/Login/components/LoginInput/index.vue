@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { fetchUserLoginToken } from '@/api/login'
 import { useStore } from 'vuex'
@@ -39,7 +39,7 @@ const loginIM = async () => {
     buttonLoding.value = true
     /* SDK 登陆的方式 */
     // try {
-    //   let { accessToken } = await EaseIM.conn.open({
+    //   let { accessToken } = await EaseChatClient.open({
     //     user: loginValue.username.toLowerCase(),
     //     pwd: loginValue.password.toLowerCase(),
     //   });
@@ -63,7 +63,7 @@ const loginIM = async () => {
     //phoneNumber 暂时不支持用作user，后续支持手机号登陆
         const { token } = await fetchUserLoginToken(params)
         console.log('>>>>>>登陆token获取成功', token)
-        EaseIM.conn.open({
+        EaseChatClient.open({
             user: loginValue.username.toLowerCase(),
             accessToken: token
         })
