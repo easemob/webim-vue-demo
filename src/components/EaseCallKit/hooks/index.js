@@ -1,6 +1,3 @@
 import useManageChannel from './useManageChannel'
-import useChannelEvent from './useChannelEvent'
-export {
-    useManageChannel,
-    useChannelEvent
-}
+import useCallKitEvent from './useCallKitEvent'
+export { useManageChannel, useCallKitEvent }

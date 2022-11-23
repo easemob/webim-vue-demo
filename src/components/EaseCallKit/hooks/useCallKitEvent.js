@@ -1,4 +1,8 @@
 import { reactive } from 'vue'
+import {
+    CALLKIT_EVENT_CODE,
+    CALLKIT_EVENT_TYPE,
+} from '../constants/callKitEvent'
 const channelEvents = reactive({})
 const EVENT_NAME = 'EASECALLKIT'
 const EVENT_LEVEL = {
@@ -19,8 +23,8 @@ export default function useChannelEvent() {
     const PUB_CHANNEL_EVENT = (eventName = 'EASECALLKIT', data) => {
     /**
      *  const eventParams = {
-     *                  type: string,对外抛出type类别
-     *                  message: string,对外抛出事件内容
+     *                  type: Object,对外抛出type类别
+     *                  ext: Object,对外抛出事件内容
      *                  callType: number,音视频会话类型
      *                  eventHxId: string 事件定义来源
      *               }
@@ -40,6 +44,8 @@ export default function useChannelEvent() {
     return {
         EVENT_NAME,
         EVENT_LEVEL,
+        CALLKIT_EVENT_CODE,
+        CALLKIT_EVENT_TYPE,
         SUB_CHANNEL_EVENT,
         PUB_CHANNEL_EVENT,
         UN_SUB_CHANNEL_ENENT,

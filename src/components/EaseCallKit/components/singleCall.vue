@@ -3,7 +3,7 @@ import { ref, watch, reactive, computed, toRefs, onMounted, onBeforeUnmount } fr
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
 import { CALLSTATUS } from '../constants'
 /* hooks */
-import { useChannelEvent } from '../hooks'
+import { useCallKitEvent } from '../hooks'
 /*mini组件*/
 import MiniStreamContainer from './miniStreamContainer'
 /* image url */
@@ -115,7 +115,7 @@ onMounted(() => {
     setAgoraRtcListener()
 })
 /* 对外发布频道内事件 */
-const { EVENT_NAME, EVENT_LEVEL, PUB_CHANNEL_EVENT } = useChannelEvent()
+const { EVENT_NAME, EVENT_LEVEL, CALLKIT_EVENT_TYPE, CALLKIT_EVENT_CODE, PUB_CHANNEL_EVENT } = useCallKitEvent()
 /* 频道控制 */
 //监听本地端状态
 watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
@@ -198,8 +198,8 @@ const leaveChannel = async () => {
     console.log('》》》》》挂断')
     await CallKitClient.leave()
     const eventParams = {
-        type: EVENT_LEVEL[0],
-        message: `通话结束【${formatTime.value}】`,
+        type: CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.HANGUP],
+        ext: { message: `通话结束【${formatTime.value}】~`, calltime_length: timeCount.value },
         callType: callKitStatus.value.channelInfos.callType,
         eventHxId: callKitStatus.value.channelInfos.callerIMName,
     }

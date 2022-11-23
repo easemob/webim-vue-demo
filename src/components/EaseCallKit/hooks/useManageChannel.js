@@ -8,8 +8,14 @@ import {
 } from '../constants'
 import createUid from '../utils/createUid'
 import CallKitMessages from '../utils/callMessages'
-import useChannelEvent from './useChannelEvent'
-const { EVENT_NAME, EVENT_LEVEL, PUB_CHANNEL_EVENT } = useChannelEvent()
+import useCallKitEvent from './useCallKitEvent'
+const {
+    EVENT_NAME,
+    EVENT_LEVEL,
+    CALLKIT_EVENT_TYPE,
+    CALLKIT_EVENT_CODE,
+    PUB_CHANNEL_EVENT,
+} = useCallKitEvent()
 //弹出组件类型
 const callComponents = ref('')
 //频道基础信息
@@ -244,10 +250,10 @@ export default function useManageChannel() {
                 callId: callKitStatus.channelInfos.callId,
             })
             const eventParams = {
-                type: EVENT_LEVEL[2],
-                message: '通话超时未接听～',
+                type: CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.TIMEOUT],
+                ext: { message: '通话超时未接听～' },
                 callType: callKitStatus.channelInfos.callType,
-                eventHxId: targetId || '',
+                eventHxId: targetId,
             }
             PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
             updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
