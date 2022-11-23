@@ -1,10 +1,11 @@
+import { IMClient, MsgCreateFn } from '../constants/imClient'
 import { CALL_ACTIONS_TYPE, MSG_TYPE } from '../constants'
+
 export default class CallKitMessages {
-    constructor(params) {
-        const { IM, conn } = params
+    constructor() {
         this.action = 'rtcCall'
-        this.IM = IM
-        this.conn = IM[conn]
+        this.IMClient = IMClient
+        this.msgCreateFn = MsgCreateFn
     }
     //发送邀请信令
     sendInviteMsg(targetId, callType, channelInfors) {
@@ -18,11 +19,11 @@ export default class CallKitMessages {
                 action: CALL_ACTIONS_TYPE.INVITE,
                 channelName: channelName,
                 type: callType, // 0为1v1音频，1为1v1视频，2为多人通话
-                callerDevId: this.conn.context.jid.clientResource, // 主叫方设备Id
+                callerDevId: this.IMClient.context.jid.clientResource, // 主叫方设备Id
                 callId: callId, // 随机uuid，每次呼叫都不同，代表一次呼叫
                 ts: Date.now(),
                 msgType: MSG_TYPE,
-                callerIMName: this.conn.context.jid.name,
+                callerIMName: this.IMClient.context.jid.name,
             },
         }
         //如果是多人邀请并且groupId有参数时，在ext扩展字段中再增加一个ext并传入groupId
@@ -30,10 +31,9 @@ export default class CallKitMessages {
             option.ext.ext = { groupId: channelInfors.groupId }
         }
         return new Promise((resolve, reject) => {
-            const msg = this.IM.message.create(option)
-            // // 调用 `send` 方法发送该透传消息。
-            this.conn
-                .send(msg)
+            const msg = this.msgCreateFn.create(option)
+            // 调用 `send` 方法发送该透传消息。
+            this.IMClient.send(msg)
                 .then((res) => {
                     // 消息成功发送回调。
                     console.log('invite Success', res)
@@ -65,10 +65,9 @@ export default class CallKitMessages {
                 msgType: MSG_TYPE,
             },
         }
-        const msg = this.IM.message.create(option)
+        const msg = this.msgCreateFn.create(option)
         // // 调用 `send` 方法发送该透传消息。
-        this.conn
-            .send(msg)
+        this.IMClient.send(msg)
             .then((res) => {
                 // 消息成功发送回调。
                 console.log('ConfirmRing Success', res)
@@ -92,18 +91,17 @@ export default class CallKitMessages {
                 ext: {
                     action: CALL_ACTIONS_TYPE.CONFIRM_CALLEE,
                     result: sendBody.result,
-                    callerDevId: this.conn.context.jid.clientResource,
+                    callerDevId: this.IMClient.context.jid.clientResource,
                     calleeDevId: sendBody.calleeDevId,
                     callId: sendBody.callId,
                     ts: Date.now(),
                     msgType: MSG_TYPE,
                 },
             }
-            const msg = this.IM.message.create(option)
+            const msg = this.msgCreateFn.create(option)
             console.log('%ccallee msg', 'color:purple', msg)
             // // 调用 `send` 方法发送该透传消息。
-            this.conn
-                .send(msg)
+            this.IMClient.send(msg)
                 .then((res) => {
                     // 消息成功发送回调。
                     console.log('Calllee Success', res)
@@ -126,7 +124,7 @@ export default class CallKitMessages {
             action: this.action,
             ext: {
                 action: CALL_ACTIONS_TYPE.ALERT,
-                calleeDevId: this.conn.context.jid.clientResource,
+                calleeDevId: this.IMClient.context.jid.clientResource,
                 callerDevId: ext.callerDevId,
                 callId: ext.callId,
                 ts: Date.now(),
@@ -134,10 +132,9 @@ export default class CallKitMessages {
             },
         }
         console.log('>>>>>>>option', option)
-        const msg = this.IM.message.create(option)
+        const msg = this.msgCreateFn.create(option)
         // // 调用 `send` 方法发送该透传消息。
-        this.conn
-            .send(msg)
+        this.IMClient.send(msg)
             .then((res) => {
                 // 消息成功发送回调。
                 console.log('answer Success', res)
@@ -162,16 +159,15 @@ export default class CallKitMessages {
                 action: CALL_ACTIONS_TYPE.ANSWER,
                 result: answerType,
                 callerDevId: sendBody.callerDevId,
-                calleeDevId: this.conn.context.jid.clientResource,
+                calleeDevId: this.IMClient.context.jid.clientResource,
                 callId: sendBody.callId,
                 ts: Date.now(),
                 msgType: MSG_TYPE,
             },
         }
-        const msg = this.IM.message.create(option)
+        const msg = this.msgCreateFn.create(option)
         // // 调用 `send` 方法发送该透传消息。
-        this.conn
-            .send(msg)
+        this.IMClient.send(msg)
             .then((res) => {
                 // 消息成功发送回调。
                 console.log('answer Success', res)
@@ -195,16 +191,15 @@ export default class CallKitMessages {
             // 设置消息扩展信息。
             ext: {
                 action: CALL_ACTIONS_TYPE.CANCEL,
-                callerDevId: this.conn.context.jid.clientResource,
+                callerDevId: this.IMClient.context.jid.clientResource,
                 callId: callId || '',
                 ts: Date.now(),
                 msgType: MSG_TYPE,
             },
         }
-        const msg = this.IM.message.create(option)
+        const msg = this.msgCreateFn.create(option)
         // // 调用 `send` 方法发送该透传消息。
-        this.conn
-            .send(msg)
+        this.IMClient.send(msg)
             .then((res) => {
                 // 消息成功发送回调。
                 console.log('Cannel Success', res)

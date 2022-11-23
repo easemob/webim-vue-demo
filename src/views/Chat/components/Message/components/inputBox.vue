@@ -210,7 +210,7 @@ const all_func = [
 ]
 
 /* About EaseCallKit */
-const { CALL_TYPES, sendInviteMessage } = useManageChannel(EaseChatClient, 'conn')
+const { CALL_TYPES, sendInviteMessage } = useManageChannel()
 //处理发起的音视频呼叫类型
 const handleInviteCall = (handleType) => {
     const toId = nowPickInfo.value.id

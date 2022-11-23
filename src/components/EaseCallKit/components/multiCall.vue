@@ -374,7 +374,7 @@ const inviteMoreMembers = () => {
 onBeforeUnmount(() => {
     //释放调用的媒体硬件权限
     localVoiceTrack && localVoiceTrack.close()
-    localVoiceTrack && localVideoTrack.close()
+    localVideoTrack && localVideoTrack.close()
     console.log('>>>>>>监听到组件卸载')
     //清除通话计时
     inChannelTimer.value && clearInterval(inChannelTimer.value)

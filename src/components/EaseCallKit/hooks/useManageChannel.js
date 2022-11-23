@@ -1,4 +1,5 @@
 import { ref, reactive, watch } from 'vue'
+import { IMClient } from '../constants/imClient'
 import {
     CALLSTATUS,
     CALL_TYPES,
@@ -32,8 +33,7 @@ const callKitStatus = reactive({
 })
 //CallKit timer
 const callKitTimer = ref(null)
-export default function useManageChannel(EaseIM = {}, conn = 'conn') {
-    if (!EaseIM || !conn) throw 'EaseIM or conn must pass！'
+export default function useManageChannel() {
     /* localClientStatus 监听处理 */
     watch(
         () => callKitStatus.localClientStatus,
@@ -139,7 +139,7 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         Object.assign(callKitStatus.channelInfos, params)
     }
     /* 邀请部分 */
-    const SignalMsgs = new CallKitMessages({ IM: EaseIM, conn: conn })
+    const SignalMsgs = new CallKitMessages()
     //发起类邀请
     const sendInviteMessage = async (targetId, callType, groupId) => {
         console.log('groupId', groupId)
@@ -179,13 +179,13 @@ export default function useManageChannel(EaseIM = {}, conn = 'conn') {
         }
         //更改部分ChannelInfos
         const params = {
-            from: EaseIM[conn].user,
+            from: IMClient.user,
             to: callType === CALL_TYPES.MULTI_VIDEO ? '' : targetId,
             ext: {
                 channelName: channelInfors.channelName,
                 callId: channelInfors.callId,
                 type: callType,
-                callerDevId: EaseIM[conn].context.jid.clientResource,
+                callerDevId: IMClient.context.jid.clientResource,
             },
         }
         //如果存在群组ID则增加ext字段进入到groupId

@@ -231,7 +231,7 @@ const changeStreamContainer = () => defaultStreamContainerClass.value = !default
 onBeforeUnmount(() => {
     console.log('>>>>>>监听到组件卸载')
     localVoiceTrack && localVoiceTrack.close()
-    localVoiceTrack && localVideoTrack.close()
+    localVideoTrack && localVideoTrack.close()
     //清除通话计时
     inChannelTimer.value && clearInterval(inChannelTimer.value)
 })

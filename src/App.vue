@@ -14,7 +14,6 @@ const store = useStore()
 const { isOpenPlayRing, clickRing } = usePlayRing()
 EaseChatSDK.logger.disableAll()
 /* connect 相关监听 */
-console.log('APP EaseChatClient', EaseChatClient)
 EaseChatClient.addEventHandler('connection', {
     onConnected: () => {
         console.log('>>>>>环信连接成功')
@@ -237,8 +236,9 @@ const sendMulitInviteMsg = (targetIMId) => {
     <!-- 铃声标签 -->
     <audio id="ring" :src="ring" controls hidden></audio>
     <!-- About EaseCallKit -->
-    <!-- <EaseCallKit ref="easeCallKit" :EaseIM="EaseIM" :connectionName="'conn'" @onInviteMembers="showModal" />
-    <InviteCallMembers ref="inviteCallComp" @sendMulitInviteMsg="sendMulitInviteMsg" /> -->
+    <EaseCallKit ref="easeCallKit" :EaseIMClient="EaseChatClient" :msgCreateFunc="EaseChatSDK.message"
+        @onInviteMembers="showModal" />
+    <InviteCallMembers ref="inviteCallComp" @sendMulitInviteMsg="sendMulitInviteMsg" />
 </template>
 
 <style type="scss">

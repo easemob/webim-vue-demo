@@ -2,6 +2,7 @@
 import { ref, toRefs, onUnmounted } from 'vue'
 import { CALLSTATUS, CALL_ACTIONS_TYPE, ANSWER_TYPE } from './constants'
 import CallKitMessages from './utils/callMessages'
+import { setImClient } from './constants/imClient'
 import { useManageChannel, useChannelEvent } from './hooks'
 import getRtcToken from './utils/getRtcToken'
 import getChannelDetails from './utils/getChannelDetails'
@@ -23,26 +24,29 @@ import MultiCall from './components/multiCall.vue'
 
 /* props */
 const props = defineProps({
-    //IMSDK对象
-    EaseIM: {
+
+
+    //实力化后的SDK
+    EaseIMClient: {
         type: Object,
         default: () => ({}),
         required: true
     },
-    //connection name （IMSDK实例化存放的对象名）
-    connectionName: {
-        type: String,
-        default: () => 'conn',
+    //消息创建方法
+    msgCreateFunc: {
+        type: Function,
+        default: () => ({}),
         required: true
     }
 })
 /* emits */
 const emits = defineEmits(['onInviteMembers'])
 /* 环信相关初始化配置 */
-const { EaseIM, connectionName } = toRefs(props)
-const conn = connectionName.value
+// const { EaseIM, connectionName } = toRefs(props)
+const { EaseIMClient, msgCreateFunc } = props
+setImClient(EaseIMClient, msgCreateFunc)
 const msgListenerName = 'IM_MESSAGE'
-EaseIM.value[conn].addEventHandler('IM_CONNECT', {
+EaseIMClient.addEventHandler('IM_CONNECT', {
     onConnected: () => {
         console.log('%c>>>>EaseCallKitIM已连接', 'color:green;')
         setMessageListener()
@@ -69,15 +73,15 @@ const setMessageListener = () => {
     }
     //防止重复设置监听，设置之前先执行移除
     removeMessageListener()
-    EaseIM.value[conn].addEventHandler(msgListenerName, msgListener)
+    EaseIMClient.addEventHandler(msgListenerName, msgListener)
     //初始化当前登录ID
     setLoginUserHxId()
 }
 //移除信令监听
-const removeMessageListener = () => EaseIM.value[conn].removeEventHandler(msgListenerName)
+const removeMessageListener = () => EaseIMClient.removeEventHandler(msgListenerName)
 //当前登录用户ID
 const loginUserHxId = ref('')
-const setLoginUserHxId = () => loginUserHxId.value = EaseIM.value[conn].user || ''
+const setLoginUserHxId = () => loginUserHxId.value = EaseIMClient.user || ''
 /* CallKit status */
 const callCompsType = {
     'singleCall': SingleCall,
@@ -91,16 +95,16 @@ const {
     updateChannelInfos,
     sendInviteMessage,
     inMultiChanelSendInviteMsg
-} = useManageChannel(EaseIM.value, conn)
+} = useManageChannel()
 const { EVENT_NAME, EVENT_LEVEL, PUB_CHANNEL_EVENT } = useChannelEvent()
 /* 信令部分 */
-const SignalMsgs = new CallKitMessages({ IM: EaseIM.value, conn: conn })
+const SignalMsgs = new CallKitMessages()
 //处理收到为文本的邀请信息
 const handleCallKitInvite = (msgBody) => {
     console.log('>>>>>开始处理被邀请消息')
     const { from, ext } = msgBody || {}
     //邀请消息发送者为自己则忽略
-    if (from === EaseIM.value[conn].user) return
+    if (from === EaseIMClient.user) return
     //非空闲回复busy
     if (callKitStatus.localClientStatus > CALLSTATUS.idle) {
         console.log('>>>>>回复忙碌')
@@ -126,7 +130,7 @@ const handleCallKitCommand = (msgBody) => {
     console.log('>>>>开始处理command命令消息', msgBody)
     const cmdMsgBody = Object.assign({}, msgBody.ext) || {}
     const { calleeDevId, callerDevId } = cmdMsgBody
-    const clientResource = EaseIM.value[conn].context.jid.clientResource
+    const clientResource = EaseIMClient.context.jid.clientResource
     const { action } = cmdMsgBody
     const { localClientStatus, channelInfos } = callKitStatus
     //当前有效会议ID
@@ -218,7 +222,7 @@ const handleCallKitCommand = (msgBody) => {
         break
     case CALL_ACTIONS_TYPE.CONFIRM_CALLEE: {
         if (cmdMsgBody.calleeDevId !== clientResource) {
-            if (msgBody.to === EaseIM.value[conn].user) {
+            if (msgBody.to === EaseIMClient.user) {
                 updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
                 console.log('%c 已在其他设备处理', 'color:red;')
                 return
@@ -234,7 +238,7 @@ const handleCallKitCommand = (msgBody) => {
     }
         break
     case CALL_ACTIONS_TYPE.CANCEL: {
-        if (msgBody.from === EaseIM.value[conn].user) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
+        if (msgBody.from === EaseIMClient.user) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
         if (msgBody.from === callKitStatus.channelInfos.callerIMName) return updateLocalStatus(CALLSTATUS.idle)
         break
     }
@@ -329,11 +333,11 @@ const handleCancelCall = () => {
 }
 /* 获取agoraToken */
 const getAgoraRtcToken = async (callback) => {
-    const username = EaseIM.value[conn].user
+    const username = EaseIMClient.user
     const channelName = callKitStatus.channelInfos.channelName
     console.log('channelNamechannelNamechannelName', channelName)
     if (!username && !channelName) return
-    const { accessToken, agoraUserId } = await getRtcToken(EaseIM.value[conn], { username, channelName })
+    const { accessToken, agoraUserId } = await getRtcToken(EaseIMClient, { username, channelName })
     console.log('+_+_+_+_+_+获取房间token成功', accessToken, agoraUserId)
     callKitStatus.channelInfos.agoraChannelToken = accessToken
     callKitStatus.channelInfos.agoraUserId = agoraUserId
@@ -342,10 +346,10 @@ const getAgoraRtcToken = async (callback) => {
 /* 获取channel信息 */
 const getAgoraChannelDetails = async (callback) => {
     console.log('>>>>>调用获取channel信息')
-    const username = EaseIM.value[conn].user
+    const username = EaseIMClient.user
     const channelName = callKitStatus.channelInfos.channelName
     if (!username && !channelName) return
-    const { result } = await getChannelDetails(EaseIM.value[conn], { username, channelName })
+    const { result } = await getChannelDetails(EaseIMClient, { username, channelName })
     console.log('+_+_+_+_+_+获取房间内用户信息', result)
     callKitStatus.channelInfos.channelUsers = { ...result }
     callback()
