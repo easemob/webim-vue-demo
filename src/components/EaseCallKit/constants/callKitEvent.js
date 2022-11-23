@@ -10,6 +10,7 @@ const CALLKIT_EVENT_CODE = {
     TIMEOUT: 7,
     CANCEL: 8,
     CALLER_CANCEL: 9,
+    OTHER_HANDLE: 10,
 }
 const CALLKIT_EVENT_TYPE = {
     [CALLKIT_EVENT_CODE.CALLER_ACCPET]: {
@@ -51,6 +52,10 @@ const CALLKIT_EVENT_TYPE = {
     [CALLKIT_EVENT_CODE.CALLER_CANCEL]: {
         code: CALLKIT_EVENT_CODE.CALLER_CANCEL,
         description: 'CALLER_CANCEL',
+    },
+    [CALLKIT_EVENT_CODE.OTHER_HANDLE]: {
+        code: CALLKIT_EVENT_CODE.OTHER_HANDLE,
+        description: 'OTHER_HANDLE',
     },
 }
 

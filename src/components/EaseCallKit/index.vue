@@ -125,6 +125,8 @@ const handleCallKitInvite = (msgBody) => {
 }
 //处理接收到通话交互过程的CMD命令消息
 const handleCallKitCommand = (msgBody) => {
+    //多端状态下信令消息发送者为自己则忽略
+    if (msgBody.from === EaseIMClient.user) return
     console.log('>>>>开始处理command命令消息', msgBody)
     const cmdMsgBody = Object.assign({}, msgBody.ext) || {}
     const { calleeDevId, callerDevId } = cmdMsgBody
@@ -229,6 +231,11 @@ const handleCallKitCommand = (msgBody) => {
             if (msgBody.to === EaseIMClient.user) {
                 updateLocalStatus(CALLSTATUS.idle) //更改状态为闲置
                 console.log('%c 已在其他设备处理', 'color:red;')
+                eventParams.type = CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.OTHER_HANDLE]
+                eventParams.ext = { message: '已在其他设备处理' }
+                eventParams.callType = callKitStatus.channelInfos.callType
+                eventParams.eventHxId = msgBody.from || ''
+                PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
                 return
             }
             return

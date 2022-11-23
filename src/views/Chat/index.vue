@@ -20,10 +20,10 @@ const { EVENT_NAME, CALLKIT_EVENT_CODE, SUB_CHANNEL_EVENT, UN_SUB_CHANNEL_ENENT 
 SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
     console.log('%c>>>>>>订阅事件触发', 'color:blue', param)
     /* 
-    事件对外抛出包含有对应的事件type，type/code 可以自行判断处理，ext字段内有对外传出的事件中文描述，可自行选择是否使用。
-  */
+  事件对外抛出包含有对应的事件type，type/code 可以自行判断处理，ext字段内有对外传出的事件中文描述，可自行选择是否使用。
+*/
     const { type, ext, callType, eventHxId } = param
-    if (type.code === CALLKIT_EVENT_CODE.CALLEE_REFUSE || type.code === CALLKIT_EVENT_CODE.CALLEE_BUSY) {
+    if (type.code === CALLKIT_EVENT_CODE.CALLEE_REFUSE || type.code === CALLKIT_EVENT_CODE.CALLEE_BUSY || type.code === CALLKIT_EVENT_CODE.OTHER_HANDLE) {
         ElMessage({
             type: 'error',
             message: ext.message,
