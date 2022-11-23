@@ -1,8 +1,8 @@
 const MSG_TYPE = 'rtcCallWithAgora'
 const CALL_INVITE_TEXT = {
-    0: '邀请您进行语音通话~',
-    1: '邀请您进行视频通话~',
-    2: '邀请您进行多人会议~',
+    0: '邀请您进行语音通话',
+    1: '邀请您进行视频通话',
+    2: '邀请您进行多人通话',
 }
 const CALL_TYPES = {
     SINGLE_VOICE: 0,

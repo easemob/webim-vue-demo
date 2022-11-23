@@ -223,7 +223,7 @@ const handleInviteCall = (handleType) => {
             from: EaseChatClient.user,
             to: toId,
             chatType: CHAT_TYPE.SINGLE,
-            msg: `邀请${toId}进行语音通话～`
+            msg: `邀请【${toId}】进行语音通话`
         }
         store.dispatch('createInformMessage', params)
     }
@@ -236,7 +236,7 @@ const handleInviteCall = (handleType) => {
                 from: EaseChatClient.user,
                 to: toId,
                 chatType: CHAT_TYPE.SINGLE,
-                msg: `邀请${toId}进行视频通话～`
+                msg: `邀请【${toId}】进行视频通话`
             }
             store.dispatch('createInformMessage', params)
         } else if (nowPickInfo.value?.chatType === CHAT_TYPE.GROUP) {
@@ -267,7 +267,7 @@ const sendMulitInviteMsg = (targetIMId) => {
         from: EaseChatClient.user,
         to: groupId,
         chatType: CHAT_TYPE.GROUP,
-        msg: '已发起多人音视频通话～'
+        msg: '已发起多人音视频通话'
     }
     store.dispatch('createInformMessage', params)
 }

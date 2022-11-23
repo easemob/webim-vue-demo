@@ -209,11 +209,11 @@ const handleCallKitCommand = (msgBody) => {
             if (callKitStatus.channelInfos.callType !== 2) { //无论对方是忙碌还是拒接都讲通话状态更改为闲置。
                 if (cmdMsgBody.result === ANSWER_TYPE.BUSY) {
                     eventParams.type = CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.CALLEE_BUSY]
-                    eventParams.ext = { message: '对方正忙～' }
+                    eventParams.ext = { message: '对方正忙' }
                 }
                 if (cmdMsgBody.result === ANSWER_TYPE.REFUSE) {
                     eventParams.type = CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.CALLEE_REFUSE]
-                    eventParams.ext = { message: '对方拒绝接听～' }
+                    eventParams.ext = { message: '对方拒绝接听' }
                 }
                 eventParams.callType = callKitStatus.channelInfos.callType
                 eventParams.eventHxId = msgBody.from || ''
@@ -252,7 +252,7 @@ const handleCallKitCommand = (msgBody) => {
         if (msgBody.from === EaseIMClient.user) return //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
         if (msgBody.from === callKitStatus.channelInfos.callerIMName) return updateLocalStatus(CALLSTATUS.idle)
         eventParams.type = CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.CALLER_CANCEL]
-        eventParams.ext = { message: '对方取消呼叫～' }
+        eventParams.ext = { message: '对方取消呼叫' }
         eventParams.callType = callKitStatus.channelInfos.callType
         eventParams.eventHxId = msgBody.from || ''
         PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
@@ -286,7 +286,7 @@ const handleSendAnswerMsg = (sendType) => {
         //对外频道接听事件发布事件
         const eventParams = {
             type: CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.CALLEE_ACCPET],
-            ext: { message: '通话已接听~' },
+            ext: { message: '通话已接听' },
             callType: callKitStatus.channelInfos.callType,
             eventHxId: channelInfos.callerIMName
         }
@@ -303,7 +303,7 @@ const handleSendAnswerMsg = (sendType) => {
         //对外频道接听事件发布事件
         const eventParams = {
             type: CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.CALLEE_REFUSE],
-            ext: { message: '已拒绝通话邀请~' },
+            ext: { message: '已拒绝通话邀请' },
             callType: callKitStatus.channelInfos.callType,
             eventHxId: channelInfos.callerIMName
         }
@@ -326,7 +326,7 @@ const handleCancelCall = () => {
         //对外频道接听事件发布事件
         const eventParams = {
             type: CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.CANCEL],
-            ext: { message: '多人音视频通话已取消～' },
+            ext: { message: '多人音视频通话已取消' },
             callType: CALL_TYPES.MULTI_VIDEO,
             eventHxId: callKitStatus.channelInfos.groupId
         }
@@ -337,7 +337,7 @@ const handleCancelCall = () => {
         //对外频道接听事件发布事件
         const eventParams = {
             type: CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.CANCEL],
-            ext: { message: '通话已取消～' },
+            ext: { message: '通话已取消' },
             callType: callKitStatus.channelInfos.callType,
             eventHxId: targetId
         }

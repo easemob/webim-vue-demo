@@ -251,7 +251,7 @@ export default function useManageChannel() {
             })
             const eventParams = {
                 type: CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.TIMEOUT],
-                ext: { message: '通话超时未接听～' },
+                ext: { message: '通话超时未接听' },
                 callType: callKitStatus.channelInfos.callType,
                 eventHxId: targetId,
             }

@@ -199,7 +199,7 @@ const leaveChannel = async () => {
     await CallKitClient.leave()
     const eventParams = {
         type: CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.HANGUP],
-        ext: { message: `通话结束【${formatTime.value}】~`, calltime_length: timeCount.value },
+        ext: { message: `通话结束【${formatTime.value}】`, calltime_length: timeCount.value },
         callType: callKitStatus.value.channelInfos.callType,
         eventHxId: callKitStatus.value.channelInfos.callerIMName,
     }
