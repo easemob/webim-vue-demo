@@ -78,6 +78,35 @@ export default class CallKitMessages {
             })
     }
     //发送视频转语音信令
+    sendVideoToVioce(targetId, callId) {
+        console.log('targetId', targetId)
+        try {
+            const option = {
+                type: 'cmd',
+                chatType: 'singleChat',
+                to: targetId,
+                action: this.action,
+                ext: {
+                    action: CALL_ACTIONS_TYPE.VIDEO_TO_VOICE,
+                    callId: callId,
+                    ts: Date.now(),
+                    msgType: MSG_TYPE,
+                },
+            }
+            const msg = this.msgCreateFn.create(option)
+            this.IMClient.send(msg)
+                .then((res) => {
+                    // 消息成功发送回调。
+                    console.log('videotovioce Success', res)
+                })
+                .catch((e) => {
+                    // 消息发送失败回调。
+                    console.log('videotovioc Fail', e)
+                })
+        } catch (error) {
+            console.log('>>>>>失败', error)
+        }
+    }
     //发送给对方确认后的结果
     sendConfirmCallee(payload) {
         const { targetId, sendBody } = payload

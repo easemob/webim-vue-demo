@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { ref, toRaw, onUnmounted } from 'vue'
 import { CALLSTATUS, CALL_ACTIONS_TYPE, ANSWER_TYPE, CALL_TYPES } from './constants'
 import CallKitMessages from './utils/callMessages'
 import { _setImClient } from './constants/imClient'
@@ -260,7 +260,8 @@ const handleCallKitCommand = (msgBody) => {
     }
     case CALL_ACTIONS_TYPE.VIDEO_TO_VOICE: {
         console.log('视频转语音通知')
-        callKitStatus.channelInfos.callType = 0
+        if (cmdMsgBody.callId !== callKitStatus.channelInfos.callType) return
+        callKitStatus.channelInfos.callType = CALL_TYPES.SINGLE_VOICE
         break
     }
 
@@ -319,7 +320,7 @@ const handleCancelCall = () => {
     const targetId = callKitStatus.inviteTarget
     if (!targetId) return console.log('>>>挂断目标ID为空', targetId)
     //多人遍历发送取消
-    if (callKitStatus.channelInfos.callType === 2) {
+    if (callKitStatus.channelInfos.callType === CALL_TYPES.MULTI_VIDEO) {
         targetId.length && targetId.forEach(userHxId => {
             SignalMsgs.sendCannelMsg({ targetId: userHxId, callId: callKitStatus.channelInfos.callId })
         })
@@ -346,6 +347,13 @@ const handleCancelCall = () => {
     }
 
 
+}
+//视频转语音
+const handleVideoToVioce = () => {
+    const { calleeIMName, callerIMName, callId } = callKitStatus.channelInfos
+    const targetId = calleeIMName === EaseIMClient.user ? callerIMName : calleeIMName
+    SignalMsgs.sendVideoToVioce(targetId, callId)
+    callKitStatus.channelInfos.callType = CALL_TYPES.SINGLE_VOICE
 }
 /* 获取agoraToken */
 const getAgoraRtcToken = async (callback) => {
@@ -397,7 +405,7 @@ onUnmounted(() => {
         <component :is="callCompsType[callComponents]" :callKitStatus="callKitStatus" :loginUserHxId="loginUserHxId"
             @getAgoraRtcToken="getAgoraRtcToken" @getAgoraChannelDetails="getAgoraChannelDetails"
             @updateLocalStatus="updateLocalStatus" @onInviteMembers="onInviteMembers"
-            @handleCancelCall="handleCancelCall">
+            @handleCancelCall="handleCancelCall" @handleVideoToVioce="handleVideoToVioce">
         </component>
     </div>
 </template>

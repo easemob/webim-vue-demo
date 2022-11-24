@@ -9,8 +9,6 @@ import MiniStreamContainer from './miniStreamContainer'
 /* image url */
 import microphone from '@/assets/callkit/microphone@2x.png'
 import mutemicrophone from '@/assets/callkit/microphone-mute@2x.png'
-import camera from '@/assets/callkit/camera@2x.png'
-import closecamera from '@/assets/callkit/camera-close@2x.png'
 /* vueUse */
 //Draggable
 import { useDraggable, useMouseInElement, useWindowSize } from '@vueuse/core'
@@ -61,7 +59,7 @@ const isStreamPlay = ref(false)
 const smallContainer = ref(null)
 const mainContainer = ref(null)
 /* emits */
-const emits = defineEmits(['getAgoraRtcToken', 'updateLocalStatus', 'handleCancelCall'])
+const emits = defineEmits(['getAgoraRtcToken', 'updateLocalStatus', 'handleCancelCall', 'handleVideoToVioce'])
 /* AgoraRTC */
 //client 初始化
 let CallKitClient = null
@@ -308,7 +306,7 @@ onBeforeUnmount(() => {
         <div v-show="!isOutside" class="stream_control">
           <template v-if="callKitStatus.localClientStatus === CALLSTATUS.inviting">
             <div class="stream_invite_btn" @click="cancelCall">
-              <img src="@/assets/callkit/hangupCall@2x.png" alt="" draggable="false">
+              <img src="@/assets/callkit/hangupCall@2x.png" alt="取消" draggable="false">
               <p class="btn_text">取消</p>
             </div>
           </template>
@@ -318,13 +316,13 @@ onBeforeUnmount(() => {
               <p class="btn_text">语音</p>
             </div>
             <div class="stream_calling_btn" @click="leaveChannel">
-              <img src="@/assets/callkit/hangupCall@2x.png" alt="" draggable="false">
+              <img src="@/assets/callkit/hangupCall@2x.png" alt="挂断" draggable="false">
               <p class="btn_text">挂断</p>
             </div>
             <div v-show="callKitStatus.channelInfos.callType === 1" class="stream_calling_btn"
-              @click="handleLocalStreamPublish('video')">
-              <img :src="localStreamStatus.video ? camera : closecamera" alt="" draggable="false">
-              <p class="btn_text">视频</p>
+              @click="() => { emits('handleVideoToVioce') }">
+              <img src="@/assets/callkit/change.png" alt="转语音" draggable="false">
+              <p class="btn_text">转语音</p>
             </div>
           </template>
         </div>
