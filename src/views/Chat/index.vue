@@ -20,7 +20,7 @@ const { EVENT_NAME, CALLKIT_EVENT_CODE, SUB_CHANNEL_EVENT, UN_SUB_CHANNEL_ENENT 
 SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
     console.log('%c>>>>>>订阅事件触发', 'color:blue', param)
     /* 
-  事件对外抛出包含有对应的事件type，type/code 可以自行判断处理，ext字段内有对外传出的事件中文描述，可自行选择是否使用。
+事件对外抛出包含有对应的事件type，type/code 可以自行判断处理，ext字段内有对外传出的事件中文描述，可自行选择是否使用。
 */
     const { type, ext, callType, eventHxId } = param
     if (type.code === CALLKIT_EVENT_CODE.CALLEE_REFUSE || type.code === CALLKIT_EVENT_CODE.CALLEE_BUSY || type.code === CALLKIT_EVENT_CODE.OTHER_HANDLE) {
@@ -36,19 +36,26 @@ SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
             msg: ext.message
         }
         store.dispatch('createInformMessage', { ...params })
-    } else {
+    }
+    else if (type.code === CALLKIT_EVENT_CODE.NOT_HAVE_MICROPHONE || type.code === CALLKIT_EVENT_CODE.NOT_HAVE_CAMERA) {
+        ElMessage({
+            type: 'warning',
+            message: ext.message,
+            center: true
+        })
+    }
+    else if (eventHxId) {
         const params = {
             from: EaseChatClient.user,
             to: eventHxId,
             chatType: callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
             msg: ext.message
         }
-
         store.dispatch('createInformMessage', { ...params })
     }
 })
 onBeforeUnmount(() => {
-    UN_SUB_CHANNEL_ENENT('EASECALLKIT')
+    UN_SUB_CHANNEL_ENENT(EVENT_NAME)
 })
 </script>
 <template>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, reactive, computed, toRefs, onMounted, onBeforeUnmount } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
-import { CALLSTATUS } from '../constants'
+import { CALLSTATUS, CALL_TYPES } from '../constants'
 /* hooks */
 import { useCallKitEvent } from '../hooks'
 /*mini组件*/
@@ -47,6 +47,8 @@ const props = defineProps({
     }
 })
 const { callKitStatus } = toRefs(props)
+/* 对外发布频道内事件 */
+const { EVENT_NAME, CALLKIT_EVENT_TYPE, CALLKIT_EVENT_CODE, PUB_CHANNEL_EVENT } = useCallKitEvent()
 /* 视频UI控制 */
 //是否最小化
 const isMiniSize = ref(false)
@@ -70,6 +72,40 @@ const localStreamStatus = reactive({
     video: false
 })
 CallKitClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
+//媒体设备检查
+const checkMediaDevice = async (callType) => {
+    console.log('%c开启媒体检查', 'color:green')
+    const eventParams = {
+        type: {},
+        ext: {},
+        callType: callType
+    }
+
+    if (callType === CALL_TYPES.SINGLE_VOICE) {
+        const devices = await AgoraRTC.getMicrophones()
+        if (!devices.length) {
+            eventParams.type = CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.NOT_HAVE_MICROPHONE]
+            eventParams.ext.message = '未发现音频输入设备，请检查麦克风'
+            PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
+        }
+        console.log('getMicrophones devices', devices)
+    }
+    if (callType === CALL_TYPES.SINGLE_VIDEO) {
+        const devices = await AgoraRTC.getCameras()
+        const devices2 = await AgoraRTC.getMicrophones()
+        if (!devices.length) {
+            eventParams.type = CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.NOT_HAVE_CAMERA]
+            eventParams.ext.message = '未发现视频输入设备，请检查摄像头'
+            PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
+        }
+        if (!devices2) {
+            eventParams.type = CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.NOT_HAVE_MICROPHONE]
+            eventParams.ext.message = '未发现音频输入设备，请检查麦克风'
+            PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
+        }
+        console.log('getCameras devices', devices, devices2)
+    }
+}
 //Agora listenner
 const setAgoraRtcListener = () => {
     console.log('>>>>>AgoraRtc监听挂载完毕')
@@ -110,12 +146,11 @@ const setAgoraRtcListener = () => {
         leaveChannel()
     })
 }
+
 //挂载Agora监听
 onMounted(() => {
     setAgoraRtcListener()
 })
-/* 对外发布频道内事件 */
-const { EVENT_NAME, EVENT_LEVEL, CALLKIT_EVENT_TYPE, CALLKIT_EVENT_CODE, PUB_CHANNEL_EVENT } = useCallKitEvent()
 /* 频道控制 */
 //监听本地端状态
 watch(() => callKitStatus.value.localClientStatus, (newVal, oldVal) => {
@@ -161,6 +196,7 @@ const joinChannel = async () => {
     const agoraUserId = channelInfos.agoraUserId
     const callType = channelInfos.callType
     try {
+        checkMediaDevice(callType)
         await CallKitClient.join(AgoraAppId, channelName, agoraChannelToken, agoraUserId)
         console.log('>>>>加入频道成功')
         //开启房间通话计时
@@ -169,12 +205,12 @@ const joinChannel = async () => {
         // Create a local video track from the video captured by a camera.
         localVideoTrack = await AgoraRTC.createCameraVideoTrack()
 
-        if (callType === 0) {
+        if (callType === CALL_TYPES.SINGLE_VOICE) {
             localVoiceTrack && await CallKitClient.publish(localVoiceTrack)
             handleLocalStreamPublish('voice')
             console.log('%c---本地轨道音频推流成功', 'color:green')
         }
-        if (callType === 1) {
+        if (callType === CALL_TYPES.SINGLE_VIDEO) {
             if (localVoiceTrack && localVideoTrack) await CallKitClient.publish([localVoiceTrack, localVideoTrack])
             setTimeout(() => {
                 localVideoTrack.play(smallContainer.value)

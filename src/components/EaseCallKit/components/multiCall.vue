@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, computed, watch, nextTick, toRaw, toRefs, onMounted, onBeforeUnmount } from 'vue'
 import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc'
-import { CALLSTATUS } from '../constants'
+import { CALLSTATUS, CALL_TYPES } from '../constants'
 /* hooks */
 import { useCallKitEvent } from '../hooks'
 /*mini组件*/
@@ -148,6 +148,39 @@ const setAgoraRtcListener = () => {
         }
     })
 }
+//媒体设备检查
+const checkMediaDevice = async (callType) => {
+    console.log('%c开启媒体检查', 'color:green')
+    const eventParams = {
+        type: {},
+        ext: {},
+        callType: callType || CALL_TYPES.MULTI_VIDEO
+    }
+
+    if (callType === CALL_TYPES.SINGLE_VOICE) {
+        const devices = await AgoraRTC.getMicrophones()
+        if (!devices.length) {
+            eventParams.type = CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.NOT_HAVE_MICROPHONE]
+            eventParams.ext.message = '未发现音频输入设备，请检查麦克风'
+            PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
+        }
+        console.log('getMicrophones devices', devices)
+    } else if (callType === CALL_TYPES.SINGLE_VIDEO || !callType) {
+        const devices = await AgoraRTC.getCameras()
+        const devices2 = await AgoraRTC.getMicrophones()
+        if (!devices.length) {
+            eventParams.type = CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.NOT_HAVE_CAMERA]
+            eventParams.ext.message = '未发现视频输入设备，请检查摄像头'
+            PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
+        }
+        if (!devices2) {
+            eventParams.type = CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.NOT_HAVE_MICROPHONE]
+            eventParams.ext.message = '未发现音频输入设备，请检查麦克风'
+            PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
+        }
+        console.log('getCameras devices', devices, devices2)
+    }
+}
 onMounted(() => {
     setAgoraRtcListener()
 })
@@ -204,6 +237,7 @@ const joinChannel = async () => {
     const channelName = channelInfos.channelName
     const agoraChannelToken = channelInfos.agoraChannelToken
     const agoraUserId = channelInfos.agoraUserId
+    checkMediaDevice()
     try {
         await CallKitClient.join(AgoraAppId, channelName, agoraChannelToken, agoraUserId)
         startInChannelTimer()
