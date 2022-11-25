@@ -39,19 +39,20 @@ const showEmojisBox = () => {
 //发送文本内容
 const textContent = ref('')
 const sendTextMessage = _.debounce(async () => {
+    //如果输入框全部为空格同样拒绝发送
     if (textContent.value.match(/^\s*$/)) return
     const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
         msg: textContent.value,
     }
+    textContent.value = ''
     try {
         await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.TEXT, msgOptions })
-        textContent.value = ''
     } catch (error) {
         console.log('>>>>>>>发送失败+++++++', error)
     }
-}, 300)
+}, 50)
 //新增一个emoji
 const addOneEmoji = (emoji) => {
     console.log('>>>>>>emoji', emoji)
