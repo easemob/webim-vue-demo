@@ -518,6 +518,8 @@ onBeforeUnmount(() => {
     height: 350px;
     margin: 5px 0;
     border-radius: 3px;
+    background: url('../../../assets/callkit/rtc-bg@2x.png') no-repeat;
+    background-size: 100% 100%;
     overflow: hidden;
 }
 
