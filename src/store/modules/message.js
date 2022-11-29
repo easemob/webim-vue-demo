@@ -2,7 +2,7 @@ import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
 import {
     handleSDKErrorNotifi,
     setMessageKey,
-    createMessage,
+    createMessage
 } from '@/utils/handleSomeData'
 import _ from 'lodash'
 // import { ref, toRaw } from 'vue';
@@ -11,7 +11,7 @@ import { usePlayRing } from '@/hooks'
 const { ALL_MESSAGE_TYPE } = messageType
 const Message = {
     state: {
-        messageList: {},
+        messageList: {}
     },
     mutations: {
         UPDATE_MESSAGE_LIST: (state, msgBody) => {
@@ -51,7 +51,10 @@ const Message = {
             const { type, key, mid } = payload
             if (type === 'recall') {
                 if (state.messageList[key]) {
-                    const res = _.find(state.messageList[key], (o) => o.id === mid)
+                    const res = _.find(
+                        state.messageList[key],
+                        (o) => o.id === mid
+                    )
                     res.isRecall = true
                 }
             }
@@ -66,10 +69,10 @@ const Message = {
                     state.messageList[key] = _.assign([], sourceData)
                 }
             }
-        },
+        }
     },
     actions: {
-    //添加新消息
+        //添加新消息
         createNewMessage: ({ dispatch, commit }, params) => {
             const { isOpenPlayRing, playRing } = usePlayRing()
             const key = setMessageKey(params)
@@ -87,20 +90,19 @@ const Message = {
                     pageSize: 10,
                     cursor: cursor,
                     chatType: chatType,
-                    searchDirection: 'up',
+                    searchDirection: 'up'
                 }
                 try {
-                    const { cursor, messages } = await EaseChatClient.getHistoryMessages(
-                        options
-                    )
+                    const { cursor, messages } =
+                        await EaseChatClient.getHistoryMessages(options)
                     messages.length > 0 &&
-            messages.forEach((item) => {
-                item.read = true
-            })
+                        messages.forEach((item) => {
+                            item.read = true
+                        })
                     resolve({ messages, cursor })
                     commit('UPDATE_HISTORY_MESSAGE', {
                         listKey: id,
-                        historyMessage: _.reverse(messages),
+                        historyMessage: _.reverse(messages)
                     })
                     //提示会话列表更新
                     dispatch('gatherConversation', id)
@@ -117,7 +119,10 @@ const Message = {
                 const errorCallback = (error) => {
                     reject(error)
                 }
-                const options = createMessage.createOptions(params, errorCallback)
+                const options = createMessage.createOptions(
+                    params,
+                    errorCallback
+                )
                 const msg = EaseChatSDK.message.create(options)
                 try {
                     const { serverMsgId } = await EaseChatClient.send(msg)
@@ -158,7 +163,11 @@ const Message = {
             return new Promise(async (resolve, reject) => {
                 try {
                     await EaseChatClient.recallMessage({ mid, to, chatType })
-                    commit('CHANGE_MESSAGE_BODAY', { type: 'recall', key: to, mid })
+                    commit('CHANGE_MESSAGE_BODAY', {
+                        type: 'recall',
+                        key: to,
+                        mid
+                    })
                     dispatch('gatherConversation', to)
                     resolve('OK')
                 } catch (error) {
@@ -167,7 +176,7 @@ const Message = {
                     reject(error)
                 }
             })
-        },
-    },
+        }
+    }
 }
 export default Message
