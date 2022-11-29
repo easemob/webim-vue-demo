@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, toRefs, watch, computed, defineProps, defineEmits } from 'vue'
-import store from '@/store';
-import EaseIM from '@/IM/initwebsdk'
+import store from '@/store'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import { ElNotification } from 'element-plus'
 const props = defineProps({
     dialogVisible: {
@@ -15,8 +15,8 @@ const applyAddFriendsForm = reactive({
     username: '',
     applyFriendMessage: ''
 })
-const friendList = computed(() => store.state.Contacts.friendList);
-console.log('>>>>>好友列表', friendList.value);
+const friendList = computed(() => store.state.Contacts.friendList)
+console.log('>>>>>好友列表', friendList.value)
 const applyAddFriends = () => {
     if (!applyAddFriendsForm.username) return ElNotification({
         title: '好友操作',
@@ -30,14 +30,14 @@ const applyAddFriends = () => {
         center: true,
         type: 'warning',
     })
-    if (applyAddFriendsForm.username === EaseIM.conn.user) return ElNotification({
+    if (applyAddFriendsForm.username === EaseChatClient.user) return ElNotification({
         title: '好友操作',
         message: '不可添加自己为好友！',
         center: true,
         type: 'warning',
     })
     try {
-        EaseIM.conn.addContact(applyAddFriendsForm.username, applyAddFriendsForm.applyFriendMessage);
+        EaseChatClient.addContact(applyAddFriendsForm.username, applyAddFriendsForm.applyFriendMessage)
         ElNotification({
             title: '好友操作',
             message: '好友申请已发送！',

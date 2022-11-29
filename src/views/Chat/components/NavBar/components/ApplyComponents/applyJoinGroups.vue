@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, toRefs, watch, defineProps, defineEmits } from 'vue'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import { ElNotification } from 'element-plus'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 const props = defineProps({
@@ -17,12 +17,12 @@ const applyJoinGroupsForm = reactive({
 })
 //判断是否为公开群
 const getTheGroupIsPublic = async (groupId) => {
-    console.log('groupId', groupId);
+    console.log('groupId', groupId)
     try {
-        let res = await EaseIM.conn.getGroupInfo({ groupId: groupId + '' })
-        console.log('>>>>获取成功', res);
+        const res = await EaseChatClient.getGroupInfo({ groupId: groupId + '' })
+        console.log('>>>>获取成功', res)
         if (res && res?.data && res.data[0]?.public === false) {
-            Promise.resolve(false);
+            Promise.resolve(false)
             return ElNotification({
                 title: '申请入群',
                 message: '该群为私有群不可主动申请！',
@@ -32,7 +32,7 @@ const getTheGroupIsPublic = async (groupId) => {
             return Promise.resolve(true)
         }
     } catch (error) {
-        console.log('>>>>>>>获取群组信息失败', error);
+        console.log('>>>>>>>获取群组信息失败', error)
         if (error.type === 17) {
             ElNotification({
                 title: '申请入群',
@@ -55,15 +55,15 @@ const joinGroups = async () => {
         type: 'warning',
     })
     //如果获取到期群组详情中的public为false代表为私有群（私有群不可主动申请加入）
-    let isPublic = await getTheGroupIsPublic(applyJoinGroupsForm.groupId)
-    console.log('isPublic', isPublic);
-    if (!isPublic) return;
-    let options = {
+    const isPublic = await getTheGroupIsPublic(applyJoinGroupsForm.groupId)
+    console.log('isPublic', isPublic)
+    if (!isPublic) return
+    const options = {
         groupId: applyJoinGroupsForm.groupId + '',         // 群组ID
         message: applyJoinGroupsForm.applyJoinMessage       // 请求信息
-    };
+    }
     try {
-        await EaseIM.conn.joinGroup(options)
+        await EaseChatClient.joinGroup(options)
         ElNotification({
             title: '群组操作',
             message: '群申请已发送！',
@@ -71,7 +71,7 @@ const joinGroups = async () => {
         })
     } catch (error) {
         const { type, data, message } = error
-        console.log('>>>>>申请失败', error);
+        console.log('>>>>>申请失败', error)
         if (error.data) {
             if (JSON.parse(data).error_description.includes('blacklist')) {
                 handleSDKErrorNotifi(type, 'blacklist')

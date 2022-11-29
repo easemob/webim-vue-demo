@@ -19,33 +19,33 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
 
 //搜索部分的总数据
 const searchData = computed(() => {
-  let totalsearchData = Object.assign(_.cloneDeep(friendList.value), _.cloneDeep(joinedGroupList.value))
-  return Object.values(totalsearchData)
+    const totalsearchData = Object.assign(_.cloneDeep(friendList.value), _.cloneDeep(joinedGroupList.value))
+    return Object.values(totalsearchData)
 })
 // console.log('searchDatasearchData', searchData.value)
 /* 路由跳转 */
 //跳转至inform
 const toInformDetails = () => {
-  router.push('/chat/contacts/informdetails');
+    router.push('/chat/contacts/informdetails')
 }
 //跳转至 contactInfo
 const toContacts = ({ id, chatType }) => {
-  console.log('>>>>>>触发跳转')
-  router.push({ path: '/chat/contacts/contactInfo', query: { id: id, chatType: chatType } })
+    console.log('>>>>>>触发跳转')
+    router.push({ path: '/chat/contacts/contactInfo', query: { id: id, chatType: chatType } })
 }
 
 //取网络状态
 const networkStatus = computed(() => {
-  return store.state.networkStatus
+    return store.state.networkStatus
 })
 
 //取系统通知数据
 const informDetail = computed(() => {
-  let informDetailArr = store.state.Conversation.informDetail;
-  let lastInformDeatail = informDetailArr[0] || {}
-  let untreated = _.sumBy(informDetailArr, 'untreated') || 0;
-  return { untreated, lastInformDeatail };
-});
+    const informDetailArr = store.state.Conversation.informDetail
+    const lastInformDeatail = informDetailArr[0] || {}
+    const untreated = _.sumBy(informDetailArr, 'untreated') || 0
+    return { untreated, lastInformDeatail }
+})
 </script>
 
 

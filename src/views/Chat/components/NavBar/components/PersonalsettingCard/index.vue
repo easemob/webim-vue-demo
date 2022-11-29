@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { usePlayRing } from '@/hooks';
+import { ref } from 'vue'
+import { usePlayRing } from '@/hooks'
 const dialogVisible = ref(false)
 const { isOpenPlayRing } = usePlayRing()
 

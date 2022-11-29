@@ -1,16 +1,20 @@
 <script setup>
-import { ref, toRefs, defineProps } from 'vue';
-import { useStore } from 'vuex';
-import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
-import { ElLoading, ElMessageBox } from 'element-plus';
-import { onClickOutside } from '@vueuse/core';
-import { emojis } from '@/constant';
+import { ref, toRefs, defineProps } from 'vue'
+import { useStore } from 'vuex'
+import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
+import { ElLoading, ElMessageBox } from 'element-plus'
+import { onClickOutside } from '@vueuse/core'
+import { emojis } from '@/constant'
 import { messageType } from '@/constant'
 import _ from 'lodash'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
 /* 组件 */
 import CollectAudio from './suit/audio.vue'
-const store = useStore();
+//EaseCallKit Invite
+import { useManageChannel } from '@/components/EaseCallKit/hooks'
+//inviteMembers modal
+import InviteCallMembers from '@/components/InviteCallMembers'
+const store = useStore()
 const props = defineProps({
     nowPickInfo: {
         type: Object,
@@ -18,7 +22,7 @@ const props = defineProps({
         default: () => ({})
     }
 })
-const { ALL_MESSAGE_TYPE } = messageType;
+const { ALL_MESSAGE_TYPE, CHAT_TYPE } = messageType
 const { nowPickInfo } = toRefs(props)
 //加载状态
 const loadingBox = ref(null)
@@ -27,7 +31,7 @@ const loadingBox = ref(null)
 //emojis框展开
 const isShowEmojisBox = ref(false)
 const emojisBox = ref(null)
-onClickOutside(emojisBox, () => { isShowEmojisBox.value = false; })
+onClickOutside(emojisBox, () => { isShowEmojisBox.value = false })
 const showEmojisBox = () => {
     console.log('>>>>>展开模态框')
     isShowEmojisBox.value = true
@@ -35,22 +39,23 @@ const showEmojisBox = () => {
 //发送文本内容
 const textContent = ref('')
 const sendTextMessage = _.debounce(async () => {
+    //如果输入框全部为空格同样拒绝发送
     if (textContent.value.match(/^\s*$/)) return
-    let msgOptions = {
+    const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
         msg: textContent.value,
     }
+    textContent.value = ''
     try {
         await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.TEXT, msgOptions })
-        textContent.value = ""
     } catch (error) {
         console.log('>>>>>>>发送失败+++++++', error)
     }
-}, 300)
+}, 50)
 //新增一个emoji
 const addOneEmoji = (emoji) => {
-    console.log('>>>>>>emoji', emoji);
+    console.log('>>>>>>emoji', emoji)
     textContent.value = textContent.value + emoji
 
 }
@@ -65,17 +70,17 @@ const chooseImages = () => {
 //发送图片
 const sendImagesMessage = async () => {
     //读取图片的宽高
-    let imgFile = uploadImgs.value.files[0];
-    let file = {
+    const imgFile = uploadImgs.value.files[0]
+    const file = {
         data: imgFile,           // file 对象。
         filename: imgFile.name, //文件名称。
         filetype: imgFile.type, //文件类型。
     }
-    console.log('imgFile', file);
-    let url = window.URL || window.webkitURL;
-    let img = new Image();              //手动创建一个Image对象
-    img.src = url.createObjectURL(imgFile);//创建Image的对象的url
-    let msgOptions = {
+    console.log('imgFile', file)
+    const url = window.URL || window.webkitURL
+    const img = new Image()              //手动创建一个Image对象
+    img.src = url.createObjectURL(imgFile)//创建Image的对象的url
+    const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
         file: file,
@@ -84,22 +89,22 @@ const sendImagesMessage = async () => {
     }
     img.onload = async () => {
         const loadingInstance = ElLoading.service({ target: loadingBox.value, background: '#f7f7f7' })
-        msgOptions.width = img.width;
-        msgOptions.height = img.height;
+        msgOptions.width = img.width
+        msgOptions.height = img.height
         console.log('height:' + img.height + '----' + img.width)
         try {
             await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.IMAGE, msgOptions: _.cloneDeep(msgOptions) })
             loadingInstance.close()
-            uploadImgs.value.value = null;
+            uploadImgs.value.value = null
         } catch (error) {
-            console.log('>>>>>发送失败', error);
+            console.log('>>>>>发送失败', error)
             if (error.type && error?.data) {
                 handleSDKErrorNotifi(error.type, error.data.error || 'none')
             } else {
                 handleSDKErrorNotifi(0, 'none')
             }
             loadingInstance.close()
-            uploadImgs.value.value = null;
+            uploadImgs.value.value = null
         }
 
     }
@@ -108,21 +113,21 @@ const sendImagesMessage = async () => {
 }
 /* 文件消息相关 */
 //选择文件
-const uploadFiles = ref(null);
+const uploadFiles = ref(null)
 const chooseFiles = () => {
     uploadFiles.value.click()
 }
 //发送文件
 const sendFilesMessages = async () => {
-    let commonFile = uploadFiles.value.files[0];
-    let file = {
+    const commonFile = uploadFiles.value.files[0]
+    const file = {
         data: commonFile,           // file 对象。
         filename: commonFile.name, //文件名称。
         filetype: commonFile.type, //文件类型。
         size: commonFile.size
     }
     console.log('>>>>>调用发送文件', file)
-    let msgOptions = {
+    const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
         file: file,
@@ -131,16 +136,16 @@ const sendFilesMessages = async () => {
     try {
         await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.FILE, msgOptions: _.cloneDeep(msgOptions) })
         loadingInstance.close()
-        uploadFiles.value.value = null;
+        uploadFiles.value.value = null
     } catch (error) {
-        console.log('>>>>file error', error);
+        console.log('>>>>file error', error)
         if (error.type && error?.data) {
             handleSDKErrorNotifi(error.type, error.data.error || 'none')
         } else {
             handleSDKErrorNotifi(0, 'none')
         }
 
-        uploadFiles.value.value = null;
+        uploadFiles.value.value = null
         loadingInstance.close()
     }
 
@@ -150,19 +155,19 @@ const sendFilesMessages = async () => {
 const isHttps = window.location.protocol === 'https:' || window.location.hostname === 'localhost'
 const isShowRecordBox = ref(false)
 const recordBox = ref(null)
-onClickOutside(recordBox, () => { isShowRecordBox.value = false; })
+onClickOutside(recordBox, () => { isShowRecordBox.value = false })
 const showRecordBox = () => {
     isShowRecordBox.value = true
 }
 const sendAudioMessages = async (audioData) => {
-    let file = {
-        url: EaseIM.utils.parseDownloadResponse(audioData.src),
-        filename: "录音",
-        filetype: ".amr",
+    const file = {
+        url: EaseChatSDK.utils.parseDownloadResponse(audioData.src),
+        filename: '录音',
+        filetype: '.amr',
         data: audioData.src
-    };
+    }
     console.log('>>>>>audioData', audioData, file)
-    let msgOptions = {
+    const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
         file: file,
@@ -185,14 +190,14 @@ const sendAudioMessages = async (audioData) => {
 const clearScreen = () => {
     ElMessageBox.confirm('确认清空当前消息内容？',
         '消息清屏', {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'warning',
-    }).then(() => {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }).then(() => {
         const key = nowPickInfo.value.id
         store.commit('CLEAR_SOMEONE_MESSAGE', key)
     }).catch(() => {
-        return false;
+        return false
     })
 
 }
@@ -202,9 +207,71 @@ const all_func = [
     { 'className': 'icon-tuku', 'style': 'font-size: 26px;', 'title': '发送图片', 'methodName': chooseImages },
     { 'className': 'icon-wenjian', 'style': 'font-size: 20px;', 'title': '发送文件', 'methodName': chooseFiles },
     { 'className': 'icon-01', 'style': 'font-size: 20px;', 'title': '发送语音', 'methodName': showRecordBox },
-    { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen },
+    { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen }
 ]
 
+/* About EaseCallKit */
+const { CALL_TYPES, sendInviteMessage } = useManageChannel()
+//处理发起的音视频呼叫类型
+const handleInviteCall = (handleType) => {
+    const toId = nowPickInfo.value.id
+    //语音类型
+    if (handleType === 'voice') {
+        const callType = CALL_TYPES.SINGLE_VOICE
+        sendInviteMessage(toId, callType)
+        //发送邀请信息后创建一条本地系统通知类消息上屏展示
+        const params = {
+            from: EaseChatClient.user,
+            to: toId,
+            chatType: CHAT_TYPE.SINGLE,
+            msg: `邀请【${toId}】进行语音通话`
+        }
+        store.dispatch('createInformMessage', params)
+    }
+    if (handleType === 'video') {
+        if (nowPickInfo.value?.chatType === CHAT_TYPE.SINGLE) {
+            const callType = CALL_TYPES.SINGLE_VIDEO
+            sendInviteMessage(toId, callType)
+            //发送邀请信息后创建一条本地系统通知类消息上屏展示
+            const params = {
+                from: EaseChatClient.user,
+                to: toId,
+                chatType: CHAT_TYPE.SINGLE,
+                msg: `邀请【${toId}】进行视频通话`
+            }
+            store.dispatch('createInformMessage', params)
+        } else if (nowPickInfo.value?.chatType === CHAT_TYPE.GROUP) {
+            //群组则弹出多人模态框
+            showInviteCallMembersModal()
+        }
+    }
+}
+const inviteCallMembersComp = ref(null)
+//调起多人邀请组件
+const showInviteCallMembersModal = () => {
+    console.log('>>>>>>>邀请多人modal弹出')
+    const groupId = nowPickInfo.value.id
+    if (groupId) {
+        inviteCallMembersComp.value.alertDialog(groupId)
+    } else {
+        console.warn('请传入groupId')
+    }
+
+}
+//发送多人场景邀请信息的方法
+const sendMulitInviteMsg = (targetIMId) => {
+    console.log('>>>>>要发送的用户列表', targetIMId)
+    const callType = CALL_TYPES.MULTI_VIDEO
+    const groupId = nowPickInfo.value.id
+    sendInviteMessage(targetIMId, callType, groupId)
+    const params = {
+        from: EaseChatClient.user,
+        to: groupId,
+        chatType: CHAT_TYPE.GROUP,
+        msg: '已发起多人音视频通话'
+    }
+    store.dispatch('createInformMessage', params)
+}
 defineExpose({
     textContent
 })
@@ -213,6 +280,15 @@ defineExpose({
     <div class="chat_func_box">
         <span v-for="iconItem in all_func" :class="['iconfont', iconItem.className]" :key="iconItem.className"
             :style="iconItem.style" :title="iconItem.title" @click.stop="iconItem.methodName"></span>
+        <!-- EaseCallKit 音视频邀请icon【不需要可移除】 -->
+        <!-- 群组没有语音发起 -->
+        <template v-if="isHttps">
+            <span class="iconfont icon-31dianhua" style="font-size:20px" title="语音通话"
+                v-show="nowPickInfo.chatType === CHAT_TYPE.SINGLE" @click="handleInviteCall('voice')"></span>
+            <span class="iconfont icon-video" style="font-size:20px" title="视频通话"
+                @click="handleInviteCall('video')"></span>
+        </template>
+
         <!-- 表情框 -->
         <el-scrollbar ref="emojisBox" v-if="isShowEmojisBox" class="emojis_box" tag="div">
             <span class="emoji" v-for="(emoji, index) in emojis" :key="index" @click="addOneEmoji(emoji)">{{ emoji
@@ -234,8 +310,9 @@ defineExpose({
         contenteditable="true" placeholder="请输入消息内容..." onkeydown="if (event.keyCode === 13) event.preventDefault();"
         @keyup.enter="sendTextMessage">
     </textarea>
-    <el-button :class="[textContent === ''?'no_content_send_btn': 'chat_send_btn']" type="primary"
+    <el-button :class="[textContent === '' ? 'no_content_send_btn' : 'chat_send_btn']" type="primary"
         @click="sendTextMessage">发送</el-button>
+    <InviteCallMembers ref="inviteCallMembersComp" @sendMulitInviteMsg="sendMulitInviteMsg" />
 </template>
 
 <style lang="scss" scoped>

@@ -1,8 +1,8 @@
 <script setup>
 import { ref, toRaw, computed } from 'vue'
-import { ElMessage } from 'element-plus';
-import { Close, EditPen, Phone, Message, Flag } from '@element-plus/icons-vue';
-import _ from 'lodash';
+import { ElMessage } from 'element-plus'
+import { Close, EditPen, Phone, Message, Flag } from '@element-plus/icons-vue'
+import _ from 'lodash'
 /* store */
 import store from '@/store'
 /* 头像相关 */
@@ -12,8 +12,8 @@ const avatarBaseUrl = 'https://download-sdk.oss-cn-beijing.aliyuncs.com/download
 const bodyIcon = require('@/assets/images/gender/Group76.png')
 const girlIcon = require('@/assets/images/gender/Group77.png')
 const genderIcon = {
-    "1": bodyIcon,
-    "2": girlIcon
+    '1': bodyIcon,
+    '2': girlIcon
 }
 const loginUserId = computed(() => { return store.state.loginUserInfo.hxId })
 const SEX_TEXT = {
@@ -22,9 +22,9 @@ const SEX_TEXT = {
     '2': '女'
 }
 /* 用户属性功能相关 */
-let isEdit = ref(false)
+const isEdit = ref(false)
 const dialogVisible = ref(false)
-let userInfos = ref({
+const userInfos = ref({
     nickname: '',
     avatarurl: '',
     mail: '123@qq.com',
@@ -48,8 +48,8 @@ const setUserInfos = () => {
 }
 //点击待选的用户头像
 const chooseAvatar = (avatarNum) => {
-    let fullAvatarUrl = `${avatarBaseUrl}Image${avatarNum}.png`
-    userInfos.value.avatarurl = fullAvatarUrl;
+    const fullAvatarUrl = `${avatarBaseUrl}Image${avatarNum}.png`
+    userInfos.value.avatarurl = fullAvatarUrl
 }
 //完成保存其修改后的用户属性值
 const saveEditedUserInfos = async () => {

@@ -1,19 +1,19 @@
 <script setup>
 import { ref, toRefs, toRaw, computed, watch } from 'vue'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import {
     CircleClose,
     Search,
     CircleCheckFilled,
     Select
-} from '@element-plus/icons-vue';
+} from '@element-plus/icons-vue'
 /* 拼音排序好友列表 */
 import { sortPinyinFriendItem } from '@/utils/handleSomeData'
 /* store */
 import store from '@/store'
-import _ from 'lodash';
+import _ from 'lodash'
 
-import defaultAvatar from '@/assets/images/avatar/theme2x.png';
+import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 /* props */
 const props = defineProps({
     groupDetail: {
@@ -34,11 +34,11 @@ const { groupDetail, memberRole } = toRefs(props)
     * 中间涉及到一些权限判断，大量使用了 v-if 后续建议挪到计算属性中处理。
  **/
 /* 当前登陆的id */
-const loginUserId = computed(() => EaseIM.conn.user)
+const loginUserId = computed(() => EaseChatClient.user)
 /* 数据获取 */
 //群组成员
 const groupMembers = computed(() => {
-    return store.state.Groups.groupsInfos[groupDetail.value.id].members;
+    return store.state.Groups.groupsInfos[groupDetail.value.id].members
 })
 
 /* 群成员操作相关 */
@@ -54,22 +54,22 @@ const showGroupsMembersName = computed(() => {
 })
 
 //待渲染的群成员
-let renderGroupMembers = ref(null);
+const renderGroupMembers = ref(null)
 //选中要邀请的成员list
 const checkedInviteMembers = computed(() => {
-    let list = _.values(renderGroupMembers.value)
-    let toBeInviteList = list.length > 0 && list.filter(m => m.isChecked)
+    const list = _.values(renderGroupMembers.value)
+    const toBeInviteList = list.length > 0 && list.filter(m => m.isChecked)
     return toBeInviteList
 })
 //将原数据重新组建
 const sortedFriendList = computed(() => {
-    const sourceData = _.cloneDeep(store.state.Contacts.friendList);
+    const sourceData = _.cloneDeep(store.state.Contacts.friendList)
     for (const key in sourceData) {
         if (Object.hasOwnProperty.call(sourceData, key)) {
-            const v = sourceData[key];
-            v.name = v.nickname ? v.nickname : v.hxId;
-            v.isChecked = false;
-            v.exitTheGroup = groupMembers.value && toRaw(groupMembers.value).some((m) => m.member === v.hxId);
+            const v = sourceData[key]
+            v.name = v.nickname ? v.nickname : v.hxId
+            v.isChecked = false
+            v.exitTheGroup = groupMembers.value && toRaw(groupMembers.value).some((m) => m.member === v.hxId)
             v.keywords = `${v.hxId && v.hxId}${v.nickname && v.nickname || ''}`
         }
     }
@@ -77,39 +77,39 @@ const sortedFriendList = computed(() => {
 })
 //监听到选择群id变化重新进行赋值
 watch(() => groupDetail.value.id, () => {
-    renderGroupMembers.value = sortedFriendList.value;
+    renderGroupMembers.value = sortedFriendList.value
 }, {
     immediate: true
 })
 
 //取消邀请
 const cancelCheck = (params) => {
-    renderGroupMembers.value[params].isChecked = false;
+    renderGroupMembers.value[params].isChecked = false
 }
 //移出群成员
 const removeTheMember = async (params) => {
-    const { member } = params;
-    let groupId = groupDetail.value && groupDetail.value.id
+    const { member } = params
+    const groupId = groupDetail.value && groupDetail.value.id
     store.dispatch('removeTheGroupMember', { username: member, groupId })
 }
 /* 完成操作 */
 const saveHandleMembers = async () => {
     if (checkedInviteMembers.value && checkedInviteMembers.value.length) {
-        let users = _.map(checkedInviteMembers.value, 'hxId')
-        let groupId = groupDetail.value && groupDetail.value.id
+        const users = _.map(checkedInviteMembers.value, 'hxId')
+        const groupId = groupDetail.value && groupDetail.value.id
         await store.dispatch('inviteUserJoinTheGroup', { users, groupId })
     }
 }
 
 /* 搜索逻辑 */
 //创建用户搜索部分
-let serachInputValue = ref('')
-let isShowSearchContent = ref(false) //控制检索内容显隐
-let searchResultList = ref([])
+const serachInputValue = ref('')
+const isShowSearchContent = ref(false) //控制检索内容显隐
+const searchResultList = ref([])
 const searchUsers = () => {
     if (serachInputValue.value) {
         isShowSearchContent.value = true
-        let resultArr = _.filter(sortedFriendList.value, (v) => v.keywords.includes(serachInputValue.value))
+        const resultArr = _.filter(sortedFriendList.value, (v) => v.keywords.includes(serachInputValue.value))
         searchResultList.value = resultArr
     } else {
         return isShowSearchContent.value = false

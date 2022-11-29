@@ -1,89 +1,87 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch } from 'vue'
 /* vuex */
-import { useStore } from 'vuex';
+import { useStore } from 'vuex'
 /* router */
-import router from '@/router';
+import router from '@/router'
 /* route */
-import { useRoute } from 'vue-router';
+import { useRoute } from 'vue-router'
 /* lodash */
-import _ from 'lodash';
+import _ from 'lodash'
 /* icon */
-import { Plus } from '@element-plus/icons-vue';
+import { Plus } from '@element-plus/icons-vue'
 /* 组件 */
-import MiniInfoCard from './components/AboutUserInfoCard/MiniInfoCard.vue';
-import UserOnlineStatusCard from './components/UserOnlineStatusCard.vue';
+import MiniInfoCard from './components/AboutUserInfoCard/MiniInfoCard.vue'
+import UserOnlineStatusCard from './components/UserOnlineStatusCard.vue'
 import ApplyComponents from './components/ApplyComponents'
-import Logout from './components/Logout.vue';
+import Logout from './components/Logout.vue'
 import EditUserInfoCard from './components/AboutUserInfoCard/EditUserInfoCard.vue'
 import PersonalsettingCard from './components/PersonalsettingCard'
 /* constants */
-import { onLineStatus } from '@/constant';
+import { onLineStatus } from '@/constant'
 /* vueUse */
-import { onClickOutside } from '@vueuse/core';
+import { onClickOutside } from '@vueuse/core'
 const route = useRoute()
-
-
-const store = useStore();
+const store = useStore()
 /* 取用户头像 */
-let loginUserAvatar = computed(() => {
-  return store.getters.loginUserInfo.avatarurl;
-});
+const loginUserAvatar = computed(() => {
+    return store.getters.loginUserInfo.avatarurl
+})
 
 /* 用户在线状态--样式展示逻辑 */
-let loginUserOnlineStatusIcon = computed(() => {
-  const loginUserOnlineStatus = store.state.loginUserOnlineStatus;
-  if (loginUserOnlineStatus === 'Unset' || loginUserOnlineStatus === '') {
-    return '';
-  } else {
-    return onLineStatus[loginUserOnlineStatus] && onLineStatus[loginUserOnlineStatus].style || '';
-  }
-});
+const loginUserOnlineStatusIcon = computed(() => {
+    const loginUserOnlineStatus = store.state.loginUserOnlineStatus
+    if (loginUserOnlineStatus === 'Unset' || loginUserOnlineStatus === '') {
+        return ''
+    } else {
+        return onLineStatus[loginUserOnlineStatus] && onLineStatus[loginUserOnlineStatus].style || ''
+    }
+})
 
 /* tabbar icon 路由跳转 */
-let skipRouterName = ref('conversation');
-let highligthConversation = require('@/assets/images/tabbar/highlightconversation.png');
-let grayConversation = require('@/assets/images/tabbar/grayconversation.png');
-let highligthContacts = require('@/assets/images/tabbar/higtlightcontacts.png');
-let grayContacts = require('@/assets/images/tabbar/graycontacts.png');
+const skipRouterName = ref('conversation')
+const highligthConversation = require('@/assets/images/tabbar/highlightconversation.png')
+const grayConversation = require('@/assets/images/tabbar/grayconversation.png')
+const highligthContacts = require('@/assets/images/tabbar/higtlightcontacts.png')
+const grayContacts = require('@/assets/images/tabbar/graycontacts.png')
 const changeSkipRouterName = (routerName) => {
-  router.push(`/chat/${routerName}`);
-};
+    router.push(`/chat/${routerName}`)
+}
 watch(() => route.path, (newPath) => {
-  if (newPath.includes('/chat/conversation')) {
-    skipRouterName.value = 'conversation';
-  }
-  if (newPath.includes('/chat/contacts')) {
-    console.log('>>>>>存在赋值为联系人样式')
-    skipRouterName.value = 'contacts';
-  }
+    if (newPath.includes('/chat/conversation')) {
+        skipRouterName.value = 'conversation'
+    }
+    if (newPath.includes('/chat/contacts')) {
+        console.log('>>>>>存在赋值为联系人样式')
+        skipRouterName.value = 'contacts'
+    }
 })
 /* 取会话以及系统消息未读数控制会话icon badge显隐 */
 const conversationUnreadCount = computed(() => {
-  let informCount = _.sumBy(store.state.Conversation.informDetail, 'untreated') || 0
-  let commonConversationCount = _.sumBy(_.values(store.state.Conversation.conversationListData), 'unreadMessageNum')
-  return { informCount, commonConversationCount }
+    const informCount = _.sumBy(store.state.Conversation.informDetail, 'untreated') || 0
+    const commonConversationCount = _.sumBy(_.values(store.state.Conversation.conversationListData), 'unreadMessageNum')
+    return { informCount, commonConversationCount }
 })
 /* 用户信息卡片显隐 */
-const isShowUserInfoCard = ref(false);
-const changeUserInfoCard = ref(null);
-onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
+const isShowUserInfoCard = ref(false)
+const changeUserInfoCard = ref(null)
+onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false))
 
 
 /* 新建功能部分 */
 const settingComp = ref(null)
 const settingPopover = ref(null)
-const modalType = ref('');
+const modalType = ref('')
 const isShowPopover = ref(false)
 //新建功能相关icon
 const createGroupIcon = require('@/assets/images/tabbar/1461654066965_.pic.jpg')
 const applyJoinGroupIcon = require('@/assets/images/tabbar/1471654067125_.pic.jpg')
 const applyAddFriendIcon = require('@/assets/images/tabbar/1481654067168_.pic.jpg')
-onClickOutside(settingPopover, () => (isShowPopover.value = false));
+onClickOutside(settingPopover, () => (isShowPopover.value = false))
 const showInputModal = (type) => {
-  modalType.value = type
-  settingComp.value.dialogVisible = true
-  console.log('>>>>>>跳转对应modal')
+    modalType.value = type
+    settingComp.value.dialogVisible = true
+    console.log('>>>>>>跳转对应modal')
 }
 
 /* 更多操作部分more_settings */

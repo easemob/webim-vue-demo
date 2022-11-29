@@ -1,9 +1,9 @@
 <script setup>
-import { ref, toRefs } from 'vue';
-import GroupDesc from './GoupDesc.vue';
+import { ref, toRefs } from 'vue'
+import GroupDesc from './GoupDesc.vue'
 import GroupAnnoun from './GroupAnnoun.vue'
 import GroupSomeList from './GroupSomeList.vue'
-import GroupMembers from './GroupMembers.vue';
+import GroupMembers from './GroupMembers.vue'
 const props = defineProps({
     modalType: {
         type: String,
@@ -26,13 +26,13 @@ const props = defineProps({
         default: () => ({})
     }
 })
-const dialogVisible = ref(false);
+const dialogVisible = ref(false)
 defineExpose({
     dialogVisible
 })
 const { modalType, groupModalTitle } = toRefs(props)
 
-let diffModal = {
+const diffModal = {
     'groupDesc': {
         'width': '480px',
         'title': '群描述',
@@ -56,13 +56,13 @@ let diffModal = {
 }
 
 //完成事件
-const groupModalComp = ref(null);
+const groupModalComp = ref(null)
 const save = () => {
     console.log('>>>>>调用了保存', groupModalComp.value)
     if (groupModalComp.value && groupModalComp.value.saveHandleMembers) {
         groupModalComp.value.saveHandleMembers()
     }
-    dialogVisible.value = false;
+    dialogVisible.value = false
 }
 </script>
 <template>

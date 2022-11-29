@@ -4,12 +4,12 @@ import { useStore } from 'vuex'
 import _ from 'lodash'
 import { ElNotification } from 'element-plus'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
-import EaseIM from '@/IM/initwebsdk'
+import { EaseChatClient } from '@/IM/initwebsdk'
 import { messageType } from '@/constant'
 import {
     Search,
     CircleCheckFilled
-} from '@element-plus/icons-vue';
+} from '@element-plus/icons-vue'
 /* 路由 */
 import router from '@/router'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
@@ -24,15 +24,15 @@ const props = defineProps({
 const { dialogVisible } = toRefs(props)
 const store = useStore()
 
-let nextStep = ref(0) //下一步
-let renderFriendList = ref([])
+const nextStep = ref(0) //下一步
+const renderFriendList = ref([])
 //选中人数统计
 const checkedCount = computed(() => {
     return _.sumBy(renderFriendList.value, 'isChecked') * 1
 })
 //选中人id数组
 const checkedUserArr = computed(() => {
-    let filtered = _.filter(renderFriendList.value, 'isChecked') //过滤后为选中的user list
+    const filtered = _.filter(renderFriendList.value, 'isChecked') //过滤后为选中的user list
     return _.map(filtered, 'hxId')
 })
 onMounted(() => {
@@ -42,10 +42,10 @@ onMounted(() => {
 //处理拉取到的好友列表数据（添加是否选中字段）
 const friendList = computed(() => store.state.Contacts.friendList)
 const handleRenderFiendList = () => {
-    let newFriendList = []
+    const newFriendList = []
     for (const key in friendList.value) {
         if (Object.hasOwnProperty.call(friendList.value, key)) {
-            const v = friendList.value[key];
+            const v = friendList.value[key]
             newFriendList.push({ name: v.nickname && v.nickname ? v.nickname : v.hxId, hxId: v.hxId, isChecked: false, keywords: `${v.hxId && v.hxId}${v.nickname && v.nickname}` })
         }
     }
@@ -53,13 +53,13 @@ const handleRenderFiendList = () => {
 }
 /* 搜索逻辑 */
 //创建用户搜索部分
-let serachInputValue = ref('')
-let isShowSearchContent = ref(false) //控制检索内容显隐
-let searchResultList = ref([])
+const serachInputValue = ref('')
+const isShowSearchContent = ref(false) //控制检索内容显隐
+const searchResultList = ref([])
 const searchFriend = () => {
     console.log('>>>>>serachInputValue.value ', serachInputValue.value === '')
     if (serachInputValue.value) {
-        let resultArr = _.filter(renderFriendList.value, (v) => v.keywords.includes(serachInputValue.value))
+        const resultArr = _.filter(renderFriendList.value, (v) => v.keywords.includes(serachInputValue.value))
         searchResultList.value = resultArr
         console.log('>>>>>>>执行搜索', resultArr)
         resultArr.length > 0 && (isShowSearchContent.value = true)
@@ -73,9 +73,9 @@ const searchFriend = () => {
 
 /* 创建群组form */
 //创建群组群组所用参数
-let groupCreateForm = reactive({
-    groupname: "",
-    desc: "",
+const groupCreateForm = reactive({
+    groupname: '',
+    desc: '',
     members: [],
     public: true,
     approval: true,
@@ -91,8 +91,8 @@ watch(dialogVisible, (newVal) => {
 })
 const sourceForm = () => {
     return {
-        groupname: "",
-        desc: "",
+        groupname: '',
+        desc: '',
         members: [],
         public: true,
         approval: true,
@@ -107,7 +107,7 @@ const createNewGroups = async () => {
     groupCreateForm.members = checkedUserArr.value
     if (groupCreateForm.groupname === '') return ElNotification.error('请设置群组名称！')
     try {
-        let { data } = await EaseIM.conn.createGroup({ data: { ...groupCreateForm } })
+        const { data } = await EaseChatClient.createGroup({ data: { ...groupCreateForm } })
         //更新群组列表
         await store.dispatch('fetchGroupList', {
             pageNum: 1,
@@ -119,12 +119,12 @@ const createNewGroups = async () => {
             type: 'success',
         })
         router.push({ path: '/chat/conversation/message', query: { id: data.groupid, chatType: CHAT_TYPE.GROUP } })
-        store.dispatch('createInformMessage', { from: EaseIM.conn.user, to: data.groupid, chatType: CHAT_TYPE.GROUP, msg: `您的群组，【${groupCreateForm.groupname}】创建成功,聊两句吧！` })
+        store.dispatch('createInformMessage', { from: EaseChatClient.user, to: data.groupid, chatType: CHAT_TYPE.GROUP, msg: `您的群组，【${groupCreateForm.groupname}】创建成功,聊两句吧！` })
         resetTheModalStatus()
     }
     catch (error) {
         if (error && error.type && error.message) {
-            let errorDesc = JSON.parse(error.message)
+            const errorDesc = JSON.parse(error.message)
             handleSDKErrorNotifi(error.type, errorDesc.error_description)
             console.log('>>>errorDesc>>>', errorDesc)
         } else {
@@ -159,7 +159,7 @@ defineExpose({ handleRenderFiendList })
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
                                 <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{`${item.name}(${item.hxId})` }}</b>
+                                <b class="friend_list_username">{{ `${item.name}(${item.hxId})` }}</b>
                             </div>
                             <el-icon class="checked_btn"
                                 @click="searchResultList[index].isChecked = !searchResultList[index].isChecked">

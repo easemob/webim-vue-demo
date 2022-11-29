@@ -1,20 +1,20 @@
 <script setup>
 import { ref, toRaw, toRefs, computed, nextTick } from 'vue'
-import { ElMessage } from 'element-plus';
+import { ElMessage } from 'element-plus'
 /* IMSDK */
-import EaseIM from '@/IM/initwebsdk';
+import { EaseChatClient } from '@/IM/initwebsdk'
 /* components */
 import GroupsManagement from '../GroupsManagement'
 /* icons */
-import { ArrowRight, Edit, View } from '@element-plus/icons-vue';
-import store from '@/store';
+import { ArrowRight, Edit, View } from '@element-plus/icons-vue'
+import store from '@/store'
 /* porps */
 const props = defineProps({
     groupDetail: { type: Object, required: true, default: () => ({}) },
     nowGroupId: {
         type: String,
         required: true,
-        default: ""
+        default: ''
     }
 })
 /* 
@@ -35,29 +35,29 @@ const goupsInfos = computed(() => {
 const memberRole = computed(() => {
     let allGroupAdmin = []
     //群主
-    let owner = groupDetail.value && groupDetail.value.owner;
+    const owner = groupDetail.value && groupDetail.value.owner
     //管理员列表
-    let groupAdmin = goupsInfos.value && toRaw(goupsInfos.value.admin) || [];
+    const groupAdmin = goupsInfos.value && toRaw(goupsInfos.value.admin) || []
     //登陆人id
-    let loginUser = EaseIM.conn.user;
+    const loginUser = EaseChatClient.user
     //合并两者名单
     allGroupAdmin = [...groupAdmin, owner]
     //判断是否在权限名单内
     return allGroupAdmin.includes(loginUser)
 })
 /* 群组管理 */
-const groupmanagement = ref(null);
-let modalType = ref('')
-let groupModalTitle = ref({ title: '', type: 0 })
+const groupmanagement = ref(null)
+const modalType = ref('')
+const groupModalTitle = ref({ title: '', type: 0 })
 //弹出群管理相关modal框
 const alertManagementModal = (type, groupType) => {
-    let titleType = {
+    const titleType = {
         1: '黑名单',
         2: '禁言'
     }
     modalType.value = type
     groupmanagement.value.dialogVisible = true
-    console.log('groupType', groupType);
+    console.log('groupType', groupType)
     if (groupType !== undefined) {
         groupModalTitle.value.title = titleType[groupType]
         groupModalTitle.value.type = groupType
@@ -66,12 +66,12 @@ const alertManagementModal = (type, groupType) => {
 }
 //修改群组名称
 const editGroupNameInput = ref(null)
-let isEdit = ref(false)
-let groupName = ref('')
+const isEdit = ref(false)
+const groupName = ref('')
 const editGroupName = async (type, oldGroupName) => {
     if (type === 'save') {
         if (groupName.value === oldGroupName) return isEdit.value = false
-        let params = {
+        const params = {
             groupid: groupDetail.value.id,
             modifyType: 0,
             content: groupName.value
@@ -100,7 +100,7 @@ const editGroupName = async (type, oldGroupName) => {
         console.log('>>>>>>oldGroupName', oldGroupName)
         nextTick(() => {
             editGroupNameInput.value.focus()
-            groupName.value = oldGroupName;
+            groupName.value = oldGroupName
         })
         console.log('>>>>开始编辑')
     }

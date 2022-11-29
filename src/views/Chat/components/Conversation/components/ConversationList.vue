@@ -1,9 +1,9 @@
 <script setup>
-import { ref, computed, defineEmits } from 'vue';
-import { useStore } from 'vuex';
+import { ref, computed, defineEmits } from 'vue'
+import { useStore } from 'vuex'
 import dateFormater from '@/utils/dateFormater'
 import { messageType } from '@/constant'
-import _ from 'lodash';
+import _ from 'lodash'
 import { useRouter, useRoute } from 'vue-router'
 /* 头像相关 */
 import informIcon from '@/assets/images/avatar/inform.png'
@@ -12,15 +12,15 @@ const route = useRoute()
 /* router */
 const router = useRouter()
 /* store */
-const store = useStore();
+const store = useStore()
 const { CHAT_TYPE } = messageType
 //取系统通知数据
 const informDetail = computed(() => {
-  let informDetailArr = store.state.Conversation.informDetail;
-  let lastInformDeatail = informDetailArr[0] || {}
-  let untreated = _.sumBy(informDetailArr, 'untreated') || 0;
-  return { untreated, lastInformDeatail };
-});
+    const informDetailArr = store.state.Conversation.informDetail
+    const lastInformDeatail = informDetailArr[0] || {}
+    const untreated = _.sumBy(informDetailArr, 'untreated') || 0
+    return { untreated, lastInformDeatail }
+})
 // console.log('>>>>>informDetail', informDetail.lastInformDeatail)
 //取好友列表(主要使用好友下的用户属性相关)
 const friendList = computed(() => store.state.Contacts.friendList
@@ -31,49 +31,49 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
 
 //取会话数据
 const conversationList = computed(() => {
-  return store.state.Conversation.conversationListData;
-});
+    return store.state.Conversation.conversationListData
+})
 
 //处理会话name 
 const handleConversationName = computed(() => {
-  return (item) => {
-    if (item.conversationType === CHAT_TYPE.SINGLE) {
-      return friendList.value[item.conversationKey] && friendList.value[item.conversationKey].nickname || item.conversationInfo.name
-    }
-    if (item.conversationType === CHAT_TYPE.GROUP) {
-      if (joinedGroupList.value[item.conversationKey] && joinedGroupList.value[item.conversationKey].groupDetail) {
-        return joinedGroupList.value[item.conversationKey].groupDetail.name
-      } else if (joinedGroupList.value[item.conversationKey] && joinedGroupList.value[item.conversationKey].groupname) {
-        return joinedGroupList.value[item.conversationKey].groupname
-      } else {
-        return item.conversationKey
-      }
+    return (item) => {
+        if (item.conversationType === CHAT_TYPE.SINGLE) {
+            return friendList.value[item.conversationKey] && friendList.value[item.conversationKey].nickname || item.conversationInfo.name
+        }
+        if (item.conversationType === CHAT_TYPE.GROUP) {
+            if (joinedGroupList.value[item.conversationKey] && joinedGroupList.value[item.conversationKey].groupDetail) {
+                return joinedGroupList.value[item.conversationKey].groupDetail.name
+            } else if (joinedGroupList.value[item.conversationKey] && joinedGroupList.value[item.conversationKey].groupname) {
+                return joinedGroupList.value[item.conversationKey].groupname
+            } else {
+                return item.conversationKey
+            }
 
+        }
     }
-  }
 })
 //取网络状态
 const networkStatus = computed(() => {
-  return store.state.networkStatus
+    return store.state.networkStatus
 })
 
 const emit = defineEmits(['toInformDetails', 'toChatMessage'])
 //普通会话
-let checkedConverItemIndex = ref(null);
+const checkedConverItemIndex = ref(null)
 const toChatMessage = (item, itemKey, index) => {
-  checkedConverItemIndex.value = index;
-  if (item && item.unreadMessageNum > 0) store.commit('CLEAR_UNREAD_NUM', itemKey)
-  //跳转至对应的消息界面
-  emit('toChatMessage', itemKey, item.conversationType)
-};
+    checkedConverItemIndex.value = index
+    if (item && item.unreadMessageNum > 0) store.commit('CLEAR_UNREAD_NUM', itemKey)
+    //跳转至对应的消息界面
+    emit('toChatMessage', itemKey, item.conversationType)
+}
 //删除某条会话
 const deleteConversation = (itemKey) => {
-  console.log('选中的会话key', itemKey, route.query)
-  store.commit('DELETE_ONE_CONVERSATION', itemKey)
-  //如果删除的itemKey与当前的message会话页的id一致则跳转至会话默认页。
-  if (route?.query?.id && route.query.id === itemKey) {
-    router.push('/chat/conversation')
-  }
+    console.log('选中的会话key', itemKey, route.query)
+    store.commit('DELETE_ONE_CONVERSATION', itemKey)
+    //如果删除的itemKey与当前的message会话页的id一致则跳转至会话默认页。
+    if (route?.query?.id && route.query.id === itemKey) {
+        router.push('/chat/conversation')
+    }
 }
 //加载到底拉取新数据
 // const load = () => {

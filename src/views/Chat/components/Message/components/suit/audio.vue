@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-import BenzAMRRecorder from "benz-amr-recorder"
-import { ElNotification } from 'element-plus';
+import BenzAMRRecorder from 'benz-amr-recorder'
+import { ElNotification } from 'element-plus'
 const voice = ref({
     interval: null, // 录音定时器
     type: 0, // 0未录音 1录音中 2录音完毕 3回放录音
@@ -9,59 +9,59 @@ const voice = ref({
     src: null // 录音资源
 })
 const amrRec = ref(null)
-let timer = ref({
+const timer = ref({
     interval: null,
     tim: 60
-}); //倒计时
-const showCountDown = ref(false);
+}) //倒计时
+const showCountDown = ref(false)
 const benginTimer = () => {
-    showCountDown.value = false;
+    showCountDown.value = false
     timer.value.interval = setInterval(() => {
         if (timer.value.tim === 0) {
-            clearInterval(timer.value.interval);
-            clearInterval(voice.value.interval);
+            clearInterval(timer.value.interval)
+            clearInterval(voice.value.interval)
             // 自动发送
-            recordOver();
-            return;
+            recordOver()
+            return
         }
         else if (false) {
             // 弹层关闭 清空倒计时
-            timer.value.tim = 60;
-            return;
+            timer.value.tim = 60
+            return
         } else {
-            timer.value.tim--;
+            timer.value.tim--
         }
         if (timer.value.tim < 11) {
-            showCountDown.value = true;
+            showCountDown.value = true
         }
-    }, 1000);
+    }, 1000)
 }
 
 const startRecord = () => {
     if (voice.value.type === 0) {
-        amrRec.value = new BenzAMRRecorder();
+        amrRec.value = new BenzAMRRecorder()
         console.log(amrRec)
         amrRec.value
             .initWithRecord()
             .then(() => {
-                amrRec.value.startRecord(); //开始录音
-                voice.value.type = 1;
-                benginTimer();
+                amrRec.value.startRecord() //开始录音
+                voice.value.type = 1
+                benginTimer()
                 //开启录音时长定时器
                 voice.value.interval = setInterval(() => {
-                    voice.value.length++;
-                }, 1000);
+                    voice.value.length++
+                }, 1000)
             })
             .catch(e => {
                 console.log(e)
-                voice.value.type = 0;
+                voice.value.type = 0
                 ElNotification({
                     title: '',
                     message: '录音失败，请检查相关权限和设备',
                     type: 'error',
-                });
+                })
                 //   $Toast("录音失败，请检查相关权限和设备");
-            });
+            })
     }
 }
 const emit = defineEmits(['sendAudioMessages'])
@@ -70,28 +70,28 @@ const recordOver = () => {
         .finishRecord()
         .then(() => {
             if (voice.value.length <= 1) {
-                clearInterval(timer.value.interval);
-                clearInterval(voice.value.interval);
-                initVocie();
+                clearInterval(timer.value.interval)
+                clearInterval(voice.value.interval)
+                initVocie()
                 // 放弃录音
-                amrRec.value.cancelRecord();
+                amrRec.value.cancelRecord()
                 ElNotification({
                     title: '',
                     message: '录音时间较短',
                     type: 'warning',
-                });
+                })
             } else {
-                voice.value.length = Math.ceil(amrRec.value.getDuration());
+                voice.value.length = Math.ceil(amrRec.value.getDuration())
                 // 获取音频文件
-                voice.value.src = amrRec.value.getBlob();
-                emit("sendAudioMessages", {
+                voice.value.src = amrRec.value.getBlob()
+                emit('sendAudioMessages', {
                     src: voice.value.src,
                     length: voice.value.length > 60 ? 60 : voice.value.length //一般计时器开始时间都较为提前一秒 减去误差值
-                });
+                })
 
-                clearInterval(timer.value.interval);
-                clearInterval(voice.value.interval);
-                initVocie();
+                clearInterval(timer.value.interval)
+                clearInterval(voice.value.interval)
+                initVocie()
             }
         })
         .catch(() => {
@@ -99,16 +99,16 @@ const recordOver = () => {
                 title: '',
                 message: '录音失败，请检查相关权限',
                 type: 'error',
-            });
-        });
+            })
+        })
 }
 const initVocie = () => {
-    voice.value.interval = null;
-    voice.value.length = 0;
-    voice.value.type = 0;
-    timer.value.tim = 60;
+    voice.value.interval = null
+    voice.value.length = 0
+    voice.value.type = 0
+    timer.value.tim = 60
     showCountDown.value = false
-    timer.value.interval = null;
+    timer.value.interval = null
 }
 // const filterRecordVoicTime = (len) => {
 //     let min = Math.floor(len / 60),
@@ -128,12 +128,12 @@ const initVocie = () => {
 //     });
 // }
 const closeDialog = () => {
-    console.log("关闭子组件的定时器")
-    clearInterval(timer.value.interval);
-    clearInterval(voice.value.interval);
-    initVocie();
+    console.log('关闭子组件的定时器')
+    clearInterval(timer.value.interval)
+    clearInterval(voice.value.interval)
+    initVocie()
 }
-defineExpose({ closeDialog });
+defineExpose({ closeDialog })
 
 
 </script>

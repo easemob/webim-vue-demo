@@ -1,35 +1,35 @@
 <script setup>
-import { ref } from 'vue';
-import EaseIM from '@/IM/initwebsdk';
-import CustomImConfig from '@/views/Login/components/CustomImConfig';
+import { ref } from 'vue'
+import { EaseChatClient } from '@/IM/initwebsdk'
+import CustomImConfig from '@/views/Login/components/CustomImConfig'
 import LoginInput from './components/LoginInput'
 import RegisterInput from './components/RegisterInput'
 import ResetPassword from './components/ResetPassword'
 //login图
-const logo = require('@/assets/images/loginIcon.png');
+const logo = require('@/assets/images/loginIcon.png')
 // 登陆注册所用
-const showComponent = ref(0);
+const showComponent = ref(0)
 const componType = {
-  0: LoginInput,
-  1: RegisterInput,
-  2: ResetPassword
+    0: LoginInput,
+    1: RegisterInput,
+    2: ResetPassword
 }
 const changeToLogin = () => {
-  showComponent.value = 0
+    showComponent.value = 0
 }
 const toEasemob = () => {
-  const linkUrl = 'https://www.easemob.com/?utm_source=baidu-ppwx';
-  window.open(linkUrl, 'Easemob');
-};
+    const linkUrl = 'https://www.easemob.com/?utm_source=baidu-ppwx'
+    window.open(linkUrl, 'Easemob')
+}
 
 //服务配置
-const customImConfig = ref(null);
+const customImConfig = ref(null)
 // const showCustomImConfigModal = () => {
 //   customImConfig.value.centerDialogVisible = true
 // }
 
 //SDK-Version
-const IM_SDK_VERSION = EaseIM.conn.version
+const IM_SDK_VERSION = EaseChatClient.version
 </script>
 <template>
   <el-container class="app_container">

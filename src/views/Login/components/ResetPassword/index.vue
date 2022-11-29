@@ -33,7 +33,7 @@ const validatePass2 = (rule, value, callback) => {
     if (value === '') {
         callback(new Error('请再次输入您设定的新密码！'))
     } else if (value !== resetPasswordFrom.password) {
-        callback(new Error("两次输入的密码不一样啊！"))
+        callback(new Error('两次输入的密码不一样啊！'))
     } else {
         callback()
     }
@@ -75,7 +75,7 @@ const changeImageCode = () => {
 //获取图片验证码
 const sendImageCode = async () => {
     try {
-        let { data } = await createImageCode()
+        const { data } = await createImageCode()
         if (data.image_enabled === 'true') {
             imageCodeInfo.imgUrl = `${window.location.protocol}//a1.easemob.com/inside/app/image/${data.image_id}`
             imageCodeInfo.imageId = data.image_id
@@ -91,10 +91,10 @@ onMounted(() => {
 })
 
 /* 短信验证码相关 */
-let isSenedAuthCode = ref(false)
-let authCodeNextCansendTime = ref(60)
+const isSenedAuthCode = ref(false)
+const authCodeNextCansendTime = ref(60)
 const sendMessageAuthCode = async () => {
-    let params = {
+    const params = {
         phoneNumber: resetPasswordFrom.phoneNumber,
         imageId: imageCodeInfo.imageId,
         imageCode: resetPasswordFrom.imageCode
@@ -120,8 +120,8 @@ const startCountDown = () => {
         }
         else {
             clearInterval(timer)
-            timer = null;
-            authCodeNextCansendTime.value = 60;
+            timer = null
+            authCodeNextCansendTime.value = 60
             isSenedAuthCode.value = false
         }
     }, 1000)
@@ -132,7 +132,7 @@ const resetPwdTheNext = (formEl) => {
     if (!formEl) return
     formEl.validate(async (valid) => {
         if (valid) {
-            let params = {
+            const params = {
                 userId: resetPasswordFrom.username,
                 phoneNumber: resetPasswordFrom.phoneNumber,
                 smsCode: resetPasswordFrom.smsCode
@@ -158,19 +158,19 @@ const submitNewPassword = (formEl) => {
     if (!formEl) return
     formEl.validate(async (valid) => {
         if (valid) {
-            let params = {
+            const params = {
                 userId: resetPasswordFrom.username,
                 newPassword: resetPasswordFrom.password
             }
             try {
                 const { code } = await updateNewPasswrod({ ...params })
                 if (code === 200) {
-                    ElMessage({ type: "success", message: "重置完成！登录试试吧😁", center: true })
+                    ElMessage({ type: 'success', message: '重置完成！登录试试吧😁', center: true })
                     emits('changeToLogin')
                 }
             } catch (error) {
-                console.log('>>>>>重置失败', error);
-                ElMessage({ type: "error", message: "重置失败，请稍后重试！", center: true })
+                console.log('>>>>>重置失败', error)
+                ElMessage({ type: 'error', message: '重置失败，请稍后重试！', center: true })
             }
 
         } else {

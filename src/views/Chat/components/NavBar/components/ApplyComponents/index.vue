@@ -28,7 +28,7 @@ const dialogVisible = ref(false)
 //open时 初始化个别子组件所需要的数据
 const settingComps = ref(null)
 const initCompData = () => {
-    console.log('>>>>>>initCompData', modalType.value);
+    console.log('>>>>>>initCompData', modalType.value)
     if (modalType.value === 'createNewGroups') {
         nextTick(() => {
             settingComps.value && settingComps.value.handleRenderFiendList()
