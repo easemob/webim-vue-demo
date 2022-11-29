@@ -135,36 +135,48 @@ const Login = {
 	    },
 	    // 使用 token 登录
 	    loginWithToken: (context, payload) => {
-	    	axios.post(domain+'/inside/app/user/login', {
-                userId: payload.username,
-                userPassword: payload.password
+	    	axios.post(domain+'/inside/app/user/login/V1', {
+                phoneNumber: payload.phone,
+                smsCode: payload.captcha
             })
             .then(function (response) {
                 const {phoneNumber, token} = response.data
                 context.commit('setPhoneNumber', phoneNumber)
 
-                context.commit('setUserName', payload.username);
+                context.commit('setUserName', payload.phone);
 
 				let options = {
-					user: payload.username,
+					user: payload.phone,
 					accessToken: token,
                 	appKey: WebIM.config.appkey
 				};
 				WebIM.conn.open(options);
-				localStorage.setItem('userInfo', JSON.stringify({ userId: payload.username, password: payload.password }));
+				localStorage.setItem('userInfo', JSON.stringify({ userId: payload.phone, accessToken: token }));
             })
             .catch(function (error) {
-							switch (error.response.data.errorInfo) {
-								case "UserId password error.":
-									Message.error('用户名或密码错误！')
-									break;
-								case `UserId ${payload.username} does not exist.`:
-									Message.error('登录用户不存在')
-									break;
-								default:
-									Message.error('登录失败，请重试！')
-									break;
-							}
+				switch (error.response.data.errorInfo) {
+					case "UserId password error.":
+						Message.error('用户名或密码错误！')
+						break;
+					case `UserId ${payload.username} does not exist.`:
+						Message.error('登录用户不存在')
+						break;
+					case 'phone number illegal':
+                        Message.error('请输入正确的手机号')
+                        break;
+                    case 'SMS verification code error.':
+                        Message.error('验证码错误')
+                        break;
+                    case 'Sms code cannot be empty':
+                        Message.error('验证码不能为空')
+                        break;
+                    case 'Please send SMS to get mobile phone verification code.':
+                        Message.error('请使用短信验证码登录')
+                        break;
+					default:
+						Message.error('登录失败，请重试！')
+						break;
+				}
               console.log(error);
             });
 	    }

@@ -23,37 +23,7 @@
 			<div class="login-panel">
 			<div class="logo">Web IM</div>
 			<a-form :form="form" >
-				 <a-form-item has-feedback>
-			      <a-input
-			      	placeholder="用户名"
-			        v-decorator="[
-			          'username',
-			          {
-			            rules: [{ required: true, message: 'Please input your username!', whitespace: true }],
-			          },
-			        ]"
-			      />
-			    </a-form-item>
-
-				 <a-form-item has-feedback>
-			      <a-input
-			      	placeholder="密码"
-			        v-decorator="[
-			          'password',
-			          {
-			            rules: [
-			              {
-			                required: true,
-			                message: 'Please input your password!',
-			              }
-			            ],
-			          },
-			        ]"
-			        type="password"
-			      />
-			    </a-form-item>
-
-			    <a-form-item has-feedback v-if="isRegister == true">
+			    <a-form-item has-feedback>
 			      <a-input
 			      	placeholder="手机号码"
 			        v-decorator="[
@@ -77,28 +47,7 @@
 			      </a-input>
 			    </a-form-item>
 
-			    <a-form-item
-			      v-if="isRegister == true"
-			    >
-			      <a-row :gutter="8" style="margin: 0px;">
-			        <a-col :span="16">
-			          <a-input
-			          	placeholder="图片验证码"
-			            v-decorator="[
-			              'imageCode',
-			              { rules: [{ required: true, message: 'Please input the image code!' }] },
-			            ]"
-			          />
-			        </a-col>
-			        <a-col :span="8" style="height: 40px;">
-			          <img :src="imageUrl" class="image-code" v-on:click="getImageVerification"/>
-			        </a-col>
-			      </a-row>
-			    </a-form-item>
-
-			    <a-form-item
-			      v-if="isRegister == true"
-			    >
+			    <a-form-item>
 			      <a-row :gutter="8">
 			        <a-col :span="14">
 			          <a-input
@@ -114,21 +63,8 @@
 			        </a-col>
 			      </a-row>
 			    </a-form-item>
+				<a-button style="width: 100%" type="primary" @click="toLogin" class="login-rigester-btn">登录</a-button>
 
-			    <a-button type="primary" @click="toRegister" class="login-rigester-btn" v-if="isRegister == true">注册</a-button>
-				<a-button type="primary" @click="toLogin" class="login-rigester-btn" v-else>登录</a-button>
-
-			    <p class="tip" v-if="isRegister == true">
-					已有账号?
-					<span class="green" v-on:click="changeType">去登录</span>
-				</p>
-				<p class="tip" v-else>
-					<span>
-						没有账号?
-					<span class="green" v-on:click="changeType">注册</span>
-					</span>
-					<span class="green" @click="toReset">找回密码</span>
-				</p>
 			</a-form>
 			</div>
 		</div>
@@ -142,7 +78,7 @@ import axios from 'axios'
 import { Message } from 'ant-design-vue';
 const domain = window.location.protocol+'//a1.easemob.com'
 const userInfo = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo'));
-let times = 50;
+let times = 60;
 let timer
 export default{
 	data(){
@@ -176,7 +112,7 @@ export default{
 	components: {},
 	computed: {
 		isRegister(){
-			return this.$store.state.login.isRegister;
+			return  true//this.$store.state.login.isRegister;
 		},
 		imageUrl(){
 			return this.$store.state.login.imageUrl
@@ -193,10 +129,10 @@ export default{
 			// 	password: this.password
 			// });
 			const form = this.form;
-		    form.validateFields(['username', 'password'], { force: true }, (err, value) => {
+		    form.validateFields(['phone', 'captcha'], { force: true }, (err, value) => {
 		    	if(!err){
-		    		const {username, password} = value
-		    		this.loginWithToken({username, password})
+		    		const {phone, captcha} = value
+		    		this.loginWithToken({phone, captcha})
 		    	}
 		    });
 		},
@@ -228,7 +164,7 @@ export default{
 		getSmsCode(){
 			if(this.$data.btnTxt != '获取验证码') return
 			const form = this.form;
-		    form.validateFields(['imageCode', 'phone'], { force: true }, (err, value) => {
+		    form.validateFields(['phone'], { force: true }, (err, value) => {
 		    	if(!err){
 		    		const {phone, imageCode} = value
 		    		this.getCaptcha({phoneNumber: phone, imageCode})
@@ -238,10 +174,8 @@ export default{
 		getCaptcha(payload){
 			const self = this
 			const imageId = this.imageId
-			axios.post(domain+'/inside/app/sms/send', {
+			axios.post(domain+`/inside/app/sms/send/${payload.phoneNumber}`, {
                 phoneNumber: payload.phoneNumber,
-                imageId: imageId,
-                imageCode: payload.imageCode
             })
             .then(function (response) {
                 Message.success('短信已发送')
@@ -252,7 +186,15 @@ export default{
                 	if(error.response.data.errorInfo == 'Image verification code error.'){
                 		self.getImageVerification()
                 	}
-                    Message.error(error.response.data.errorInfo)
+                	if(error.response.data?.errorInfo == 'phone number illegal'){
+						Message.error('请输入正确的手机号！')
+					}else if(error.response.data?.errorInfo == 'Please wait a moment while trying to send.'){
+						Message.error('你的操作过于频繁，请稍后再试！')
+					}else if(error.response..data?.errorInfo.includes('exceed the limit')){
+						Message.error('获取已达上限！')
+					}else{
+						Message.error(error.response.data?.errorInfo)
+					}
                 }
             });
 		},
@@ -262,7 +204,7 @@ export default{
 				this.$data.btnTxt--
 				times--
 				if(this.$data.btnTxt === 0){
-					times = 50
+					times = 60
 					this.$data.btnTxt = '获取验证码'
 					return clearTimeout(timer)
 				}

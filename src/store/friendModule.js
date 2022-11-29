@@ -46,7 +46,7 @@ const FriendModule = {
 		},
 		// 获取黑名单
 		onGetFirendBlack: function(context, payload){
-			WebIM.conn.getBlocklist().then(res => {
+			WebIM.conn.getBlacklist().then(res => {
 				let dt = res.data.map(item => {
 					return {
 						name: item

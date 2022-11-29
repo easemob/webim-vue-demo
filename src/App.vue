@@ -14,10 +14,10 @@ export default{
 		const userInfo = localStorage.getItem('userInfo') && JSON.parse(localStorage.getItem('userInfo'));
 		if(userInfo){
 			const userName = userInfo.userId;
-			const password = userInfo.password;
+			const accessToken = userInfo.accessToken;
 			let options = {
 				user: userName,
-				pwd: password,
+				accessToken: accessToken,
 				appKey: WebIM.config.appkey
 			};
 			WebIM.conn.open(options);
