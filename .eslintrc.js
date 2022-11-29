@@ -2,11 +2,11 @@ module.exports = {
     root: true,
     env: {
         node: true,
-        'vue/setup-compiler-macros': true, //针对setup语法糖 可不用defined defineEmits 以及 definExpose
+        'vue/setup-compiler-macros': true //针对setup语法糖 可不用defined defineEmits 以及 definExpose
     },
     extends: ['plugin:vue/vue3-essential', 'eslint:recommended'],
     parserOptions: {
-        parser: '@babel/eslint-parser',
+        parser: '@babel/eslint-parser'
     },
     rules: {
         'arrow-parens': 0,
@@ -26,17 +26,17 @@ module.exports = {
             300,
             4,
             {
-                ignoreUrls: true,
-            },
+                ignoreUrls: true
+            }
         ],
         'prefer-const': [
             'error',
             {
                 destructuring: 'all',
-                ignoreReadBeforeAssign: false,
-            },
+                ignoreReadBeforeAssign: false
+            }
         ],
         'guard-for-in': 'error',
-        'vue/multi-word-component-names': 'off', // 取消组件名称校验
-    },
+        'vue/multi-word-component-names': 'off' // 取消组件名称校验
+    }
 }
