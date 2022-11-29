@@ -14,11 +14,7 @@ webim-vue3-demo 是基于环信 sdk 开发的一款具有单聊、群聊等功�
 npm install or yarn install
 
 # serve with hot reload at localhost:8080
-<<<<<<< HEAD
 npm start or yarn run dev
-=======
-npm run dev or yarn run dev
->>>>>>> remotes/vue-demo/demo-vue3
 
 # build for production with minification
 npm run build or yarn build

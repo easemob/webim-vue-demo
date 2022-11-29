@@ -1294,14 +1294,11 @@
   dependencies:
     "@types/node" "*"
 
-<<<<<<< HEAD
 "@types/web-bluetooth@^0.0.16":
   version "0.0.16"
   resolved "https://registry.npmmirror.com/@types/web-bluetooth/-/web-bluetooth-0.0.16.tgz#1d12873a8e49567371f2a75fe3e7f7edca6662d8"
   integrity sha512-oh8q2Zc32S6gd/j50GowEjKLoOVOwHP/bWVjKJInBwQqdOYMdPrf1oVlelTlyfFK3CKxL1uahMDAr+vy8T7yMQ==
 
-=======
->>>>>>> remotes/vue-demo/demo-vue3
 "@types/ws@^8.5.1":
   version "8.5.3"
   resolved "https://registry.yarnpkg.com/@types/ws/-/ws-8.5.3.tgz#7d25a1ffbecd3c4f2d35068d0b283c037003274d"
@@ -1677,7 +1674,6 @@
   resolved "https://registry.yarnpkg.com/@vue/web-component-wrapper/-/web-component-wrapper-1.3.0.tgz#b6b40a7625429d2bd7c2281ddba601ed05dc7f1a"
   integrity sha512-Iu8Tbg3f+emIIMmI2ycSI8QcEuAUgPTgHwesDU1eKMLE4YC/c/sFbGc70QgMq31ijRftV0R7vCm9co6rldCeOA==
 
-<<<<<<< HEAD
 "@vueuse/components@^9.5.0":
   version "9.5.0"
   resolved "https://registry.npmmirror.com/@vueuse/components/-/components-9.5.0.tgz#7bfe5dd2853486b022c0ae775c1a5d56835bfdc0"
@@ -1688,18 +1684,6 @@
     vue-demi "*"
 
 "@vueuse/core@8.6.0", "@vueuse/core@^8.6.0":
-=======
-"@vueuse/core@^8.4.2":
-  version "8.4.2"
-  resolved "https://registry.yarnpkg.com/@vueuse/core/-/core-8.4.2.tgz#e5be73f40394150e6a1b6abd59e5adb7c6bb6c1f"
-  integrity sha512-dUVU96lii1ZdWoNJXauQNt+4QrHz1DKbuW+y6pDR2N10q7rGZJMDU7pQeMcC2XeosX7kMODfaBuqsF03NozzLg==
-  dependencies:
-    "@vueuse/metadata" "8.4.2"
-    "@vueuse/shared" "8.4.2"
-    vue-demi "*"
-
-"@vueuse/core@^8.6.0":
->>>>>>> remotes/vue-demo/demo-vue3
   version "8.6.0"
   resolved "https://registry.yarnpkg.com/@vueuse/core/-/core-8.6.0.tgz#a8f80363cc63d17382423f16beae57696f376e67"
   integrity sha512-VirzExCm/N+QdrEWT7J4uSrvJ5hquKIAU9alQ37kUvIJk9XxCLxmfRnmekYc1kz2+6BnoyuKYXVmrMV351CB4w==
@@ -1708,7 +1692,6 @@
     "@vueuse/shared" "8.6.0"
     vue-demi "*"
 
-<<<<<<< HEAD
 "@vueuse/core@9.5.0":
   version "9.5.0"
   resolved "https://registry.npmmirror.com/@vueuse/core/-/core-9.5.0.tgz#6726e952e8f92b465457d3bc95deb385aacd9a41"
@@ -1718,31 +1701,16 @@
     "@vueuse/metadata" "9.5.0"
     "@vueuse/shared" "9.5.0"
     vue-demi "*"
-=======
-"@vueuse/metadata@8.4.2":
-  version "8.4.2"
-  resolved "https://registry.yarnpkg.com/@vueuse/metadata/-/metadata-8.4.2.tgz#b33e6b7bd5ca69e3f24ea41b149267118bcd566f"
-  integrity sha512-2BIj++7P0/I5dfMsEe8q7Kw0HqVAjVcyNOd9+G22/ILUC9TVLTeYOuJ1kwa1Gpr+0LWKHc6GqHiLWNL33+exoQ==
->>>>>>> remotes/vue-demo/demo-vue3
 
 "@vueuse/metadata@8.6.0":
   version "8.6.0"
   resolved "https://registry.yarnpkg.com/@vueuse/metadata/-/metadata-8.6.0.tgz#34771443a72ee891ae001a70aa05dd9a1d799372"
   integrity sha512-F+CKPvaExsm7QgRr8y+ZNJFwXasn89rs5wth/HeX9lJ1q8XEt+HJ16Q5Sxh4rfG5YSKXrStveVge8TKvPjMjFA==
 
-<<<<<<< HEAD
 "@vueuse/metadata@9.5.0":
   version "9.5.0"
   resolved "https://registry.npmmirror.com/@vueuse/metadata/-/metadata-9.5.0.tgz#b01c84230261ddee4d439ae5d9c21343dc5ae565"
   integrity sha512-4M1AyPZmIv41pym+K5+4wup3bKuYebbH8w8BROY1hmT7rIwcyS4tEL+UsGz0Hiu1FCOxcoBrwtAizc0YmBJjyQ==
-=======
-"@vueuse/shared@8.4.2":
-  version "8.4.2"
-  resolved "https://registry.yarnpkg.com/@vueuse/shared/-/shared-8.4.2.tgz#5900f06ff78bd8b6df4cbf48f8ca82dd6d9747d1"
-  integrity sha512-hILXMEjL8YQhj1LHN/HZ49UThyfk8irTjhele2nW+L3N55ElFUBGB/f4w0rg8EW+/suhqv7kJJPTZzvHCqxlIw==
-  dependencies:
-    vue-demi "*"
->>>>>>> remotes/vue-demo/demo-vue3
 
 "@vueuse/shared@8.6.0":
   version "8.6.0"
@@ -1751,7 +1719,6 @@
   dependencies:
     vue-demi "*"
 
-<<<<<<< HEAD
 "@vueuse/shared@9.5.0":
   version "9.5.0"
   resolved "https://registry.npmmirror.com/@vueuse/shared/-/shared-9.5.0.tgz#f5306548af0dc9f2b3a0d4da74e62bfdd6211241"
@@ -1759,8 +1726,6 @@
   dependencies:
     vue-demi "*"
 
-=======
->>>>>>> remotes/vue-demo/demo-vue3
 "@webassemblyjs/ast@1.11.1":
   version "1.11.1"
   resolved "https://registry.yarnpkg.com/@webassemblyjs/ast/-/ast-1.11.1.tgz#2bfd767eae1a6996f432ff7e8d7fc75679c0b6a7"
@@ -2949,17 +2914,10 @@ duplexer@^0.1.2:
   resolved "https://registry.yarnpkg.com/duplexer/-/duplexer-0.1.2.tgz#3abe43aef3835f8ae077d136ddce0f276b0400e6"
   integrity sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==
 
-<<<<<<< HEAD
 easemob-websdk@4.1.1:
   version "4.1.1"
   resolved "https://registry.npmmirror.com/easemob-websdk/-/easemob-websdk-4.1.1.tgz#916873c71a4577eaa4c95141ef896b97e6281fce"
   integrity sha512-ES822UJh7idvpraHZYLFD6MZEaL1TH2Kn4txvr1j+rWCEa8CN3RcQdMrwSmp0EgbnR9paSNzbBRTcuDYDo6spA==
-=======
-easemob-websdk@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/easemob-websdk/-/easemob-websdk-4.1.0.tgz#5da402d4511f3af53a3aa9a81de613bc74d32262"
-  integrity sha512-0+eVIxfcxuh9CcWMXXgscofJB+Ra31MtLKdyPjEr+uYepdwKjSmz17PWx28ewK1aVm3YsM0J67z7YM5bcCiaxA==
->>>>>>> remotes/vue-demo/demo-vue3
 
 easy-stack@1.0.1:
   version "1.0.1"
