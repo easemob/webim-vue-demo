@@ -190,7 +190,7 @@ export default{
 						Message.error('请输入正确的手机号！')
 					}else if(error.response.data.errorInfo == 'Please wait a moment while trying to send.'){
 						Message.error('你的操作过于频繁，请稍后再试！')
-					}else if(error.response..data.errorInfo.includes('exceed the limit')){
+					}else if(error.response.data.errorInfo.includes('exceed the limit')){
 						Message.error('获取已达上限！')
 					}else{
 						Message.error(error.response.data.errorInfo)
