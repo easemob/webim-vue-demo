@@ -1,11 +1,10 @@
 <script setup>
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, toRaw, nextTick, computed } from 'vue'
 import _ from 'lodash'
 import { EaseChatClient } from '@/IM/initwebsdk'
 import { useStore } from 'vuex'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { messageType, warningText } from '@/constant'
-// import { useScroll } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import { Close } from '@element-plus/icons-vue'
 /* 组件 */
@@ -133,20 +132,17 @@ const messageData = computed(() => {
 })
 
 const messageContainer = ref(null)
-// const innerRef = ref(null);
-// const { arrivedState, } = useScroll(messageContainer)
-// const { top } = toRefs(arrivedState)
 //控制消息滚动
 const scrollMessageList = (direction) => {
+    console.log('>>>>>scrollMessageList', direction)
     //direction滚动方向 bottom向下滚动 normal向上滚动 
     nextTick(() => {
         const messageNodeList = document.querySelectorAll('.messageList_box')
         const fistMsgElement = messageNodeList[0]
         const lastMsgElement = messageNodeList[messageNodeList.length - 1]
-        console.log('lastMsgElement', lastMsgElement)
-        console.log('fistMsgElement', fistMsgElement)
         //直接滚动置底
         if (direction === 'bottom') {
+            console.log('>>>滚动置底')
             lastMsgElement && lastMsgElement.scrollIntoView(false)
         }
         //保持当前的消息位于当前可视窗口
@@ -155,26 +151,34 @@ const scrollMessageList = (direction) => {
         }
     })
 }
-const scroll = ({ scrollTop }) => {
-    console.log('scrollscrollscroll', scrollTop)
-}
-//监听到消息内容改变 置底滚动。
-watch(() => store.state.Message.messageList[nowPickInfo.value.id], () => {
-    setTimeout(() => {
-        scrollMessageList('bottom')
-    }, 300)
+// const scroll = ({ scrollTop }) => {
+//   console.log('scrollscrollscroll', scrollTop)
+// }
+watch(() => messageData, (newMsg, oldMsg) => {
+    nextTick(() => {
+        console.log('>>>>>监听到消息变化', notScrollBottom.value)
+        //判断拉取漫游导致的消息变化不需要执行滚动置底
+        if (notScrollBottom.value) {
+            return
+        } else {
+            setTimeout(() => {
+                scrollMessageList('bottom')
+            }, 300)
+
+        }
+    })
 }, {
-    deep: true
+    deep: true,
+    immediate: true
 })
 //监听到nowPickInfo改变 让消息直接置底
-watch(() => route.query, () => nextTick(() => {
+watch(() => route.query, () => {
     if (Object.keys(nowPickInfo.value).length > 0) {
         nextTick(() => {
-            // messageContainer.value.setScrollTop(100000)
             scrollMessageList('bottom')
         })
     }
-}))
+})
 
 //消息重新编辑
 const inputBox = ref(null)
@@ -249,7 +253,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg
 
     </div>
     <el-main class="chat_message_main">
-      <el-scrollbar class="main_container" ref="messageContainer" @scroll="scroll">
+      <el-scrollbar class="main_container" ref="messageContainer">
         <div class="innerRef">
           <div v-show="isMoreHistoryMsg" class="chat_message_tips">
             <div v-show="messageData.length > 0 && messageData[0].type !== 'inform'" class="load_more_msg">
@@ -278,136 +282,5 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg
 
 
 <style lang="scss" scoped>
-.app_container {
-  height: 100%;
-  border-left: 1px solid #E6E6E6;
-}
-
-.chat_message_header {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  justify-content: space-between;
-  height: 61px;
-  background: #F9F9F9;
-  border-radius: 0 3px 0 0;
-  border-bottom: 1px solid #E6E6E6;
-
-  .chat_user_box {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    height: 20px;
-    max-width: 80%;
-
-    .chat_user_name {
-      font-family: 'PingFang SC';
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-style: normal;
-      font-weight: 400;
-      font-size: 17px;
-      line-height: 20px;
-      letter-spacing: 0.3px;
-      color: #333333;
-    }
-  }
-
-
-  .more {
-    display: flex;
-    width: 35px;
-    height: 100%;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    cursor: pointer;
-    transition: all .3s;
-
-    &:hover {
-      transform: scale(1.1);
-    }
-  }
-}
-
-.easeim_safe_tips {
-  position: relative;
-  padding: 12px 20px;
-  background-color: #FFF4E6;
-  color: #ff8c39;
-  line-height: 18px;
-  font-family: PingFang SC;
-  font-style: normal;
-  font-weight: 400;
-  text-align: justify;
-  font-size: 12px;
-  border: none;
-
-  .easeim_close_tips {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-  }
-}
-
-.chat_message_main {
-  padding: 0;
-  background: #F9F9F9;
-
-  .main_container {
-    padding: 0 20px;
-    height: 100%;
-    // overflow-y: scroll;
-
-    .chat_message_tips {
-      margin-top: 5px;
-      width: 100%;
-      height: 30px;
-      text-align: center;
-      line-height: 30px;
-
-      .load_more_msg {
-        width: 200px;
-        height: 30px;
-        border-radius: 20px;
-        margin: 0 auto;
-        background: rgba(114, 112, 112, 0.143);
-        font-size: 13px;
-        letter-spacing: .5px;
-        // box-shadow: 1px 1px 1px 1px rgba(128, 128, 128, 0.193);
-      }
-    }
-  }
-
-}
-
-.chat_message_inputbar {
-  width: 100%;
-  height: 25%;
-  padding: 0;
-  background-color: #F9F9F9;
-  border-radius: 0 0 3px 0;
-
-
-}
-
-::v-deep .el-drawer {
-  margin-top: 60px;
-  width: 150px;
-  height: calc(100% - 60px);
-  border-radius: 5px 0 0 5px;
-
-  .el-drawer__header {
-    margin-bottom: 0;
-    padding-top: 0;
-  }
-
-  .el-drawer__body {
-    padding: 0;
-    // padding-left: 16px;
-  }
-}
+@import "./index.scss"
 </style>
