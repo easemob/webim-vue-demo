@@ -60,7 +60,7 @@ const loginIM = async () => {
     try {
         const res = await fetchUserLoginToken(params)
         if (res?.code === 200) {
-            console.log('>>>>>>登陆token获取成功', token)
+            console.log('>>>>>>登陆token获取成功', res.token)
             EaseChatClient.open({
                 user: loginValue.phoneNumber,
                 accessToken: res.token
