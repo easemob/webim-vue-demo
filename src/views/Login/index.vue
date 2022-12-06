@@ -39,17 +39,18 @@ const IM_SDK_VERSION = EaseChatClient.version
           <el-col>
             <img class="logo" :src="logo" @click="toEasemob" alt="" />
           </el-col>
-          <component :is="componType[showComponent]" @changeToLogin="changeToLogin"></component>
+          <!-- <component :is="componType[showComponent]" @changeToLogin="changeToLogin"></component> -->
+          <component :is="componType[0]" @changeToLogin="changeToLogin"></component>
           <el-col v-show="showComponent !== 2">
             <div class="function_button_extra">
-              <el-link class="reset_password" @click="showComponent = 2">重置密码</el-link>
+              <!-- <el-link class="reset_password" @click="showComponent = 2">重置密码</el-link> -->
               <!-- <el-link class="custom_config" @click="showCustomImConfigModal">服务器配置</el-link> -->
-              <p class="login_text">
+              <!-- <p class="login_text">
                 <span class="login_text_isuserid" v-show="showComponent === 0">没有账号？</span>
                 <span class="login_text_isuserid" v-show="showComponent === 1">已有账号？</span>
                 <span class="login_text_tologin" v-show="showComponent === 0" @click="showComponent = 1">注册</span>
                 <span class="login_text_tologin" v-show="showComponent === 1" @click="showComponent = 0">登录</span>
-              </p>
+              </p> -->
             </div>
           </el-col>
         </el-row>

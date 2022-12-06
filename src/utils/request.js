@@ -11,11 +11,11 @@ const service = axios.create({
 })
 // request interceptor
 service.interceptors.request.use(
-    config => {
+    (config) => {
         // do something before request is sent
         return config
     },
-    error => {
+    (error) => {
         // do something with request error
         console.log('request error', error) // for debug
         return Promise.reject(error)
@@ -27,14 +27,14 @@ service.interceptors.response.use(
     /**
      * If you want to get http information such as headers or status
      * Please return  response => response
-    */
+     */
 
     /**
      * Determine the request status by custom code
      * Here is just an example
      * You can also judge the status by HTTP Status Code
      */
-    response => {
+    (response) => {
         const res = response.data
         const code = response.status
         // if the custom code is not 20000, it is judged as an error.
@@ -44,9 +44,9 @@ service.interceptors.response.use(
             return res
         }
     },
-    error => {
+    (error) => {
         if (error.response) {
-            const res = error.response.data// for debug
+            const res = error.response.data // for debug
             if (error.response.status === 401 && res.code !== '001') {
                 console.log('>>>>>无权限')
             }
@@ -59,4 +59,4 @@ service.interceptors.response.use(
     }
 )
 
-export default service  
+export default service
