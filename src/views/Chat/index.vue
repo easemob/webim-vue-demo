@@ -5,6 +5,7 @@ import { ElMessage } from 'element-plus'
 import { EaseChatClient } from '@/IM/initwebsdk'
 import NavBar from '@/views/Chat/components/NavBar'
 import { messageType } from '@/constant'
+
 // /* CallKit */
 // import EaseCallKit from '@/components/EaseCallKit'
 import { useCallKitEvent } from '@/components/EaseCallKit/hooks'
@@ -54,6 +55,7 @@ SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
         store.dispatch('createInformMessage', { ...params })
     }
 })
+
 onBeforeUnmount(() => {
     UN_SUB_CHANNEL_ENENT(EVENT_NAME)
 })

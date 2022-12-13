@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, toRaw, nextTick, computed } from 'vue'
+import { ref, watch, toRaw, nextTick, computed, onMounted } from 'vue'
 import _ from 'lodash'
 import { EaseChatClient } from '@/IM/initwebsdk'
 import { useStore } from 'vuex'
@@ -7,6 +7,7 @@ import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { messageType, warningText } from '@/constant'
 import { ElMessage } from 'element-plus'
 import { Close } from '@element-plus/icons-vue'
+import waterMark from '@/utils/waterMark'
 /* 组件 */
 import MessageList from './components/messageList.vue'
 import InputBox from './components/inputBox.vue'
@@ -42,6 +43,13 @@ const delTheFriend = () => {
 const isShowWarningTips = computed(() => store.state.isShowWarningTips)
 const randomTips = computed(() => {
     return _.toString(_.sampleSize(SWINDLER_GO_DIE, 1))
+})
+/* warterMark */
+onMounted(() => {
+    const chatContainer = document.querySelector('.chat_message_main')
+    setTimeout(() => {
+        waterMark({ container: chatContainer })
+    }, 0)
 })
 const closeWarningTips = () => store.commit('CLOSE_WARNING_TIPS')
 /* userInfo */

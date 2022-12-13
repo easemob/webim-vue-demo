@@ -247,7 +247,6 @@ const Conversation = {
         //收集会话依赖数据
         gatherConversation: ({ commit }, key) => {
             const corresMessage = _.cloneDeep(Message.state.messageList[key])
-            console.log('corresMessage', corresMessage)
             const res = createConversation(corresMessage)
             commit('UPDATE_CONVERSATION_LIST', res)
         }
