@@ -8,6 +8,9 @@ import BenzAMRRecorder from 'benz-amr-recorder'
 import fileSizeFormat from '@/utils/fileSizeFormat'
 import dateFormat from '@/utils/dateFormater'
 import { messageType } from '@/constant'
+import {
+    handleSDKErrorNotifi
+} from '@/utils/handleSomeData'
 /* 默认头像 */
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 import ReportMessage from './suit/reportMessage.vue'
@@ -124,6 +127,7 @@ const recallMessage = async ({ id, to, chatType }) => {
     try {
         await store.dispatch('recallMessage', options)
     } catch (error) {
+        handleSDKErrorNotifi(error.type, error.message)
         console.log('>>>>>>撤回失败', error)
     }
 

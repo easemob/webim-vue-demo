@@ -50,6 +50,7 @@ const sendTextMessage = _.debounce(async () => {
     try {
         await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.TEXT, msgOptions })
     } catch (error) {
+        handleSDKErrorNotifi(error.type, error.message)
         console.log('>>>>>>>发送失败+++++++', error)
     }
 }, 50)

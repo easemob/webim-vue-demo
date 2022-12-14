@@ -25,17 +25,17 @@ const route = useRoute()
 const store = useStore()
 /* 取用户头像 */
 const loginUserAvatar = computed(() => {
-  return store.getters.loginUserInfo.avatarurl
+    return store.getters.loginUserInfo.avatarurl
 })
 
 /* 用户在线状态--样式展示逻辑 */
 const loginUserOnlineStatusIcon = computed(() => {
-  const loginUserOnlineStatus = store.state.loginUserOnlineStatus
-  if (loginUserOnlineStatus === 'Unset' || loginUserOnlineStatus === '') {
-    return ''
-  } else {
-    return onLineStatus[loginUserOnlineStatus] && onLineStatus[loginUserOnlineStatus].style || ''
-  }
+    const loginUserOnlineStatus = store.state.loginUserOnlineStatus
+    if (loginUserOnlineStatus === 'Unset' || loginUserOnlineStatus === '') {
+        return ''
+    } else {
+        return onLineStatus[loginUserOnlineStatus] && onLineStatus[loginUserOnlineStatus].style || ''
+    }
 })
 
 /* tabbar icon 路由跳转 */
@@ -45,22 +45,22 @@ const grayConversation = require('@/assets/images/tabbar/grayconversation.png')
 const highligthContacts = require('@/assets/images/tabbar/higtlightcontacts.png')
 const grayContacts = require('@/assets/images/tabbar/graycontacts.png')
 const changeSkipRouterName = (routerName) => {
-  router.push(`/chat/${routerName}`)
+    router.push(`/chat/${routerName}`)
 }
 watch(() => route.path, (newPath) => {
-  if (newPath.includes('/chat/conversation')) {
-    skipRouterName.value = 'conversation'
-  }
-  if (newPath.includes('/chat/contacts')) {
-    console.log('>>>>>存在赋值为联系人样式')
-    skipRouterName.value = 'contacts'
-  }
+    if (newPath.includes('/chat/conversation')) {
+        skipRouterName.value = 'conversation'
+    }
+    if (newPath.includes('/chat/contacts')) {
+        console.log('>>>>>存在赋值为联系人样式')
+        skipRouterName.value = 'contacts'
+    }
 })
 /* 取会话以及系统消息未读数控制会话icon badge显隐 */
 const conversationUnreadCount = computed(() => {
-  const informCount = _.sumBy(store.state.Conversation.informDetail, 'untreated') || 0
-  const commonConversationCount = _.sumBy(_.values(store.state.Conversation.conversationListData), 'unreadMessageNum')
-  return { informCount, commonConversationCount }
+    const informCount = _.sumBy(store.state.Conversation.informDetail, 'untreated') || 0
+    const commonConversationCount = _.sumBy(_.values(store.state.Conversation.conversationListData), 'unreadMessageNum')
+    return { informCount, commonConversationCount }
 })
 /* 用户信息卡片显隐 */
 const isShowUserInfoCard = ref(false)
@@ -79,9 +79,9 @@ const applyJoinGroupIcon = require('@/assets/images/tabbar/1471654067125_.pic.jp
 const applyAddFriendIcon = require('@/assets/images/tabbar/1481654067168_.pic.jpg')
 onClickOutside(settingPopover, () => (isShowPopover.value = false))
 const showInputModal = (type) => {
-  modalType.value = type
-  settingComp.value.dialogVisible = true
-  console.log('>>>>>>跳转对应modal')
+    modalType.value = type
+    settingComp.value.dialogVisible = true
+    console.log('>>>>>>跳转对应modal')
 }
 
 /* 更多操作部分more_settings */
