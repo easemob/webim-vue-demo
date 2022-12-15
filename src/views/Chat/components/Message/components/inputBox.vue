@@ -10,6 +10,7 @@ import _ from 'lodash'
 import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
 /* 组件 */
 import CollectAudio from './suit/audio.vue'
+import PreviewSendImg from './suit/previewSendImg.vue'
 //EaseCallKit Invite
 import { useManageChannel } from '@/components/EaseCallKit/hooks'
 //inviteMembers modal
@@ -69,18 +70,14 @@ const chooseImages = () => {
     console.log('uploadImgs')
 }
 //发送图片
-const sendImagesMessage = async () => {
-    //读取图片的宽高
-    const imgFile = uploadImgs.value.files[0]
+const sendImagesMessage = async (type, fileObj) => {
     const file = {
-        data: imgFile,           // file 对象。
-        filename: imgFile.name, //文件名称。
-        filetype: imgFile.type, //文件类型。
+        data: null,// file 对象。
+        filename: '',//文件名称。
+        filetype: ''//文件类型。
     }
-    console.log('imgFile', file)
     const url = window.URL || window.webkitURL
     const img = new Image()              //手动创建一个Image对象
-    img.src = url.createObjectURL(imgFile)//创建Image的对象的url
     const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
@@ -88,26 +85,94 @@ const sendImagesMessage = async () => {
         width: 0,
         height: 0
     }
-    img.onload = async () => {
-        const loadingInstance = ElLoading.service({ target: loadingBox.value, background: '#f7f7f7' })
-        msgOptions.width = img.width
-        msgOptions.height = img.height
-        console.log('height:' + img.height + '----' + img.width)
-        try {
-            await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.IMAGE, msgOptions: _.cloneDeep(msgOptions) })
-            loadingInstance.close()
-            uploadImgs.value.value = null
-        } catch (error) {
-            console.log('>>>>>发送失败', error)
-            if (error.type && error?.data) {
-                handleSDKErrorNotifi(error.type, error.data.error || 'none')
-            } else {
-                handleSDKErrorNotifi(0, 'none')
+    if (type === 'common') {
+        //读取图片的宽高
+        const imgFile = uploadImgs.value.files[0]
+        file.data = imgFile
+        file.filename = imgFile.name
+        file.filetype = imgFile.type
+        console.log('imgFile', file)
+        img.src = url.createObjectURL(imgFile)//创建Image的对象的url
+        img.onload = async () => {
+            const loadingInstance = ElLoading.service({ target: loadingBox.value, background: '#f7f7f7' })
+            msgOptions.width = img.width
+            msgOptions.height = img.height
+            console.log('height:' + img.height + '----' + img.width)
+            try {
+                await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.IMAGE, msgOptions: _.cloneDeep(msgOptions) })
+                loadingInstance.close()
+                uploadImgs.value.value = null
+            } catch (error) {
+                console.log('>>>>>发送失败', error)
+                if (error.type && error?.data) {
+                    handleSDKErrorNotifi(error.type, error.data.error || 'none')
+                } else {
+                    handleSDKErrorNotifi(0, 'none')
+                }
+                loadingInstance.close()
+                uploadImgs.value.value = null
             }
-            loadingInstance.close()
-            uploadImgs.value.value = null
-        }
 
+        }
+    } else if (type === 'other') {
+        console.log('fileObjfileObjfileObj', fileObj)
+        const imgFile = fileObj
+        file.data = imgFile
+        file.filename = imgFile.name
+        file.filetype = imgFile.type
+        console.log('imgFile', file)
+        img.src = url.createObjectURL(imgFile)//创建Image的对象的url
+        img.onload = async () => {
+            const loadingInstance = ElLoading.service({ target: loadingBox.value, background: '#f7f7f7' })
+            msgOptions.width = img.width
+            msgOptions.height = img.height
+            console.log('height:' + img.height + '----' + img.width)
+            try {
+                await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.IMAGE, msgOptions: _.cloneDeep(msgOptions) })
+                loadingInstance.close()
+                uploadImgs.value.value = null
+            } catch (error) {
+                console.log('>>>>>发送失败', error)
+                if (error.type && error?.data) {
+                    handleSDKErrorNotifi(error.type, error.data.error || 'none')
+                } else {
+                    handleSDKErrorNotifi(0, 'none')
+                }
+                loadingInstance.close()
+                uploadImgs.value.value = null
+            }
+
+        }
+    }
+
+
+
+
+}
+//贴图发送
+const previewSendImg = ref(null)
+const onPasteImage = (event) => {
+    console.log('>>>>>>监听粘贴事件', event)
+    const data = (event.clipboardData || window.clipboardData)
+    //获取图片内容
+    const imgContent = data.items[0].getAsFile()
+    //判断是不是图片，最好通过文件类型判断
+    const isImg = (imgContent && 1) || -1
+    const reader = new FileReader()
+    if (isImg >= 0) {
+        //将文件读取为 DataURL
+        reader.readAsDataURL(imgContent)
+    }
+    //文件读取完成时触发
+    reader.onload = (event) => {
+        //获取base64流
+        const base64_str = event.target.result
+        const imgInfo = {
+            imgFile: imgContent,
+            tempFilePath: base64_str
+        }
+        previewSendImg.value.showPreviewImgModal({ ...imgInfo })
+        console.log('>>>>>获取到粘贴到的文本', imgInfo)
     }
 
 
@@ -296,7 +361,8 @@ defineExpose({
             }}</span>
         </el-scrollbar>
         <!-- 图片附件choose -->
-        <input ref="uploadImgs" type="file" style="display:none" @change="sendImagesMessage" single accept="image/*">
+        <input ref="uploadImgs" type="file" style="display:none" @change="sendImagesMessage('common')" single
+            accept="image/*">
         <!-- 文件附件choose -->
         <input ref="uploadFiles" type="file" style="display:none" @change="sendFilesMessages" single>
         <!-- 录音采集框 -->
@@ -309,11 +375,12 @@ defineExpose({
     </div>
     <textarea ref="editable" v-model="textContent" class="chat_content_editable" spellcheck="false"
         contenteditable="true" placeholder="请输入消息内容..." onkeydown="if (event.keyCode === 13) event.preventDefault();"
-        @keyup.enter="sendTextMessage">
+        @keyup.enter="sendTextMessage" @paste="onPasteImage">
     </textarea>
     <el-button :class="[textContent === '' ? 'no_content_send_btn' : 'chat_send_btn']" type="primary"
         @click="sendTextMessage">发送</el-button>
     <InviteCallMembers ref="inviteCallMembersComp" @sendMulitInviteMsg="sendMulitInviteMsg" />
+    <PreviewSendImg ref="previewSendImg" @sendImagesMessage="sendImagesMessage" />
 </template>
 
 <style lang="scss" scoped>
