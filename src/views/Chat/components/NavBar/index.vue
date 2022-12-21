@@ -9,7 +9,7 @@ import { useRoute } from 'vue-router'
 /* lodash */
 import _ from 'lodash'
 /* icon */
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Message } from '@element-plus/icons-vue'
 /* 组件 */
 import MiniInfoCard from './components/AboutUserInfoCard/MiniInfoCard.vue'
 import UserOnlineStatusCard from './components/UserOnlineStatusCard.vue'
@@ -88,6 +88,8 @@ const showInputModal = (type) => {
 const edituserinfo = ref(null)
 const personalsetting = ref(null)
 const logout = ref(null)
+//打开意见反馈发送邮箱页
+const toSendFeedback = () => window.open('mailto:yunying@easemob.com')
 
 
 </script>
@@ -217,6 +219,15 @@ const logout = ref(null)
               </svg>
             </span>
             <span class="setting_fun_text">系统设置</span>
+          </div>
+          <!-- 意见反馈 -->
+          <div class="func_item" @click="toSendFeedback">
+            <span class="settting_fun_icon">
+              <el-icon>
+                <Message />
+              </el-icon>
+            </span>
+            <span class="setting_fun_text">意见反馈</span>
           </div>
           <!-- 退出登陆 -->
           <div class="func_item" @click="logout.dialogVisible = true">
@@ -403,6 +414,9 @@ const logout = ref(null)
     }
 
     .settting_fun_icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-left: 5px;
 
       img {

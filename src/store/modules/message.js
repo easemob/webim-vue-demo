@@ -1,9 +1,5 @@
 import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
-import {
-    handleSDKErrorNotifi,
-    setMessageKey,
-    createMessage
-} from '@/utils/handleSomeData'
+import { setMessageKey, createMessage } from '@/utils/handleSomeData'
 import _ from 'lodash'
 // import { ref, toRaw } from 'vue';
 import { messageType } from '@/constant'
@@ -84,7 +80,7 @@ const Message = {
         //获取历史消息
         getHistoryMessage: async ({ dispatch, commit }, params) => {
             const { id, chatType, cursor } = params
-            return new Promise(async (resolve, reject) => {
+            return new Promise((resolve, reject) => {
                 const options = {
                     targetId: id,
                     pageSize: 10,
@@ -92,28 +88,29 @@ const Message = {
                     chatType: chatType,
                     searchDirection: 'up'
                 }
-                try {
-                    const { cursor, messages } =
-                        await EaseChatClient.getHistoryMessages(options)
-                    messages.length > 0 &&
-                        messages.forEach((item) => {
-                            item.read = true
+                EaseChatClient.getHistoryMessages(options)
+                    .then((res) => {
+                        const { cursor, messages } = res
+                        messages.length > 0 &&
+                            messages.forEach((item) => {
+                                item.read = true
+                            })
+                        resolve({ messages, cursor })
+                        commit('UPDATE_HISTORY_MESSAGE', {
+                            listKey: id,
+                            historyMessage: _.reverse(messages)
                         })
-                    resolve({ messages, cursor })
-                    commit('UPDATE_HISTORY_MESSAGE', {
-                        listKey: id,
-                        historyMessage: _.reverse(messages)
+                        //提示会话列表更新
+                        dispatch('gatherConversation', id)
                     })
-                    //提示会话列表更新
-                    dispatch('gatherConversation', id)
-                } catch (error) {
-                    reject(error)
-                }
+                    .catch((error) => {
+                        reject(error)
+                    })
             })
         },
         //发送展示类型消息
         sendShowTypeMessage: async ({ dispatch, commit }, params) => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise((resolve, reject) => {
                 //主要作用为创建消息Options中附件会有上传失败的回调函数。
                 //传入errorCallback，让附件类型消息在上传失败时调用reject抛出error
                 const errorCallback = (error) => {
@@ -124,20 +121,21 @@ const Message = {
                     errorCallback
                 )
                 const msg = EaseChatSDK.message.create(options)
-                try {
-                    const { serverMsgId } = await EaseChatClient.send(msg)
-                    console.log('>>>>发送成功', msg)
-                    msg.id = serverMsgId
-                    msg.from = EaseChatClient.user
-                    const msgBody = createMessage.createMsgBody(msg)
-                    commit('UPDATE_MESSAGE_LIST', msgBody)
-                    // 提示会话列表更新
-                    dispatch('gatherConversation', msgBody.to)
-                    resolve('OK')
-                } catch (error) {
-                    console.log('>>>>>>>>发送失败', error)
-                    handleSDKErrorNotifi(error.type, error.message)
-                }
+                EaseChatClient.send(msg)
+                    .then((res) => {
+                        const { serverMsgId } = res
+                        console.log('>>>>发送成功', res)
+                        msg.id = serverMsgId
+                        msg.from = EaseChatClient.user
+                        const msgBody = createMessage.createMsgBody(msg)
+                        commit('UPDATE_MESSAGE_LIST', msgBody)
+                        // 提示会话列表更新
+                        dispatch('gatherConversation', msgBody.to)
+                        resolve('OK')
+                    })
+                    .catch((error) => {
+                        reject(error)
+                    })
             })
         },
         //添加通知类消息
@@ -160,21 +158,20 @@ const Message = {
         //撤回消息
         recallMessage: async ({ dispatch, commit }, params) => {
             const { mid, to, chatType } = params
-            return new Promise(async (resolve, reject) => {
-                try {
-                    await EaseChatClient.recallMessage({ mid, to, chatType })
-                    commit('CHANGE_MESSAGE_BODAY', {
-                        type: 'recall',
-                        key: to,
-                        mid
+            return new Promise((resolve, reject) => {
+                EaseChatClient.recallMessage({ mid, to, chatType })
+                    .then(() => {
+                        commit('CHANGE_MESSAGE_BODAY', {
+                            type: 'recall',
+                            key: to,
+                            mid
+                        })
+                        dispatch('gatherConversation', to)
+                        resolve('OK')
                     })
-                    dispatch('gatherConversation', to)
-                    resolve('OK')
-                } catch (error) {
-                    handleSDKErrorNotifi(error.type, error.message)
-                    console.log('>>>>>>撤回消息error', error)
-                    reject(error)
-                }
+                    .catch((error) => {
+                        reject(error)
+                    })
             })
         }
     }
