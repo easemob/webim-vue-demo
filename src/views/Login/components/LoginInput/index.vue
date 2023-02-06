@@ -24,10 +24,18 @@ watch(loginState, (newVal) => {
 const rules = reactive({
     phoneNumber: [
         { required: true, message: '请输入手机号', trigger: 'blur' },
-        { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: ['blur', 'change'] }
+        {
+            pattern: /^1[3-9]\d{9}$/,
+            message: '请输入正确的手机号',
+            trigger: ['blur', 'change']
+        }
     ],
     smsCode: [
-        { required: true, message: '请输入短信验证码', trigger: ['blur', 'change'] },
+        {
+            required: true,
+            message: '请输入短信验证码',
+            trigger: ['blur', 'change']
+        }
     ]
 })
 //登陆接口调用
@@ -52,22 +60,27 @@ const loginIM = async () => {
     // finally {
     //   buttonLoading.value = false;
     // }
-    /* 环信后台接口登陆（仅供环信线上demo使用！） */
+    /*  !环信后台接口登陆（仅供环信线上demo使用！） */
     const params = {
         phoneNumber: loginValue.phoneNumber.toString(),
-        smsCode: loginValue.smsCode.toString(),
+        smsCode: loginValue.smsCode.toString()
     }
     try {
         const res = await fetchUserLoginToken(params)
         if (res?.code === 200) {
             console.log('>>>>>>登陆token获取成功', res.token)
             EaseChatClient.open({
-                user: loginValue.phoneNumber,
+                user: res.chatUserName.toLowerCase(),
                 accessToken: res.token
             })
-            window.localStorage.setItem('EASEIM_loginUser', JSON.stringify({ user: loginValue.phoneNumber, accessToken: res.token }))
+            window.localStorage.setItem(
+                'EASEIM_loginUser',
+                JSON.stringify({
+                    user: res.chatUserName.toLowerCase(),
+                    accessToken: res.token
+                })
+            )
         }
-
     } catch (error) {
         console.log('>>>>登陆失败', error)
         if (error.response?.data) {
@@ -76,17 +89,15 @@ const loginIM = async () => {
                 ElMessage({
                     center: true,
                     message: `用户${loginValue.username}不存在！`,
-                    type: 'error',
+                    type: 'error'
                 })
             } else {
                 handleSDKErrorNotifi(code, errorInfo)
             }
         }
-    }
-    finally {
+    } finally {
         buttonLoading.value = false
     }
-
 }
 /* 短信验证码相关 */
 const isSenedAuthCode = ref(false)
@@ -95,162 +106,188 @@ const sendMessageAuthCode = async () => {
     const phoneNumber = loginValue.phoneNumber
     try {
         await fetchUserLoginSmsCode(phoneNumber)
-        ElMessage({ type: 'success', message: '验证码获取成功！', center: true })
+        ElMessage({
+            type: 'success',
+            message: '验证码获取成功！',
+            center: true
+        })
         startCountDown()
     } catch (error) {
         ElMessage({ type: 'error', message: '验证码获取失败！', center: true })
     }
-
 }
 const startCountDown = () => {
     isSenedAuthCode.value = true
     let timer = null
     timer = setInterval(() => {
-        if (authCodeNextCansendTime.value <= 60 && authCodeNextCansendTime.value > 0) {
+        if (
+            authCodeNextCansendTime.value <= 60 &&
+            authCodeNextCansendTime.value > 0
+        ) {
             authCodeNextCansendTime.value--
-        }
-        else {
+        } else {
             clearInterval(timer)
             timer = null
             authCodeNextCansendTime.value = 60
             isSenedAuthCode.value = false
         }
     }, 1000)
-
 }
 </script>
 
 <template>
-  <el-form :model="loginValue" :rules="rules">
-    <el-form-item prop="phoneNumber">
-      <el-input class="login_input_style" v-model="loginValue.phoneNumber" placeholder="手机号" clearable />
-    </el-form-item>
-    <el-form-item prop="smsCode">
-      <el-input class="login_input_style" v-model="loginValue.smsCode" placeholder="请输入短信验证码">
-        <template #append>
-          <el-button type="primary" :disabled="loginValue.phoneNumber && isSenedAuthCode" @click="sendMessageAuthCode"
-            v-text="isSenedAuthCode ? `${authCodeNextCansendTime}S` : '获取验证码'"></el-button>
-        </template>
-      </el-input>
-    </el-form-item>
-    <el-form-item>
-      <div class="function_button_box">
-        <el-button v-if="(loginValue.phoneNumber && loginValue.smsCode)" class="haveValueBtn" :loading="buttonLoading"
-          @click="loginIM">登录</el-button>
-        <el-button v-else class="notValueBtn">登录</el-button>
-      </div>
-    </el-form-item>
-  </el-form>
+    <el-form :model="loginValue" :rules="rules">
+        <el-form-item prop="phoneNumber">
+            <el-input
+                class="login_input_style"
+                v-model="loginValue.phoneNumber"
+                placeholder="手机号"
+                clearable
+            />
+        </el-form-item>
+        <el-form-item prop="smsCode">
+            <el-input
+                class="login_input_style"
+                v-model="loginValue.smsCode"
+                placeholder="请输入短信验证码"
+            >
+                <template #append>
+                    <el-button
+                        type="primary"
+                        :disabled="loginValue.phoneNumber && isSenedAuthCode"
+                        @click="sendMessageAuthCode"
+                        v-text="
+                            isSenedAuthCode
+                                ? `${authCodeNextCansendTime}S`
+                                : '获取验证码'
+                        "
+                    ></el-button>
+                </template>
+            </el-input>
+        </el-form-item>
+        <el-form-item>
+            <div class="function_button_box">
+                <el-button
+                    v-if="loginValue.phoneNumber && loginValue.smsCode"
+                    class="haveValueBtn"
+                    :loading="buttonLoading"
+                    @click="loginIM"
+                    >登录</el-button
+                >
+                <el-button v-else class="notValueBtn">登录</el-button>
+            </div>
+        </el-form-item>
+    </el-form>
 </template>
 
 <style lang="scss" scoped>
 .login_input_style {
-  margin: 10px 0;
-  width: 400px;
-  height: 50px;
-  padding: 0 16px;
+    margin: 10px 0;
+    width: 400px;
+    height: 50px;
+    padding: 0 16px;
 }
 
 ::v-deep .el-input__inner {
-  padding: 0 20px;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 20px;
-  letter-spacing: 1.75px;
-  color: #3A3A3A;
-
-  &::placeholder {
-    font-family: 'PingFang SC';
+    padding: 0 20px;
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
     line-height: 20px;
-    /* identical to box height */
     letter-spacing: 1.75px;
-    color: #CCCCCC;
-  }
+    color: #3a3a3a;
+
+    &::placeholder {
+        font-family: 'PingFang SC';
+        font-style: normal;
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 20px;
+        /* identical to box height */
+        letter-spacing: 1.75px;
+        color: #cccccc;
+    }
 }
 
 ::v-deep .el-input__suffix-inner {
-  font-size: 20px;
-  margin-right: 15px;
+    font-size: 20px;
+    margin-right: 15px;
 }
 
 ::v-deep .el-form-item__error {
-  margin-left: 16px;
+    margin-left: 16px;
 }
 
 ::v-deep .el-input-group__append {
-  background: linear-gradient(90deg, #04aef0 0%, #5a5dd0 100%);
-  width: 60px;
-  color: #FFF;
-  border: none;
-  font-weight: 400;
+    background: linear-gradient(90deg, #04aef0 0%, #5a5dd0 100%);
+    width: 60px;
+    color: #fff;
+    border: none;
+    font-weight: 400;
 
-  button {
-    font-weight: 300;
-  }
+    button {
+        font-weight: 300;
+    }
 }
 
 .login_text {
-  font-family: 'PingFang SC';
-  font-style: normal;
-  font-weight: 400;
-  font-size: 12px;
-  line-height: 17px;
-  text-align: right;
+    font-family: 'PingFang SC';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 17px;
+    text-align: right;
 
-  .login_text_isuserid {
-    display: inline-block;
-    // width: 100px;
-    color: #F9F9F9;
-  }
-
-  .login_text_tologin {
-    margin-right: 20px;
-    width: 80px;
-    color: #05B5F1;
-    cursor: pointer;
-
-    &:hover {
-      text-decoration: underline;
+    .login_text_isuserid {
+        display: inline-block;
+        // width: 100px;
+        color: #f9f9f9;
     }
-  }
+
+    .login_text_tologin {
+        margin-right: 20px;
+        width: 80px;
+        color: #05b5f1;
+        cursor: pointer;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
 }
 
 .function_button_box {
-  margin-top: 10px;
-  width: 400px;
+    margin-top: 10px;
+    width: 400px;
 
-  button {
-    margin: 10px;
-    width: 380px;
-    height: 50px;
-    border-radius: 57px;
-  }
-
-  .haveValueBtn {
-    background: linear-gradient(90deg, #04aef0 0%, #5a5dd0 100%);
-    border: none;
-    font-weight: 300;
-    font-size: 17px;
-    color: #F4F4F4;
-
-    &:active {
-      background: linear-gradient(90deg, #0b83b2 0%, #363df4 100%);
+    button {
+        margin: 10px;
+        width: 380px;
+        height: 50px;
+        border-radius: 57px;
     }
-  }
 
-  .notValueBtn {
-    border: none;
-    font-weight: 300;
-    font-size: 17px;
-    background: #000000;
-    mix-blend-mode: normal;
-    opacity: 0.3;
-    color: #FFFFFF;
-    cursor: not-allowed;
-  }
+    .haveValueBtn {
+        background: linear-gradient(90deg, #04aef0 0%, #5a5dd0 100%);
+        border: none;
+        font-weight: 300;
+        font-size: 17px;
+        color: #f4f4f4;
+
+        &:active {
+            background: linear-gradient(90deg, #0b83b2 0%, #363df4 100%);
+        }
+    }
+
+    .notValueBtn {
+        border: none;
+        font-weight: 300;
+        font-size: 17px;
+        background: #000000;
+        mix-blend-mode: normal;
+        opacity: 0.3;
+        color: #ffffff;
+        cursor: not-allowed;
+    }
 }
 </style>

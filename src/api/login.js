@@ -10,9 +10,17 @@ import request from '@/utils/request'
 // }
 
 //新获取用户登录token
+// export function fetchUserLoginToken(params) {
+//     return request({
+//         url: '/inside/app/user/login/V1',
+//         method: 'post',
+//         data: params
+//     })
+// }
+//新获取用户登录token v2
 export function fetchUserLoginToken(params) {
     return request({
-        url: '/inside/app/user/login/V1',
+        url: '/inside/app/user/login/V2',
         method: 'post',
         data: params
     })
