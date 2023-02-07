@@ -18,7 +18,7 @@ const store = useStore()
 /* route */
 const route = useRoute()
 const { CHAT_TYPE } = messageType
-const { EASEIM_HINT, SWINDLER_GO_DIE } = warningText
+const { EASEIM_HINT, SWINDLER_GO_DIE, WARM_TIP } = warningText
 const nowPickInfo = ref({})
 const friendList = computed(() => store.state.Contacts.friendList)
 const groupList = computed(() => store.state.Contacts.groupList)
@@ -253,6 +253,7 @@ const reEditMessage = (msg) => inputBox.value.textContent = msg
     <div v-if="isShowWarningTips" class="easeim_safe_tips">
       <p>{{ EASEIM_HINT }}</p>
       <p>【防骗提示】{{ randomTips }}</p>
+      <p v-show="nowPickInfo.chatType === CHAT_TYPE.GROUP && nowPickInfo?.groupDetail?.custom !=='default'" >{{ WARM_TIP }}</p>
       <span class="easeim_close_tips" @click="closeWarningTips">
         <el-icon>
           <Close />
