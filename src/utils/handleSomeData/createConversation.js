@@ -123,7 +123,7 @@ export default function (corresMessage) {
             }
             if (chatType === CHAT_TYPE.GROUP) {
                 const groupInfo = store.state.Contacts.groupList[to]
-                groupInfo.groupname &&
+                groupInfo?.groupname &&
                     (state.conversationInfo.name = groupInfo.groupname)
             } else if (chatType === CHAT_TYPE.SINGLE) {
                 //to字段 暂时选择展示为环信ID
