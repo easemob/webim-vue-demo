@@ -517,6 +517,8 @@ export default{
 }
 .name_box {
   position: relative;
+  display: flex;
+  margin-top: 5px;
 }
 .friend_portrait{
   width: 35px;
@@ -526,6 +528,7 @@ export default{
 .custom-title {
   font-weight: 500;
   width: 100%;
+  margin-left: 5px;
   // height: 50px;
 }
 .custom-title-width {

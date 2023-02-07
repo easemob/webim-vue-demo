@@ -135,23 +135,23 @@ const Login = {
 	    },
 	    // 使用 token 登录
 	    loginWithToken: (context, payload) => {
-	    	axios.post(domain+'/inside/app/user/login/V1', {
+	    	axios.post(domain+'/inside/app/user/login/V2', {
                 phoneNumber: payload.phone,
                 smsCode: payload.captcha
             })
             .then(function (response) {
-                const {phoneNumber, token} = response.data
+                const {phoneNumber, token, chatUserName} = response.data
                 context.commit('setPhoneNumber', phoneNumber)
 
-                context.commit('setUserName', payload.phone);
+                context.commit('setUserName', chatUserName);
 
 				let options = {
-					user: payload.phone,
+					user: chatUserName,
 					accessToken: token,
                 	appKey: WebIM.config.appkey
 				};
 				WebIM.conn.open(options);
-				localStorage.setItem('userInfo', JSON.stringify({ userId: payload.phone, accessToken: token }));
+				localStorage.setItem('userInfo', JSON.stringify({ userId: chatUserName, accessToken: token }));
             })
             .catch(function (error) {
 				switch (error.response.data.errorInfo) {
