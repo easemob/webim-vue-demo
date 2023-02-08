@@ -141,7 +141,7 @@ const setAgoraRtcListener = () => {
     //监听用户离开回调
     CallKitClient.on('user-left', (user, reason) => {
         console.log('>>>>>>用户离开回调触发,离开原因', reason)
-        leaveChannel()
+        leaveChannel(false)
     })
 }
 
@@ -218,6 +218,8 @@ const joinChannel = async () => {
         }
         isStreamPlay.value = true
     } catch (error) {
+        localVoiceTrack && localVoiceTrack.close()
+        localVideoTrack && localVideoTrack.close()
         console.log('%c>>>>加入频道失败', 'color:red', error)
     }
 
@@ -228,9 +230,13 @@ const cancelCall = () => {
     emits('handleCancelCall')
 }
 //离开频道【挂断&对方挂断】
-const leaveChannel = async () => {
+const leaveChannel = async (isHangUp) => {
     console.log('》》》》》挂断')
     await CallKitClient.leave()
+    //leaveType 主动挂断发送cannel信令
+    if(isHangUp){
+        cancelCall()
+    }
     const eventParams = {
         type: CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.HANGUP],
         ext: { message: `通话结束【${formatTime.value}】`, calltime_length: timeCount.value },
@@ -315,7 +321,7 @@ onBeforeUnmount(() => {
               <img :src="localStreamStatus.voice ? microphone : mutemicrophone" alt="" draggable="false">
               <p class="btn_text">语音</p>
             </div>
-            <div class="stream_calling_btn" @click="leaveChannel">
+            <div class="stream_calling_btn" @click="leaveChannel(true)">
               <img src="@/assets/callkit/hangupCall@2x.png" alt="挂断" draggable="false">
               <p class="btn_text">挂断</p>
             </div>
