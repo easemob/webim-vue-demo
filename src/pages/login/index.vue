@@ -112,7 +112,7 @@ export default{
 	components: {},
 	computed: {
 		isRegister(){
-			return  true//this.$store.state.login.isRegister;
+			return  this.$store.state.login.isRegister;
 		},
 		imageUrl(){
 			return this.$store.state.login.imageUrl
