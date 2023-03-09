@@ -114,7 +114,9 @@ export default{
 	},
 
 	mounted(){
-		rtc.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+		// rtc.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+    rtc.client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' });
+    rtc.client.setClientRole('host');
 		this.addListener();
 		this.interval();
 
