@@ -150,11 +150,13 @@ const fechHistoryMessage = (loadType) => {
 //获取其id对应的消息内容
 const messageData = computed(() => {
     //如果Message.messageList中不存在的话调用拉取漫游取一下历史消息
-    return (
-        (nowPickInfo.value.id &&
-            store.state.Message.messageList[nowPickInfo.value.id]) ||
-        fechHistoryMessage('fistLoad')()
-    )
+    if (loginState.value) {
+        return (
+            (nowPickInfo.value.id &&
+                store.state.Message.messageList[nowPickInfo.value.id]) ||
+            fechHistoryMessage('fistLoad')()
+        )
+    }
 })
 
 const messageContainer = ref(null)
