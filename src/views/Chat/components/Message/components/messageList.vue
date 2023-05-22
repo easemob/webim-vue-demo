@@ -41,6 +41,12 @@ const isMyself = computed(() => {
         return msgBody.from === loginUserId
     }
 })
+/* 文本中是否包含link */
+const isLink = computed(() => {
+    return (msg) => {
+        return paseLink(msg).isLink
+    }
+})
 /* 获取自己的用户信息 */
 const loginUserInfo = computed(() => store.state.loginUserInfo)
 
@@ -190,13 +196,12 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                         style="padding: 10px; line-height: 20px"
                         v-if="msgBody.type === ALL_MESSAGE_TYPE.TEXT"
                     >
-                        <span v-show="!paseLink(msgBody.msg).isLink">
+                        <template v-if="!isLink(msgBody.msg)">
                             {{ msgBody.msg }}
-                        </span>
-                        <span
-                            v-show="paseLink(msgBody.msg).isLink"
-                            v-html="paseLink(msgBody.msg).msg"
-                        ></span>
+                        </template>
+                        <template v-else>
+                            <span v-html="paseLink(msgBody.msg).msg"> </span
+                        ></template>
                     </p>
                     <!-- 图片类型消息 -->
                     <!-- <div> -->
