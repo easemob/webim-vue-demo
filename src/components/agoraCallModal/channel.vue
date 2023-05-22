@@ -94,7 +94,9 @@ export default{
 
 	mounted(){
 		const { callStatus } = this.$store.state.agora;
-		rtc.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+		// rtc.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+    rtc.client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' });
+    rtc.client.setClientRole('host');
 		this.addListener();
 		if(callStatus == 5 || callStatus == 3){
 			// 5 被叫加入
