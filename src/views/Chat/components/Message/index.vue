@@ -319,7 +319,7 @@ const reEditMessage = (msg) => (inputBox.value.textContent = msg)
                     <div v-show="isMoreHistoryMsg" class="chat_message_tips">
                         <div
                             v-show="
-                                messageData.length?.length &&
+                                messageData?.length &&
                                 messageData[0].type !== 'inform'
                             "
                             class="load_more_msg"
