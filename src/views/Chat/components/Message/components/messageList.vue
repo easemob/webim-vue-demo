@@ -189,8 +189,15 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                     <p
                         style="padding: 10px; line-height: 20px"
                         v-if="msgBody.type === ALL_MESSAGE_TYPE.TEXT"
-                        v-html="paseLink(msgBody.msg)"
-                    ></p>
+                    >
+                        <span v-show="!paseLink(msgBody.msg).isLink">
+                            {{ msgBody.msg }}
+                        </span>
+                        <span
+                            v-show="paseLink(msgBody.msg).isLink"
+                            v-html="paseLink(msgBody.msg).msg"
+                        ></span>
+                    </p>
                     <!-- 图片类型消息 -->
                     <!-- <div> -->
                     <el-image
