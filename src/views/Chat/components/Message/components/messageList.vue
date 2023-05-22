@@ -75,13 +75,13 @@ const handleMsgTimeShow = computed(() => {
 //音频播放状态
 const audioPlayStatus = reactive({
     isPlaying: false, //是否在播放中
-    playIndex: -1 //在播放的音频消息下标
+    playMsgId: '' //在播放的音频消息id,
 })
 //开始播放
-const startplayAudio = (msgBody, index) => {
+const startplayAudio = (msgBody) => {
     const armRec = new BenzAMRRecorder()
     const src = msgBody.url
-    audioPlayStatus.playIndex = index
+    audioPlayStatus.playMsgId = msgBody.id
     console.log('>>>>>开始播放音频', msgBody.url)
     //初始化音频源并调用播放
     armRec.initWithUrl(src).then(() => {
@@ -92,12 +92,12 @@ const startplayAudio = (msgBody, index) => {
     //播放开始监听
     armRec.onPlay(() => {
         audioPlayStatus.isPlaying = true
-        audioPlayStatus.playIndex = index
+        audioPlayStatus.playMsgId = msgBody.id
     })
     //播放结束监听
     armRec.onStop(() => {
         audioPlayStatus.isPlaying = false
-        audioPlayStatus.playIndex = -1
+        audioPlayStatus.playMsgId = ''
     })
 }
 
@@ -211,7 +211,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                                 : 'message_box_content_audio_other'
                         ]"
                         v-if="msgBody.type === ALL_MESSAGE_TYPE.AUDIO"
-                        @click="startplayAudio(msgBody, index)"
+                        @click="startplayAudio(msgBody)"
                         :style="`width:${msgBody.length * 10}px`"
                     >
                         <span class="audio_length_text">
@@ -222,7 +222,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                                 isMyself(msgBody)
                                     ? 'play_audio_icon_mine'
                                     : 'play_audio_icon_other',
-                                audioPlayStatus.playIndex === index &&
+                                audioPlayStatus.playMsgId === msgBody.id &&
                                     'start_play_audio'
                             ]"
                             style="background-size: 100% 100%"
