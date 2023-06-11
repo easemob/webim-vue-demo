@@ -154,14 +154,14 @@ EaseChatClient.addEventHandler('friendListen', {
         //取消针对好友的在线状态订阅
         presenceStatus('unsub', data.from)
         //好友关系解除重新获取好友列表
-        fetchFriendList()
+        // fetchFriendList()
     },
     // 新增联系人会触发此方法。
     onContactAdded: (data) => {
         console.log('>>>>好友新增监听', data)
         submitInformData(INFORM_FROM.FRIEND, data)
         //新增好友重新获取好友列表
-        fetchFriendList()
+        // fetchFriendList()
 
     },
     // 好友请求被拒绝时触发此方法。
@@ -179,7 +179,7 @@ EaseChatClient.addEventHandler('friendListen', {
         data.type = 'other_person_agree'
         submitInformData(INFORM_FROM.FRIEND, data)
         //对方同意后重新获取好友列表
-        fetchFriendList()
+        // fetchFriendList()
     }
 })
 /* 群组相关监听 */
