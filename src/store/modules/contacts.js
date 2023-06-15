@@ -114,7 +114,7 @@ const Contacts = {
     },
     actions: {
         //获取好友列表
-        fetchFriendList: async ({ dispatch, commit }) => {
+        fetchAllFriendListFromServer: async ({ dispatch, commit }) => {
             const friendListData = {}
             try {
                 //获取好友列表
