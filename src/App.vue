@@ -28,14 +28,14 @@ EaseChatClient.addEventHandler('connection', {
     },
     onOnline: () => {
         store.commit('CHANGE_NETWORK_STATUS', true)
-    },                  // 本机网络连接成功。
+    }, // 本机网络连接成功。
     onOffline: () => {
         store.commit('CHANGE_NETWORK_STATUS', false)
-    },                 // 本机网络掉线。
+    }, // 本机网络掉线。
     onError: (error) => {
         console.log('on error', error)
         handleSDKErrorNotifi(error.type, error.message)
-    },
+    }
 })
 //fetch 登陆用户的初始数据
 const fetchLoginUsersInitData = () => {
@@ -55,7 +55,7 @@ const getMyUserInfos = () => {
 const fetchFriendList = () => {
     // const { value = {} } = useLocalStorage('friendList')
     // if (Object.values(JSON.parse(value)).length > 0) return
-    store.dispatch('fetchFriendList')
+    store.dispatch('fetchAllFriendListFromServer')
 }
 //获取黑名单列表
 const fetchTheLoginUserBlickList = () => store.dispatch('fetchBlackList')
@@ -66,7 +66,7 @@ const fetchGroupList = () => {
     // if (Object.values(JSON.parse(value)).length > 0) return
     const pageParams = {
         pageNum: 1,
-        pageSize: 20,
+        pageSize: 20
     }
     store.dispatch('fetchGroupList', pageParams)
 }
@@ -81,8 +81,7 @@ EaseChatClient.addEventHandler('presenceStatusChange', {
     onPresenceStatusChange: (status) => {
         console.log('>>>>>presenceStatusChange', status)
         getUserPresence(...status)
-    },
-
+    }
 })
 //处理登陆用户状态的变更
 const getUserPresence = (status) => {
@@ -94,34 +93,34 @@ EaseChatClient.addEventHandler('messageListen', {
         console.log('>>>>>>>App mesage', message)
         console.log('setMessageKey', setMessageKey(message))
         pushNewMessage(message)
-    },    // 收到文本消息。
+    }, // 收到文本消息。
     onEmojiMessage: function (message) {
         pushNewMessage(message)
-    },   // 收到表情消息。
+    }, // 收到表情消息。
     onImageMessage: function (message) {
         pushNewMessage(message)
-    },   // 收到图片消息。
+    }, // 收到图片消息。
     onCmdMessage: function (message) {
         console.log('>>>>>收到命令消息', message)
-    },     // 收到命令消息。
+    }, // 收到命令消息。
     onAudioMessage: function (message) {
         pushNewMessage(message)
-    },   // 收到音频消息。
+    }, // 收到音频消息。
     onLocationMessage: function (message) {
         pushNewMessage(message)
-    },// 收到位置消息。
+    }, // 收到位置消息。
     onFileMessage: function (message) {
         pushNewMessage(message)
-    },    // 收到文件消息。
+    }, // 收到文件消息。
     onCustomMessage: function (message) {
         pushNewMessage(message)
-    },  // 收到自定义消息。
+    }, // 收到自定义消息。
     onVideoMessage: function (message) {
         pushNewMessage(message)
-    },     // 收到视频消息。
+    }, // 收到视频消息。
     onRecallMessage: function (message) {
         otherRecallMessage(message)
-    },    // 收到消息撤回回执。
+    } // 收到消息撤回回执。
 })
 //接收的消息往store中push
 const pushNewMessage = (message) => {
@@ -162,7 +161,6 @@ EaseChatClient.addEventHandler('friendListen', {
         submitInformData(INFORM_FROM.FRIEND, data)
         //新增好友重新获取好友列表
         // fetchFriendList()
-
     },
     // 好友请求被拒绝时触发此方法。
     onContactRefuse: (data) => {
@@ -193,7 +191,6 @@ EaseChatClient.addEventHandler('groupEvent', {
 const submitInformData = (fromType, informContent) => {
     console.log('>>>submitInformData>>>', fromType, informContent)
     store.dispatch('createNewInform', { fromType, informContent })
-
 }
 
 /* 重新登陆 */
@@ -206,7 +203,6 @@ const handleRelogin = () => {
         user: loginUserFromStorage.user,
         accessToken: loginUserFromStorage.accessToken
     })
-
 }
 if (loginUserFromStorage?.user && loginUserFromStorage?.accessToken) {
     handleRelogin()
@@ -225,20 +221,30 @@ const sendMulitInviteMsg = (targetIMId) => {
     const callType = 2
     easeCallKit.value.inMultiChanelSendInviteMsg(targetIMId, callType)
 }
-
 </script>
 <template>
     <router-view v-slot="{ Component }">
-        <transition name="slide-fade" mode="out-in" :duration="{ enter: 500, leave: 300 }">
+        <transition
+            name="slide-fade"
+            mode="out-in"
+            :duration="{ enter: 500, leave: 300 }"
+        >
             <component :is="Component" />
         </transition>
     </router-view>
     <!-- 铃声标签 -->
     <audio id="ring" :src="ring" controls hidden></audio>
     <!-- About EaseCallKit -->
-    <EaseCallKit ref="easeCallKit" :EaseIMClient="EaseChatClient" :msgCreateFunc="EaseChatSDK.message"
-        @onInviteMembers="showModal" />
-    <InviteCallMembers ref="inviteCallComp" @sendMulitInviteMsg="sendMulitInviteMsg" />
+    <EaseCallKit
+        ref="easeCallKit"
+        :EaseIMClient="EaseChatClient"
+        :msgCreateFunc="EaseChatSDK.message"
+        @onInviteMembers="showModal"
+    />
+    <InviteCallMembers
+        ref="inviteCallComp"
+        @sendMulitInviteMsg="sendMulitInviteMsg"
+    />
 </template>
 
 <style type="scss">
