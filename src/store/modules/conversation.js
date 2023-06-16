@@ -99,16 +99,6 @@ const Conversation = {
                     chatType: CHAT_TYPE.SINGLE
                 }
                 switch (informContent.type) {
-                    case 'other_person_agree':
-                        {
-                            //他人同意更新好友列表
-                            console.log(
-                                '>>>>>【other_person_agree】通知更新好友列表'
-                            )
-                            // dispatch('fetchFriendList')
-                        }
-
-                        break
                     case 'unsubscribed':
                         {
                             informMsg.msg = '你俩的友尽了，可重新发起好友申请'
@@ -179,15 +169,17 @@ const Conversation = {
                         break
                     case 'muteMember':
                         {
-                            informMsg.msg = `${informContent.from}禁言了${informContent.to ? informContent.to : '你'
-                                }~`
+                            informMsg.msg = `${informContent.from}禁言了${
+                                informContent.to ? informContent.to : '你'
+                            }~`
                             dispatch('createInformMessage', informMsg)
                         }
                         break
                     case 'unmuteMember':
                         {
-                            informMsg.msg = `${informContent.from}取消了${informContent.to ? informContent.to : '你'
-                                }的禁言~`
+                            informMsg.msg = `${informContent.from}取消了${
+                                informContent.to ? informContent.to : '你'
+                            }的禁言~`
                             dispatch('createInformMessage', informMsg)
                         }
                         break

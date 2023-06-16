@@ -4,17 +4,19 @@ import { sortPinyinFriendItem, handlePresence } from '@/utils/handleSomeData'
 import _ from 'lodash'
 const Contacts = {
     state: {
-        // friendList: useLocalStorage('friendList', {}),
         friendList: {},
-        // groupList: useLocalStorage('groupList', {}),
         groupList: {},
-        // sortedFriendList: useLocalStorage('sortedFriendList', {}),
-        sortedFriendList: {},
         friendBlackList: []
     },
     mutations: {
         SET_FRIEND_LIST: (state, payload) => {
             state.friendList = _.assign({}, payload)
+        },
+        SET_ADD_NEW_FRIEND: (state, payload) => {
+            state.friendList = _.assign(state.friendList, payload)
+        },
+        DELETE_FRIEND_FROM_LIST: (state, payload) => {
+            payload && delete state.friendList[payload]
         },
         SET_BLACK_LIST: (state, payload) => {
             state.friendBlackList = _.assign([], payload)
@@ -28,9 +30,6 @@ const Contacts = {
                         friendList[commonStatus.uid].userStatus = commonStatus
                     }
                 })
-        },
-        SET_SORDED_FRIEND_LIST: (state, payload) => {
-            state.sortedFriendList = _.assign({}, payload)
         },
         SET_GROUP_LIST: (state, payload) => {
             //init 为初始化获取 replenish 补充群列表（包括补充群详情）
@@ -131,19 +130,42 @@ const Contacts = {
                     friendListData,
                     friendListWithInfos
                 )
-                //合并后的好友列表数据进行排序并单独提交处理
-                const sortFriendList = sortPinyinFriendItem(mergedFriendList)
-                commit('SET_SORDED_FRIEND_LIST', sortFriendList)
                 commit('SET_FRIEND_LIST', mergedFriendList)
                 //提交之后订阅好友状态
                 dispatch('subFriendsPresence', data)
             } catch (error) {
                 //异常一般为获取会话异常，直接提交好友列表
                 commit('SET_FRIEND_LIST', friendListData)
-                commit('SET_SORDED_FRIEND_LIST', sortFriendList)
                 //提交之后订阅好友状态
                 dispatch('subFriendsPresence', data)
             }
+        },
+        //新增联系人
+        onAddedNewFriend: async ({ dispatch, commit }, params) => {
+            console.log('onAddedNewFriend params', params)
+            const { from: userId } = params
+            let friendData = {}
+            friendData[userId] = { hxId: userId }
+            try {
+                const newfriendInfos = await dispatch('getOtherUserInfo', [
+                    userId
+                ])
+                console.log('newfriendInfos', newfriendInfos)
+                _.merge(friendData, newfriendInfos)
+                commit('SET_ADD_NEW_FRIEND', friendData)
+            } catch (error) {
+                console.log('>>>>新增好友数据处理失败', error)
+            }
+            //订阅新增联系人
+            dispatch('subFriendsPresence', [userId])
+        },
+        //好友关系解除
+        onDeleteFriend: async ({ dispatch, commit }, params) => {
+            //取消订阅好友状态。
+            const { from: userId } = params
+            dispatch('unsubFriendsPresence', [userId])
+            //从本地好友列表中删除此好友
+            commit('DELETE_FRIEND_FROM_LIST', userId)
         },
         //获取黑名单列表
         fetchBlackList: async ({ dispatch, commit }, params) => {
@@ -242,6 +264,12 @@ const Contacts = {
                     setType: 'replenish',
                     data: result.data[0]
                 })
+        }
+    },
+    getters: {
+        //返回排序后的好友列表
+        sortedFriendList: (state) => {
+            return sortPinyinFriendItem(state.friendList)
         }
     }
 }
