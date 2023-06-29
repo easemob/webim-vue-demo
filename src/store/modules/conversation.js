@@ -107,7 +107,7 @@ const Conversation = {
                         break
                     case 'subscribed':
                         {
-                            informMsg.msg = '已成为你的好友,开始聊天吧'
+                            informMsg.msg = '你们已成为你的好友,开始聊天吧'
                             dispatch('createInformMessage', informMsg)
                         }
                         break
@@ -224,6 +224,25 @@ const Conversation = {
                                     pageSize: 500
                                 })
                             }, 300)
+                        }
+                        break
+                    case 'memberAttributesUpdate':
+                        {
+                            console.log('>>>>>>>收到了群组成员属性更新事件')
+                            informMsg.msg = `${informContent.from}修改群内昵称为【${informContent?.attributes?.nickName}】`
+                            dispatch('createInformMessage', informMsg)
+                            commit('SET_GROUP_MEMBERS_INFO', {
+                                groupId: informContent.id,
+                                inGroupInfo: [
+                                    {
+                                        [informContent.from]: {
+                                            nickName:
+                                                informContent?.attributes
+                                                    ?.nickName
+                                        }
+                                    }
+                                ]
+                            })
                         }
                         break
                     default:

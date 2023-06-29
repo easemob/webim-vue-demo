@@ -17,7 +17,8 @@ const INFORM_NAME = {
     GROUP_UNMUTE_MEMBER: '移除成员禁言',
     GROUP_DESTORY: '解散群组',
     GROUP_ACCEPTREQUEST: '同意入群申请',
-    GROUP_UPDATE_INFO: '更新群组信息'
+    GROUP_UPDATE_INFO: '更新群组信息',
+    GROUP_UPDATE_MEMBER_ATTRIBUTES: '群组成员属性更新'
 }
 const INFORM_TYPE = {
     subscribe: INFORM_NAME.FRIEND_INVITE,
@@ -38,13 +39,14 @@ const INFORM_TYPE = {
     destroy: INFORM_NAME.GROUP_DESTORY,
     requestToJoin: INFORM_NAME.GROUP_REQUESTTOJOIN,
     acceptRequest: INFORM_NAME.GROUP_ACCEPTREQUEST,
-    updateInfo: INFORM_NAME.GROUP_UPDATE_INFO
+    updateInfo: INFORM_NAME.GROUP_UPDATE_INFO,
+    memberAttributesUpdate: INFORM_NAME.GROUP_UPDATE_MEMBER_ATTRIBUTES
 }
 const INFORM_FROM = {
     FRIEND: 'friend',
-    GROUP: 'group',
+    GROUP: 'group'
 }
 export default {
     INFORM_TYPE,
-    INFORM_FROM,
+    INFORM_FROM
 }
