@@ -11,6 +11,7 @@ import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
 /* 组件 */
 import CollectAudio from './suit/audio.vue'
 import PreviewSendImg from './suit/previewSendImg.vue'
+import { useGetGroupUserMapInfo } from '@/hooks'
 //vue at
 import VueAt from 'vue-at/dist/vue-at-textarea' // for textarea
 //EaseCallKit Invite
@@ -30,6 +31,7 @@ const { nowPickInfo } = toRefs(props)
 //附件类上传加载状态
 const loadingBox = ref(null)
 /* 文本消息相关 */
+const { getTheGroupNickNameById } = useGetGroupUserMapInfo()
 //AT 逻辑
 const atMembersList = computed(() => {
     let members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }]
@@ -37,7 +39,7 @@ const atMembersList = computed(() => {
     //TODO text部分应为获取群组成员的自定义属性，待后续增加可设置自定在群组当中的自定义属性。
     if (groupId) {
         const sourceMembers =
-            store.state.Groups.groupsInfos[nowPickInfo.value.id]?.members || []
+            store.state.Groups.groupsInfos[groupId]?.members || []
         sourceMembers.length &&
             sourceMembers.forEach((item) => {
                 if (
@@ -45,7 +47,10 @@ const atMembersList = computed(() => {
                     item.member !== EaseChatClient.user
                 ) {
                     members.push({
-                        text: item.owner || item.member,
+                        text: getTheGroupNickNameById(
+                            groupId,
+                            item.owner || item.member
+                        ),
                         value: item.owner || item.member
                     })
                 }
@@ -142,6 +147,19 @@ const addOneEmoji = (emoji) => {
     console.log('>>>>>>emoji', emoji)
     textContent.value = textContent.value + emoji
 }
+//监听键盘按下事件，如果为enter键则发送文本内容,shift+enter则换行。
+const onTextInputKeyDown = (event) => {
+    if (event.keyCode === 13 && !event.shiftKey) {
+        event.preventDefault()
+        // 执行发送操作
+        sendTextMessage()
+    } else if (event.keyCode === 13 && event.shiftKey) {
+        // 换行操作
+        insertNewLine()
+    }
+}
+//换行操作
+const insertNewLine = () => (textContent.value += '\n')
 
 /* 图片消息相关 */
 //选择图片
@@ -458,6 +476,7 @@ const sendMulitInviteMsg = (targetIMId) => {
     }
     store.dispatch('createInformMessage', params)
 }
+
 defineExpose({
     textContent
 })
@@ -537,7 +556,7 @@ defineExpose({
         <!-- 附件上传加载容器 -->
         <div ref="loadingBox" class="loading_box"></div>
     </div>
-    <vue-at :members="atMembersList" name-key="text" @insert="onInsert">
+    <template v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE">
         <textarea
             ref="editable"
             v-model="textContent"
@@ -545,11 +564,26 @@ defineExpose({
             spellcheck="false"
             contenteditable="true"
             placeholder="请输入消息内容..."
-            onkeydown="if (event.keyCode === 13) event.preventDefault();"
+            @keydown="onTextInputKeyDown"
             @paste="onPasteImage"
         >
         </textarea>
-    </vue-at>
+    </template>
+    <template v-else-if="nowPickInfo.chatType === CHAT_TYPE.GROUP">
+        <vue-at :members="atMembersList" name-key="text" @insert="onInsert">
+            <textarea
+                ref="editable"
+                v-model="textContent"
+                class="chat_content_editable"
+                spellcheck="false"
+                contenteditable="true"
+                placeholder="请输入消息内容..."
+                @keydown="onTextInputKeyDown"
+                @paste="onPasteImage"
+            >
+            </textarea>
+        </vue-at>
+    </template>
 
     <el-button
         :class="[textContent === '' ? 'no_content_send_btn' : 'chat_send_btn']"
