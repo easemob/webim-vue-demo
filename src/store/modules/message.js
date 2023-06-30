@@ -78,7 +78,7 @@ const Message = {
             dispatch('gatherConversation', key)
         },
         //获取历史消息
-        getHistoryMessage: async ({ dispatch, commit }, params) => {
+        getHistoryMessage: async ({ state, dispatch, commit }, params) => {
             const { id, chatType, cursor } = params
             return new Promise((resolve, reject) => {
                 const options = {
@@ -100,8 +100,10 @@ const Message = {
                             listKey: id,
                             historyMessage: _.reverse(messages)
                         })
-                        //提示会话列表更新
-                        dispatch('gatherConversation', id)
+                        if (!state.messageList[id]) {
+                            //提示会话列表更新
+                            dispatch('gatherConversation', id)
+                        }
                     })
                     .catch((error) => {
                         reject(error)

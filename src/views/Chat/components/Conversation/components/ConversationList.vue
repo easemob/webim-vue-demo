@@ -196,7 +196,7 @@ const deleteConversation = (itemKey) => {
                                     <span
                                         class="last_msg_body_mention"
                                         v-if="item.isMention"
-                                        >[ 有人@我 ]</span
+                                        >[有人@我]</span
                                     >
                                     <span
                                         v-show="
