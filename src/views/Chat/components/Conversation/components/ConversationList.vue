@@ -14,6 +14,8 @@ const router = useRouter()
 /* store */
 const store = useStore()
 const { CHAT_TYPE } = messageType
+//登录用户ID
+const loginUserId = computed(() => store.state.loginUserInfo.hxId)
 //取系统通知数据
 const informDetail = computed(() => {
     const informDetailArr = store.state.Conversation.informDetail
@@ -195,7 +197,10 @@ const deleteConversation = (itemKey) => {
                                 <div class="last_msg_body">
                                     <span
                                         class="last_msg_body_mention"
-                                        v-if="item.isMention"
+                                        v-if="
+                                            item.fromInfo.fromId !==
+                                                loginUserId && item.isMention
+                                        "
                                         >[有人@我]</span
                                     >
                                     <span

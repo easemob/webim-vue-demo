@@ -33,13 +33,12 @@ const handleLastMsgContent = (msgBody) => {
     return resultContent
 }
 //判断该消息是否包含提及（@登录用户）
-const checkLastMsgisHasMention = (lastMentionState, ext) => {
+const checkLastMsgisHasMention = (ext, lastMentionState) => {
     const EM_AT_LIST = 'em_at_list'
     //如果上一个会话中提及状态为true则继续保持为true
     if (lastMentionState) return true
     //如不包含@相关字段信息，则返回提及状态为false
-    if (!_.keys(ext).length || _.keys(ext).includes(EM_AT_LIST) === false)
-        return false
+    if (!ext?.EM_AT_LIST) return false
     //包含提及相关信息则返回true
     if (
         ext[EM_AT_LIST].includes(EaseChatClient.user) ||
@@ -125,7 +124,7 @@ export default function (corresMessage) {
                     from === loginUserId || msgBody.read || msgBody.isRecall
                         ? 0
                         : 1,
-                isMention: msgBody.read ? false : checkLastMsgisHasMention(ext),
+                isMention: checkLastMsgisHasMention(ext),
                 latestMessage: {
                     msg: handleLastMsgContent(msgBody),
                     // SESSION_MESSAGE_TYPE[type] ||
@@ -165,7 +164,7 @@ export default function (corresMessage) {
                 targetId: to,
                 latestMessageId: id,
                 latestSendTime: time || Date.now(),
-                isMention: checkLastMsgisHasMention(theData.isMention, ext),
+                isMention: checkLastMsgisHasMention(ext, theData.isMention),
                 unreadMessageNum:
                     /* 这里的逻辑为如果from为自己，更新的消息已读，更新的消息为撤回，不计入unreadMessageNum的累加 */
                     from === loginUserId || msgBody.read || msgBody.isRecall
