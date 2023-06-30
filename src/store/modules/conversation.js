@@ -72,11 +72,28 @@ const Conversation = {
         CLEAR_UNREAD_NUM: (state, key) => {
             state.conversationListData[key].unreadMessageNum = 0
         },
+        //清除会话@状态
+        CLEAR_AT_STATUS: (state, index) => {
+            console.log('>>>>>>>执行清除会话@状态', index)
+            state.conversationListData[index].isMention = false
+        },
         //清除信息卡片未读
         CLEAR_UNTREATED_STATUS: (state, index) => {
             console.log('>>>>>执行清除卡片未读', index)
             state.informDetail[index].untreated = 0
         },
+
+        //清除会话未读状态
+        CLEAR_UNREAD_STATUS: (state, index) => {
+            console.log('>>>>>>>执行清除会话未读状态', index)
+            state.conversationListData[index].unreadMessageNum = 0
+        },
+        //更新会话未读状态
+        UPDATE_UNREAD_STATUS: (state, index) => {
+            console.log('>>>>>>>执行更新会话未读状态', index)
+            state.conversationListData[index].unreadMessageNum++
+        },
+        //更新会话@状态
         //更改卡片消息的按钮状态
         UPDATE_INFORM_BTNSTATUS: (state, { index: index, btnStatus }) => {
             console.log('>>>>触发了按钮更新状态', index, btnStatus)

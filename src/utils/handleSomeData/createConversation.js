@@ -20,7 +20,7 @@ const handleLastMsgContent = (msgBody) => {
     } else if (type === ALL_MESSAGE_TYPE.CUSTOM) {
         //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
         if (msgBody.customEvent) {
-            (CUSTOM_TYPE[msgBody.customEvent] &&
+            ;(CUSTOM_TYPE[msgBody.customEvent] &&
                 (resultContent = CUSTOM_TYPE[msgBody.customEvent])) ||
                 ''
         }
@@ -32,7 +32,22 @@ const handleLastMsgContent = (msgBody) => {
     }
     return resultContent
 }
-//当前登陆ID
+//判断该消息是否包含提及（@登录用户）
+const checkLastMsgisHasMention = (ext) => {
+    const EM_AT_LIST = 'em_at_list'
+    console.log(
+        '_.checkLastMsgisHasMention(ext)',
+        _.keys(ext).includes(EM_AT_LIST)
+    )
+    if (!_.keys(ext).length || _.keys(ext).includes(EM_AT_LIST) === false)
+        return false
+    if (
+        ext[EM_AT_LIST].includes(EaseChatClient.user) ||
+        ext[EM_AT_LIST] === 'ALL'
+    )
+        return true
+}
+
 export default function (corresMessage) {
     /*
      * 1、取到messageList更新后的最后一套消息
@@ -110,6 +125,7 @@ export default function (corresMessage) {
                     from === loginUserId || msgBody.read || msgBody.isRecall
                         ? 0
                         : 1,
+                isMention: msgBody.read ? false : checkLastMsgisHasMention(ext),
                 latestMessage: {
                     msg: handleLastMsgContent(msgBody),
                     // SESSION_MESSAGE_TYPE[type] ||
@@ -149,6 +165,7 @@ export default function (corresMessage) {
                 targetId: to,
                 latestMessageId: id,
                 latestSendTime: time || Date.now(),
+                isMention: checkLastMsgisHasMention(ext),
                 unreadMessageNum:
                     /* 这里的逻辑为如果from为自己，更新的消息已读，更新的消息为撤回，不计入unreadMessageNum的累加 */
                     from === loginUserId || msgBody.read || msgBody.isRecall

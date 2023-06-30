@@ -84,7 +84,9 @@ const toChatMessage = (item, itemKey, index) => {
     checkedConverItemIndex.value = index
     if (item && item.unreadMessageNum > 0)
         store.commit('CLEAR_UNREAD_NUM', itemKey)
+    if (item.isMention) store.commit('CLEAR_AT_STATUS', itemKey)
     //跳转至对应的消息界面
+
     emit('toChatMessage', itemKey, item.conversationType)
 }
 //删除某条会话
@@ -191,6 +193,11 @@ const deleteConversation = (itemKey) => {
                                     {{ handleConversationName(item) }}
                                 </div>
                                 <div class="last_msg_body">
+                                    <span
+                                        class="last_msg_body_mention"
+                                        v-if="item.isMention"
+                                        >[ 有人@我 ]</span
+                                    >
                                     <span
                                         v-show="
                                             item.conversationType ===
@@ -332,6 +339,12 @@ const deleteConversation = (itemKey) => {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+        .last_msg_body_mention {
+            font-size: 12px;
+            line-height: 17px;
+            font-weight: bold;
+            color: red;
         }
     }
 
