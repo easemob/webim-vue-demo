@@ -33,13 +33,18 @@ const handleLastMsgContent = (msgBody) => {
     return resultContent
 }
 //判断该消息是否包含提及（@登录用户）
-const checkLastMsgisHasMention = (ext, toDoUpdateConversation) => {
+const checkLastMsgisHasMention = (toDoUpdateMsg, toDoUpdateConversation) => {
+    const { ext, type, from } = toDoUpdateMsg
     const EM_AT_LIST = 'em_at_list'
+    //如果要更新的消息不为文本消息则直接return
+    if (type !== ALL_MESSAGE_TYPE.TEXT) return false
+    //当前要更新会话状态如果已为提及则不做处理仍返回true
     if (toDoUpdateConversation && toDoUpdateConversation?.isMention) return true
+    //如果要更新的消息消息包含扩展提及则返回true
     if (!ext || !ext[EM_AT_LIST]) return false
     if (
         ext[EM_AT_LIST].includes(EaseChatClient.user) ||
-        ext[EM_AT_LIST] === 'ALL'
+        (from !== EaseChatClient.user && ext[EM_AT_LIST] === 'ALL')
     ) {
         return true
     } else {
@@ -55,9 +60,8 @@ export default function (corresMessage) {
      */
     const updatedConversation = {}
     const lastMsgBody = corresMessage[corresMessage.length - 1]
-    findIncludesConversation(lastMsgBody)
     //根据传入的消息进入会话列表进行查询
-    function findIncludesConversation(msgBody) {
+    const findIncludesConversation = (msgBody) => {
         const localConversationList =
             store.state.Conversation.conversationListData
         const listKey = setMessageKey(msgBody)
@@ -81,7 +85,7 @@ export default function (corresMessage) {
         }
     }
     //构建会话方法
-    function buildConversationItem(operateType, msgBody, theData) {
+    const buildConversationItem = (operateType, msgBody, theData) => {
         //type create构建 update更新
         /**
   * 
@@ -124,7 +128,7 @@ export default function (corresMessage) {
                     from === loginUserId || msgBody.read || msgBody.isRecall
                         ? 0
                         : 1,
-                isMention: checkLastMsgisHasMention(ext),
+                isMention: checkLastMsgisHasMention(msgBody),
                 latestMessage: {
                     msg: handleLastMsgContent(msgBody),
                     // SESSION_MESSAGE_TYPE[type] ||
@@ -164,7 +168,7 @@ export default function (corresMessage) {
                 targetId: to,
                 latestMessageId: id,
                 latestSendTime: time || Date.now(),
-                isMention: checkLastMsgisHasMention(ext, theData),
+                isMention: checkLastMsgisHasMention(msgBody, theData),
                 unreadMessageNum:
                     /* 这里的逻辑为如果from为自己，更新的消息已读，更新的消息为撤回，不计入unreadMessageNum的累加 */
                     from === loginUserId || msgBody.read || msgBody.isRecall
@@ -174,5 +178,6 @@ export default function (corresMessage) {
             return _.assign(theData, updatedState)
         }
     }
+    findIncludesConversation(lastMsgBody)
     return updatedConversation
 }

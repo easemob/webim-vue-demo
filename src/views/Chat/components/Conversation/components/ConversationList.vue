@@ -197,10 +197,7 @@ const deleteConversation = (itemKey) => {
                                 <div class="last_msg_body">
                                     <span
                                         class="last_msg_body_mention"
-                                        v-if="
-                                            item.fromInfo.fromId !==
-                                                loginUserId && item.isMention
-                                        "
+                                        v-if="item.isMention"
                                         >[有人@我]</span
                                     >
                                     <span
