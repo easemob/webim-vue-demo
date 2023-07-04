@@ -154,7 +154,7 @@ export default function (corresMessage) {
                     fromName: ''
                 },
                 latestMessage: {
-                    msg: handleLastMsgContent(msgBody, theData),
+                    msg: handleLastMsgContent(msgBody),
                     // SESSION_MESSAGE_TYPE[type] ||
                     // (msgBody.isRecall && '撤回了一条消息') ||
                     // msg,
