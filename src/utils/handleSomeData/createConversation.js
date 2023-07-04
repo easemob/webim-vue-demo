@@ -36,19 +36,19 @@ const handleLastMsgContent = (msgBody) => {
 const checkLastMsgisHasMention = (toDoUpdateMsg, toDoUpdateConversation) => {
     const { ext, type, from } = toDoUpdateMsg
     const EM_AT_LIST = 'em_at_list'
-    //如果要更新的消息不为文本消息则直接return
-    if (type !== ALL_MESSAGE_TYPE.TEXT) return false
     //当前要更新会话状态如果已为提及则不做处理仍返回true
     if (toDoUpdateConversation && toDoUpdateConversation?.isMention) return true
     //如果要更新的消息消息包含扩展提及则返回true
-    if (!ext || !ext[EM_AT_LIST]) return false
-    if (
-        ext[EM_AT_LIST].includes(EaseChatClient.user) ||
-        (from !== EaseChatClient.user && ext[EM_AT_LIST] === 'ALL')
-    ) {
-        return true
-    } else {
-        return false
+    if (type === ALL_MESSAGE_TYPE.TEXT) {
+        if (!ext || !ext[EM_AT_LIST]) return false
+        if (
+            ext[EM_AT_LIST].includes(EaseChatClient.user) ||
+            (from !== EaseChatClient.user && ext[EM_AT_LIST] === 'ALL')
+        ) {
+            return true
+        } else {
+            return false
+        }
     }
 }
 
