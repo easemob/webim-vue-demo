@@ -338,6 +338,7 @@ const reEditMessage = (msg) => (inputBox.value.textContent = msg)
                         </div>
                     </div>
                     <MessageList
+                        :nowPickInfo="nowPickInfo"
                         :messageData="messageData"
                         @scrollMessageList="scrollMessageList"
                         @reEditMessage="reEditMessage"

@@ -5811,6 +5811,11 @@ text-table@^0.2.0:
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
 
+textarea-caret@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.npmmirror.com/textarea-caret/-/textarea-caret-3.1.0.tgz#5d5a35bb035fd06b2ff0e25d5359e97f2655087f"
+  integrity sha512-cXAvzO9pP5CGa6NKx0WYHl+8CHKZs8byMkt3PCJBCmq2a34YA9pO1NrQET5pzeqnBjBdToF5No4rrmkDUgQC2Q==
+
 thenify-all@^1.0.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/thenify-all/-/thenify-all-1.6.0.tgz#1a1918d402d8fc3f98fbf234db0bcc8cc10e9726"
@@ -5987,6 +5992,13 @@ vary@~1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha1-IpnwLG3tMNSllhsLn3RSShj2NPw=
+
+vue-at@^3.0.0-alpha.2:
+  version "3.0.0-alpha.2"
+  resolved "https://registry.npmmirror.com/vue-at/-/vue-at-3.0.0-alpha.2.tgz#5b11e3ebc7edbb72d19891bcb9361aefcc6fc6a7"
+  integrity sha512-ybFUA4SMxxG9WDkZczjMARu2Q8NeixRbzAk4izu9bUiXdDhDcYqyTDCU6X82SlW6/Dq4NZfw4zdpdKkoAkXdgw==
+  dependencies:
+    textarea-caret "^3.1.0"
 
 vue-demi@*:
   version "0.12.5"

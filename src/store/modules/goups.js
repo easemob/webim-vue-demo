@@ -2,45 +2,37 @@ import { ElMessage } from 'element-plus'
 import { EaseChatClient } from '@/IM/initwebsdk'
 const Groups = {
     state: {
-        groupsInfos: {},
+        groupsInfos: {}
     },
     mutations: {
         SET_GORUPS_ADMINS: (state, payload) => {
             console.log('>>>>>开始赋值群组管理员', payload)
             const { groupId, admin } = payload
-            if (state.groupsInfos[groupId]) {
-                state.groupsInfos[groupId].admin = admin
-            } else {
+            if (!state.groupsInfos[groupId]) {
                 state.groupsInfos[groupId] = {}
-                state.groupsInfos[groupId].admin = admin
             }
+            state.groupsInfos[groupId].admin = admin
         },
         SET_GOUPS_MEMBERS: (state, payload) => {
             const { groupId, members } = payload
-            if (state.groupsInfos[groupId]) {
-                state.groupsInfos[groupId].members = members
-            } else {
+            if (!state.groupsInfos[groupId]) {
                 state.groupsInfos[groupId] = {}
-                state.groupsInfos[groupId].members = members
             }
+            state.groupsInfos[groupId].members = members
         },
         SET_GROUPS_BLIACK_LIST: (state, payload) => {
             const { groupId, blacklist } = payload
-            if (state.groupsInfos[groupId]) {
-                state.groupsInfos[groupId].blacklist = blacklist
-            } else {
+            if (!state.groupsInfos[groupId]) {
                 state.groupsInfos[groupId] = {}
-                state.groupsInfos[groupId].blacklist = blacklist
             }
+            state.groupsInfos[groupId].blacklist = blacklist
         },
         SET_GOUPS_MUTE_LIST: (state, payload) => {
             const { groupId, mutelist } = payload
-            if (state.groupsInfos[groupId]) {
-                state.groupsInfos[groupId].mutelist = mutelist
-            } else {
+            if (!state.groupsInfos[groupId]) {
                 state.groupsInfos[groupId] = {}
-                state.groupsInfos[groupId].mutelist = mutelist
             }
+            state.groupsInfos[groupId].mutelist = mutelist
         },
         SET_GOUPS_ANNOUN: (state, payload) => {
             const { groupId, announcement } = payload
@@ -51,9 +43,26 @@ const Groups = {
                 state.groupsInfos[groupId].announcement = announcement
             }
         },
+        //设置用户在群组中的群组属性
+        SET_GROUP_MEMBERS_INFO: (state, payload) => {
+            const { groupId, inGroupInfo } = payload
+            let groupMemberInfo = {}
+            inGroupInfo.length > 0 &&
+                inGroupInfo.map(
+                    (item) =>
+                        (groupMemberInfo = Object.assign(groupMemberInfo, item))
+                )
+            if (!state.groupsInfos[groupId]) {
+                state.groupsInfos[groupId] = {}
+            }
+            state.groupsInfos[groupId].groupMemberInfo = _.assign(
+                state.groupsInfos[groupId].groupMemberInfo,
+                groupMemberInfo
+            )
+        }
     },
     actions: {
-    //初始群信息需要多个请求
+        //初始群信息需要多个请求
         fetchMultiGoupsInfos: async ({ dispatch }, groupid) => {
             dispatch('fetchGoupsAdmin', groupid)
             dispatch('fetchAnnounment', groupid)
@@ -64,7 +73,9 @@ const Groups = {
         },
         //群管理员
         fetchGoupsAdmin: async ({ commit }, params) => {
-            const { data } = await EaseChatClient.getGroupAdmin({ groupId: params })
+            const { data } = await EaseChatClient.getGroupAdmin({
+                groupId: params
+            })
             commit('SET_GORUPS_ADMINS', { groupId: params, admin: data })
         },
         //群组成员
@@ -76,37 +87,118 @@ const Groups = {
             const options = {
                 pageNum: pageNum,
                 pageSize: pageSize,
-                groupId: params,
+                groupId: params
             }
             const { data } = await EaseChatClient.listGroupMembers(options)
+            dispatch('fetchGroupMemberAttributes', {
+                groupId: params,
+                members: data
+            })
             commit('SET_GOUPS_MEMBERS', { groupId: params, members: data })
         },
+        //获取群成员对应的群组属性
+        fetchGroupMemberAttributes: async ({ dispatch, commit }, params) => {
+            const { groupId, members } = params
+            const membersList = _.chunk(members, 10)
+            let requestTrack = []
+            membersList.forEach((list) => {
+                const goupMemberList = _.flatten(_.map(list, _.values))
+                console.log('goupMemberList', list, goupMemberList)
+                requestTrack.push(
+                    EaseChatClient.getGroupMembersAttributes({
+                        groupId: groupId,
+                        userIds: goupMemberList
+                    })
+                )
+            })
+            try {
+                const res = await Promise.all(requestTrack)
+                const groupUsersInfo = _.map(res, 'data')
+                console.log('>>>>批量获取群组成员属性成功', groupUsersInfo)
+                commit('SET_GROUP_MEMBERS_INFO', {
+                    groupId: groupId,
+                    inGroupInfo: groupUsersInfo
+                })
+            } catch (error) {
+                console.log('>>>>批量获取群组成员属性失败', error)
+            }
+        },
+        //获取登录用户在某群的群组属性
+        // fetchInTheGroupInfo: async ({ commit }, groupId) => {
+        //     console.log('>>>>>>>开始拉取群组信息', groupId)
+        //     try {
+        //         const { data: inGroupInfo } =
+        //             await EaseChatClient.getGroupMemberAttributes({
+        //                 groupId: groupId,
+        //                 userId: EaseChatClient.user
+        //             })
+        //         console.log('>>>>>>拉取群组信息成功', inGroupInfo)
+        //         commit('SET_LOGINUSER_GROUP_INFO', {
+        //             groupId: groupId,
+        //             inGroupInfo: inGroupInfo
+        //         })
+        //     } catch (error) {
+        //         console.log('>>>>>获取当前登录用户群组属性失败', error)
+        //     }
+
+        //     // commit('SET_GROUP_INFOS', {
+        //     //     groupId: params,
+        //     //     groupInfo: data,
+        //     // })
+        // },
+        //设置登录用户在某群的群组属性
+        setInTheGroupInfo: async ({ commit }, params) => {
+            console.log('>>>>>>>开始拉取群组信息', params)
+            const { groupId, nickName } = params
+            try {
+                await EaseChatClient.setGroupMemberAttributes({
+                    groupId: groupId,
+                    userId: EaseChatClient.user,
+                    memberAttributes: {
+                        nickName
+                    }
+                })
+                commit('SET_GROUP_MEMBERS_INFO', {
+                    groupId: groupId,
+                    inGroupInfo: [{ [EaseChatClient.user]: { nickName } }]
+                })
+            } catch (error) {
+                console.log('>>>>>获取当前登录用户群组属性失败', error)
+            }
+        },
+
         //获取群公告
         fetchAnnounment: async ({ dispatch, commit }, params) => {
             const option = {
-                groupId: params,
+                groupId: params
             }
             const { data } = await EaseChatClient.fetchGroupAnnouncement(option)
             commit('SET_GOUPS_ANNOUN', {
                 groupId: params,
-                announcement: data.announcement,
+                announcement: data.announcement
             })
         },
         //群黑名单
         fetchGoupsBlackList: async ({ dispatch, commit }, params) => {
             const { data } = await EaseChatClient.getGroupBlocklist({
-                groupId: params,
+                groupId: params
             })
-            commit('SET_GROUPS_BLIACK_LIST', { groupId: params, blacklist: data })
+            commit('SET_GROUPS_BLIACK_LIST', {
+                groupId: params,
+                blacklist: data
+            })
         },
         //群禁言列表
         fetchGoupsMuteList: async ({ dispatch, commit }, params) => {
             console.log('>>>>>>>成功触发拉取禁言列表', params)
             try {
                 const { data } = await EaseChatClient.getGroupMuteList({
-                    groupId: params,
+                    groupId: params
                 })
-                commit('SET_GOUPS_MUTE_LIST', { groupId: params, mutelist: data })
+                commit('SET_GOUPS_MUTE_LIST', {
+                    groupId: params,
+                    mutelist: data
+                })
             } catch (error) {
                 console.log('>>>>禁言接口获取失败', error)
             }
@@ -118,33 +210,33 @@ const Groups = {
             if (modifyType === 0) {
                 const option = {
                     groupId: groupid,
-                    groupName: content,
+                    groupName: content
                 }
                 await EaseChatClient.modifyGroup(option)
                 //更新本地缓存数据
                 commit('UPDATE_GROUP_INFOS', {
                     groupId: groupid,
                     type: 'groupName',
-                    params: content,
+                    params: content
                 })
                 commit('UPDATE_GROUP_LIST', {
                     type: 'updateGroupName',
                     groupId: groupid,
-                    groupName: content,
+                    groupName: content
                 })
             }
             //1 是修改群详情
             if (modifyType === 1) {
                 const option = {
                     groupId: groupid,
-                    description: content,
+                    description: content
                 }
                 await EaseChatClient.modifyGroup(option)
                 //更新本地缓存数据
                 commit('UPDATE_GROUP_INFOS', {
                     groupId: groupid,
                     type: 'groupDescription',
-                    params: content,
+                    params: content
                 })
             }
         },
@@ -162,13 +254,13 @@ const Groups = {
                 await EaseChatClient.inviteUsersToGroup({ users, groupId })
                 ElMessage({
                     message: '群组邀请成功送出~',
-                    type: 'success',
+                    type: 'success'
                 })
             } catch (error) {
                 console.log('>>>>群组邀请失败', error)
                 ElMessage({
                     message: '群组邀请失败，请稍后重试~',
-                    type: 'error',
+                    type: 'error'
                 })
             }
         },
@@ -180,7 +272,7 @@ const Groups = {
                 await EaseChatClient.removeGroupMember({ username, groupId })
                 ElMessage({
                     message: `已将${username}移出群组!`,
-                    type: 'success',
+                    type: 'success'
                 })
                 //通知更新群详情
                 dispatch('getAssignGroupDetail', groupId)
@@ -189,7 +281,7 @@ const Groups = {
             } catch (error) {
                 ElMessage({
                     message: '该群成员移出失败，请稍后重试！',
-                    type: 'error',
+                    type: 'error'
                 })
                 console.log('<<>>>>>>>>移出失败', error)
             }
@@ -206,7 +298,7 @@ const Groups = {
                 await EaseChatClient.blockGroupMembers({ groupId, usernames })
                 ElMessage({
                     message: '黑名单添加成功~',
-                    type: 'success',
+                    type: 'success'
                 })
                 //移出黑名单，还要调用拉取群组列表，原因为将群成员加入黑名单还会将其踢出群组。
                 dispatch('fetchGoupsMember', groupId)
@@ -218,7 +310,7 @@ const Groups = {
                 console.log('>>>>>error', error)
                 ElMessage({
                     message: '黑名单添加失败，请稍后重试~',
-                    type: 'error',
+                    type: 'error'
                 })
             }
         },
@@ -229,7 +321,7 @@ const Groups = {
                 await EaseChatClient.unblockGroupMembers({ groupId, usernames })
                 ElMessage({
                     message: '黑名单移除成功~',
-                    type: 'success',
+                    type: 'success'
                 })
                 //重新获取黑名单列表
                 dispatch('fetchGoupsBlackList', groupId)
@@ -237,7 +329,7 @@ const Groups = {
                 console.log('>>>>>>黑名单移除失败')
                 ElMessage({
                     message: '黑名单移除失败，请稍后重试~',
-                    type: 'error',
+                    type: 'error'
                 })
             }
         },
@@ -250,17 +342,17 @@ const Groups = {
 
             try {
                 usernames.length > 0 &&
-          usernames.map((userId) => {
-              requestTrack.push = EaseChatClient.muteGroupMember({
-                  groupId,
-                  username: userId,
-                  muteDuration: 886400000,
-              })
-          })
+                    usernames.map((userId) => {
+                        requestTrack.push = EaseChatClient.muteGroupMember({
+                            groupId,
+                            username: userId,
+                            muteDuration: 886400000
+                        })
+                    })
                 await Promise.all(requestTrack)
                 ElMessage({
                     message: '禁言成功~',
-                    type: 'success',
+                    type: 'success'
                 })
                 setTimeout(() => {
                     dispatch('fetchGoupsMuteList', groupId)
@@ -268,7 +360,7 @@ const Groups = {
             } catch (error) {
                 ElMessage({
                     message: '禁言失败，请稍后重试~',
-                    type: 'error',
+                    type: 'error'
                 })
             }
 
@@ -286,16 +378,16 @@ const Groups = {
             const requestTrack = []
             try {
                 usernames.length > 0 &&
-          usernames.map((userId) => {
-              requestTrack.push = EaseChatClient.unmuteGroupMember({
-                  groupId,
-                  username: userId,
-              })
-          })
+                    usernames.map((userId) => {
+                        requestTrack.push = EaseChatClient.unmuteGroupMember({
+                            groupId,
+                            username: userId
+                        })
+                    })
                 await Promise.all(requestTrack)
                 ElMessage({
                     message: '移除禁言成功~',
-                    type: 'success',
+                    type: 'success'
                 })
                 setTimeout(() => {
                     dispatch('fetchGoupsMuteList', groupId)
@@ -303,13 +395,13 @@ const Groups = {
             } catch (error) {
                 ElMessage({
                     message: '移除禁言失败，请稍后重试~',
-                    type: 'error',
+                    type: 'error'
                 })
             }
             console.log('>>>>>>调用了移出禁言操作', params)
-        },
+        }
     },
-    getters: {},
+    getters: {}
 }
 
 export default Groups

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, defineProps } from 'vue'
+import { ref, toRefs, computed, defineProps } from 'vue'
 import { useStore } from 'vuex'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { ElLoading, ElMessageBox } from 'element-plus'
@@ -11,6 +11,9 @@ import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
 /* 组件 */
 import CollectAudio from './suit/audio.vue'
 import PreviewSendImg from './suit/previewSendImg.vue'
+import { useGetGroupUserMapInfo } from '@/hooks'
+//vue at
+import VueAt from 'vue-at/dist/vue-at-textarea' // for textarea
 //EaseCallKit Invite
 import { useManageChannel } from '@/components/EaseCallKit/hooks'
 //inviteMembers modal
@@ -23,16 +26,86 @@ const props = defineProps({
         default: () => ({})
     }
 })
-const { ALL_MESSAGE_TYPE, CHAT_TYPE } = messageType
+const { ALL_MESSAGE_TYPE, CHAT_TYPE, MENTION_ALL } = messageType
 const { nowPickInfo } = toRefs(props)
-//加载状态
+//附件类上传加载状态
 const loadingBox = ref(null)
-
 /* 文本消息相关 */
+const { getTheGroupNickNameById } = useGetGroupUserMapInfo()
+//AT 逻辑
+const atMembersList = computed(() => {
+    let members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }]
+    const groupId = nowPickInfo.value?.id
+    //TODO text部分应为获取群组成员的自定义属性，待后续增加可设置自定在群组当中的自定义属性。
+    if (groupId) {
+        const sourceMembers =
+            store.state.Groups.groupsInfos[groupId]?.members || []
+        sourceMembers.length &&
+            sourceMembers.forEach((item) => {
+                if (
+                    item.owner !== EaseChatClient.user &&
+                    item.member !== EaseChatClient.user
+                ) {
+                    members.push({
+                        text: getTheGroupNickNameById(
+                            groupId,
+                            item.owner || item.member
+                        ),
+                        value: item.owner || item.member
+                    })
+                }
+            })
+    }
+    console.log('membersList', members)
+    return members
+    // return store.state.Groups.groupsInfos[nowPickInfo.value.id]?.members || []
+})
+console.log(atMembersList.value)
+const isAtAll = ref(false)
+const atMembers = ref([])
+//输入框插入@事件
+const onInsert = (target) => {
+    // if (!) return false
+    console.log('onInset', target)
+    if (_.map(atMembers.value, 'value').includes(target.value)) return false
+    if (target.value === MENTION_ALL.VALUE) {
+        return (isAtAll.value = true)
+    } else {
+        atMembers.value.push({ ...target })
+    }
+}
+//校验消息内容中是否包含要@的成员
+const checkAtMembers = (text) => {
+    if (!text) {
+        return false
+    }
+    //判断是否文本中是否有@ALL，没有则直接设置为false
+    const patternAtAll = new RegExp(`@${MENTION_ALL.TEXT}`)
+    console.log('patternAtAll', patternAtAll)
+    if (isAtAll.value && !patternAtAll.test(text)) {
+        isAtAll.value = false
+    }
+    if (atMembers.value.length !== 0) {
+        //循环AT成员数组通过匹配文本内容判断是否存在已经移除@成员
+        _.map(atMembers.value, 'text').forEach((item, index) => {
+            console.log('atMembers item', item, index)
+            const pattern = new RegExp(`@${item}`)
+            const result = pattern.test(text)
+            if (!result) {
+                console.log('文本中不满足条件')
+                //不包含则从@列表中移除该成员
+                atMembers.value.splice(index, 1)
+                console.log('>>>>>已删除', atMembers.value)
+            }
+        })
+    }
+}
 //emojis框展开
 const isShowEmojisBox = ref(false)
 const emojisBox = ref(null)
-onClickOutside(emojisBox, () => { isShowEmojisBox.value = false })
+onClickOutside(emojisBox, () => {
+    isShowEmojisBox.value = false
+})
 const showEmojisBox = () => {
     console.log('>>>>>展开模态框')
     isShowEmojisBox.value = true
@@ -42,25 +115,51 @@ const textContent = ref('')
 const sendTextMessage = _.debounce(async () => {
     //如果输入框全部为空格同样拒绝发送
     if (textContent.value.match(/^\s*$/)) return
+    console.log('atMembers.value', atMembers.value)
+    checkAtMembers(textContent.value)
     const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
         msg: textContent.value,
+        ext: {
+            em_at_list: isAtAll.value
+                ? MENTION_ALL.VALUE
+                : _.map(atMembers.value, 'value')
+        }
     }
     textContent.value = ''
     try {
-        await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.TEXT, msgOptions })
+        console.log('msgOptions', msgOptions)
+        await store.dispatch('sendShowTypeMessage', {
+            msgType: ALL_MESSAGE_TYPE.TEXT,
+            msgOptions
+        })
     } catch (error) {
         handleSDKErrorNotifi(error.type, error.message)
         console.log('>>>>>>>发送失败+++++++', error)
+    } finally {
+        isAtAll.value = false
+        atMembers.value = []
     }
 }, 50)
 //新增一个emoji
 const addOneEmoji = (emoji) => {
     console.log('>>>>>>emoji', emoji)
     textContent.value = textContent.value + emoji
-
 }
+//监听键盘按下事件，如果为enter键则发送文本内容,shift+enter则换行。
+const onTextInputKeyDown = (event) => {
+    if (event.keyCode === 13 && !event.shiftKey) {
+        event.preventDefault()
+        // 执行发送操作
+        sendTextMessage()
+    } else if (event.keyCode === 13 && event.shiftKey) {
+        // 换行操作
+        insertNewLine()
+    }
+}
+//换行操作
+const insertNewLine = () => (textContent.value += '\n')
 
 /* 图片消息相关 */
 //选择图片
@@ -72,12 +171,12 @@ const chooseImages = () => {
 //发送图片
 const sendImagesMessage = async (type, fileObj) => {
     const file = {
-        data: null,// file 对象。
-        filename: '',//文件名称。
-        filetype: ''//文件类型。
+        data: null, // file 对象。
+        filename: '', //文件名称。
+        filetype: '' //文件类型。
     }
     const url = window.URL || window.webkitURL
-    const img = new Image()              //手动创建一个Image对象
+    const img = new Image() //手动创建一个Image对象
     const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
@@ -92,14 +191,20 @@ const sendImagesMessage = async (type, fileObj) => {
         file.filename = imgFile.name
         file.filetype = imgFile.type
         console.log('imgFile', file)
-        img.src = url.createObjectURL(imgFile)//创建Image的对象的url
+        img.src = url.createObjectURL(imgFile) //创建Image的对象的url
         img.onload = async () => {
-            const loadingInstance = ElLoading.service({ target: loadingBox.value, background: '#f7f7f7' })
+            const loadingInstance = ElLoading.service({
+                target: loadingBox.value,
+                background: '#f7f7f7'
+            })
             msgOptions.width = img.width
             msgOptions.height = img.height
             console.log('height:' + img.height + '----' + img.width)
             try {
-                await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.IMAGE, msgOptions: _.cloneDeep(msgOptions) })
+                await store.dispatch('sendShowTypeMessage', {
+                    msgType: ALL_MESSAGE_TYPE.IMAGE,
+                    msgOptions: _.cloneDeep(msgOptions)
+                })
                 loadingInstance.close()
                 uploadImgs.value.value = null
             } catch (error) {
@@ -112,7 +217,6 @@ const sendImagesMessage = async (type, fileObj) => {
                 loadingInstance.close()
                 uploadImgs.value.value = null
             }
-
         }
     } else if (type === 'other') {
         console.log('fileObjfileObjfileObj', fileObj)
@@ -121,14 +225,20 @@ const sendImagesMessage = async (type, fileObj) => {
         file.filename = imgFile.name
         file.filetype = imgFile.type
         console.log('imgFile', file)
-        img.src = url.createObjectURL(imgFile)//创建Image的对象的url
+        img.src = url.createObjectURL(imgFile) //创建Image的对象的url
         img.onload = async () => {
-            const loadingInstance = ElLoading.service({ target: loadingBox.value, background: '#f7f7f7' })
+            const loadingInstance = ElLoading.service({
+                target: loadingBox.value,
+                background: '#f7f7f7'
+            })
             msgOptions.width = img.width
             msgOptions.height = img.height
             console.log('height:' + img.height + '----' + img.width)
             try {
-                await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.IMAGE, msgOptions: _.cloneDeep(msgOptions) })
+                await store.dispatch('sendShowTypeMessage', {
+                    msgType: ALL_MESSAGE_TYPE.IMAGE,
+                    msgOptions: _.cloneDeep(msgOptions)
+                })
                 loadingInstance.close()
                 uploadImgs.value.value = null
             } catch (error) {
@@ -141,19 +251,14 @@ const sendImagesMessage = async (type, fileObj) => {
                 loadingInstance.close()
                 uploadImgs.value.value = null
             }
-
         }
     }
-
-
-
-
 }
 //贴图发送
 const previewSendImg = ref(null)
 const onPasteImage = (event) => {
     console.log('>>>>>>监听粘贴事件', event)
-    const data = (event.clipboardData || window.clipboardData)
+    const data = event.clipboardData || window.clipboardData
     //获取图片内容
     const imgContent = data.items[0].getAsFile()
     //判断是不是图片，最好通过文件类型判断
@@ -174,8 +279,6 @@ const onPasteImage = (event) => {
         previewSendImg.value.showPreviewImgModal({ ...imgInfo })
         console.log('>>>>>获取到粘贴到的文本', imgInfo)
     }
-
-
 }
 /* 文件消息相关 */
 //选择文件
@@ -187,7 +290,7 @@ const chooseFiles = () => {
 const sendFilesMessages = async () => {
     const commonFile = uploadFiles.value.files[0]
     const file = {
-        data: commonFile,           // file 对象。
+        data: commonFile, // file 对象。
         filename: commonFile.name, //文件名称。
         filetype: commonFile.type, //文件类型。
         size: commonFile.size
@@ -196,11 +299,17 @@ const sendFilesMessages = async () => {
     const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
-        file: file,
+        file: file
     }
-    const loadingInstance = ElLoading.service({ target: loadingBox.value, background: '#f7f7f7' })
+    const loadingInstance = ElLoading.service({
+        target: loadingBox.value,
+        background: '#f7f7f7'
+    })
     try {
-        await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.FILE, msgOptions: _.cloneDeep(msgOptions) })
+        await store.dispatch('sendShowTypeMessage', {
+            msgType: ALL_MESSAGE_TYPE.FILE,
+            msgOptions: _.cloneDeep(msgOptions)
+        })
         loadingInstance.close()
         uploadFiles.value.value = null
     } catch (error) {
@@ -214,14 +323,17 @@ const sendFilesMessages = async () => {
         uploadFiles.value.value = null
         loadingInstance.close()
     }
-
 }
 /* 语音消息相关 */
 //展示录音对话框
-const isHttps = window.location.protocol === 'https:' || window.location.hostname === 'localhost'
+const isHttps =
+    window.location.protocol === 'https:' ||
+    window.location.hostname === 'localhost'
 const isShowRecordBox = ref(false)
 const recordBox = ref(null)
-onClickOutside(recordBox, () => { isShowRecordBox.value = false })
+onClickOutside(recordBox, () => {
+    isShowRecordBox.value = false
+})
 const showRecordBox = () => {
     isShowRecordBox.value = true
 }
@@ -240,7 +352,10 @@ const sendAudioMessages = async (audioData) => {
         length: audioData.length
     }
     try {
-        await store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.AUDIO, msgOptions: _.cloneDeep(msgOptions) })
+        await store.dispatch('sendShowTypeMessage', {
+            msgType: ALL_MESSAGE_TYPE.AUDIO,
+            msgOptions: _.cloneDeep(msgOptions)
+        })
         isShowRecordBox.value = false
     } catch (error) {
         if (error.type && error?.data) {
@@ -250,30 +365,54 @@ const sendAudioMessages = async (audioData) => {
         }
         isShowRecordBox.value = false
     }
-
 }
 //清除屏幕
 const clearScreen = () => {
-    ElMessageBox.confirm('确认清空当前消息内容？',
-        '消息清屏', {
-            confirmButtonText: '确认',
-            cancelButtonText: '取消',
-            type: 'warning',
-        }).then(() => {
-        const key = nowPickInfo.value.id
-        store.commit('CLEAR_SOMEONE_MESSAGE', key)
-    }).catch(() => {
-        return false
+    ElMessageBox.confirm('确认清空当前消息内容？', '消息清屏', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning'
     })
-
+        .then(() => {
+            const key = nowPickInfo.value.id
+            store.commit('CLEAR_SOMEONE_MESSAGE', key)
+        })
+        .catch(() => {
+            return false
+        })
 }
 //func 对应事件 icon class样式等
 const all_func = [
-    { 'className': 'icon-emoji', 'style': 'font-size:20px;margin-left: 20px;', 'title': '选择表情', 'methodName': showEmojisBox },
-    { 'className': 'icon-tuku', 'style': 'font-size: 26px;', 'title': '发送图片', 'methodName': chooseImages },
-    { 'className': 'icon-wenjian', 'style': 'font-size: 20px;', 'title': '发送文件', 'methodName': chooseFiles },
-    { 'className': 'icon-01', 'style': 'font-size: 20px;', 'title': '发送语音', 'methodName': showRecordBox },
-    { 'className': 'icon-lajitong', 'style': 'font-size: 23px;', 'title': '清屏', 'methodName': clearScreen }
+    {
+        className: 'icon-emoji',
+        style: 'font-size:20px;margin-left: 20px;',
+        title: '选择表情',
+        methodName: showEmojisBox
+    },
+    {
+        className: 'icon-tuku',
+        style: 'font-size: 26px;',
+        title: '发送图片',
+        methodName: chooseImages
+    },
+    {
+        className: 'icon-wenjian',
+        style: 'font-size: 20px;',
+        title: '发送文件',
+        methodName: chooseFiles
+    },
+    {
+        className: 'icon-01',
+        style: 'font-size: 20px;',
+        title: '发送语音',
+        methodName: showRecordBox
+    },
+    {
+        className: 'icon-lajitong',
+        style: 'font-size: 23px;',
+        title: '清屏',
+        methodName: clearScreen
+    }
 ]
 
 /* About EaseCallKit */
@@ -322,7 +461,6 @@ const showInviteCallMembersModal = () => {
     } else {
         console.warn('请传入groupId')
     }
-
 }
 //发送多人场景邀请信息的方法
 const sendMulitInviteMsg = (targetIMId) => {
@@ -338,49 +476,129 @@ const sendMulitInviteMsg = (targetIMId) => {
     }
     store.dispatch('createInformMessage', params)
 }
+
 defineExpose({
     textContent
 })
 </script>
 <template>
     <div class="chat_func_box">
-        <span v-for="iconItem in all_func" :class="['iconfont', iconItem.className]" :key="iconItem.className"
-            :style="iconItem.style" :title="iconItem.title" @click.stop="iconItem.methodName"></span>
+        <span
+            v-for="iconItem in all_func"
+            :class="['iconfont', iconItem.className]"
+            :key="iconItem.className"
+            :style="iconItem.style"
+            :title="iconItem.title"
+            @click.stop="iconItem.methodName"
+        ></span>
         <!-- EaseCallKit 音视频邀请icon【不需要可移除】 -->
         <!-- 群组没有语音发起 -->
         <template v-if="isHttps">
-            <span class="iconfont icon-31dianhua" style="font-size:20px" title="语音通话"
-                v-show="nowPickInfo.chatType === CHAT_TYPE.SINGLE" @click="handleInviteCall('voice')"></span>
-            <span class="iconfont icon-video" style="font-size:20px" title="视频通话"
-                @click="handleInviteCall('video')"></span>
+            <span
+                class="iconfont icon-31dianhua"
+                style="font-size: 20px"
+                title="语音通话"
+                v-show="nowPickInfo.chatType === CHAT_TYPE.SINGLE"
+                @click="handleInviteCall('voice')"
+            ></span>
+            <span
+                class="iconfont icon-video"
+                style="font-size: 20px"
+                title="视频通话"
+                @click="handleInviteCall('video')"
+            ></span>
         </template>
 
         <!-- 表情框 -->
-        <el-scrollbar ref="emojisBox" v-if="isShowEmojisBox" class="emojis_box" tag="div">
-            <span class="emoji" v-for="(emoji, index) in emojis" :key="index" @click="addOneEmoji(emoji)">{{ emoji
-            }}</span>
+        <el-scrollbar
+            ref="emojisBox"
+            v-if="isShowEmojisBox"
+            class="emojis_box"
+            tag="div"
+        >
+            <span
+                class="emoji"
+                v-for="(emoji, index) in emojis"
+                :key="index"
+                @click="addOneEmoji(emoji)"
+                >{{ emoji }}</span
+            >
         </el-scrollbar>
         <!-- 图片附件choose -->
-        <input ref="uploadImgs" type="file" style="display:none" @change="sendImagesMessage('common')" single
-            accept="image/*">
+        <input
+            ref="uploadImgs"
+            type="file"
+            style="display: none"
+            @change="sendImagesMessage('common')"
+            single
+            accept="image/*"
+        />
         <!-- 文件附件choose -->
-        <input ref="uploadFiles" type="file" style="display:none" @change="sendFilesMessages" single>
+        <input
+            ref="uploadFiles"
+            type="file"
+            style="display: none"
+            @change="sendFilesMessages"
+            single
+        />
         <!-- 录音采集框 -->
-        <el-card ref="recordBox" v-if="isShowRecordBox" class="record_box" shadow="always">
-            <p v-if="!isHttps">由于浏览器限制,录音功能必须为https环境或者为localhost环境下使用！</p>
+        <el-card
+            ref="recordBox"
+            v-if="isShowRecordBox"
+            class="record_box"
+            shadow="always"
+        >
+            <p v-if="!isHttps">
+                由于浏览器限制,录音功能必须为https环境或者为localhost环境下使用！
+            </p>
             <CollectAudio v-else @sendAudioMessages="sendAudioMessages" />
         </el-card>
         <!-- 附件上传加载容器 -->
         <div ref="loadingBox" class="loading_box"></div>
     </div>
-    <textarea ref="editable" v-model="textContent" class="chat_content_editable" spellcheck="false"
-        contenteditable="true" placeholder="请输入消息内容..." onkeydown="if (event.keyCode === 13) event.preventDefault();"
-        @keyup.enter="sendTextMessage" @paste="onPasteImage">
-    </textarea>
-    <el-button :class="[textContent === '' ? 'no_content_send_btn' : 'chat_send_btn']" type="primary"
-        @click="sendTextMessage">发送</el-button>
-    <InviteCallMembers ref="inviteCallMembersComp" @sendMulitInviteMsg="sendMulitInviteMsg" />
-    <PreviewSendImg ref="previewSendImg" @sendImagesMessage="sendImagesMessage" />
+    <template v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE">
+        <textarea
+            ref="editable"
+            v-model="textContent"
+            class="chat_content_editable"
+            spellcheck="false"
+            contenteditable="true"
+            placeholder="请输入消息内容..."
+            @keydown="onTextInputKeyDown"
+            @paste="onPasteImage"
+        >
+        </textarea>
+    </template>
+    <template v-else-if="nowPickInfo.chatType === CHAT_TYPE.GROUP">
+        <vue-at :members="atMembersList" name-key="text" @insert="onInsert">
+            <textarea
+                ref="editable"
+                v-model="textContent"
+                class="chat_content_editable"
+                spellcheck="false"
+                contenteditable="true"
+                placeholder="请输入消息内容..."
+                @keydown="onTextInputKeyDown"
+                @paste="onPasteImage"
+            >
+            </textarea>
+        </vue-at>
+    </template>
+
+    <el-button
+        :class="[textContent === '' ? 'no_content_send_btn' : 'chat_send_btn']"
+        type="primary"
+        @click="sendTextMessage"
+        >发送</el-button
+    >
+    <InviteCallMembers
+        ref="inviteCallMembersComp"
+        @sendMulitInviteMsg="sendMulitInviteMsg"
+    />
+    <PreviewSendImg
+        ref="previewSendImg"
+        @sendImagesMessage="sendImagesMessage"
+    />
 </template>
 
 <style lang="scss" scoped>
@@ -391,9 +609,8 @@ defineExpose({
     height: 42px;
     width: 100%;
     background-color: #f7f7f7;
-    border-top: 1px solid #E6E6E6;
-    border-bottom: 1px solid #E6E6E6;
-
+    border-top: 1px solid #e6e6e6;
+    border-bottom: 1px solid #e6e6e6;
 
     .chat_func_icon {
         width: 25px;
@@ -412,7 +629,7 @@ defineExpose({
         flex-wrap: wrap;
         justify-content: space-between;
         align-items: center;
-        background: #FFF;
+        background: #fff;
         padding: 15px 5px;
 
         .emoji {
@@ -422,7 +639,7 @@ defineExpose({
             text-align: center;
             line-height: 25px;
             cursor: pointer;
-            transition: all .3s ease;
+            transition: all 0.3s ease;
 
             &:hover {
                 transform: scale(1.2);
@@ -454,7 +671,7 @@ defineExpose({
     min-height: 100px;
     border: none;
     background: none;
-    letter-spacing: .5px;
+    letter-spacing: 0.5px;
     resize: none;
     padding: 10px 20px;
     font-size: 14px;
@@ -465,7 +682,7 @@ defineExpose({
     bottom: 20px;
     right: 20px;
     width: 80px;
-    opacity: .5;
+    opacity: 0.5;
 }
 
 .chat_send_btn {
@@ -477,12 +694,12 @@ defineExpose({
 
 .iconfont {
     margin-right: 12px;
-    transition: all .3s ease;
+    transition: all 0.3s ease;
     cursor: pointer;
 
     &:hover {
         transform: scale(1.2);
-        color: #1B83F9;
+        color: #1b83f9;
     }
 }
 
