@@ -235,7 +235,7 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                         >{{ handleNickName(msgBody.from) }}</span
                     >
                     <el-dropdown
-                        class="'message_box_content',"
+                        class="message_box_content"
                         :class="[
                             isMyself(msgBody)
                                 ? 'message_box_content_mine'
