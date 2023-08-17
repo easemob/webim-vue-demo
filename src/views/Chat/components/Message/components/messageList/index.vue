@@ -228,23 +228,19 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                 >
                 </el-avatar>
                 <!-- 普通消息内容 -->
-                <div
-                    :class="[
-                        'message_box_card',
-                        clickQuoteMsgId === msgBody.id && 'quote_msg_avtive'
-                    ]"
-                >
+                <div class="message_box_card">
                     <span
                         v-show="!isMyself(msgBody)"
                         class="message_box_nickname"
                         >{{ handleNickName(msgBody.from) }}</span
                     >
                     <el-dropdown
-                        class="message_box_content"
+                        class="'message_box_content',"
                         :class="[
                             isMyself(msgBody)
                                 ? 'message_box_content_mine'
-                                : 'message_box_content_other'
+                                : 'message_box_content_other',
+                            clickQuoteMsgId === msgBody.id && 'quote_msg_avtive'
                         ]"
                         trigger="contextmenu"
                         placement="bottom-end"
