@@ -9,9 +9,10 @@ import { messageType } from '@/constant'
 import _ from 'lodash'
 import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
 /* 组件 */
-import CollectAudio from './suit/audio.vue'
-import PreviewSendImg from './suit/previewSendImg.vue'
-import { useGetGroupUserMapInfo } from '@/hooks'
+import CollectAudio from '../suit/audio.vue'
+import PreviewSendImg from '../suit/previewSendImg.vue'
+import MsgQuote from '../suit/msgQuote.vue'
+import { useGetUserMapInfo } from '@/hooks'
 //vue at
 import VueAt from 'vue-at/dist/vue-at-textarea' // for textarea
 //EaseCallKit Invite
@@ -30,8 +31,12 @@ const { ALL_MESSAGE_TYPE, CHAT_TYPE, MENTION_ALL } = messageType
 const { nowPickInfo } = toRefs(props)
 //附件类上传加载状态
 const loadingBox = ref(null)
-/* 文本消息相关 */
-const { getTheGroupNickNameById } = useGetGroupUserMapInfo()
+/** /
+ * 文本消息相关
+ * 包含 @、emoji、引用功能
+ */
+
+const { getTheGroupNickNameById } = useGetUserMapInfo()
 //AT 逻辑
 const atMembersList = computed(() => {
     let members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }]
@@ -56,9 +61,7 @@ const atMembersList = computed(() => {
                 }
             })
     }
-    console.log('membersList', members)
     return members
-    // return store.state.Groups.groupsInfos[nowPickInfo.value.id]?.members || []
 })
 console.log(atMembersList.value)
 const isAtAll = ref(false)
@@ -110,6 +113,29 @@ const showEmojisBox = () => {
     console.log('>>>>>展开模态框')
     isShowEmojisBox.value = true
 }
+//新增一个emoji
+const addOneEmoji = (emoji) => {
+    console.log('>>>>>>emoji', emoji)
+    textContent.value = textContent.value + emoji
+}
+//消息引用
+const messageQuoteRef = ref(null)
+const handleQuoteMessage = (msgBody) => {
+    messageQuoteRef.value && messageQuoteRef.value.setQuoteContent(msgBody)
+}
+//监听键盘按下事件，如果为enter键则发送文本内容,shift+enter则换行。
+const onTextInputKeyDown = (event) => {
+    if (event.keyCode === 13 && !event.shiftKey) {
+        event.preventDefault()
+        // 执行发送操作
+        sendTextMessage()
+    } else if (event.keyCode === 13 && event.shiftKey) {
+        // 换行操作
+        insertNewLine()
+    }
+}
+//换行操作
+const insertNewLine = () => (textContent.value += '\n')
 //发送文本内容
 const textContent = ref('')
 const sendTextMessage = _.debounce(async () => {
@@ -127,7 +153,15 @@ const sendTextMessage = _.debounce(async () => {
                 : _.map(atMembers.value, 'value')
         }
     }
+    //关闭引用框
+    if (messageQuoteRef.value?.isShowQuoteMsgBox) {
+        msgOptions.ext.msgQuote = Object.assign(
+            {},
+            messageQuoteRef.value.msgQuote
+        )
+    }
     textContent.value = ''
+    messageQuoteRef.value?.clearQuoteContent()
     try {
         console.log('msgOptions', msgOptions)
         await store.dispatch('sendShowTypeMessage', {
@@ -142,24 +176,6 @@ const sendTextMessage = _.debounce(async () => {
         atMembers.value = []
     }
 }, 50)
-//新增一个emoji
-const addOneEmoji = (emoji) => {
-    console.log('>>>>>>emoji', emoji)
-    textContent.value = textContent.value + emoji
-}
-//监听键盘按下事件，如果为enter键则发送文本内容,shift+enter则换行。
-const onTextInputKeyDown = (event) => {
-    if (event.keyCode === 13 && !event.shiftKey) {
-        event.preventDefault()
-        // 执行发送操作
-        sendTextMessage()
-    } else if (event.keyCode === 13 && event.shiftKey) {
-        // 换行操作
-        insertNewLine()
-    }
-}
-//换行操作
-const insertNewLine = () => (textContent.value += '\n')
 
 /* 图片消息相关 */
 //选择图片
@@ -366,7 +382,7 @@ const sendAudioMessages = async (audioData) => {
         isShowRecordBox.value = false
     }
 }
-//清除屏幕
+/*清除屏幕*/
 const clearScreen = () => {
     ElMessageBox.confirm('确认清空当前消息内容？', '消息清屏', {
         confirmButtonText: '确认',
@@ -478,7 +494,8 @@ const sendMulitInviteMsg = (targetIMId) => {
 }
 
 defineExpose({
-    textContent
+    textContent,
+    handleQuoteMessage
 })
 </script>
 <template>
@@ -599,112 +616,9 @@ defineExpose({
         ref="previewSendImg"
         @sendImagesMessage="sendImagesMessage"
     />
+    <MsgQuote ref="messageQuoteRef" />
 </template>
 
 <style lang="scss" scoped>
-.chat_func_box {
-    position: relative;
-    display: flex;
-    align-items: center;
-    height: 42px;
-    width: 100%;
-    background-color: #f7f7f7;
-    border-top: 1px solid #e6e6e6;
-    border-bottom: 1px solid #e6e6e6;
-
-    .chat_func_icon {
-        width: 25px;
-        height: 25px;
-    }
-
-    .emojis_box {
-        position: absolute;
-        left: 15px;
-        top: -180px;
-        width: 330px;
-        height: 150px;
-        border-radius: 5px;
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        background: #fff;
-        padding: 15px 5px;
-
-        .emoji {
-            display: inline-block;
-            width: 25px;
-            height: 25px;
-            text-align: center;
-            line-height: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-
-            &:hover {
-                transform: scale(1.2);
-            }
-        }
-    }
-
-    .loading_box {
-        position: absolute;
-        right: 5px;
-        top: 0;
-        width: 50px;
-        height: 100%;
-        font-size: 15px;
-    }
-}
-
-/* loading svg大小调整 */
-::v-deep .circular {
-    margin-top: 8px;
-    width: 25px;
-    height: 25px;
-}
-
-.chat_content_editable {
-    font-family: 'PingFang SC';
-    width: 100%;
-    box-sizing: border-box;
-    min-height: 100px;
-    border: none;
-    background: none;
-    letter-spacing: 0.5px;
-    resize: none;
-    padding: 10px 20px;
-    font-size: 14px;
-}
-
-.no_content_send_btn {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 80px;
-    opacity: 0.5;
-}
-
-.chat_send_btn {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 80px;
-}
-
-.iconfont {
-    margin-right: 12px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-
-    &:hover {
-        transform: scale(1.2);
-        color: #1b83f9;
-    }
-}
-
-.record_box {
-    width: 250px;
-    height: 180px;
-}
+@import './index.scss';
 </style>

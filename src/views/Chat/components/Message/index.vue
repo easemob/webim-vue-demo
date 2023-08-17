@@ -9,8 +9,8 @@ import { ElMessage } from 'element-plus'
 import { Close } from '@element-plus/icons-vue'
 import waterMark from '@/utils/waterMark'
 /* 组件 */
-import MessageList from './components/messageList.vue'
-import InputBox from './components/inputBox.vue'
+import MessageList from './components/messageList'
+import InputBox from './components/inputBox'
 import UserStatus from '@/components/UserStatus'
 import GroupsDetails from '@/views/Chat/components/AboutGroups/GroupsDetails'
 /* store */
@@ -217,6 +217,8 @@ watch(
 //消息重新编辑
 const inputBox = ref(null)
 const reEditMessage = (msg) => (inputBox.value.textContent = msg)
+//消息引用
+const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
 </script>
 <template>
     <el-container v-if="loginState" class="app_container">
@@ -342,6 +344,7 @@ const reEditMessage = (msg) => (inputBox.value.textContent = msg)
                         :messageData="messageData"
                         @scrollMessageList="scrollMessageList"
                         @reEditMessage="reEditMessage"
+                        @messageQuote="messageQuote"
                     />
                 </div>
             </el-scrollbar>

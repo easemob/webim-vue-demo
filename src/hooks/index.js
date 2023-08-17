@@ -1,4 +1,4 @@
 import usePlayRing from './usePlayRing'
-import useGetGroupUserMapInfo from './useGetGroupUserMapInfo'
+import useGetUserMapInfo from './useGetUserMapInfo'
 
-export { usePlayRing, useGetGroupUserMapInfo }
+export { usePlayRing, useGetUserMapInfo }

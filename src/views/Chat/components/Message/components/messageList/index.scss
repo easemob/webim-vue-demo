@@ -1,0 +1,303 @@
+.messageList_box {
+    width: 100%;
+
+    .message_box_item {
+        position: relative;
+        display: flex;
+        margin: 32px auto;
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 20px;
+        letter-spacing: 0.4px;
+        color: #333333;
+
+        .message_item_time {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            right: 0;
+            margin: auto;
+            width: 74px;
+            height: 20px;
+            color: #adadad;
+            font-weight: 400;
+            font-size: 10px;
+            line-height: 20px;
+        }
+
+        .message_item_avator {
+            width: 38px;
+            height: 38px;
+        }
+        .message_box_card {
+            display: flex;
+            flex-direction: column;
+            max-width: 50%;
+            min-height: 34px;
+        }
+        .message_box_nickname {
+            font-size: 14px;
+            line-height: 20px;
+            letter-spacing: 0.4px;
+            color: #9a9a9a;
+            margin: 0 10px;
+        }
+        .message_box_content {
+            display: flex;
+            align-items: center;
+            margin: 0 6px;
+            word-break: break-all;
+            /* 通用音频播放样式 */
+            .message_box_content_audio {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                max-width: 250px;
+                min-width: 80px;
+                font-size: 12px;
+
+                .audio_length_text {
+                    font-family: 'Avenir';
+                    font-style: normal;
+                    font-weight: 400;
+                    font-size: 12px;
+                }
+            }
+
+            /* 对方音频播放样式 */
+            .message_box_content_audio_other {
+                flex-direction: row;
+
+                @keyframes other_play_icon {
+                    0% {
+                        background: url('@/assets/images/playAudio/msg_recv_audio02@3x.png')
+                            no-repeat;
+
+                        background-size: 100% 100%;
+                    }
+
+                    50% {
+                        background: url('@/assets/images/playAudio/msg_recv_audio01@3x.png')
+                            no-repeat;
+
+                        background-size: 100% 100%;
+                    }
+
+                    100% {
+                        background: url('@/assets/images/playAudio/msg_recv_audio@3x.png')
+                            no-repeat;
+                        background-size: 100% 100%;
+                    }
+                }
+
+                .play_audio_icon_other {
+                    width: 30px;
+                    height: 30px;
+                    background: url('@/assets/images/playAudio/msg_recv_audio@3x.png')
+                        no-repeat;
+                    margin-right: 10px;
+                }
+
+                .start_play_audio {
+                    animation: other_play_icon 2s;
+                    animation-iteration-count: infinite;
+                }
+            }
+
+            /* 己方音频播放样式 */
+            .message_box_content_audio_mine {
+                flex-direction: row-reverse;
+
+                @keyframes mine_play_icon {
+                    0% {
+                        background: url('@/assets/images/playAudio/msg_send_audio02@3x.png')
+                            no-repeat;
+
+                        background-size: 100% 100%;
+                    }
+
+                    50% {
+                        background: url('@/assets/images/playAudio/msg_send_audio01@3x.png')
+                            no-repeat;
+
+                        background-size: 100% 100%;
+                    }
+
+                    100% {
+                        background: url('@/assets/images/playAudio/msg_send_audio@3x.png')
+                            no-repeat;
+                        background-size: 100% 100%;
+                    }
+                }
+
+                .play_audio_icon_mine {
+                    width: 30px;
+                    height: 30px;
+                    background-size: 100% 100%;
+                    background: url('@/assets/images/playAudio/msg_send_audio@3x.png')
+                        no-repeat;
+                    margin-left: 10px;
+                }
+
+                .start_play_audio {
+                    animation: mine_play_icon 2s;
+                    animation-iteration-count: infinite;
+                }
+            }
+
+            /* 文件消息样式 */
+            .message_box_content_file {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                width: 200px;
+                min-height: 60px;
+                max-height: 120px;
+                padding: 10px;
+
+                .file_text_box {
+                    width: 75%;
+                    height: 80%;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-around;
+
+                    .file_name {
+                        width: 120px;
+                        white-space: wrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        font-size: 15px;
+                        font-weight: bold;
+                    }
+
+                    .file_size {
+                        font-size: 13px;
+                    }
+
+                    .file_download {
+                        width: 100%;
+                        color: #333333;
+                        font-size: 13px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+
+                        &:hover {
+                            transform: scale(0.9);
+                        }
+                    }
+                }
+
+                .icon-wenjian {
+                    font-size: 50px;
+                    color: #8d8a8a;
+                }
+            }
+
+            /* 自定义消息 */
+            .message_box_content_custom {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                width: 200px;
+                min-height: 60px;
+                max-height: 120px;
+                padding: 10px;
+                overflow: hidden;
+
+                .user_card_main {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: flex-start;
+                    align-items: center;
+                    color: #333333;
+                    font-size: 17px;
+
+                    .nickname {
+                        display: inline-block;
+                        // width: 100%;
+                        margin-left: 10px;
+                        height: 35px;
+                        line-height: 35px;
+                    }
+                }
+            }
+
+            /* 个人名片 */
+        }
+        .quote_msg_avtive {
+            animation: twinkle 0.4s infinite alternate;
+        }
+        .quote_msg_avtive ::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 5px;
+            background-color: rgba(247, 169, 35, 0.5);
+        }
+        @keyframes twinkle {
+            0% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 0.6;
+            }
+            100% {
+                opacity: 0.9;
+            }
+        }
+        .message_box_content_other {
+            background: #fff;
+            border-radius: 8px 8px 8px 0px;
+        }
+
+        .message_box_content_mine {
+            background: #c1e3fc;
+            border-radius: 8px 0px 8px 8px;
+        }
+    }
+
+    /* 撤回或者系统通知类消息 */
+    .recall_style,
+    .inform_style {
+        height: 60px;
+        text-align: center;
+        color: #aaaaaa;
+        font-size: 10px;
+        margin: 5px 0;
+
+        .reEdit {
+            color: #3e91fa;
+            margin-left: 3px;
+            cursor: pointer;
+        }
+    }
+}
+.message_quote_box {
+    padding: 5px 10px;
+    font-size: 7px;
+    background-color: #e7e7e7;
+    border-radius: 5px;
+    margin-top: 5px;
+    color: #a0a0a0;
+    cursor: pointer;
+    p {
+        word-break: break-all;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+}
+:deep(.el-input__wrapper) {
+    border-radius: 5px;
+}
+
+:deep(.el-dialog__header) {
+    background: #f2f2f2;
+    margin: 0;
+}

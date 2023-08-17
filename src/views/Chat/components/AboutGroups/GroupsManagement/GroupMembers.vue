@@ -7,7 +7,7 @@ import {
     CircleCheckFilled,
     Select
 } from '@element-plus/icons-vue'
-import { useGetGroupUserMapInfo } from '@/hooks'
+import { useGetUserMapInfo } from '@/hooks'
 /* 拼音排序好友列表 */
 import { sortPinyinFriendItem } from '@/utils/handleSomeData'
 /* store */
@@ -44,7 +44,7 @@ const groupMembers = computed(() => {
 
 /* 群成员操作相关 */
 //获取id对应的昵称（群成员属性昵称>用户属性>环信id）
-const { getTheGroupNickNameById } = useGetGroupUserMapInfo()
+const { getTheGroupNickNameById } = useGetUserMapInfo()
 const getNickNameById = (hxId) => {
     const groupId = groupDetail.value.id
     return getTheGroupNickNameById(groupId, hxId)
