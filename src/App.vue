@@ -6,8 +6,7 @@ import ring from '@/assets/ring.mp3'
 /* callkit */
 import EaseCallKit from '@/components/EaseCallKit'
 import InviteCallMembers from '@/components/InviteCallMembers'
-
-EaseChatSDK.logger.disableAll()
+/* 【重要】挂载IM相关监听回调。 */
 mountAllEMListener()
 /* 重新登陆 */
 //读取本地EASEIM_loginUser

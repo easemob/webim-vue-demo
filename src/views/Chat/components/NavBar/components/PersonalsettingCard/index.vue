@@ -1,21 +1,63 @@
 <script setup>
 import { ref } from 'vue'
-import { usePlayRing } from '@/hooks'
+import { usePlayRing, useSetEMLogConfig } from '@/hooks'
 const dialogVisible = ref(false)
 const { isOpenPlayRing } = usePlayRing()
-
+const { isOpenedEMLog, donwLoadEMLog } = useSetEMLogConfig()
 defineExpose({
     dialogVisible
 })
 </script>
 
 <template>
-    <el-dialog custom-class="personal_setting_card" v-model="dialogVisible" width="366px" title="个人设置"
-        :show-close="true" :destroy-on-close="true">
+    <el-dialog
+        custom-class="personal_setting_card"
+        v-model="dialogVisible"
+        width="366px"
+        title="个人设置"
+        :show-close="true"
+        :destroy-on-close="true"
+    >
         <div class="setting_main">
             <div class="setting_main_item">
-                <span>新消息提示音</span>
-                <el-switch v-model="isOpenPlayRing" active-text="开启" inactive-text="关闭" />
+                <el-tooltip
+                    class="item"
+                    effect="dark"
+                    content="开启后可在收到消息时，播放消息提示音。"
+                    placement="top"
+                >
+                    <span>新消息提示音</span>
+                </el-tooltip>
+
+                <el-switch
+                    v-model="isOpenPlayRing"
+                    active-text="开启"
+                    inactive-text="关闭"
+                />
+            </div>
+            <div class="setting_main_item">
+                <el-tooltip
+                    class="item"
+                    effect="dark"
+                    content="开启SDK日志后，会在控制台输出SDK日志,并可下载SDK缓存日志。"
+                    placement="top"
+                >
+                    <span>开启SDK日志</span></el-tooltip
+                >
+                <el-switch
+                    v-model="isOpenedEMLog"
+                    active-text="开启"
+                    inactive-text="关闭"
+                />
+            </div>
+            <div class="setting_main_item" v-if="isOpenedEMLog">
+                <el-button
+                    class="download_log"
+                    type="primary"
+                    plain
+                    @click="donwLoadEMLog"
+                    >下载SDK缓存日志</el-button
+                >
             </div>
             <!-- <div>
                 <span>新消息系统推送</span>
