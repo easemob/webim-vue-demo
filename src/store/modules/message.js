@@ -177,6 +177,30 @@ const Message = {
             commit('UPDATE_MESSAGE_LIST', msgBody)
             dispatch('gatherConversation', key)
         },
+        //删除消息
+        removeMessage: ({ dispatch, commit }, params) => {
+            const { id: mid, from: targetId, chatType } = params
+            const key = setMessageKey(params)
+            return new Promise((resolve, reject) => {
+                EaseChatClient.removeHistoryMessages({
+                    targetId: targetId,
+                    chatType: chatType,
+                    messageIds: [mid]
+                })
+                    .then((res) => {
+                        commit('CHANGE_MESSAGE_BODAY', {
+                            type: CHANGE_MESSAGE_BODAY_TYPE.DELETE,
+                            key: key,
+                            mid
+                        })
+                        dispatch('gatherConversation', key)
+                        resolve('OK')
+                    })
+                    .catch((error) => {
+                        reject(error)
+                    })
+            })
+        },
         //撤回消息
         recallMessage: async ({ dispatch, commit }, params) => {
             const { mid, to, chatType } = params

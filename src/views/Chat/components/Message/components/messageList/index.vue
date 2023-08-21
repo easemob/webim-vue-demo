@@ -2,7 +2,7 @@
 import { reactive, ref, computed, toRefs, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { useClipboard, usePermission } from '@vueuse/core'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { EaseChatClient } from '@/IM/initwebsdk'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import fileSizeFormat from '@/utils/fileSizeFormat'
@@ -187,14 +187,34 @@ const showModifyMsgModal = (msgBody) => {
         modifyMessageRef.value.initModifyMessage(msgBody)
     })
 }
-//删除消息（非从服务器删除）
-const deleteMessage = ({ from, to, id: mid }) => {
-    const key = to === EaseChatClient.user ? from : to
-    store.commit('CHANGE_MESSAGE_BODAY', {
-        type: CHANGE_MESSAGE_BODAY_TYPE.DELETE,
-        key,
-        mid
-    })
+//删除消息
+const deleteMessage = async (msgBody) => {
+    try {
+        await ElMessageBox.confirm(
+            '消息删除是从服务端删除，确认要删除吗？',
+            '消息删除',
+            {
+                confirmButtonText: '确认',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }
+        )
+        await store.dispatch('removeMessage', { ...msgBody })
+        ElMessage({
+            type: 'success',
+            message: '消息已删除',
+            center: true
+        })
+    } catch (error) {
+        console.log('>>>>>取消', error)
+        if (error !== 'cancel') {
+            ElMessage({
+                type: 'error',
+                message: '删除失败',
+                center: true
+            })
+        }
+    }
 }
 // 消息举报
 const reportMessage = ref(null)
