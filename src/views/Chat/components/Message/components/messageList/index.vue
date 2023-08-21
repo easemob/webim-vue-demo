@@ -14,6 +14,8 @@ import paseLink from '@/utils/paseLink'
 /* 默认头像 */
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 import ReportMessage from '../suit/reportMessage.vue'
+/* components */
+import ModifyMessage from '../suit/modifyMessage.vue'
 /* vuex store */
 const store = useStore()
 /* props */
@@ -33,7 +35,8 @@ const { nowPickInfo } = toRefs(props)
 const emit = defineEmits(['scrollMessageList', 'reEditMessage', 'messageQuote'])
 const { messageData } = toRefs(props)
 /* constant */
-const { ALL_MESSAGE_TYPE, CUSTOM_TYPE, CHAT_TYPE } = messageType
+const { ALL_MESSAGE_TYPE, CUSTOM_TYPE, CHAT_TYPE, CHANGE_MESSAGE_BODAY_TYPE } =
+    messageType
 /* login hxId */
 const loginUserId = EaseChatClient.user
 
@@ -136,12 +139,10 @@ const copyTextMessages = (msg) => {
         console.log('>>>>>成功复制')
     }
 }
-//点击引用消息跳转
-
+//引用消息
 let clickQuoteMsgId = ref('')
 const clickQuoteMessage = (msgQuote) => {
     const { msgID } = msgQuote
-
     nextTick(() => {
         const messageQuery = document.querySelectorAll('.messageList_box')
         const filterQuoteMsg =
@@ -178,10 +179,22 @@ const recallMessage = async ({ id, to, chatType }) => {
         console.log('>>>>>>撤回失败', error)
     }
 }
+//编辑消息
+
+const modifyMessageRef = ref(null)
+const showModifyMsgModal = (msgBody) => {
+    nextTick(() => {
+        modifyMessageRef.value.initModifyMessage(msgBody)
+    })
+}
 //删除消息（非从服务器删除）
 const deleteMessage = ({ from, to, id: mid }) => {
     const key = to === EaseChatClient.user ? from : to
-    store.commit('CHANGE_MESSAGE_BODAY', { type: 'deleteMsg', key, mid })
+    store.commit('CHANGE_MESSAGE_BODAY', {
+        type: CHANGE_MESSAGE_BODAY_TYPE.DELETE,
+        key,
+        mid
+    })
 }
 // 消息举报
 const reportMessage = ref(null)
@@ -252,6 +265,14 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                         >
                             <template v-if="!isLink(msgBody.msg)">
                                 {{ msgBody.msg }}
+                                <!-- 已编辑 -->
+                                <sup
+                                    style="font-size: 7px; color: #707784"
+                                    v-show="
+                                        msgBody?.modifiedInfo?.operationCount
+                                    "
+                                    >（已编辑）</sup
+                                >
                             </template>
                             <template v-else>
                                 <span v-html="paseLink(msgBody.msg).msg"> </span
@@ -379,6 +400,16 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                                 >
                                     撤回
                                 </el-dropdown-item>
+                                <el-dropdown-item
+                                    v-if="
+                                        msgBody.type ===
+                                            ALL_MESSAGE_TYPE.TEXT &&
+                                        isMyself(msgBody)
+                                    "
+                                    @click="showModifyMsgModal(msgBody)"
+                                >
+                                    编辑
+                                </el-dropdown-item>
                                 <el-dropdown-item @click="onMsgQuote(msgBody)">
                                     引用
                                 </el-dropdown-item>
@@ -396,6 +427,7 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                             </el-dropdown-menu>
                         </template>
                     </el-dropdown>
+                    <!-- 引用消息展示框 -->
                     <div
                         class="message_quote_box"
                         v-if="msgBody?.ext?.msgQuote"
@@ -434,6 +466,7 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
             </div>
         </div>
         <ReportMessage ref="reportMessage" />
+        <ModifyMessage ref="modifyMessageRef" />
     </div>
 </template>
 

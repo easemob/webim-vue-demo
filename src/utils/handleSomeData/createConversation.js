@@ -52,6 +52,34 @@ const checkLastMsgisHasMention = (toDoUpdateMsg, toDoUpdateConversation) => {
     }
 }
 
+//计算未读数
+const handleCalcUnReadNum = (msgBody, toDoUpdateConversation) => {
+    // 确定当前未读数，如果会话不存在，未读数初始为0
+    let currentUnreadNum = toDoUpdateConversation
+        ? toDoUpdateConversation.unreadMessageNum
+        : 0
+    // 如果消息来自当前用户，或者是被召回的消息，或者消息处于读取状态，未读数不变
+    if (
+        msgBody.from === EaseChatClient.user ||
+        msgBody.isRecall ||
+        msgBody.read
+    ) {
+        return currentUnreadNum
+    }
+
+    //如果会话不存在，则返回未读数为1
+    if (!toDoUpdateConversation) {
+        return 1
+    }
+
+    //如果消息包含修改信息，未读数不变
+    if (msgBody.modifiedInfo) {
+        return currentUnreadNum
+    }
+
+    // 其他情况，未读数+1
+    return currentUnreadNum + 1
+}
 export default function (corresMessage) {
     /*
      * 1、取到messageList更新后的最后一套消息
@@ -124,10 +152,14 @@ export default function (corresMessage) {
                     fromName: ''
                 },
                 targetId: to,
-                unreadMessageNum:
-                    from === loginUserId || msgBody.read || msgBody.isRecall
-                        ? 0
-                        : 1,
+                unreadMessageNum: handleCalcUnReadNum(msgBody),
+                // unreadMessageNum:
+                //     from === loginUserId ||
+                //     msgBody.read ||
+                //     msgBody.isRecall ||
+                //     msgBody?.modifiedInfo
+                //         ? 0
+                //         : 1,
                 isMention: checkLastMsgisHasMention(msgBody),
                 latestMessage: {
                     msg: handleLastMsgContent(msgBody),
@@ -171,9 +203,12 @@ export default function (corresMessage) {
                 isMention: checkLastMsgisHasMention(msgBody, theData),
                 unreadMessageNum:
                     /* 这里的逻辑为如果from为自己，更新的消息已读，更新的消息为撤回，不计入unreadMessageNum的累加 */
-                    from === loginUserId || msgBody.read || msgBody.isRecall
-                        ? 0
-                        : theData.unreadMessageNum + 1
+                    handleCalcUnReadNum(msgBody, _.cloneDeep(theData))
+                // unreadMessageNum:
+                //     /* 这里的逻辑为如果from为自己，更新的消息已读，更新的消息为撤回，不计入unreadMessageNum的累加 */
+                //     from === loginUserId || msgBody.read || msgBody.isRecall
+                //         ? 0
+                //         : theData.unreadMessageNum + 1
             }
             return _.assign(theData, updatedState)
         }

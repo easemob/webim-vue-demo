@@ -3,7 +3,7 @@ import { useStore } from 'vuex'
 import router from '@/router'
 import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
 import { handleSDKErrorNotifi, setMessageKey } from '@/utils/handleSomeData'
-import { informType } from '@/constant'
+import { informType, messageType } from '@/constant'
 import { usePlayRing } from '@/hooks'
 import ring from '@/assets/ring.mp3'
 /* callkit */
@@ -82,6 +82,7 @@ EaseChatClient.addEventHandler('presenceStatusChange', {
 const getUserPresence = (status) => {
     store.dispatch('handlePresenceChanges', status)
 }
+const { CHANGE_MESSAGE_BODAY_TYPE } = messageType
 /* message 相关监听 */
 EaseChatClient.addEventHandler('messageListen', {
     onTextMessage: function (message) {
@@ -115,7 +116,11 @@ EaseChatClient.addEventHandler('messageListen', {
     }, // 收到视频消息。
     onRecallMessage: function (message) {
         otherRecallMessage(message)
-    } // 收到消息撤回回执。
+    }, // 收到消息撤回回执。
+    onModifiedMessage: function (message) {
+        console.log('>>>>>收到修改消息', message)
+        otherModifyMessage(message)
+    }
 })
 //接收的消息往store中push
 const pushNewMessage = (message) => {
@@ -128,7 +133,25 @@ const otherRecallMessage = (message) => {
     //单对单的撤回to必然为登陆的用户id，群组发起撤回to必然为群组id 所以key可以这样来区分群组或者单人。
     const key = to === EaseChatClient.user ? from : to
     console.log('>>>>>收到他人撤回', key)
-    store.commit('CHANGE_MESSAGE_BODAY', { type: 'recall', key, mid })
+    store.commit('CHANGE_MESSAGE_BODAY', {
+        type: CHANGE_MESSAGE_BODAY_TYPE.RECALL,
+        key,
+        mid
+    })
+    store.dispatch('gatherConversation', key)
+}
+//收到消息修改指令
+const otherModifyMessage = (message) => {
+    const { from, to, id: mid } = message
+    //单对单的撤回to必然为登陆的用户id，群组发起撤回to必然为群组id 所以key可以这样来区分群组或者单人。
+    if (!to) return
+    const key = to === EaseChatClient.user ? from : to
+    store.commit('CHANGE_MESSAGE_BODAY', {
+        type: CHANGE_MESSAGE_BODAY_TYPE.MODIFY,
+        key,
+        mid,
+        message
+    })
     store.dispatch('gatherConversation', key)
 }
 /* 好友关系相关监听 */
