@@ -26,6 +26,9 @@ const groupList = computed(() => store.state.Contacts.groupList)
 const loginState = computed(() => store.state.loginState)
 /* header 操作 */
 const drawer = ref(false) //抽屉显隐
+const handleDrawer = () => {
+    drawer.value = !drawer.value
+}
 //删除好友
 const delTheFriend = () => {
     console.log(nowPickInfo.value)
@@ -241,7 +244,7 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
                 <div v-if="nowPickInfo.groupDetail" class="chat_user_box">
                     <span class="chat_user_name">
                         {{ groupDetail.name || '' }}
-                        {{ `(${groupDetail.affiliations_count || ''})` }}
+                        {{ `(${groupDetail?.affiliations_count || ''})` }}
                     </span>
                 </div>
                 <div v-else class="chat_user_box">
@@ -257,7 +260,7 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
                     nowPickInfo.groupDetail &&
                     nowPickInfo.chatType === CHAT_TYPE.GROUP
                 "
-                @click="drawer = !drawer"
+                @click="handleDrawer"
             >
                 <svg
                     width="18"
@@ -272,7 +275,7 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
                 </svg>
             </span>
             <!-- 单人展示删除拉黑 -->
-            <span class="more" v-else>
+            <span class="more" v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE">
                 <el-dropdown placement="bottom-end" trigger="click">
                     <svg
                         width="18"
@@ -364,6 +367,7 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
             <GroupsDetails
                 :nowGroupId="nowPickInfo.id"
                 :groupDetail="groupDetail"
+                @handleDrawer="handleDrawer"
             />
         </el-drawer>
     </el-container>

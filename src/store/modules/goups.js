@@ -399,6 +399,47 @@ const Groups = {
                 })
             }
             console.log('>>>>>>调用了移出禁言操作', params)
+        },
+        //退出群组
+        leaveIntheGroup: async ({ commit }, params) => {
+            if (!params.groupId) return
+            const { groupId } = params
+            return new Promise((resolve, reject) => {
+                EaseChatClient.leaveGroup({
+                    groupId: groupId
+                })
+                    .then((res) => {
+                        commit('UPDATE_GROUP_LIST', {
+                            type: 'deleteFromList',
+                            groupId: groupId
+                        })
+                        resolve(res)
+                    })
+                    .catch((err) => {
+                        reject(err)
+                    })
+            })
+        },
+        //解散群组
+        destroyInTheGroup: async ({ commit }, params) => {
+            if (!params.groupId) return
+            const { groupId } = params
+            return new Promise((resolve, reject) => {
+                let option = {
+                    groupId: groupId
+                }
+                EaseChatClient.destroyGroup(option)
+                    .then((res) => {
+                        resolve(res)
+                        commit('UPDATE_GROUP_LIST', {
+                            type: 'deleteFromList',
+                            groupId: groupId
+                        })
+                    })
+                    .catch((err) => {
+                        reject(err)
+                    })
+            })
         }
     },
     getters: {}
