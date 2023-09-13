@@ -1,8 +1,8 @@
 <script setup>
-import { reactive, ref, computed, toRefs } from 'vue'
+import { reactive, ref, computed, toRefs, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { useClipboard, usePermission } from '@vueuse/core'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { EaseChatClient } from '@/IM/initwebsdk'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import fileSizeFormat from '@/utils/fileSizeFormat'
@@ -13,7 +13,9 @@ import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import paseLink from '@/utils/paseLink'
 /* 默认头像 */
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
-import ReportMessage from './suit/reportMessage.vue'
+import ReportMessage from '../suit/reportMessage.vue'
+/* components */
+import ModifyMessage from '../suit/modifyMessage.vue'
 /* vuex store */
 const store = useStore()
 /* props */
@@ -30,10 +32,11 @@ const props = defineProps({
 })
 const { nowPickInfo } = toRefs(props)
 /* emits */
-const emit = defineEmits(['scrollMessageList', 'reEditMessage'])
+const emit = defineEmits(['scrollMessageList', 'reEditMessage', 'messageQuote'])
 const { messageData } = toRefs(props)
 /* constant */
-const { ALL_MESSAGE_TYPE, CUSTOM_TYPE, CHAT_TYPE } = messageType
+const { ALL_MESSAGE_TYPE, CUSTOM_TYPE, CHAT_TYPE, CHANGE_MESSAGE_BODAY_TYPE } =
+    messageType
 /* login hxId */
 const loginUserId = EaseChatClient.user
 
@@ -136,6 +139,32 @@ const copyTextMessages = (msg) => {
         console.log('>>>>>成功复制')
     }
 }
+//引用消息
+let clickQuoteMsgId = ref('')
+const clickQuoteMessage = (msgQuote) => {
+    const { msgID } = msgQuote
+    nextTick(() => {
+        const messageQuery = document.querySelectorAll('.messageList_box')
+        const filterQuoteMsg =
+            messageQuery.length &&
+            Array.from(messageQuery).filter(
+                (node) => msgID === node.dataset.mid
+            )
+        if (filterQuoteMsg.length) {
+            filterQuoteMsg[0].scrollIntoView()
+            clickQuoteMsgId.value = msgID
+            setTimeout(() => {
+                clickQuoteMsgId.value = ''
+            }, 1000)
+        } else {
+            ElMessage({
+                type: 'error',
+                message: '无法定位到原消息',
+                center: true
+            })
+        }
+    })
+}
 //撤回消息
 const recallMessage = async ({ id, to, chatType }) => {
     const options = {
@@ -150,10 +179,42 @@ const recallMessage = async ({ id, to, chatType }) => {
         console.log('>>>>>>撤回失败', error)
     }
 }
-//删除消息（非从服务器删除）
-const deleteMessage = ({ from, to, id: mid }) => {
-    const key = to === EaseChatClient.user ? from : to
-    store.commit('CHANGE_MESSAGE_BODAY', { type: 'deleteMsg', key, mid })
+//编辑消息
+
+const modifyMessageRef = ref(null)
+const showModifyMsgModal = (msgBody) => {
+    nextTick(() => {
+        modifyMessageRef.value.initModifyMessage(msgBody)
+    })
+}
+//删除消息
+const deleteMessage = async (msgBody) => {
+    try {
+        await ElMessageBox.confirm(
+            '消息删除是从服务端删除，确认要删除吗？',
+            '消息删除',
+            {
+                confirmButtonText: '确认',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }
+        )
+        await store.dispatch('removeMessage', { ...msgBody })
+        ElMessage({
+            type: 'success',
+            message: '消息已删除',
+            center: true
+        })
+    } catch (error) {
+        console.log('>>>>>取消', error)
+        if (error !== 'cancel') {
+            ElMessage({
+                type: 'error',
+                message: '删除失败',
+                center: true
+            })
+        }
+    }
 }
 // 消息举报
 const reportMessage = ref(null)
@@ -164,6 +225,8 @@ const informOnMessage = (msgBody) => {
 }
 //父组件重新编辑方法
 const reEdit = (msg) => emit('reEditMessage', msg)
+//调用父组件引用消息
+const onMsgQuote = (msg) => emit('messageQuote', msg)
 </script>
 <template>
     <div>
@@ -171,7 +234,9 @@ const reEdit = (msg) => emit('reEditMessage', msg)
             class="messageList_box"
             v-for="(msgBody, index) in messageData"
             :key="msgBody.id"
+            :data-mid="msgBody.id"
         >
+            <!-- 普通消息气泡 -->
             <div
                 v-if="
                     !msgBody.isRecall &&
@@ -195,6 +260,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                     "
                 >
                 </el-avatar>
+                <!-- 普通消息内容 -->
                 <div class="message_box_card">
                     <span
                         v-show="!isMyself(msgBody)"
@@ -206,7 +272,8 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                         :class="[
                             isMyself(msgBody)
                                 ? 'message_box_content_mine'
-                                : 'message_box_content_other'
+                                : 'message_box_content_other',
+                            clickQuoteMsgId === msgBody.id && 'quote_msg_avtive'
                         ]"
                         trigger="contextmenu"
                         placement="bottom-end"
@@ -218,6 +285,14 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                         >
                             <template v-if="!isLink(msgBody.msg)">
                                 {{ msgBody.msg }}
+                                <!-- 已编辑 -->
+                                <sup
+                                    style="font-size: 7px; color: #707784"
+                                    v-show="
+                                        msgBody?.modifiedInfo?.operationCount
+                                    "
+                                    >（已编辑）</sup
+                                >
                             </template>
                             <template v-else>
                                 <span v-html="paseLink(msgBody.msg).msg"> </span
@@ -327,6 +402,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                                 </div>
                             </template>
                         </div>
+                        <!-- 右键点击弹起更多功能栏 -->
                         <template #dropdown>
                             <el-dropdown-menu>
                                 <el-dropdown-item
@@ -345,6 +421,19 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                                     撤回
                                 </el-dropdown-item>
                                 <el-dropdown-item
+                                    v-if="
+                                        msgBody.type ===
+                                            ALL_MESSAGE_TYPE.TEXT &&
+                                        isMyself(msgBody)
+                                    "
+                                    @click="showModifyMsgModal(msgBody)"
+                                >
+                                    编辑
+                                </el-dropdown-item>
+                                <el-dropdown-item @click="onMsgQuote(msgBody)">
+                                    引用
+                                </el-dropdown-item>
+                                <el-dropdown-item
                                     @click="deleteMessage(msgBody)"
                                 >
                                     删除
@@ -358,8 +447,21 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                             </el-dropdown-menu>
                         </template>
                     </el-dropdown>
+                    <!-- 引用消息展示框 -->
+                    <div
+                        class="message_quote_box"
+                        v-if="msgBody?.ext?.msgQuote"
+                        @click="clickQuoteMessage(msgBody.ext.msgQuote)"
+                    >
+                        <p>
+                            {{ msgBody?.ext?.msgQuote?.msgSender }}：{{
+                                msgBody?.ext?.msgQuote?.msgPreview
+                            }}
+                        </p>
+                    </div>
                 </div>
             </div>
+            <!-- 撤回消息通知通知 -->
             <div v-if="msgBody.isRecall" class="recall_style">
                 {{
                     isMyself(msgBody) ? '你' : `${msgBody.from}`
@@ -373,6 +475,7 @@ const reEdit = (msg) => emit('reEditMessage', msg)
                     >重新编辑</span
                 >
             </div>
+            <!-- 灰色系统通知 -->
             <div
                 v-if="msgBody.type === ALL_MESSAGE_TYPE.INFORM"
                 class="inform_style"
@@ -383,274 +486,10 @@ const reEdit = (msg) => emit('reEditMessage', msg)
             </div>
         </div>
         <ReportMessage ref="reportMessage" />
+        <ModifyMessage ref="modifyMessageRef" />
     </div>
 </template>
 
 <style lang="scss" scoped>
-.messageList_box {
-    width: 100%;
-
-    .message_box_item {
-        position: relative;
-        display: flex;
-        margin: 32px auto;
-        font-weight: 400;
-        font-size: 14px;
-        line-height: 20px;
-        letter-spacing: 0.4px;
-        color: #333333;
-
-        .message_item_time {
-            position: absolute;
-            top: -25px;
-            left: 0;
-            right: 0;
-            margin: auto;
-            width: 74px;
-            height: 20px;
-            color: #adadad;
-            font-weight: 400;
-            font-size: 10px;
-            line-height: 20px;
-        }
-
-        .message_item_avator {
-            width: 38px;
-            height: 38px;
-        }
-        .message_box_card {
-            display: flex;
-            flex-direction: column;
-            max-width: 50%;
-            min-height: 34px;
-        }
-        .message_box_nickname {
-            font-size: 14px;
-            line-height: 20px;
-            letter-spacing: 0.4px;
-            color: #9a9a9a;
-            margin: 0 10px;
-        }
-        .message_box_content {
-            display: flex;
-            align-items: center;
-            margin: 0 6px;
-            word-break: break-all;
-
-            /* 通用音频播放样式 */
-            .message_box_content_audio {
-                display: flex;
-                justify-content: flex-end;
-                align-items: center;
-                max-width: 250px;
-                min-width: 80px;
-                font-size: 12px;
-
-                .audio_length_text {
-                    font-family: 'Avenir';
-                    font-style: normal;
-                    font-weight: 400;
-                    font-size: 12px;
-                }
-            }
-
-            /* 对方音频播放样式 */
-            .message_box_content_audio_other {
-                flex-direction: row;
-
-                @keyframes other_play_icon {
-                    0% {
-                        background: url('@/assets/images/playAudio/msg_recv_audio02@3x.png')
-                            no-repeat;
-
-                        background-size: 100% 100%;
-                    }
-
-                    50% {
-                        background: url('@/assets/images/playAudio/msg_recv_audio01@3x.png')
-                            no-repeat;
-
-                        background-size: 100% 100%;
-                    }
-
-                    100% {
-                        background: url('@/assets/images/playAudio/msg_recv_audio@3x.png')
-                            no-repeat;
-                        background-size: 100% 100%;
-                    }
-                }
-
-                .play_audio_icon_other {
-                    width: 30px;
-                    height: 30px;
-                    background: url('@/assets/images/playAudio/msg_recv_audio@3x.png')
-                        no-repeat;
-                    margin-right: 10px;
-                }
-
-                .start_play_audio {
-                    animation: other_play_icon 2s;
-                    animation-iteration-count: infinite;
-                }
-            }
-
-            /* 己方音频播放样式 */
-            .message_box_content_audio_mine {
-                flex-direction: row-reverse;
-
-                @keyframes mine_play_icon {
-                    0% {
-                        background: url('@/assets/images/playAudio/msg_send_audio02@3x.png')
-                            no-repeat;
-
-                        background-size: 100% 100%;
-                    }
-
-                    50% {
-                        background: url('@/assets/images/playAudio/msg_send_audio01@3x.png')
-                            no-repeat;
-
-                        background-size: 100% 100%;
-                    }
-
-                    100% {
-                        background: url('@/assets/images/playAudio/msg_send_audio@3x.png')
-                            no-repeat;
-                        background-size: 100% 100%;
-                    }
-                }
-
-                .play_audio_icon_mine {
-                    width: 30px;
-                    height: 30px;
-                    background-size: 100% 100%;
-                    background: url('@/assets/images/playAudio/msg_send_audio@3x.png')
-                        no-repeat;
-                    margin-left: 10px;
-                }
-
-                .start_play_audio {
-                    animation: mine_play_icon 2s;
-                    animation-iteration-count: infinite;
-                }
-            }
-
-            /* 文件消息样式 */
-            .message_box_content_file {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                width: 200px;
-                min-height: 60px;
-                max-height: 120px;
-                padding: 10px;
-
-                .file_text_box {
-                    width: 75%;
-                    height: 80%;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-around;
-
-                    .file_name {
-                        width: 120px;
-                        white-space: wrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        font-size: 15px;
-                        font-weight: bold;
-                    }
-
-                    .file_size {
-                        font-size: 13px;
-                    }
-
-                    .file_download {
-                        width: 100%;
-                        color: #333333;
-                        font-size: 13px;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-
-                        &:hover {
-                            transform: scale(0.9);
-                        }
-                    }
-                }
-
-                .icon-wenjian {
-                    font-size: 50px;
-                    color: #8d8a8a;
-                }
-            }
-
-            /* 自定义消息 */
-            .message_box_content_custom {
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                width: 200px;
-                min-height: 60px;
-                max-height: 120px;
-                padding: 10px;
-                overflow: hidden;
-
-                .user_card_main {
-                    display: flex;
-                    flex-direction: row;
-                    justify-content: flex-start;
-                    align-items: center;
-                    color: #333333;
-                    font-size: 17px;
-
-                    .nickname {
-                        display: inline-block;
-                        // width: 100%;
-                        margin-left: 10px;
-                        height: 35px;
-                        line-height: 35px;
-                    }
-                }
-            }
-
-            /* 个人名片 */
-        }
-
-        .message_box_content_other {
-            background: #fff;
-            border-radius: 8px 8px 8px 0px;
-        }
-
-        .message_box_content_mine {
-            background: #c1e3fc;
-            border-radius: 8px 0px 8px 8px;
-        }
-    }
-
-    /* 撤回或者系统通知类消息 */
-    .recall_style,
-    .inform_style {
-        height: 60px;
-        text-align: center;
-        color: #aaaaaa;
-        font-size: 10px;
-        margin: 5px 0;
-
-        .reEdit {
-            color: #3e91fa;
-            margin-left: 3px;
-            cursor: pointer;
-        }
-    }
-}
-
-:deep(.el-input__wrapper) {
-    border-radius: 5px;
-}
-
-:deep(.el-dialog__header) {
-    background: #f2f2f2;
-    margin: 0;
-}
+@import './index.scss';
 </style>

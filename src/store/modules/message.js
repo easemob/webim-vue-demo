@@ -4,7 +4,7 @@ import _ from 'lodash'
 // import { ref, toRaw } from 'vue';
 import { messageType } from '@/constant'
 import { usePlayRing } from '@/hooks'
-const { ALL_MESSAGE_TYPE } = messageType
+const { ALL_MESSAGE_TYPE, CHANGE_MESSAGE_BODAY_TYPE } = messageType
 const Message = {
     state: {
         messageList: {}
@@ -42,28 +42,48 @@ const Message = {
         CLEAR_SOMEONE_MESSAGE: (state, payload) => {
             state.messageList[payload] = []
         },
-        //撤回删除消息
+        //修改本地原消息【撤回、删除、编辑】
         CHANGE_MESSAGE_BODAY: (state, payload) => {
             const { type, key, mid } = payload
-            if (type === 'recall') {
-                if (state.messageList[key]) {
-                    const res = _.find(
-                        state.messageList[key],
-                        (o) => o.id === mid
-                    )
-                    res.isRecall = true
-                }
-            }
-            if (type === 'deleteMsg') {
-                if (state.messageList[key]) {
-                    const sourceData = state.messageList[key]
-                    const index = _.findIndex(
-                        state.messageList[key],
-                        (o) => o.id === mid
-                    )
-                    sourceData.splice(index, 1)
-                    state.messageList[key] = _.assign([], sourceData)
-                }
+            switch (type) {
+                case CHANGE_MESSAGE_BODAY_TYPE.RECALL:
+                    {
+                        if (state.messageList[key]) {
+                            const res = _.find(
+                                state.messageList[key],
+                                (o) => o.id === mid
+                            )
+                            res.isRecall = true
+                        }
+                    }
+
+                    break
+                case CHANGE_MESSAGE_BODAY_TYPE.DELETE:
+                    {
+                        if (state.messageList[key]) {
+                            const sourceData = state.messageList[key]
+                            const index = _.findIndex(
+                                state.messageList[key],
+                                (o) => o.id === mid
+                            )
+                            sourceData.splice(index, 1)
+                            state.messageList[key] = _.assign([], sourceData)
+                        }
+                    }
+                    break
+                case CHANGE_MESSAGE_BODAY_TYPE.MODIFY:
+                    {
+                        if (state.messageList[key]) {
+                            const res = _.find(
+                                state.messageList[key],
+                                (o) => o.id === mid
+                            )
+                            _.assign(res, payload?.message)
+                        }
+                    }
+                    break
+                default:
+                    break
             }
         }
     },
@@ -157,6 +177,30 @@ const Message = {
             commit('UPDATE_MESSAGE_LIST', msgBody)
             dispatch('gatherConversation', key)
         },
+        //删除消息
+        removeMessage: ({ dispatch, commit }, params) => {
+            const { id: mid, from: targetId, chatType } = params
+            const key = setMessageKey(params)
+            return new Promise((resolve, reject) => {
+                EaseChatClient.removeHistoryMessages({
+                    targetId: targetId,
+                    chatType: chatType,
+                    messageIds: [mid]
+                })
+                    .then((res) => {
+                        commit('CHANGE_MESSAGE_BODAY', {
+                            type: CHANGE_MESSAGE_BODAY_TYPE.DELETE,
+                            key: key,
+                            mid
+                        })
+                        dispatch('gatherConversation', key)
+                        resolve('OK')
+                    })
+                    .catch((error) => {
+                        reject(error)
+                    })
+            })
+        },
         //撤回消息
         recallMessage: async ({ dispatch, commit }, params) => {
             const { mid, to, chatType } = params
@@ -164,7 +208,7 @@ const Message = {
                 EaseChatClient.recallMessage({ mid, to, chatType })
                     .then(() => {
                         commit('CHANGE_MESSAGE_BODAY', {
-                            type: 'recall',
+                            type: CHANGE_MESSAGE_BODAY_TYPE.RECALL,
                             key: to,
                             mid
                         })
@@ -173,6 +217,39 @@ const Message = {
                     })
                     .catch((error) => {
                         reject(error)
+                    })
+            })
+        },
+        //修改（编辑）消息
+        modifyMessage: async ({ dispatch, commit }, params) => {
+            const { id: mid, to, chatType, msg } = params
+            return new Promise((resolve, reject) => {
+                const textMessage = EaseChatSDK.message.create({
+                    type: 'txt',
+                    msg: msg,
+                    to: to,
+                    chatType: chatType
+                })
+                console.log('textMessage', textMessage)
+                EaseChatClient.modifyMessage({
+                    messageId: mid,
+                    modifiedMessage: textMessage
+                })
+                    .then((res) => {
+                        console.log(res.message, 'modifiedMessage')
+                        const { message } = res || {}
+                        commit('CHANGE_MESSAGE_BODAY', {
+                            type: CHANGE_MESSAGE_BODAY_TYPE.MODIFY,
+                            key: to,
+                            mid,
+                            message
+                        })
+                        dispatch('gatherConversation', to)
+                        resolve(res)
+                    })
+                    .catch((e) => {
+                        console.log(e)
+                        reject(e)
                     })
             })
         }

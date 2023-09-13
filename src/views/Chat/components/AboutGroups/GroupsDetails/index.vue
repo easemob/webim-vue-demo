@@ -1,6 +1,6 @@
 <script setup>
 import { ref, toRaw, toRefs, computed, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 /* IMSDK */
 import { EaseChatClient } from '@/IM/initwebsdk'
 /* components */
@@ -17,6 +17,8 @@ const props = defineProps({
         default: ''
     }
 })
+/* emits */
+const emits = defineEmits(['handleDrawer'])
 /*
  * groupDetail（群详情接口返回的数据）
  * 主要包含群名称，群主id，群组desc，群组人数，群组禁言状态是否容许邀请...。
@@ -157,6 +159,58 @@ const inTheGroupNickname = computed(() => {
         ]?.nickName
     return myNickname
 })
+//退出、解散群组
+const quitThisGroup = async () => {
+    console.log('>>>>>退出群组')
+    if (!groupDetail.value.id) return
+    const groupId = groupDetail.value.id
+    try {
+        await ElMessageBox.confirm(
+            '将要从本群退出，确认要退出此群吗？',
+            '群组提示',
+            {
+                confirmButtonText: '确认',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }
+        )
+        await store.dispatch('leaveIntheGroup', { groupId })
+        emits('handleDrawer')
+    } catch (error) {
+        if (error !== 'cancel') {
+            ElMessage({
+                message: '退出群组失败~',
+                type: 'error',
+                center: true
+            })
+        }
+    }
+}
+const dissolveThisGroup = async () => {
+    if (!groupDetail.value.id) return
+    const groupId = groupDetail.value.id
+    try {
+        await ElMessageBox.confirm(
+            '将要将本群解散，确认要解散此群吗？',
+            '群组提示',
+            {
+                confirmButtonText: '确认',
+                cancelButtonText: '取消',
+                type: 'error'
+            }
+        )
+        await store.dispatch('destroyInTheGroup', { groupId })
+        emits('handleDrawer')
+    } catch (error) {
+        if (error !== 'cancel') {
+            ElMessage({
+                message: '解散群组失败~',
+                type: 'error',
+                center: true
+            })
+        }
+    }
+}
 </script>
 <template>
     <div class="app_container" v-if="groupDetail">
@@ -310,6 +364,27 @@ const inTheGroupNickname = computed(() => {
             </div>
             <el-divider style="margin: 0" />
         </template>
+        <!-- 群组操作按钮 -->
+        <div class="group_list_handle_box">
+            <template v-if="groupDetail.owner === EaseChatClient.user">
+                <el-button
+                    type="danger"
+                    class="group_list_card_btn"
+                    plain
+                    @click="dissolveThisGroup"
+                    >解散群组</el-button
+                >
+            </template>
+            <template v-else>
+                <el-button
+                    type="danger"
+                    class="group_list_card_btn"
+                    plain
+                    @click="quitThisGroup"
+                    >退出群组</el-button
+                >
+            </template>
+        </div>
 
         <GroupsManagement
             ref="groupmanagement"
@@ -321,150 +396,5 @@ const inTheGroupNickname = computed(() => {
     </div>
 </template>
 <style lang="scss" scoped>
-.app_container {
-    height: 100%;
-    overflow: auto;
-
-    .group_func_card {
-        padding: 15px;
-        min-height: 72px;
-        width: 100%;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: space-around;
-
-        .title {
-            font-family: 'PingFang SC';
-            font-style: normal;
-            font-weight: 500;
-            font-size: 12px;
-            line-height: 18px;
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-
-            .icon {
-                cursor: pointer;
-                margin-left: 5px;
-                transition: all 0.3s;
-
-                &:hover {
-                    transform: scale(1.5);
-                }
-            }
-        }
-
-        .content {
-            font-family: 'PingFang SC';
-            font-style: normal;
-            font-weight: 400;
-            font-size: 12px;
-            line-height: 18px;
-            /* or 150% */
-            text-align: justify;
-            color: #a3a3a3;
-            // height: 72px;
-            overflow: hidden;
-            cursor: pointer;
-        }
-    }
-
-    .group_announcements {
-        padding: 15px;
-        height: 127px;
-        width: 100%;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: space-around;
-
-        .title {
-            font-family: 'PingFang SC';
-            font-style: normal;
-            font-weight: 500;
-            font-size: 12px;
-            line-height: 18px;
-        }
-
-        .content {
-            font-family: 'PingFang SC';
-            font-style: normal;
-            font-weight: 400;
-            font-size: 12px;
-            line-height: 18px;
-            /* or 150% */
-            text-align: justify;
-            color: #a3a3a3;
-            height: 72px;
-            overflow: hidden;
-            cursor: pointer;
-        }
-    }
-
-    .group_list_card {
-        padding: 15px 0px 15px 15px;
-        height: 52px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-
-        &:hover {
-            background: #f3f3f3;
-        }
-
-        .label {
-            font-family: 'PingFang SC';
-            font-style: normal;
-            font-weight: 500;
-            font-size: 12px;
-        }
-
-        .main {
-            height: 100%;
-            width: 80px;
-            display: flex;
-            flex-direction: row;
-            justify-content: flex-end;
-            align-items: center;
-            margin: 0 5px;
-
-            .member_count {
-                min-width: 17px;
-                height: 20px;
-                background: #f9f9f9;
-                border-radius: 108px;
-                font-family: 'PingFang SC';
-                font-style: normal;
-                font-weight: 500;
-                font-size: 7px;
-                line-height: 11px;
-                color: #a3a3a3;
-                padding: 5px 8px;
-                box-sizing: border-box;
-            }
-
-            .more_list {
-                > svg {
-                    width: 18.49px;
-                    height: 10.84px;
-                    cursor: pointer;
-                }
-            }
-        }
-    }
-}
-
-::v-deep .group_name_input > .el-input__wrapper {
-    border-radius: 5px;
-}
-
-::v-deep .el-dialog__header {
-    background: #f2f2f2;
-    margin: 0;
-}
+@import './index.scss';
 </style>

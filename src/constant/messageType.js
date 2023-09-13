@@ -28,10 +28,16 @@ const MENTION_ALL = {
     TEXT: '所有人',
     VALUE: 'ALL'
 }
+const CHANGE_MESSAGE_BODAY_TYPE = {
+    RECALL: 0,
+    DELETE: 1,
+    MODIFY: 2
+}
 export default {
     SESSION_MESSAGE_TYPE,
     CUSTOM_TYPE,
     ALL_MESSAGE_TYPE,
     CHAT_TYPE,
-    MENTION_ALL
+    MENTION_ALL,
+    CHANGE_MESSAGE_BODAY_TYPE
 }

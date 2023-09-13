@@ -1,0 +1,153 @@
+.app_container {
+    height: 100%;
+    overflow: auto;
+
+    .group_func_card {
+        padding: 15px;
+        min-height: 72px;
+        width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: space-around;
+
+        .title {
+            font-family: 'PingFang SC';
+            font-style: normal;
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 18px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+
+            .icon {
+                cursor: pointer;
+                margin-left: 5px;
+                transition: all 0.3s;
+
+                &:hover {
+                    transform: scale(1.5);
+                }
+            }
+        }
+
+        .content {
+            font-family: 'PingFang SC';
+            font-style: normal;
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 18px;
+            /* or 150% */
+            text-align: justify;
+            color: #a3a3a3;
+            // height: 72px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+    }
+
+    .group_announcements {
+        padding: 15px;
+        height: 127px;
+        width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: space-around;
+
+        .title {
+            font-family: 'PingFang SC';
+            font-style: normal;
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 18px;
+        }
+
+        .content {
+            font-family: 'PingFang SC';
+            font-style: normal;
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 18px;
+            /* or 150% */
+            text-align: justify;
+            color: #a3a3a3;
+            height: 72px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+    }
+
+    .group_list_card {
+        padding: 15px 0px 15px 15px;
+        height: 52px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+
+        &:hover {
+            background: #f3f3f3;
+        }
+
+        .label {
+            font-family: 'PingFang SC';
+            font-style: normal;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .main {
+            height: 100%;
+            width: 80px;
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+            align-items: center;
+            margin: 0 5px;
+
+            .member_count {
+                min-width: 17px;
+                height: 20px;
+                background: #f9f9f9;
+                border-radius: 108px;
+                font-family: 'PingFang SC';
+                font-style: normal;
+                font-weight: 500;
+                font-size: 7px;
+                line-height: 11px;
+                color: #a3a3a3;
+                padding: 5px 8px;
+                box-sizing: border-box;
+            }
+
+            .more_list {
+                > svg {
+                    width: 18.49px;
+                    height: 10.84px;
+                    cursor: pointer;
+                }
+            }
+        }
+    }
+}
+.group_list_handle_box {
+    margin-top: 10px;
+    padding: 0 2px;
+}
+.group_list_card_btn {
+    width: 100%;
+    height: 40px;
+}
+::v-deep .group_name_input > .el-input__wrapper {
+    border-radius: 5px;
+}
+
+::v-deep .el-dialog__header {
+    background: #f2f2f2;
+    margin: 0;
+}
