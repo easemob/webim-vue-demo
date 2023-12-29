@@ -2905,10 +2905,10 @@ duplexer@^0.1.2:
   resolved "https://registry.yarnpkg.com/duplexer/-/duplexer-0.1.2.tgz#3abe43aef3835f8ae077d136ddce0f276b0400e6"
   integrity sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==
 
-easemob-websdk@^4.3.0:
-  version "4.3.0"
-  resolved "https://registry.npmjs.org/easemob-websdk/-/easemob-websdk-4.3.0.tgz#42d21dbb1486db0e8aafd32a44ad493f4a3302b5"
-  integrity sha512-OwYsRTOjZMRmDVrVkB4L2N/CTqHJaQFIUO86nHohzv0ReBV6BNS3yaDghkZujfvAxy1O4F1LPOJ3wNx/kWJeTg==
+easemob-websdk@^4.4.1:
+  version "4.4.1"
+  resolved "https://registry.npmjs.org/easemob-websdk/-/easemob-websdk-4.4.1.tgz#e90bf988f23673fa83d12eea510a0a17501b6d3b"
+  integrity sha512-sPWQBiulZ4xrP/Ui7r6PUqUE1NiSvrpTeL4lwIfXPRUMmpIriziIt+vsdkRJf4FO4t4s0z/W2tEILnsUcu8lcQ==
 
 easy-stack@1.0.1:
   version "1.0.1"
