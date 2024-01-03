@@ -3,6 +3,7 @@ import MiniCore from 'easemob-websdk/miniCore/miniCore'
 import * as contactPlugin from 'easemob-websdk/contact/contact'
 import * as groupPlugin from 'easemob-websdk/group/group'
 import * as presencePlugin from 'easemob-websdk/presence/presence'
+import * as localCachePlugin from 'easemob-websdk/localCache/localCache'
 import {
     DEFAULT_EASEMOB_APPKEY,
     DEFAULT_EASEMOB_SOCKET_URL,
@@ -17,6 +18,7 @@ if (Object.keys(miniCore).length) {
     miniCore.usePlugin(contactPlugin)
     miniCore.usePlugin(groupPlugin)
     miniCore.usePlugin(presencePlugin)
-    console.log('>>>>>IM 插件已注册')
+    miniCore.usePlugin(localCachePlugin)
+    console.log('>>>>>IM 插件已注册', miniCore)
 }
 export default miniCore

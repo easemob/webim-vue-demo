@@ -1,7 +1,6 @@
 import { watchEffect } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
 import { EMClient } from '@/IM'
-console.log('log EMClient', EMClient)
 export const useSetEMLogConfig = () => {
     const isOpenedEMLog = useLocalStorage('isOpenedEMLog', false)
     const closeEMLog = () => EMClient.logger.disableAll()
