@@ -70,7 +70,7 @@ const loginIM = async () => {
         if (res?.code === 200) {
             console.log('>>>>>>登陆token获取成功', res.token)
             EMClient.open({
-                user: res.chatUserName.toLowerCase(),
+                username: res.chatUserName.toLowerCase(),
                 accessToken: res.token
             })
             window.localStorage.setItem(
