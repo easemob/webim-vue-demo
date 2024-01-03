@@ -1,12 +1,12 @@
 import router from '@/router'
 import store from '@/store'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
-import { EaseChatClient } from '../initwebsdk'
+import { EMClient } from '../index'
 import { usePlayRing } from '@/hooks'
 export const imConnectListener = () => {
     const mountConnectEventListener = () => {
         const { isOpenPlayRing, clickRing } = usePlayRing()
-        EaseChatClient.addEventHandler('connection', {
+        EMClient.addEventHandler('connection', {
             onConnected: () => {
                 console.log('>>>>>环信连接成功')
                 store.commit('CHANGE_LOGIN_STATUS', true)
@@ -42,7 +42,7 @@ export const imConnectListener = () => {
     }
     //获取登陆用户属性
     const getMyUserInfos = () => {
-        const userId = EaseChatClient.user
+        const userId = EMClient.user
         store.dispatch('getMyUserInfo', userId)
     }
     //获取好友列表

@@ -1,10 +1,10 @@
-import { EaseChatClient } from '../initwebsdk'
+import { EMClient } from '../index'
 import { informType } from '@/constant'
 import store from '@/store'
 export const imContactListener = () => {
     const { INFORM_FROM } = informType
     const mountContactEventListener = () => {
-        EaseChatClient.addEventHandler('friendListen', {
+        EMClient.addEventHandler('friendListen', {
             // 收到好友邀请触发此方法。
             onContactInvited: (data) => {
                 //写入INFORM

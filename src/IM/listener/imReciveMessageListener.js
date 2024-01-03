@@ -1,4 +1,4 @@
-import { EaseChatClient } from '../initwebsdk'
+import { EMClient } from '../index'
 import { messageType } from '@/constant'
 import { setMessageKey } from '@/utils/handleSomeData'
 import store from '@/store'
@@ -13,7 +13,7 @@ export const imReviceMessageListener = () => {
         console.log('>>>>>收到他人撤回', message)
         const { from, to, mid } = message
         //单对单的撤回to必然为登陆的用户id，群组发起撤回to必然为群组id 所以key可以这样来区分群组或者单人。
-        const key = to === EaseChatClient.user ? from : to
+        const key = to === EMClient.user ? from : to
         console.log('>>>>>收到他人撤回', key)
         store.commit('CHANGE_MESSAGE_BODAY', {
             type: CHANGE_MESSAGE_BODAY_TYPE.RECALL,
@@ -27,7 +27,7 @@ export const imReviceMessageListener = () => {
         const { from, to, id: mid } = message
         //单对单的撤回to必然为登陆的用户id，群组发起撤回to必然为群组id 所以key可以这样来区分群组或者单人。
         if (!to) return
-        const key = to === EaseChatClient.user ? from : to
+        const key = to === EMClient.user ? from : to
         store.commit('CHANGE_MESSAGE_BODAY', {
             type: CHANGE_MESSAGE_BODAY_TYPE.MODIFY,
             key,
@@ -38,7 +38,7 @@ export const imReviceMessageListener = () => {
     }
     const mountReviceMessageEventListener = () => {
         /* message 相关监听 */
-        EaseChatClient.addEventHandler('messageListen', {
+        EMClient.addEventHandler('messageListen', {
             onTextMessage: function (message) {
                 console.log('>>>>>>>App mesage', message)
                 console.log('setMessageKey', setMessageKey(message))

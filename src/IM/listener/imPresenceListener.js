@@ -1,4 +1,4 @@
-import { EaseChatClient } from '../initwebsdk'
+import { EMClient } from '../index'
 import store from '@/store'
 export const imPresenceListener = () => {
     //处理登陆用户状态的变更
@@ -6,7 +6,7 @@ export const imPresenceListener = () => {
         store.dispatch('handlePresenceChanges', status)
     }
     const mountPresenceEventListener = () => {
-        EaseChatClient.addEventHandler('presenceStatusChange', {
+        EMClient.addEventHandler('presenceStatusChange', {
             onPresenceStatusChange: (status) => {
                 console.log('>>>>>presenceStatusChange', status)
                 getUserPresence(...status)
