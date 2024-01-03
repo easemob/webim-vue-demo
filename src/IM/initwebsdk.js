@@ -31,4 +31,7 @@ const EaseChatClient = new EaseChatSDK.connection({
         ? `${CUSTOM_CONFIG.restServer}:${CUSTOM_CONFIG.port}`
         : DEFAULT_EASEMOB_REST_URL
 })
+//向EaseChatClient下添加构建消息方法。
+EaseChatClient.Message = EaseChatSDK.message
+console.log('EaseChatClient', EaseChatClient)
 export { EaseChatSDK, EaseChatClient }

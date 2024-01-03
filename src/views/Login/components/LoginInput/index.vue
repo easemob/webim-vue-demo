@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { fetchUserLoginSmsCode, fetchUserLoginToken } from '@/api/login'
 import { useStore } from 'vuex'
@@ -45,7 +45,7 @@ const loginIM = async () => {
     buttonLoading.value = true
     /* SDK 登陆的方式 */
     // try {
-    //   let { accessToken } = await EaseChatClient.open({
+    //   let { accessToken } = await EMClient.open({
     //     user: loginValue.username.toLowerCase(),
     //     pwd: loginValue.password.toLowerCase(),
     //   });
@@ -69,7 +69,7 @@ const loginIM = async () => {
         const res = await fetchUserLoginToken(params)
         if (res?.code === 200) {
             console.log('>>>>>>登陆token获取成功', res.token)
-            EaseChatClient.open({
+            EMClient.open({
                 user: res.chatUserName.toLowerCase(),
                 accessToken: res.token
             })

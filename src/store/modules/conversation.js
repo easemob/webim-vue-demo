@@ -6,7 +6,7 @@ import {
     createInform
 } from '@/utils/handleSomeData'
 import Message from './message'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import { informType, messageType } from '@/constant'
 const { INFORM_FROM } = informType
 const { CHAT_TYPE } = messageType
@@ -18,7 +18,7 @@ const Conversation = {
     mutations: {
         //初始化会话列表的数据（根据登陆的id取其对应的会话数据）
         INIT_CONVERSATION_STATE: (state) => {
-            const storageId = EaseChatClient.user
+            const storageId = EMClient.user
             state.informDetail = useLocalStorage(
                 `EASEIM_${storageId}_INFORM`,
                 []

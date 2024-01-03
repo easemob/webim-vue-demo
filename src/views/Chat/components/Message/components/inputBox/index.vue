@@ -7,7 +7,8 @@ import { onClickOutside } from '@vueuse/core'
 import { emojis } from '@/constant'
 import { messageType } from '@/constant'
 import _ from 'lodash'
-import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
+import parseDownloadResponse from '@/utils/parseDownloadResponse'
 /* 组件 */
 import CollectAudio from '../suit/audio.vue'
 import PreviewSendImg from '../suit/previewSendImg.vue'
@@ -48,8 +49,8 @@ const atMembersList = computed(() => {
         sourceMembers.length &&
             sourceMembers.forEach((item) => {
                 if (
-                    item.owner !== EaseChatClient.user &&
-                    item.member !== EaseChatClient.user
+                    item.owner !== EMClient.user &&
+                    item.member !== EMClient.user
                 ) {
                     members.push({
                         text: getTheGroupNickNameById(
@@ -355,7 +356,7 @@ const showRecordBox = () => {
 }
 const sendAudioMessages = async (audioData) => {
     const file = {
-        url: EaseChatSDK.utils.parseDownloadResponse(audioData.src),
+        url: parseDownloadResponse(audioData.src),
         filename: '录音',
         filetype: '.amr',
         data: audioData.src
@@ -442,7 +443,7 @@ const handleInviteCall = (handleType) => {
         sendInviteMessage(toId, callType)
         //发送邀请信息后创建一条本地系统通知类消息上屏展示
         const params = {
-            from: EaseChatClient.user,
+            from: EMClient.user,
             to: toId,
             chatType: CHAT_TYPE.SINGLE,
             msg: `邀请【${toId}】进行语音通话`
@@ -455,7 +456,7 @@ const handleInviteCall = (handleType) => {
             sendInviteMessage(toId, callType)
             //发送邀请信息后创建一条本地系统通知类消息上屏展示
             const params = {
-                from: EaseChatClient.user,
+                from: EMClient.user,
                 to: toId,
                 chatType: CHAT_TYPE.SINGLE,
                 msg: `邀请【${toId}】进行视频通话`
@@ -485,7 +486,7 @@ const sendMulitInviteMsg = (targetIMId) => {
     const groupId = nowPickInfo.value.id
     sendInviteMessage(targetIMId, callType, groupId)
     const params = {
-        from: EaseChatClient.user,
+        from: EMClient.user,
         to: groupId,
         chatType: CHAT_TYPE.GROUP,
         msg: '已发起多人音视频通话'

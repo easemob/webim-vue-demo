@@ -2,8 +2,7 @@
 import _ from 'lodash'
 import store from '@/store'
 import { messageType } from '@/constant'
-import { EaseChatClient } from '@/IM/initwebsdk'
-
+import { EMClient } from '@/IM'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png'
 import defaultSingleAvatarUrl from '@/assets/images/avatar/theme2x.png'
 import { setMessageKey } from '@/utils/handleSomeData'
@@ -42,8 +41,8 @@ const checkLastMsgisHasMention = (toDoUpdateMsg, toDoUpdateConversation) => {
     if (type === ALL_MESSAGE_TYPE.TEXT) {
         if (!ext || !ext[EM_AT_LIST]) return false
         if (
-            ext[EM_AT_LIST].includes(EaseChatClient.user) ||
-            (from !== EaseChatClient.user && ext[EM_AT_LIST] === 'ALL')
+            ext[EM_AT_LIST].includes(EMClient.user) ||
+            (from !== EMClient.user && ext[EM_AT_LIST] === 'ALL')
         ) {
             return true
         } else {
@@ -59,11 +58,7 @@ const handleCalcUnReadNum = (msgBody, toDoUpdateConversation) => {
         ? toDoUpdateConversation.unreadMessageNum
         : 0
     // 如果消息来自当前用户，或者是被召回的消息，或者消息处于读取状态，未读数不变
-    if (
-        msgBody.from === EaseChatClient.user ||
-        msgBody.isRecall ||
-        msgBody.read
-    ) {
+    if (msgBody.from === EMClient.user || msgBody.isRecall || msgBody.read) {
         return currentUnreadNum
     }
 
@@ -132,7 +127,7 @@ export default function (corresMessage) {
     latestMessageId: "", 最近消息的消息mid
     latestSendTime:"", 最近一条消息的发送时间,
    */
-        const loginUserId = EaseChatClient.user
+        const loginUserId = EMClient.user
         const listKey = setMessageKey(msgBody)
         const { chatType, from, ext, id, time, to, type } = msgBody
         //操作类型为新建

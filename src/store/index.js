@@ -1,5 +1,5 @@
 import { createStore } from 'vuex'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import Conversation from './modules/conversation'
 import Contacts from './modules/contacts'
 import Message from './modules/message'
@@ -13,13 +13,13 @@ export default createStore({
             hxId: '',
             nickname: '',
             avatarurl:
-        'https://download-sdk.oss-cn-beijing.aliyuncs.com/downloads/IMDemo/avatar/Image5.png',
+                'https://download-sdk.oss-cn-beijing.aliyuncs.com/downloads/IMDemo/avatar/Image5.png'
         },
-        loginUserOnlineStatus: '',
+        loginUserOnlineStatus: ''
     },
     getters: {
         loginUserInfo: (state) => state.loginUserInfo,
-        loginUserOnlineStatus: (state) => state.loginUserOnlineStatus,
+        loginUserOnlineStatus: (state) => state.loginUserOnlineStatus
     },
     mutations: {
         CLOSE_WARNING_TIPS: (state) => (state.isShowWarningTips = false),
@@ -36,25 +36,25 @@ export default createStore({
         SET_LOGIN_USER_ONLINE_STATUS: (state, payload) => {
             console.log('payload', payload)
             state.loginUserOnlineStatus = payload
-        },
+        }
     },
     actions: {
-    //获取登陆用户的用户属性
+        //获取登陆用户的用户属性
         getMyUserInfo: async ({ commit }, userId) => {
-            const { data } = await EaseChatClient.fetchUserInfoById(userId)
+            const { data } = await EMClient.fetchUserInfoById(userId)
             data[userId].hxId = userId
             commit('SET_LOGIN_USER_INFO', data[userId])
         },
         //修改登陆用户的用户属性
         updateMyUserInfo: async ({ commit }, params) => {
-            const { data } = await EaseChatClient.updateUserInfo({ ...params })
+            const { data } = await EMClient.updateUserInfo({ ...params })
             console.log('>>>>>>修改成功', data)
             commit('SET_LOGIN_USER_INFO', data)
         },
         //处理在线状态订阅变更（包含他人的用户状态）
         handlePresenceChanges: ({ commit }, status) => {
             const { userId, ext: statusType } = status || {}
-            if (userId === EaseChatClient.user) {
+            if (userId === EMClient.user) {
                 commit(
                     'SET_LOGIN_USER_ONLINE_STATUS',
                     statusType ? statusType : 'Unset'
@@ -64,12 +64,12 @@ export default createStore({
 
                 commit('SET_FRIEND_PRESENCE', [{ ...status }])
             }
-        },
+        }
     },
     modules: {
         Conversation,
         Contacts,
         Message,
-        Groups,
-    },
+        Groups
+    }
 })

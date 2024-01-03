@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import { useStore } from 'vuex'
 import router from '@/router'
 import { useRoute } from 'vue-router'
@@ -56,14 +56,14 @@ const changeBlackStatus = async () => {
     if (blackStatus.value && route.query.id) {
         console.log('>>>>>移除黑明单')
         // 当前 removeUserFromBlackList 以及 addUsersToBlacklist 暂不支持promise 返回所以暂时获取不到其请求状态。
-        EaseChatClient.removeUserFromBlocklist({
+        EMClient.removeUserFromBlocklist({
             name: [route.query.id]
         })
         blackStatus.value = false
         switchStatus.value = false
     } else {
         console.log('>>>>加入黑名单')
-        EaseChatClient.addUsersToBlocklist({
+        EMClient.addUsersToBlocklist({
             name: [route.query.id]
         })
         blackStatus.value = true
@@ -79,7 +79,7 @@ const delTheFriend = () => {
     console.log('>>>>>>>删除好友')
     if (!route.query.id) return
     const targetId = route.query.id
-    EaseChatClient.deleteContact(targetId)
+    EMClient.deleteContact(targetId)
     router.push('/chat/contacts')
 }
 

@@ -2,7 +2,7 @@
 import { ref, toRaw, toRefs, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 /* IMSDK */
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 /* components */
 import GroupsManagement from '../GroupsManagement'
 /* icons */
@@ -47,7 +47,7 @@ const memberRole = computed(() => {
     //管理员列表
     const groupAdmin = (goupsInfos.value && toRaw(goupsInfos.value.admin)) || []
     //登陆人id
-    const loginUser = EaseChatClient.user
+    const loginUser = EMClient.user
     //合并两者名单
     allGroupAdmin = [...groupAdmin, owner]
     //判断是否在权限名单内
@@ -152,7 +152,7 @@ const editMyGroupNickName = async (type, oldMyGroupNickname) => {
     }
 }
 const inTheGroupNickname = computed(() => {
-    const loginUser = EaseChatClient.user
+    const loginUser = EMClient.user
     const myNickname =
         store.state.Groups.groupsInfos[nowGroupId.value]?.groupMemberInfo[
             loginUser
@@ -366,7 +366,7 @@ const dissolveThisGroup = async () => {
         </template>
         <!-- 群组操作按钮 -->
         <div class="group_list_handle_box">
-            <template v-if="groupDetail.owner === EaseChatClient.user">
+            <template v-if="groupDetail.owner === EMClient.user">
                 <el-button
                     type="danger"
                     class="group_list_card_btn"

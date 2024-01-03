@@ -1,19 +1,20 @@
 import { watchEffect } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
-import { EaseChatSDK } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
+console.log('log EMClient', EMClient)
 export const useSetEMLogConfig = () => {
     const isOpenedEMLog = useLocalStorage('isOpenedEMLog', false)
-    const closeEMLog = () => EaseChatSDK.logger.disableAll()
+    const closeEMLog = () => EMClient.logger.disableAll()
     const openEMLog = () => {
-        EaseChatSDK.logger.setConfig({
+        EMClient.logger.setConfig({
             useCache: true, // 是否缓存
             maxCache: 3 * 1024 * 1024 // 最大缓存字节,
         })
         // 缓存全部等级日志
-        EaseChatSDK.logger.setLevel(0)
-        EaseChatSDK.logger.enableAll()
+        EMClient.logger.setLevel(0)
+        EMClient.logger.enableAll()
     }
-    const donwLoadEMLog = () => EaseChatSDK.logger.download()
+    const donwLoadEMLog = () => EMClient.logger.download()
     watchEffect(() => {
         console.log('>>>>isOpenedEMLog', isOpenedEMLog.value)
         if (isOpenedEMLog.value) {

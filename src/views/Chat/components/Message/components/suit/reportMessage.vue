@@ -1,8 +1,7 @@
-
 <script setup>
 import { ref, reactive, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 
 const ReportTypeOptions = [
     {
@@ -42,7 +41,7 @@ const reportMessageForm = reactive({
 })
 const rules = reactive({
     reportReason: [
-        { required: true, message: '请描述举报原因！', trigger: 'blur' },
+        { required: true, message: '请描述举报原因！', trigger: 'blur' }
     ]
 })
 const alertReportMsgModal = (msgBody) => {
@@ -53,7 +52,6 @@ const alertReportMsgModal = (msgBody) => {
         console.log('reportMessageForm.mid', reportMessageForm.mid)
         dialogVisible.value = true
     }
-
 }
 const reportMsgForm = ref(null)
 const confimReportMessage = (formEl) => {
@@ -70,14 +68,13 @@ const confimReportMessage = (formEl) => {
                     messageId: reportMessageForm.mid.toString() // 消息 ID
                 }
                 console.log('>>>>>>要传入的举报参数', params)
-                await EaseChatClient.reportMessage({ ...params })
+                await EMClient.reportMessage({ ...params })
                 cannelReport(formEl)
                 ElMessage({
                     type: 'success',
                     message: '已收到您的举报申请！',
                     center: true
                 })
-
             } catch (error) {
                 console.log('举报error', error)
                 ElMessage({
@@ -90,7 +87,6 @@ const confimReportMessage = (formEl) => {
             return false
         }
     })
-
 }
 
 const cannelReport = (formEl) => {
@@ -104,24 +100,48 @@ defineExpose({
 </script>
 
 <template>
-    <el-dialog v-model="dialogVisible" title="消息举报" width="500px" :show-close="false" :close-on-press-escape="false"
-        :close-on-click-modal="false">
-        <el-form ref="reportMsgForm" :model="reportMessageForm" :rules="rules" label-position="top" label-width="100px">
+    <el-dialog
+        v-model="dialogVisible"
+        title="消息举报"
+        width="500px"
+        :show-close="false"
+        :close-on-press-escape="false"
+        :close-on-click-modal="false"
+    >
+        <el-form
+            ref="reportMsgForm"
+            :model="reportMessageForm"
+            :rules="rules"
+            label-position="top"
+            label-width="100px"
+        >
             <el-form-item label="举报类别：">
                 <el-select v-model="reportMessageForm.reportType">
-                    <el-option v-for="item in ReportTypeOptions" :key="item.key" :label="item.value"
-                        :value="item.value" />
+                    <el-option
+                        v-for="item in ReportTypeOptions"
+                        :key="item.key"
+                        :label="item.value"
+                        :value="item.value"
+                    />
                 </el-select>
             </el-form-item>
             <el-form-item label="举报原因：" prop="reportReason">
-                <el-input v-model="reportMessageForm.reportReason" maxlength="150" placeholder="请描述举报原因..."
-                    show-word-limit type="textarea" />
+                <el-input
+                    v-model="reportMessageForm.reportReason"
+                    maxlength="150"
+                    placeholder="请描述举报原因..."
+                    show-word-limit
+                    type="textarea"
+                />
             </el-form-item>
         </el-form>
         <template #footer>
             <span class="dialog-footer">
                 <el-button @click="cannelReport(reportMsgForm)">取消</el-button>
-                <el-button type="primary" @click="confimReportMessage(reportMsgForm)">
+                <el-button
+                    type="primary"
+                    @click="confimReportMessage(reportMsgForm)"
+                >
                     确认
                 </el-button>
             </span>

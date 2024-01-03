@@ -1,4 +1,4 @@
-import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import { setMessageKey, createMessage } from '@/utils/handleSomeData'
 import _ from 'lodash'
 // import { ref, toRaw } from 'vue';
@@ -108,7 +108,7 @@ const Message = {
                     chatType: chatType,
                     searchDirection: 'up'
                 }
-                EaseChatClient.getHistoryMessages(options)
+                EMClient.getHistoryMessages(options)
                     .then((res) => {
                         const { cursor, messages } = res
                         messages.length > 0 &&
@@ -142,13 +142,13 @@ const Message = {
                     params,
                     errorCallback
                 )
-                const msg = EaseChatSDK.message.create(options)
-                EaseChatClient.send(msg)
+                const msg = EMClient.Message.create(options)
+                EMClient.send(msg)
                     .then((res) => {
                         const { serverMsgId } = res
                         console.log('>>>>发送成功', res)
                         msg.id = serverMsgId
-                        msg.from = EaseChatClient.user
+                        msg.from = EMClient.user
                         const msgBody = createMessage.createMsgBody(msg)
                         commit('UPDATE_MESSAGE_LIST', msgBody)
                         // 提示会话列表更新
@@ -182,7 +182,7 @@ const Message = {
             const { id: mid, from: targetId, chatType } = params
             const key = setMessageKey(params)
             return new Promise((resolve, reject) => {
-                EaseChatClient.removeHistoryMessages({
+                EMClient.removeHistoryMessages({
                     targetId: targetId,
                     chatType: chatType,
                     messageIds: [mid]
@@ -205,7 +205,7 @@ const Message = {
         recallMessage: async ({ dispatch, commit }, params) => {
             const { mid, to, chatType } = params
             return new Promise((resolve, reject) => {
-                EaseChatClient.recallMessage({ mid, to, chatType })
+                EMClient.recallMessage({ mid, to, chatType })
                     .then(() => {
                         commit('CHANGE_MESSAGE_BODAY', {
                             type: CHANGE_MESSAGE_BODAY_TYPE.RECALL,
@@ -224,14 +224,14 @@ const Message = {
         modifyMessage: async ({ dispatch, commit }, params) => {
             const { id: mid, to, chatType, msg } = params
             return new Promise((resolve, reject) => {
-                const textMessage = EaseChatSDK.message.create({
+                const textMessage = EMClient.Message.create({
                     type: 'txt',
                     msg: msg,
                     to: to,
                     chatType: chatType
                 })
                 console.log('textMessage', textMessage)
-                EaseChatClient.modifyMessage({
+                EMClient.modifyMessage({
                     messageId: mid,
                     modifiedMessage: textMessage
                 })

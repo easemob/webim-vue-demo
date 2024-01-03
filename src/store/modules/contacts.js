@@ -1,4 +1,4 @@
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 // import { useLocalStorage } from '@vueuse/core';
 import { sortPinyinFriendItem, handlePresence } from '@/utils/handleSomeData'
 import _ from 'lodash'
@@ -117,7 +117,7 @@ const Contacts = {
             const friendListData = {}
             try {
                 //获取好友列表
-                const { data } = await EaseChatClient.getContacts()
+                const { data } = await EMClient.getContacts()
                 data.length > 0 &&
                     data.map((item) => (friendListData[item] = { hxId: item }))
                 //获取好友列表对应的用户属性
@@ -169,7 +169,7 @@ const Contacts = {
         },
         //获取黑名单列表
         fetchBlackList: async ({ dispatch, commit }, params) => {
-            const { data } = await EaseChatClient.getBlocklist()
+            const { data } = await EMClient.getBlocklist()
             data.length > 0 && commit('SET_BLACK_LIST', data)
         },
         //获取他人用户属性
@@ -186,7 +186,7 @@ const Contacts = {
                     usersArr.length > 0 &&
                         usersArr.map((userItem) =>
                             requestTask.push(
-                                EaseChatClient.fetchUserInfoById(userItem)
+                                EMClient.fetchUserInfoById(userItem)
                             )
                         )
                     const result = await Promise.all(requestTask)
@@ -213,7 +213,7 @@ const Contacts = {
                 usersArr.length > 0 &&
                     usersArr.map((userItem) =>
                         requestTask.push(
-                            EaseChatClient.subscribePresence({
+                            EMClient.subscribePresence({
                                 usernames: userItem,
                                 expiry: 30 * 24 * 3600
                             })
@@ -237,13 +237,13 @@ const Contacts = {
             const option = {
                 usernames: [...user]
             }
-            EaseChatClient.unsubscribePresence(option).then((res) => {
+            EMClient.unsubscribePresence(option).then((res) => {
                 console.log('>>>>>>>成功取消订阅', res)
             })
         },
         //获取群组列表
         fetchGroupList: async ({ commit }, params) => {
-            const res = await EaseChatClient.getJoinedGroups({
+            const res = await EMClient.getJoinedGroups({
                 // needAffiliations: true,
                 // needRole: true,
                 ...params
@@ -257,7 +257,7 @@ const Contacts = {
             const options = {
                 groupId: goupsId // 群组id
             }
-            const result = await EaseChatClient.getGroupInfo(options)
+            const result = await EMClient.getGroupInfo(options)
             // console.log('>>>>>>>群详情获取成功result', result);
             result.data &&
                 commit('SET_GROUP_LIST', {

@@ -3,7 +3,7 @@ import { reactive, ref, computed, toRefs, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { useClipboard, usePermission } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import fileSizeFormat from '@/utils/fileSizeFormat'
 import dateFormat from '@/utils/dateFormater'
@@ -38,7 +38,7 @@ const { messageData } = toRefs(props)
 const { ALL_MESSAGE_TYPE, CUSTOM_TYPE, CHAT_TYPE, CHANGE_MESSAGE_BODAY_TYPE } =
     messageType
 /* login hxId */
-const loginUserId = EaseChatClient.user
+const loginUserId = EMClient.user
 
 /* computed-- 消息来源是否为自己 */
 const isMyself = computed(() => {
