@@ -6,6 +6,7 @@ import createInform from './createInform'
 import createMessage from './createMessage'
 import sortPinyinFriendItem from './sortPinyinFriendItem'
 import handlePresence from './handlePresence'
+import checkLastMsgIsHasMention from './checkLastMsgIsHasMention'
 export {
     handleSDKErrorNotifi,
     createConversation,
@@ -13,6 +14,7 @@ export {
     sortConversation,
     createInform,
     createMessage,
+    checkLastMsgIsHasMention,
     sortPinyinFriendItem,
-    handlePresence,
+    handlePresence
 }

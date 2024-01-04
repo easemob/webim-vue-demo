@@ -103,7 +103,8 @@ const emit = defineEmits(['toInformDetails', 'toChatMessage'])
 const checkedConverItemIndex = ref(null)
 const toChatMessage = (conversationItem, index) => {
     checkedConverItemIndex.value = index
-    const { conversationId, unReadCount, conversationType } = conversationItem
+    const { conversationId, unReadCount, customField, conversationType } =
+        conversationItem
     if (unReadCount > 0) {
         console.log('>>>>>执行清除会话未读数')
         store.dispatch('clearConversationUnreadCount', {
@@ -111,8 +112,8 @@ const toChatMessage = (conversationItem, index) => {
             chatType: conversationType
         })
     }
-    if (conversationItem.isMention)
-        store.commit('CLEAR_AT_STATUS', conversationId)
+    if (customField?.mention)
+        store.dispatch('clearConversationMention', conversationItem)
     //跳转至对应的消息界面
     emit('toChatMessage', conversationId, conversationType)
 }
@@ -213,7 +214,7 @@ const deleteConversation = (conversationItem) => {
                                 <div class="last_msg_body">
                                     <span
                                         class="last_msg_body_mention"
-                                        v-if="item.isMention"
+                                        v-if="item?.customField?.mention"
                                         >[有人@我]</span
                                     >
                                     <span

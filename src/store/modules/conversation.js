@@ -1,11 +1,9 @@
 import _ from 'lodash'
 import { useLocalStorage } from '@vueuse/core'
 import {
-    createConversation,
-    sortConversation,
-    createInform
-} from '@/utils/handleSomeData'
-import Message from './message'
+    createInform,
+    checkLastMsgIsHasMention
+} from '@/utils/handleSomeData/index'
 import { EMClient } from '@/IM'
 import { informType, messageType } from '@/constant'
 const { INFORM_FROM } = informType
@@ -80,9 +78,12 @@ const Conversation = {
             })
         },
         //清除会话@状态
-        CLEAR_AT_STATUS: (state, index) => {
-            console.log('>>>>>>>执行清除会话@状态', index)
-            state.conversationListData[index].isMention = false
+        CLEAR_CONVERSATION_ITEM_MENTION_STATUS: (state, conversationId) => {
+            state.conversationListFromLocal.map((conversationItem) => {
+                if (conversationItem.conversationId === conversationId) {
+                    conversationItem.customField.mention = false
+                }
+            })
         },
         //清除信息卡片未读
         CLEAR_UNTREATED_STATUS: (state, index) => {
@@ -306,8 +307,27 @@ const Conversation = {
                     conversationId,
                     conversationType: chatType
                 })
+                let toBeUpdateConversationItem = { ...result?.data }
+                //检查更新的lastmsg中是否包含提及
+                const isMention = toBeUpdateConversationItem?.customField
+                    ?.mention
+                    ? true
+                    : checkLastMsgIsHasMention(
+                          toBeUpdateConversationItem.lastMessage
+                      )
+                const customField = (toBeUpdateConversationItem.customField && {
+                    ...toBeUpdateConversationItem.customField,
+                    mention: isMention
+                }) || { mention: isMention }
+                //设置会话级别提及状态clear
+                await dispatch('setLocalConversationCustomAttributes', {
+                    conversationId,
+                    conversationType: chatType,
+                    customField: customField
+                })
+                toBeUpdateConversationItem.customField = { ...customField }
                 commit('UPDATE_CONVERSATION_LIST_FROM_LOCAL', {
-                    ...result.data
+                    ...toBeUpdateConversationItem
                 })
             } catch (error) {
                 console.log('>>>>>>>获取本地会话更新失败', error)
@@ -360,6 +380,37 @@ const Conversation = {
                 commit('CLEAR_CONVERSATION_ITEM_UNREAD_COUNT', conversationId)
             } catch (error) {
                 console.log('>>>>>未读数清空失败', error)
+            }
+        },
+        //清除会话@提及状态
+        clearConversationMention: async ({ dispatch, commit }, params) => {
+            const { conversationId, conversationType, customField } = params
+            customField.mention = false
+            try {
+                await EMClient.localCache.setLocalConversationCustomField({
+                    conversationId,
+                    conversationType,
+                    customField: { ...customField }
+                })
+                commit('CLEAR_CONVERSATION_ITEM_MENTION_STATUS', conversationId)
+            } catch (error) {
+                console.log('>>>>>>清除会话提及状态失败', error)
+            }
+        },
+        //设置本地会话自定义属性
+        setLocalConversationCustomAttributes: async (
+            { dispatch, commit },
+            params
+        ) => {
+            const { conversationId, conversationType, customField } = params
+            try {
+                await EMClient.localCache.setLocalConversationCustomField({
+                    conversationId,
+                    conversationType,
+                    customField: { ...customField }
+                })
+            } catch (error) {
+                console.log('>>>>>>会话自定义属性设置失败', error)
             }
         }
     },
