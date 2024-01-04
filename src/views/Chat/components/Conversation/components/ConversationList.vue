@@ -102,7 +102,13 @@ const checkedConverItemIndex = ref(null)
 const toChatMessage = (conversationItem, index) => {
     checkedConverItemIndex.value = index
     const { conversationId, unReadCount, conversationType } = conversationItem
-    if (unReadCount > 0) store.commit('CLEAR_UNREAD_NUM', conversationId)
+    if (unReadCount > 0) {
+        console.log('>>>>>执行清除会话未读数')
+        store.dispatch('clearConversationUnreadCount', {
+            conversationId: conversationId,
+            chatType: conversationType
+        })
+    }
     if (conversationItem.isMention)
         store.commit('CLEAR_AT_STATUS', conversationId)
     //跳转至对应的消息界面
@@ -228,14 +234,14 @@ const deleteConversation = (conversationItem) => {
                                 }}</span>
                                 <span
                                     class="unReadNum_box"
-                                    v-if="item.unreadMessageNum >= 1"
+                                    v-if="item.unReadCount >= 1"
                                 >
                                     <sup
                                         class="unReadNum_count"
                                         v-text="
-                                            item.unreadMessageNum >= 99
+                                            item.unReadCount >= 99
                                                 ? '99+'
-                                                : item.unreadMessageNum
+                                                : item.unReadCount
                                         "
                                     ></sup>
                                 </span>
