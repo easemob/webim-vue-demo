@@ -2,7 +2,7 @@
 import { ref, toRaw, toRefs, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 /* IMSDK */
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 /* components */
 import GroupsManagement from '../GroupsManagement'
 /* icons */
@@ -31,7 +31,7 @@ const groupDetail = computed(() => {
         store.state.Contacts.groupList[nowGroupId.value].groupDetail
     )
 })
-console.log('groupDetail', groupDetail.value)
+
 /* 群组展示相关核心数据获取 */
 const goupsInfos = computed(() => {
     return (
@@ -47,7 +47,7 @@ const memberRole = computed(() => {
     //管理员列表
     const groupAdmin = (goupsInfos.value && toRaw(goupsInfos.value.admin)) || []
     //登陆人id
-    const loginUser = EaseChatClient.user
+    const loginUser = EMClient.user
     //合并两者名单
     allGroupAdmin = [...groupAdmin, owner]
     //判断是否在权限名单内
@@ -65,7 +65,7 @@ const alertManagementModal = (type, groupType) => {
     }
     modalType.value = type
     groupmanagement.value.dialogVisible = true
-    console.log('groupType', groupType)
+
     if (groupType !== undefined) {
         groupModalTitle.value.title = titleType[groupType]
         groupModalTitle.value.type = groupType
@@ -83,7 +83,7 @@ const editGroupName = async (type, oldGroupName) => {
             modifyType: 0,
             content: groupName.value
         }
-        console.log('>>>>>保存编辑')
+
         try {
             await store.dispatch('modifyGroupInfo', params)
             ElMessage({
@@ -103,12 +103,11 @@ const editGroupName = async (type, oldGroupName) => {
     }
     if (type === 'edit') {
         isEdit.value = true
-        console.log('>>>>>>oldGroupName', oldGroupName)
+
         nextTick(() => {
             editGroupNameInput.value.focus()
             groupName.value = oldGroupName
         })
-        console.log('>>>>开始编辑')
     }
 }
 //修改我的群组昵称
@@ -123,7 +122,7 @@ const editMyGroupNickName = async (type, oldMyGroupNickname) => {
             groupId: nowGroupId.value,
             nickName: myGroupNickname.value
         }
-        console.log('>>>>>保存编辑')
+
         try {
             await store.dispatch('setInTheGroupInfo', params)
             ElMessage({
@@ -143,16 +142,15 @@ const editMyGroupNickName = async (type, oldMyGroupNickname) => {
     }
     if (type === 'edit') {
         isEditMyGroupNickname.value = true
-        console.log('>>>>>>oldMyGroupNickname', oldMyGroupNickname)
+
         nextTick(() => {
             editMyGroupNickNameInput.value.focus()
             myGroupNickname.value = oldMyGroupNickname
         })
-        console.log('>>>>开始编辑')
     }
 }
 const inTheGroupNickname = computed(() => {
-    const loginUser = EaseChatClient.user
+    const loginUser = EMClient.user
     const myNickname =
         store.state.Groups.groupsInfos[nowGroupId.value]?.groupMemberInfo[
             loginUser
@@ -161,7 +159,6 @@ const inTheGroupNickname = computed(() => {
 })
 //退出、解散群组
 const quitThisGroup = async () => {
-    console.log('>>>>>退出群组')
     if (!groupDetail.value.id) return
     const groupId = groupDetail.value.id
     try {
@@ -366,7 +363,7 @@ const dissolveThisGroup = async () => {
         </template>
         <!-- 群组操作按钮 -->
         <div class="group_list_handle_box">
-            <template v-if="groupDetail.owner === EaseChatClient.user">
+            <template v-if="groupDetail.owner === EMClient.user">
                 <el-button
                     type="danger"
                     class="group_list_card_btn"

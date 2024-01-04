@@ -7,9 +7,9 @@ const paseLink = (msg) => {
         const prefix = /^https?/gm.test(v)
         isLink = prefix
         return (
-            "<a href='" +
+            '<a href=\'' +
             (prefix ? v : '//' + v) +
-            "' target='_blank'>" +
+            '\' target=\'_blank\'>' +
             v +
             '</a>'
         )

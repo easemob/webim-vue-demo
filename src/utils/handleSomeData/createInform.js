@@ -1,6 +1,6 @@
 /* 构建inform通知 */
 import { informType } from '@/constant'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 const { INFORM_FROM, INFORM_TYPE } = informType
 export default function (fromType, informContnet) {
     const { type, from, to, status } = informContnet
@@ -18,7 +18,7 @@ export default function (fromType, informContnet) {
                 time: Date.now(),
                 desc: status || INFORM_TYPE[type],
                 isOpearationBtn: true, //是否显示操作按钮？
-                operationStatus: 0, //0未操作 1同意 2拒绝
+                operationStatus: 0 //0未操作 1同意 2拒绝
             }
         } else {
             informBody = {
@@ -28,17 +28,17 @@ export default function (fromType, informContnet) {
                 from: from,
                 to: to,
                 time: Date.now(),
-                desc: status || INFORM_TYPE[type],
+                desc: status || INFORM_TYPE[type]
             }
         }
-        informBody.from === EaseChatClient.user
+        informBody.from === EMClient.user
             ? (informBody.untreated = 0)
             : (informBody.untreated = 1)
         return informBody
     }
     if (fromType === INFORM_FROM.GROUP) {
         let informBody = {}
-        console.log('>>>>>收到了群组事件', informContnet)
+
         const { operation, from, to, id } = informContnet
         //收到群组邀请加入通知
         if (operation === 'inviteToJoin') {
@@ -52,7 +52,7 @@ export default function (fromType, informContnet) {
                 time: Date.now(),
                 desc: INFORM_TYPE[operation],
                 isOpearationBtn: true, //是否显示操作按钮？
-                operationStatus: 0, //0未操作 1同意 2拒绝
+                operationStatus: 0 //0未操作 1同意 2拒绝
             }
         } else if (operation === 'requestToJoin') {
             informBody = {
@@ -65,7 +65,7 @@ export default function (fromType, informContnet) {
                 time: Date.now(),
                 desc: INFORM_TYPE[operation],
                 isOpearationBtn: true, //是否显示操作按钮？
-                operationStatus: 0, //0未操作 1同意 2拒绝
+                operationStatus: 0 //0未操作 1同意 2拒绝
             }
         } else {
             informBody = {
@@ -76,11 +76,11 @@ export default function (fromType, informContnet) {
                 to: to,
                 groupId: id,
                 time: Date.now(),
-                desc: INFORM_TYPE[operation] || operation,
+                desc: INFORM_TYPE[operation] || operation
             }
         }
 
-        informBody.from === EaseChatClient.user
+        informBody.from === EMClient.user
             ? (informBody.untreated = 0)
             : (informBody.untreated = 1)
         return informBody

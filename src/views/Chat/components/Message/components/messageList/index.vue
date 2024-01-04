@@ -3,7 +3,7 @@ import { reactive, ref, computed, toRefs, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { useClipboard, usePermission } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import fileSizeFormat from '@/utils/fileSizeFormat'
 import dateFormat from '@/utils/dateFormater'
@@ -38,7 +38,7 @@ const { messageData } = toRefs(props)
 const { ALL_MESSAGE_TYPE, CUSTOM_TYPE, CHAT_TYPE, CHANGE_MESSAGE_BODAY_TYPE } =
     messageType
 /* login hxId */
-const loginUserId = EaseChatClient.user
+const loginUserId = EMClient.user
 
 /* computed-- 消息来源是否为自己 */
 const isMyself = computed(() => {
@@ -105,7 +105,7 @@ const startplayAudio = (msgBody) => {
     const armRec = new BenzAMRRecorder()
     const src = msgBody.url
     audioPlayStatus.playMsgId = msgBody.id
-    console.log('>>>>>开始播放音频', msgBody.url)
+
     //初始化音频源并调用播放
     armRec.initWithUrl(src).then(() => {
         if (!audioPlayStatus.isPlaying) {
@@ -136,11 +136,10 @@ const copyTextMessages = (msg) => {
             message: '成功复制到剪切板',
             center: true
         })
-        console.log('>>>>>成功复制')
     }
 }
 //引用消息
-let clickQuoteMsgId = ref('')
+const clickQuoteMsgId = ref('')
 const clickQuoteMessage = (msgQuote) => {
     const { msgID } = msgQuote
     nextTick(() => {
@@ -176,7 +175,6 @@ const recallMessage = async ({ id, to, chatType }) => {
         await store.dispatch('recallMessage', options)
     } catch (error) {
         handleSDKErrorNotifi(error.type, error.message)
-        console.log('>>>>>>撤回失败', error)
     }
 }
 //编辑消息
@@ -206,7 +204,6 @@ const deleteMessage = async (msgBody) => {
             center: true
         })
     } catch (error) {
-        console.log('>>>>>取消', error)
         if (error !== 'cancel') {
             ElMessage({
                 type: 'error',
@@ -220,7 +217,6 @@ const deleteMessage = async (msgBody) => {
 const reportMessage = ref(null)
 //举报消息
 const informOnMessage = (msgBody) => {
-    console.log('>>>>调用举报')
     reportMessage.value.alertReportMsgModal(msgBody)
 }
 //父组件重新编辑方法

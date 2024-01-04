@@ -1,11 +1,7 @@
 <script setup>
 import { ref, toRaw, computed, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import {
-    CircleClose,
-    Search,
-    CircleCheckFilled
-} from '@element-plus/icons-vue'
+import { CircleClose, Search, CircleCheckFilled } from '@element-plus/icons-vue'
 import { messageType } from '@/constant'
 /* 拼音排序好友列表 */
 import { sortPinyinFriendItem } from '@/utils/handleSomeData'
@@ -32,7 +28,9 @@ const sortedFriendList = computed(() => {
             const v = sourceData[key]
             v.name = v.nickname ? v.nickname : v.hxId
             v.isChecked = false
-            v.keywords = `${v.hxId && v.hxId}${v.nickname && v.nickname || ''}`
+            v.keywords = `${v.hxId && v.hxId}${
+                (v.nickname && v.nickname) || ''
+            }`
         }
     }
     return sourceData
@@ -48,10 +46,15 @@ const handleAddFriendToSendList = (item) => {
         return
     }
     if (item.isChecked && checkedTobeSendFriend.value.includes(item.hxId)) {
-        checkedTobeSendFriend.value.map((m, idx) => { if (m === item.hxId) { checkedTobeSendFriend.value.splice(idx, 1) } })
+        checkedTobeSendFriend.value.map((m, idx) => {
+            if (m === item.hxId) {
+                checkedTobeSendFriend.value.splice(idx, 1)
+            }
+        })
         item.isChecked = false
     } else {
-        if (!checkedTobeSendFriend.value.includes(item.hxId)) checkedTobeSendFriend.value.push(item.hxId)
+        if (!checkedTobeSendFriend.value.includes(item.hxId))
+            checkedTobeSendFriend.value.push(item.hxId)
         item.isChecked = true
     }
 }
@@ -61,7 +64,7 @@ const delFriendFromCheckedList = (item, index) => {
     for (const key in renderFriend.value) {
         if (Object.hasOwnProperty.call(renderFriend.value, key)) {
             const m = renderFriend.value[key]
-            if (m.hxId === item) return m.isChecked = false
+            if (m.hxId === item) return (m.isChecked = false)
         }
     }
 }
@@ -74,53 +77,52 @@ const searchResultList = ref([])
 const searchUsers = () => {
     if (serachInputValue.value) {
         isShowSearchContent.value = true
-        const resultArr = _.filter(sortedFriendList.value, (v) => v.keywords.includes(serachInputValue.value))
+        const resultArr = _.filter(sortedFriendList.value, (v) =>
+            v.keywords.includes(serachInputValue.value)
+        )
         searchResultList.value = resultArr
     } else {
-        return isShowSearchContent.value = false
+        return (isShowSearchContent.value = false)
     }
-
 }
 
 //diglog打开的时候赋值初始renderFriend
 const initData = () => {
-    console.log('>>>>>>open')
     nextTick(() => {
-        console.log('>>>>>>diglog打开重新赋值')
         renderFriend.value = _.cloneDeep(sortedFriendList.value)
     })
-
 }
 //关闭执行重置数据
 const resetData = () => {
     renderFriend.value = null
     checkedTobeSendFriend.value = []
     dialogTableVisible.value = false
-
 }
 
 /* 执行发送 */
 const startSendMyUserCard = () => {
-    console.log(checkedTobeSendFriend.value)
     const sendTask = []
-    toRaw(checkedTobeSendFriend.value).length > 0 && toRaw(checkedTobeSendFriend.value).forEach(userId => {
-        console.log('>>>>>>userId', userId)
-        sendTask.push(userId)
-        const infoParams = _.clone(loginUserInfo.value)
-        //这一步是因为其他端统一用的avatar 作为头像路径的展示
-        infoParams.avatar = infoParams.avatarurl
-        console.log('infoParams', infoParams)
-        const msgOptions = {
-            id: userId,
-            chatType: CHAT_TYPE.SINGLE,
-            customEvent: 'userCard',
-            customExts: {
-                uid: loginUserInfo.value.hxId,
-                ...loginUserInfo.value
+    toRaw(checkedTobeSendFriend.value).length > 0 &&
+        toRaw(checkedTobeSendFriend.value).forEach((userId) => {
+            sendTask.push(userId)
+            const infoParams = _.clone(loginUserInfo.value)
+            //这一步是因为其他端统一用的avatar 作为头像路径的展示
+            infoParams.avatar = infoParams.avatarurl
+
+            const msgOptions = {
+                id: userId,
+                chatType: CHAT_TYPE.SINGLE,
+                customEvent: 'userCard',
+                customExts: {
+                    uid: loginUserInfo.value.hxId,
+                    ...loginUserInfo.value
+                }
             }
-        }
-        store.dispatch('sendShowTypeMessage', { msgType: ALL_MESSAGE_TYPE.CUSTOM, msgOptions })
-    })
+            store.dispatch('sendShowTypeMessage', {
+                msgType: ALL_MESSAGE_TYPE.CUSTOM,
+                msgOptions
+            })
+        })
     Promise.all(sendTask)
     resetData()
 }
@@ -134,78 +136,148 @@ defineExpose({
             <div class="taboo_left">
                 <!-- 搜索栏 -->
                 <div class="search_friend_box">
-                    <el-input style="height: 36px;" v-model="serachInputValue" placeholder="搜索" @input="searchUsers"
-                        :prefix-icon="Search">
+                    <el-input
+                        style="height: 36px"
+                        v-model="serachInputValue"
+                        placeholder="搜索"
+                        @input="searchUsers"
+                        :prefix-icon="Search"
+                    >
                     </el-input>
-                    <el-scrollbar v-if="isShowSearchContent" class="search_friend_box_content" tag="div">
-                        <div v-for="(item, index) in searchResultList" :key="item.name">
+                    <el-scrollbar
+                        v-if="isShowSearchContent"
+                        class="search_friend_box_content"
+                        tag="div"
+                    >
+                        <div
+                            v-for="(item, index) in searchResultList"
+                            :key="item.name"
+                        >
                             <div class="friend_user_list">
                                 <div class="friend_user_list_left">
                                     <el-avatar :src="defaultAvatar"></el-avatar>
-                                    <b class="friend_list_username">{{`${item.name}(${item.hxId})` }}</b>
+                                    <b class="friend_list_username">{{
+                                        `${item.name}(${item.hxId})`
+                                    }}</b>
                                 </div>
                                 <el-icon class="checked_btn">
-                                    <div @click="handleAddFriendToSendList(item)">
-                                        <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
-                                        <span v-else class="unChecked_icon"></span>
+                                    <div
+                                        @click="handleAddFriendToSendList(item)"
+                                    >
+                                        <CircleCheckFilled
+                                            v-if="item.isChecked"
+                                            class="checked_icon"
+                                        />
+                                        <span
+                                            v-else
+                                            class="unChecked_icon"
+                                        ></span>
                                     </div>
                                 </el-icon>
                             </div>
-                            <el-divider style="margin:12px 0;" />
+                            <el-divider style="margin: 12px 0" />
                         </div>
                     </el-scrollbar>
                 </div>
-                <el-row style="height: 100%;margin-top: 5px;" v-if="renderFriend">
+                <el-row
+                    style="height: 100%; margin-top: 5px"
+                    v-if="renderFriend"
+                >
                     <el-col :span="24" class="friend_user_list_box">
                         <el-scrollbar>
-                            <div v-for="(sortedItem, key, index) in sortPinyinFriendItem(renderFriend) "
-                                :key="sortedItem + index">
-                                <div class="title">{{ key === ' ' ? '#' : key.toUpperCase() }}</div>
-                                <template v-for="(item, index) in sortedItem" :key="item.name + index">
+                            <div
+                                v-for="(
+                                    sortedItem, key, index
+                                ) in sortPinyinFriendItem(renderFriend)"
+                                :key="sortedItem + index"
+                            >
+                                <div class="title">
+                                    {{ key === ' ' ? '#' : key.toUpperCase() }}
+                                </div>
+                                <template
+                                    v-for="(item, index) in sortedItem"
+                                    :key="item.name + index"
+                                >
                                     <div>
                                         <div class="friend_user_list">
                                             <div class="friend_user_list_left">
-                                                <el-avatar :src="defaultAvatar"></el-avatar>
-                                                <b class="friend_list_username">{{ `${item.name}(${item.hxId})` }}</b>
+                                                <el-avatar
+                                                    :src="defaultAvatar"
+                                                ></el-avatar>
+                                                <b
+                                                    class="friend_list_username"
+                                                    >{{
+                                                        `${item.name}(${item.hxId})`
+                                                    }}</b
+                                                >
                                             </div>
                                             <el-icon class="checked_btn">
-                                                <div @click="handleAddFriendToSendList(item)">
-                                                    <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
-                                                    <span v-else class="unChecked_icon"></span>
+                                                <div
+                                                    @click="
+                                                        handleAddFriendToSendList(
+                                                            item
+                                                        )
+                                                    "
+                                                >
+                                                    <CircleCheckFilled
+                                                        v-if="item.isChecked"
+                                                        class="checked_icon"
+                                                    />
+                                                    <span
+                                                        v-else
+                                                        class="unChecked_icon"
+                                                    ></span>
                                                 </div>
                                             </el-icon>
                                         </div>
                                     </div>
                                 </template>
                             </div>
-
                         </el-scrollbar>
                     </el-col>
-
                 </el-row>
             </div>
             <div class="taboo_right">
                 <p>要发送给的人数：{{ checkedTobeSendFriend.length }}</p>
-                <el-row style="height: 100%;margin-top: 5px;overflow: auto">
+                <el-row style="height: 100%; margin-top: 5px; overflow: auto">
                     <el-col :span="24" class="friend_user_list_box">
                         <template v-if="checkedTobeSendFriend.length > 0">
                             <el-scrollbar>
-                                <div v-for="(item, index) in checkedTobeSendFriend" :key="item">
+                                <div
+                                    v-for="(
+                                        item, index
+                                    ) in checkedTobeSendFriend"
+                                    :key="item"
+                                >
                                     <div class="friend_user_list">
                                         <div class="friend_user_list_left">
-                                            <el-avatar :src="defaultAvatar"></el-avatar>
-                                            <b class="friend_list_username">{{ item }}</b>
+                                            <el-avatar
+                                                :src="defaultAvatar"
+                                            ></el-avatar>
+                                            <b class="friend_list_username">{{
+                                                item
+                                            }}</b>
                                         </div>
-                                        <el-icon class="checked_btn" @click="delFriendFromCheckedList(item, index)">
+                                        <el-icon
+                                            class="checked_btn"
+                                            @click="
+                                                delFriendFromCheckedList(
+                                                    item,
+                                                    index
+                                                )
+                                            "
+                                        >
                                             <CircleClose class="checked_icon" />
                                         </el-icon>
                                     </div>
                                 </div>
                             </el-scrollbar>
-
                         </template>
                         <template v-else>
-                            <el-empty :image-size="200" description="暂无要发送的好友~" />
+                            <el-empty
+                                :image-size="200"
+                                description="暂无要发送的好友~"
+                            />
                         </template>
                     </el-col>
                 </el-row>
@@ -214,12 +286,13 @@ defineExpose({
         <template #footer>
             <span class="dialog-footer">
                 <el-button @click="dialogTableVisible = false">取消</el-button>
-                <el-button type="primary" @click="startSendMyUserCard">完成</el-button>
+                <el-button type="primary" @click="startSendMyUserCard"
+                    >完成</el-button
+                >
             </span>
         </template>
     </el-dialog>
 </template>
-
 
 <style lang="scss" scoped>
 .taboo_box {
@@ -234,7 +307,7 @@ defineExpose({
     max-height: 466px;
     min-height: 266px;
     overflow: hidden;
-    border-right: 1px solid #DCDFE6;
+    border-right: 1px solid #dcdfe6;
     padding: 0 24px;
 
     .friend_user_list_box {
@@ -251,8 +324,6 @@ defineExpose({
     min-height: 266px;
     overflow: hidden;
     padding-left: 16px;
-
-
 }
 
 .friend_user_list {
@@ -286,7 +357,7 @@ defineExpose({
 
         .checked_icon {
             font-size: 20px;
-            color: #0091FF;
+            color: #0091ff;
         }
 
         .unChecked_icon {
@@ -296,7 +367,6 @@ defineExpose({
             border: 2px solid #979797;
             border-radius: 50%;
         }
-
     }
 }
 
@@ -310,7 +380,7 @@ defineExpose({
         width: 100%;
         height: 430px;
         overflow-y: auto;
-        background: #FFF;
+        background: #fff;
         z-index: 99;
         padding: 0 10px;
     }

@@ -1,15 +1,21 @@
 <script setup>
-import { ref, reactive, computed, toRefs, onMounted, watch, defineProps, defineEmits } from 'vue'
+import {
+    ref,
+    reactive,
+    computed,
+    toRefs,
+    onMounted,
+    watch,
+    defineProps,
+    defineEmits
+} from 'vue'
 import { useStore } from 'vuex'
 import _ from 'lodash'
 import { ElNotification } from 'element-plus'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import { messageType } from '@/constant'
-import {
-    Search,
-    CircleCheckFilled
-} from '@element-plus/icons-vue'
+import { Search, CircleCheckFilled } from '@element-plus/icons-vue'
 /* 路由 */
 import router from '@/router'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
@@ -46,10 +52,15 @@ const handleRenderFiendList = () => {
     for (const key in friendList.value) {
         if (Object.hasOwnProperty.call(friendList.value, key)) {
             const v = friendList.value[key]
-            newFriendList.push({ name: v.nickname && v.nickname ? v.nickname : v.hxId, hxId: v.hxId, isChecked: false, keywords: `${v.hxId && v.hxId}${v.nickname && v.nickname}` })
+            newFriendList.push({
+                name: v.nickname && v.nickname ? v.nickname : v.hxId,
+                hxId: v.hxId,
+                isChecked: false,
+                keywords: `${v.hxId && v.hxId}${v.nickname && v.nickname}`
+            })
         }
     }
-    return renderFriendList.value = newFriendList
+    return (renderFriendList.value = newFriendList)
 }
 /* 搜索逻辑 */
 //创建用户搜索部分
@@ -57,19 +68,17 @@ const serachInputValue = ref('')
 const isShowSearchContent = ref(false) //控制检索内容显隐
 const searchResultList = ref([])
 const searchFriend = () => {
-    console.log('>>>>>serachInputValue.value ', serachInputValue.value === '')
     if (serachInputValue.value) {
-        const resultArr = _.filter(renderFriendList.value, (v) => v.keywords.includes(serachInputValue.value))
+        const resultArr = _.filter(renderFriendList.value, (v) =>
+            v.keywords.includes(serachInputValue.value)
+        )
         searchResultList.value = resultArr
-        console.log('>>>>>>>执行搜索', resultArr)
+
         resultArr.length > 0 && (isShowSearchContent.value = true)
     } else {
-        return isShowSearchContent.value = false
+        return (isShowSearchContent.value = false)
     }
-
-
 }
-
 
 /* 创建群组form */
 //创建群组群组所用参数
@@ -103,11 +112,13 @@ const sourceForm = () => {
 }
 //创建群组
 const createNewGroups = async () => {
-    console.log('checkedUserArrcheckedUserArr', checkedUserArr)
     groupCreateForm.members = checkedUserArr.value
-    if (groupCreateForm.groupname === '') return ElNotification.error('请设置群组名称！')
+    if (groupCreateForm.groupname === '')
+        return ElNotification.error('请设置群组名称！')
     try {
-        const { data } = await EaseChatClient.createGroup({ data: { ...groupCreateForm } })
+        const { data } = await EMClient.createGroup({
+            data: { ...groupCreateForm }
+        })
         //更新群组列表
         await store.dispatch('fetchGroupList', {
             pageNum: 1,
@@ -116,23 +127,27 @@ const createNewGroups = async () => {
         ElNotification({
             title: '群组操作',
             message: `${groupCreateForm.groupname}创建成功！`,
-            type: 'success',
+            type: 'success'
         })
-        router.push({ path: '/chat/conversation/message', query: { id: data.groupid, chatType: CHAT_TYPE.GROUP } })
-        store.dispatch('createInformMessage', { from: EaseChatClient.user, to: data.groupid, chatType: CHAT_TYPE.GROUP, msg: `您的群组，【${groupCreateForm.groupname}】创建成功,聊两句吧！` })
+        router.push({
+            path: '/chat/conversation/message',
+            query: { id: data.groupid, chatType: CHAT_TYPE.GROUP }
+        })
+        store.dispatch('createInformMessage', {
+            from: EMClient.user,
+            to: data.groupid,
+            chatType: CHAT_TYPE.GROUP,
+            msg: `您的群组，【${groupCreateForm.groupname}】创建成功,聊两句吧！`
+        })
         resetTheModalStatus()
-    }
-    catch (error) {
+    } catch (error) {
         if (error && error.type && error.message) {
             const errorDesc = JSON.parse(error.message)
             handleSDKErrorNotifi(error.type, errorDesc.error_description)
-            console.log('>>>errorDesc>>>', errorDesc)
         } else {
-            console.log(error)
             handleSDKErrorNotifi(null, '未知错误')
         }
     }
-
 }
 
 //重置创建群Modal
@@ -150,101 +165,187 @@ defineExpose({ handleRenderFiendList })
     <div class="app_container">
         <el-row v-if="nextStep === 0">
             <el-col class="search_friend_box">
-                <el-input class="search_friend_input" v-model="serachInputValue" placeholder="搜索" @input="searchFriend"
-                    :prefix-icon="Search">
+                <el-input
+                    class="search_friend_input"
+                    v-model="serachInputValue"
+                    placeholder="搜索"
+                    @input="searchFriend"
+                    :prefix-icon="Search"
+                >
                 </el-input>
-                <el-divider style="margin: top 20px;margin-bottom: 12px;" />
-                <el-scrollbar v-if="isShowSearchContent" class="search_friend_box_content" tag="div">
-                    <div v-for="(item, index) in searchResultList" :key="item.name">
+                <el-divider style="margin: top 20px; margin-bottom: 12px" />
+                <el-scrollbar
+                    v-if="isShowSearchContent"
+                    class="search_friend_box_content"
+                    tag="div"
+                >
+                    <div
+                        v-for="(item, index) in searchResultList"
+                        :key="item.name"
+                    >
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
                                 <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{ `${item.name}(${item.hxId})` }}</b>
+                                <b class="friend_list_username">{{
+                                    `${item.name}(${item.hxId})`
+                                }}</b>
                             </div>
-                            <el-icon class="checked_btn"
-                                @click="searchResultList[index].isChecked = !searchResultList[index].isChecked">
-                                <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
+                            <el-icon
+                                class="checked_btn"
+                                @click="
+                                    searchResultList[index].isChecked =
+                                        !searchResultList[index].isChecked
+                                "
+                            >
+                                <CircleCheckFilled
+                                    v-if="item.isChecked"
+                                    class="checked_icon"
+                                />
                                 <span v-else class="unChecked_icon"></span>
                             </el-icon>
                         </div>
-                        <el-divider style="margin:12px 0;" />
+                        <el-divider style="margin: 12px 0" />
                     </div>
                 </el-scrollbar>
             </el-col>
             <el-col class="create_modal_main">
                 <el-scrollbar>
-                    <div v-for="(item, index) in renderFriendList" :key="item.name + index">
+                    <div
+                        v-for="(item, index) in renderFriendList"
+                        :key="item.name + index"
+                    >
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
                                 <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{ `${item.name}(${item.hxId})` }}</b>
+                                <b class="friend_list_username">{{
+                                    `${item.name}(${item.hxId})`
+                                }}</b>
                             </div>
-                            <el-icon class="checked_btn"
-                                @click="renderFriendList[index].isChecked = !renderFriendList[index].isChecked">
-                                <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
+                            <el-icon
+                                class="checked_btn"
+                                @click="
+                                    renderFriendList[index].isChecked =
+                                        !renderFriendList[index].isChecked
+                                "
+                            >
+                                <CircleCheckFilled
+                                    v-if="item.isChecked"
+                                    class="checked_icon"
+                                />
                                 <span v-else class="unChecked_icon"></span>
                             </el-icon>
                         </div>
-                        <el-divider style="margin:12px 0;" />
+                        <el-divider style="margin: 12px 0" />
                     </div>
                 </el-scrollbar>
-
             </el-col>
             <el-col class="create_friend_footer">
-                <span><b class="checked_text">{{ checkedCount }}</b> 人被选中</span>
-                <el-button class="next_btn" plain @click="nextStep = 1">下一步</el-button>
+                <span
+                    ><b class="checked_text">{{ checkedCount }}</b>
+                    人被选中</span
+                >
+                <el-button class="next_btn" plain @click="nextStep = 1"
+                    >下一步</el-button
+                >
             </el-col>
         </el-row>
         <el-row v-else>
-            <el-form class="create_groups__main" ref="groupCreate" :mode="groupCreateForm" label-position="left">
+            <el-form
+                class="create_groups__main"
+                ref="groupCreate"
+                :mode="groupCreateForm"
+                label-position="left"
+            >
                 <el-form-item label="群名称">
-                    <el-input class="create_groups" v-model="groupCreateForm.groupname" size="large"
-                        placeholder="群组名称..." />
+                    <el-input
+                        class="create_groups"
+                        v-model="groupCreateForm.groupname"
+                        size="large"
+                        placeholder="群组名称..."
+                    />
                 </el-form-item>
                 <el-form-item label="群详情">
-                    <el-input class="create_groups" v-model="groupCreateForm.desc" maxlength="300" placeholder="群组描述..."
-                        show-word-limit type="text" />
+                    <el-input
+                        class="create_groups"
+                        v-model="groupCreateForm.desc"
+                        maxlength="300"
+                        placeholder="群组描述..."
+                        show-word-limit
+                        type="text"
+                    />
                 </el-form-item>
                 <el-form-item label="群人数">
-                    <el-input class="create_groups" v-model="groupCreateForm.maxusers" type="number" min="200"
-                        max="1000" :step="100" size="large" />
+                    <el-input
+                        class="create_groups"
+                        v-model="groupCreateForm.maxusers"
+                        type="number"
+                        min="200"
+                        max="1000"
+                        :step="100"
+                        size="large"
+                    />
                 </el-form-item>
                 <el-form-item label="公开群">
-                    <el-switch v-model="groupCreateForm.public" inactive-color="#DCDFE5" inline-prompt active-text="是"
-                        inactive-text="否" />
+                    <el-switch
+                        v-model="groupCreateForm.public"
+                        inactive-color="#DCDFE5"
+                        inline-prompt
+                        active-text="是"
+                        inactive-text="否"
+                    />
                 </el-form-item>
                 <el-form-item label="需要审批">
-                    <el-switch v-model="groupCreateForm.approval" inactive-color="#DCDFE5" inline-prompt active-text="是"
-                        inactive-text="否" />
+                    <el-switch
+                        v-model="groupCreateForm.approval"
+                        inactive-color="#DCDFE5"
+                        inline-prompt
+                        active-text="是"
+                        inactive-text="否"
+                    />
                 </el-form-item>
-                <el-form-item v-if="!groupCreateForm.public" label="成员邀请他人入群">
-                    <el-switch :disabled="groupCreateForm.public" v-model="groupCreateForm.allowinvites"
-                        inactive-color="#DCDFE5" active-text="允许群成员邀请" inactive-text="仅限群主" />
+                <el-form-item
+                    v-if="!groupCreateForm.public"
+                    label="成员邀请他人入群"
+                >
+                    <el-switch
+                        :disabled="groupCreateForm.public"
+                        v-model="groupCreateForm.allowinvites"
+                        inactive-color="#DCDFE5"
+                        active-text="允许群成员邀请"
+                        inactive-text="仅限群主"
+                    />
                 </el-form-item>
                 <el-form-item label="被邀请需要同意">
-                    <el-switch v-model="groupCreateForm.inviteNeedConfirm" inactive-color="#DCDFE5" inline-prompt
-                        active-text="是" inactive-text="否" />
+                    <el-switch
+                        v-model="groupCreateForm.inviteNeedConfirm"
+                        inactive-color="#DCDFE5"
+                        inline-prompt
+                        active-text="是"
+                        inactive-text="否"
+                    />
                 </el-form-item>
             </el-form>
-            <el-row class="create_groups_btn" justify="space-around" align="middle">
-                <el-col class="lastStep" :span="12" style="text-align:left">
+            <el-row
+                class="create_groups_btn"
+                justify="space-around"
+                align="middle"
+            >
+                <el-col class="lastStep" :span="12" style="text-align: left">
                     <el-button @click="nextStep = 0">上一步</el-button>
                 </el-col>
-                <el-col class="lastStep" :span="12" style="text-align:right">
-                    <el-button type="primary" @click="createNewGroups">创建群组</el-button>
+                <el-col class="lastStep" :span="12" style="text-align: right">
+                    <el-button type="primary" @click="createNewGroups"
+                        >创建群组</el-button
+                    >
                 </el-col>
             </el-row>
-
         </el-row>
-
     </div>
 </template>
 
-
-
 <style lang="scss" scoped>
-::v-deep .search_friend_input>.el-input__wrapper {
-    background: #F7F7F7;
+:deep(.search_friend_input) > .el-input__wrapper {
+    background: #f7f7f7;
     box-shadow: none;
 }
 
@@ -253,7 +354,6 @@ defineExpose({ handleRenderFiendList })
 
     .search_friend_input {
         height: 40px;
-
     }
 
     .search_friend_box_content {
@@ -264,7 +364,7 @@ defineExpose({ handleRenderFiendList })
         min-height: 280px;
         max-height: 80%;
         overflow-y: auto;
-        background: #FFF;
+        background: #fff;
         z-index: 99;
     }
 }
@@ -304,7 +404,7 @@ defineExpose({ handleRenderFiendList })
 
         .checked_icon {
             font-size: 20px;
-            color: #3F8FF7;
+            color: #3f8ff7;
         }
 
         .unChecked_icon {
@@ -314,7 +414,6 @@ defineExpose({ handleRenderFiendList })
             border: 2px solid #979797;
             border-radius: 50%;
         }
-
     }
 }
 
@@ -330,7 +429,7 @@ defineExpose({ handleRenderFiendList })
         font-size: 12px;
         line-height: 17px;
         letter-spacing: 0.3px;
-        color: #5A5A5A;
+        color: #5a5a5a;
     }
 
     .next_btn {
@@ -352,15 +451,14 @@ defineExpose({ handleRenderFiendList })
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-
 }
 
 /* 改掉当前组件 el-form-item的部分默认样式 */
-::v-deep .el-form-item__content {
+:deep(.el-form-item__content) {
     justify-content: flex-end;
 }
 
-::v-deep .create_groups>.el-input__wrapper {
+:deep(.create_groups) > .el-input__wrapper {
     border-radius: 5px;
     height: 40px;
 }

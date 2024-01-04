@@ -7,7 +7,8 @@ import { onClickOutside } from '@vueuse/core'
 import { emojis } from '@/constant'
 import { messageType } from '@/constant'
 import _ from 'lodash'
-import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
+import parseDownloadResponse from '@/utils/parseDownloadResponse'
 /* 组件 */
 import CollectAudio from '../suit/audio.vue'
 import PreviewSendImg from '../suit/previewSendImg.vue'
@@ -39,7 +40,7 @@ const loadingBox = ref(null)
 const { getTheGroupNickNameById } = useGetUserMapInfo()
 //AT 逻辑
 const atMembersList = computed(() => {
-    let members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }]
+    const members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }]
     const groupId = nowPickInfo.value?.id
     //TODO text部分应为获取群组成员的自定义属性，待后续增加可设置自定在群组当中的自定义属性。
     if (groupId) {
@@ -48,8 +49,8 @@ const atMembersList = computed(() => {
         sourceMembers.length &&
             sourceMembers.forEach((item) => {
                 if (
-                    item.owner !== EaseChatClient.user &&
-                    item.member !== EaseChatClient.user
+                    item.owner !== EMClient.user &&
+                    item.member !== EMClient.user
                 ) {
                     members.push({
                         text: getTheGroupNickNameById(
@@ -63,13 +64,13 @@ const atMembersList = computed(() => {
     }
     return members
 })
-console.log(atMembersList.value)
+
 const isAtAll = ref(false)
 const atMembers = ref([])
 //输入框插入@事件
 const onInsert = (target) => {
     // if (!) return false
-    console.log('onInset', target)
+
     if (_.map(atMembers.value, 'value').includes(target.value)) return false
     if (target.value === MENTION_ALL.VALUE) {
         return (isAtAll.value = true)
@@ -84,21 +85,18 @@ const checkAtMembers = (text) => {
     }
     //判断是否文本中是否有@ALL，没有则直接设置为false
     const patternAtAll = new RegExp(`@${MENTION_ALL.TEXT}`)
-    console.log('patternAtAll', patternAtAll)
+
     if (isAtAll.value && !patternAtAll.test(text)) {
         isAtAll.value = false
     }
     if (atMembers.value.length !== 0) {
         //循环AT成员数组通过匹配文本内容判断是否存在已经移除@成员
         _.map(atMembers.value, 'text').forEach((item, index) => {
-            console.log('atMembers item', item, index)
             const pattern = new RegExp(`@${item}`)
             const result = pattern.test(text)
             if (!result) {
-                console.log('文本中不满足条件')
                 //不包含则从@列表中移除该成员
                 atMembers.value.splice(index, 1)
-                console.log('>>>>>已删除', atMembers.value)
             }
         })
     }
@@ -110,12 +108,10 @@ onClickOutside(emojisBox, () => {
     isShowEmojisBox.value = false
 })
 const showEmojisBox = () => {
-    console.log('>>>>>展开模态框')
     isShowEmojisBox.value = true
 }
 //新增一个emoji
 const addOneEmoji = (emoji) => {
-    console.log('>>>>>>emoji', emoji)
     textContent.value = textContent.value + emoji
 }
 //消息引用
@@ -141,7 +137,7 @@ const textContent = ref('')
 const sendTextMessage = _.debounce(async () => {
     //如果输入框全部为空格同样拒绝发送
     if (textContent.value.match(/^\s*$/)) return
-    console.log('atMembers.value', atMembers.value)
+
     checkAtMembers(textContent.value)
     const msgOptions = {
         id: nowPickInfo.value.id,
@@ -163,14 +159,12 @@ const sendTextMessage = _.debounce(async () => {
     textContent.value = ''
     messageQuoteRef.value?.clearQuoteContent()
     try {
-        console.log('msgOptions', msgOptions)
         await store.dispatch('sendShowTypeMessage', {
             msgType: ALL_MESSAGE_TYPE.TEXT,
             msgOptions
         })
     } catch (error) {
         handleSDKErrorNotifi(error.type, error.message)
-        console.log('>>>>>>>发送失败+++++++', error)
     } finally {
         isAtAll.value = false
         atMembers.value = []
@@ -182,7 +176,6 @@ const sendTextMessage = _.debounce(async () => {
 const uploadImgs = ref(null)
 const chooseImages = () => {
     uploadImgs.value.click()
-    console.log('uploadImgs')
 }
 //发送图片
 const sendImagesMessage = async (type, fileObj) => {
@@ -206,7 +199,7 @@ const sendImagesMessage = async (type, fileObj) => {
         file.data = imgFile
         file.filename = imgFile.name
         file.filetype = imgFile.type
-        console.log('imgFile', file)
+
         img.src = url.createObjectURL(imgFile) //创建Image的对象的url
         img.onload = async () => {
             const loadingInstance = ElLoading.service({
@@ -215,7 +208,7 @@ const sendImagesMessage = async (type, fileObj) => {
             })
             msgOptions.width = img.width
             msgOptions.height = img.height
-            console.log('height:' + img.height + '----' + img.width)
+
             try {
                 await store.dispatch('sendShowTypeMessage', {
                     msgType: ALL_MESSAGE_TYPE.IMAGE,
@@ -224,7 +217,6 @@ const sendImagesMessage = async (type, fileObj) => {
                 loadingInstance.close()
                 uploadImgs.value.value = null
             } catch (error) {
-                console.log('>>>>>发送失败', error)
                 if (error.type && error?.data) {
                     handleSDKErrorNotifi(error.type, error.data.error || 'none')
                 } else {
@@ -235,12 +227,11 @@ const sendImagesMessage = async (type, fileObj) => {
             }
         }
     } else if (type === 'other') {
-        console.log('fileObjfileObjfileObj', fileObj)
         const imgFile = fileObj
         file.data = imgFile
         file.filename = imgFile.name
         file.filetype = imgFile.type
-        console.log('imgFile', file)
+
         img.src = url.createObjectURL(imgFile) //创建Image的对象的url
         img.onload = async () => {
             const loadingInstance = ElLoading.service({
@@ -249,7 +240,7 @@ const sendImagesMessage = async (type, fileObj) => {
             })
             msgOptions.width = img.width
             msgOptions.height = img.height
-            console.log('height:' + img.height + '----' + img.width)
+
             try {
                 await store.dispatch('sendShowTypeMessage', {
                     msgType: ALL_MESSAGE_TYPE.IMAGE,
@@ -258,7 +249,6 @@ const sendImagesMessage = async (type, fileObj) => {
                 loadingInstance.close()
                 uploadImgs.value.value = null
             } catch (error) {
-                console.log('>>>>>发送失败', error)
                 if (error.type && error?.data) {
                     handleSDKErrorNotifi(error.type, error.data.error || 'none')
                 } else {
@@ -273,7 +263,6 @@ const sendImagesMessage = async (type, fileObj) => {
 //贴图发送
 const previewSendImg = ref(null)
 const onPasteImage = (event) => {
-    console.log('>>>>>>监听粘贴事件', event)
     const data = event.clipboardData || window.clipboardData
     //获取图片内容
     const imgContent = data.items[0].getAsFile()
@@ -293,7 +282,6 @@ const onPasteImage = (event) => {
             tempFilePath: base64_str
         }
         previewSendImg.value.showPreviewImgModal({ ...imgInfo })
-        console.log('>>>>>获取到粘贴到的文本', imgInfo)
     }
 }
 /* 文件消息相关 */
@@ -311,7 +299,7 @@ const sendFilesMessages = async () => {
         filetype: commonFile.type, //文件类型。
         size: commonFile.size
     }
-    console.log('>>>>>调用发送文件', file)
+
     const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
@@ -329,7 +317,6 @@ const sendFilesMessages = async () => {
         loadingInstance.close()
         uploadFiles.value.value = null
     } catch (error) {
-        console.log('>>>>file error', error)
         if (error.type && error?.data) {
             handleSDKErrorNotifi(error.type, error.data.error || 'none')
         } else {
@@ -355,12 +342,12 @@ const showRecordBox = () => {
 }
 const sendAudioMessages = async (audioData) => {
     const file = {
-        url: EaseChatSDK.utils.parseDownloadResponse(audioData.src),
+        url: parseDownloadResponse(audioData.src),
         filename: '录音',
         filetype: '.amr',
         data: audioData.src
     }
-    console.log('>>>>>audioData', audioData, file)
+
     const msgOptions = {
         id: nowPickInfo.value.id,
         chatType: nowPickInfo.value.chatType,
@@ -442,7 +429,7 @@ const handleInviteCall = (handleType) => {
         sendInviteMessage(toId, callType)
         //发送邀请信息后创建一条本地系统通知类消息上屏展示
         const params = {
-            from: EaseChatClient.user,
+            from: EMClient.user,
             to: toId,
             chatType: CHAT_TYPE.SINGLE,
             msg: `邀请【${toId}】进行语音通话`
@@ -455,7 +442,7 @@ const handleInviteCall = (handleType) => {
             sendInviteMessage(toId, callType)
             //发送邀请信息后创建一条本地系统通知类消息上屏展示
             const params = {
-                from: EaseChatClient.user,
+                from: EMClient.user,
                 to: toId,
                 chatType: CHAT_TYPE.SINGLE,
                 msg: `邀请【${toId}】进行视频通话`
@@ -470,22 +457,19 @@ const handleInviteCall = (handleType) => {
 const inviteCallMembersComp = ref(null)
 //调起多人邀请组件
 const showInviteCallMembersModal = () => {
-    console.log('>>>>>>>邀请多人modal弹出')
     const groupId = nowPickInfo.value.id
     if (groupId) {
         inviteCallMembersComp.value.alertDialog(groupId)
     } else {
-        console.warn('请传入groupId')
     }
 }
 //发送多人场景邀请信息的方法
 const sendMulitInviteMsg = (targetIMId) => {
-    console.log('>>>>>要发送的用户列表', targetIMId)
     const callType = CALL_TYPES.MULTI_VIDEO
     const groupId = nowPickInfo.value.id
     sendInviteMessage(targetIMId, callType, groupId)
     const params = {
-        from: EaseChatClient.user,
+        from: EMClient.user,
         to: groupId,
         chatType: CHAT_TYPE.GROUP,
         msg: '已发起多人音视频通话'

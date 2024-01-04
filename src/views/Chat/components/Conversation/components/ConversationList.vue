@@ -7,13 +7,16 @@ import _ from 'lodash'
 import { useRouter, useRoute } from 'vue-router'
 /* 头像相关 */
 import informIcon from '@/assets/images/avatar/inform.png'
+import defaultAvatar from '@/assets/images/avatar/theme2x.png'
+import defaultGroupAvatar from '@/assets/images/avatar/jiaqun2x.png'
 /* route */
 const route = useRoute()
 /* router */
 const router = useRouter()
 /* store */
 const store = useStore()
-const { CHAT_TYPE } = messageType
+const { CHAT_TYPE, SESSION_MESSAGE_TYPE, ALL_MESSAGE_TYPE, CUSTOM_TYPE } =
+    messageType
 //登录用户ID
 const loginUserId = computed(() => store.state.loginUserInfo.hxId)
 //取系统通知数据
@@ -23,7 +26,7 @@ const informDetail = computed(() => {
     const untreated = _.sumBy(informDetailArr, 'untreated') || 0
     return { untreated, lastInformDeatail }
 })
-// console.log('>>>>>informDetail', informDetail.lastInformDeatail)
+//
 //取好友列表(主要使用好友下的用户属性相关)
 const friendList = computed(() => store.state.Contacts.friendList)
 
@@ -32,48 +35,89 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
 
 //取会话数据
 const conversationList = computed(() => {
-    return store.state.Conversation.conversationListData
+    return store.getters.conversationListFromLocal
 })
 
 //处理会话name
 const handleConversationName = computed(() => {
-    return (item) => {
-        if (item.conversationType === CHAT_TYPE.SINGLE) {
-            const friend = friendList.value[item.conversationKey]
-            return friend?.nickname || item.conversationInfo.name
+    return (conversationItem) => {
+        const { conversationType, conversationId } = conversationItem
+        if (conversationType === CHAT_TYPE.SINGLE) {
+            const friend = friendList.value[conversationId]
+            return friend?.nickname || conversationId
         }
-        if (item.conversationType === CHAT_TYPE.GROUP) {
-            const group = joinedGroupList.value[item.conversationKey]
+        if (conversationType === CHAT_TYPE.GROUP) {
+            const group = joinedGroupList.value[conversationId]
             if (group?.groupDetail) {
                 return group.groupDetail.name
             } else if (group?.groupname) {
                 return group.groupname
             }
         }
-        return item.conversationKey
+        return conversationId
+    }
+})
+//处理会话头像
+const handleConversationAvatar = computed(() => {
+    return (conversationItem) => {
+        const { conversationType, conversationId } = conversationItem
+        if (conversationType === CHAT_TYPE.SINGLE) {
+            const friend = friendList.value[conversationId]
+            return friend?.avatarurl || defaultAvatar
+        }
+        //群组暂使用默认群头像
+        if (conversationType === CHAT_TYPE.GROUP) {
+            return defaultGroupAvatar
+        }
     }
 })
 //处理lastmsg的from昵称
 const handleLastMsgNickName = computed(() => {
     const friendList = store.state.Contacts.friendList
     const groupsInfos = store.state.Groups.groupsInfos
-    return (conversation) => {
+    return (conversationItem) => {
         const {
-            conversationKey: groupId,
+            conversationId: groupId,
             conversationType,
-            fromInfo
-        } = conversation
-        const { fromId } = fromInfo || {}
-        if (conversationType === CHAT_TYPE.GROUP) {
-            const userInfoFromGroupNickname =
-                groupsInfos[groupId]?.groupMemberInfo?.[fromId]?.nickName
-            const friendUserInfoNickname = friendList[fromId]?.nickname
+            lastMessage
+        } = conversationItem
+        const { from } = lastMessage || {}
+        const userInfoFromGroupNickname =
+            groupsInfos[groupId]?.groupMemberInfo?.[from]?.nickName
+        const friendUserInfoNickname = friendList[from]?.nickname
+        if (!from || from === loginUserId.value) {
+            return '我：'
+        } else {
             return `${
-                userInfoFromGroupNickname || friendUserInfoNickname || fromId
+                userInfoFromGroupNickname || friendUserInfoNickname || from
             }：`
         }
     }
 })
+//处理lastmsg预览内容
+const handleLastMsgContent = computed(() => {
+    return (msgBody) => {
+        const { type, msg } = msgBody
+        let resultContent = ''
+        //如果消息类型，在预设非展示文本类型中，就返回预设值
+        if (SESSION_MESSAGE_TYPE[type]) {
+            resultContent = SESSION_MESSAGE_TYPE[type]
+        } else if (type === ALL_MESSAGE_TYPE.CUSTOM) {
+            //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
+            if (msgBody.customEvent) {
+                (CUSTOM_TYPE[msgBody.customEvent] &&
+                    (resultContent = CUSTOM_TYPE[msgBody.customEvent])) ||
+                    ''
+            }
+        } else if (msgBody?.isRecall) {
+            return (resultContent = '撤回了一条消息')
+        } else {
+            resultContent = msg
+        }
+        return resultContent
+    }
+})
+
 //取网络状态
 const networkStatus = computed(() => {
     return store.state.networkStatus
@@ -82,27 +126,33 @@ const networkStatus = computed(() => {
 const emit = defineEmits(['toInformDetails', 'toChatMessage'])
 //普通会话
 const checkedConverItemIndex = ref(null)
-const toChatMessage = (item, itemKey, index) => {
+const toChatMessage = (conversationItem, index) => {
     checkedConverItemIndex.value = index
-    if (item && item.unreadMessageNum > 0)
-        store.commit('CLEAR_UNREAD_NUM', itemKey)
-    if (item.isMention) store.commit('CLEAR_AT_STATUS', itemKey)
+    const { conversationId, unReadCount, customField, conversationType } =
+        conversationItem
+    if (unReadCount > 0) {
+        store.dispatch('clearConversationUnreadCount', {
+            conversationId: conversationId,
+            chatType: conversationType
+        })
+    }
+    if (customField?.mention)
+        store.dispatch('clearConversationMention', conversationItem)
     //跳转至对应的消息界面
-
-    emit('toChatMessage', itemKey, item.conversationType)
+    emit('toChatMessage', conversationId, conversationType)
 }
 //删除某条会话
-const deleteConversation = (itemKey) => {
-    console.log('选中的会话key', itemKey, route.query)
-    store.commit('DELETE_ONE_CONVERSATION', itemKey)
+const deleteConversation = (conversationItem) => {
+    const { conversationId } = conversationItem
+    store.dispatch('removeLocalConversation', conversationItem)
     //如果删除的itemKey与当前的message会话页的id一致则跳转至会话默认页。
-    if (route?.query?.id && route.query.id === itemKey) {
+    if (route?.query?.id && route.query.id === conversationId) {
         router.push('/chat/conversation')
     }
 }
 //加载到底拉取新数据
 // const load = () => {
-//   console.log('>>>>>加载到底');
+//
 // };
 </script>
 <template>
@@ -153,11 +203,11 @@ const deleteConversation = (itemKey) => {
             </div>
         </li>
         <!-- 普通会话 -->
-        <template v-if="Object.keys(conversationList).length > 0">
+        <template v-if="conversationList.length > 0">
             <li
-                v-for="(item, itemKey, index) in conversationList"
-                :key="itemKey"
-                @click="toChatMessage(item, itemKey, index)"
+                v-for="(item, index) in conversationList"
+                :key="item.conversationId"
+                @click="toChatMessage(item, index)"
                 :style="{
                     background:
                         checkedConverItemIndex === index ? '#E5E5E5' : ''
@@ -176,16 +226,7 @@ const deleteConversation = (itemKey) => {
                                 <div class="session_other_avatar">
                                     <el-avatar
                                         :size="34"
-                                        :src="
-                                            friendList[item.conversationKey] &&
-                                            friendList[item.conversationKey]
-                                                .avatarurl
-                                                ? friendList[
-                                                      item.conversationKey
-                                                  ].avatarurl
-                                                : item.conversationInfo
-                                                      .avatarUrl
-                                        "
+                                        :src="handleConversationAvatar(item)"
                                     >
                                     </el-avatar>
                                 </div>
@@ -197,7 +238,7 @@ const deleteConversation = (itemKey) => {
                                 <div class="last_msg_body">
                                     <span
                                         class="last_msg_body_mention"
-                                        v-if="item.isMention"
+                                        v-if="item?.customField?.mention"
                                         >[有人@我]</span
                                     >
                                     <span
@@ -207,26 +248,29 @@ const deleteConversation = (itemKey) => {
                                         "
                                         >{{ handleLastMsgNickName(item) }}</span
                                     >
-                                    {{ item.latestMessage.msg }}
+                                    {{
+                                        item.lastMessage &&
+                                        handleLastMsgContent(item.lastMessage)
+                                    }}
                                 </div>
                             </div>
                             <div class="item_body item_right">
                                 <span class="time">{{
                                     dateFormater(
                                         'MM/DD/HH:mm',
-                                        item.latestSendTime
+                                        item?.lastMessage?.time
                                     )
                                 }}</span>
                                 <span
                                     class="unReadNum_box"
-                                    v-if="item.unreadMessageNum >= 1"
+                                    v-if="item.unReadCount >= 1"
                                 >
                                     <sup
                                         class="unReadNum_count"
                                         v-text="
-                                            item.unreadMessageNum >= 99
+                                            item.unReadCount >= 99
                                                 ? '99+'
-                                                : item.unreadMessageNum
+                                                : item.unReadCount
                                         "
                                     ></sup>
                                 </span>
@@ -236,7 +280,7 @@ const deleteConversation = (itemKey) => {
                     <template #default>
                         <div
                             class="session_list_delete"
-                            @click="deleteConversation(itemKey)"
+                            @click="deleteConversation(item)"
                         >
                             删除会话
                         </div>

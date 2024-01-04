@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, toRaw, nextTick, computed, onMounted } from 'vue'
 import _ from 'lodash'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import { useStore } from 'vuex'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { messageType, warningText } from '@/constant'
@@ -31,10 +31,9 @@ const handleDrawer = () => {
 }
 //删除好友
 const delTheFriend = () => {
-    console.log(nowPickInfo.value)
     if (nowPickInfo.value?.id) {
         const targetId = nowPickInfo.value.id
-        EaseChatClient.deleteContact(targetId)
+        EMClient.deleteContact(targetId)
         ElMessage({ type: 'success', center: true, message: '好友已删除~' })
     }
 }
@@ -84,7 +83,6 @@ const getIdInfo = async ({ id, chatType }) => {
 const stopWatchRoute = watch(
     () => route.query,
     (routeVal) => {
-        console.log('>>>>>>>>监听到路由参数变化', routeVal)
         if (routeVal) {
             nowPickInfo.value = { ...routeVal }
             loginState.value && getIdInfo(routeVal)
@@ -165,7 +163,6 @@ const messageData = computed(() => {
 const messageContainer = ref(null)
 //控制消息滚动
 const scrollMessageList = (direction) => {
-    console.log('>>>>>scrollMessageList', direction)
     //direction滚动方向 bottom向下滚动 normal向上滚动
     nextTick(() => {
         const messageNodeList = document.querySelectorAll('.messageList_box')
@@ -173,7 +170,6 @@ const scrollMessageList = (direction) => {
         const lastMsgElement = messageNodeList[messageNodeList.length - 1]
         //直接滚动置底
         if (direction === 'bottom') {
-            console.log('>>>滚动置底')
             lastMsgElement && lastMsgElement.scrollIntoView(false)
         }
         //保持当前的消息位于当前可视窗口
@@ -183,13 +179,12 @@ const scrollMessageList = (direction) => {
     })
 }
 // const scroll = ({ scrollTop }) => {
-//   console.log('scrollscrollscroll', scrollTop)
+//
 // }
 watch(
     () => messageData,
     (newMsg, oldMsg) => {
         nextTick(() => {
-            console.log('>>>>>监听到消息变化', notScrollBottom.value)
             //判断拉取漫游导致的消息变化不需要执行滚动置底
             if (notScrollBottom.value) {
                 return

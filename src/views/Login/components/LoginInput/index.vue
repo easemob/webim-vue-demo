@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { fetchUserLoginSmsCode, fetchUserLoginToken } from '@/api/login'
 import { useStore } from 'vuex'
@@ -45,13 +45,13 @@ const loginIM = async () => {
     buttonLoading.value = true
     /* SDK 登陆的方式 */
     // try {
-    //   let { accessToken } = await EaseChatClient.open({
+    //   let { accessToken } = await EMClient.open({
     //     user: loginValue.username.toLowerCase(),
     //     pwd: loginValue.password.toLowerCase(),
     //   });
     //   window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: loginValue.username, accessToken: accessToken }))
     // } catch (error) {
-    //   console.log('>>>>登陆失败', error);
+    //
     //   const { data: { extraInfo } } = error
     //   handleSDKErrorNotifi(error.type, extraInfo.errDesc);
     //   loginValue.username = '';
@@ -68,9 +68,8 @@ const loginIM = async () => {
     try {
         const res = await fetchUserLoginToken(params)
         if (res?.code === 200) {
-            console.log('>>>>>>登陆token获取成功', res.token)
-            EaseChatClient.open({
-                user: res.chatUserName.toLowerCase(),
+            EMClient.open({
+                username: res.chatUserName.toLowerCase(),
                 accessToken: res.token
             })
             window.localStorage.setItem(
@@ -82,7 +81,6 @@ const loginIM = async () => {
             )
         }
     } catch (error) {
-        console.log('>>>>登陆失败', error)
         if (error.response?.data) {
             const { code, errorInfo } = error.response.data
             if (errorInfo.includes('does not exist.')) {
@@ -188,7 +186,7 @@ const startCountDown = () => {
     padding: 0 16px;
 }
 
-::v-deep .el-input__inner {
+:deep(.el-input__inner) {
     padding: 0 20px;
     font-style: normal;
     font-weight: 400;
@@ -209,16 +207,16 @@ const startCountDown = () => {
     }
 }
 
-::v-deep .el-input__suffix-inner {
+:deep(.el-input__suffix-inner) {
     font-size: 20px;
     margin-right: 15px;
 }
 
-::v-deep .el-form-item__error {
+:deep(.el-form-item__error) {
     margin-left: 16px;
 }
 
-::v-deep .el-input-group__append {
+:deep(.el-input-group__append) {
     background: linear-gradient(90deg, #04aef0 0%, #5a5dd0 100%);
     width: 60px;
     color: #fff;

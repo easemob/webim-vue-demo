@@ -1,33 +1,19 @@
 import _ from 'lodash'
 import { useLocalStorage } from '@vueuse/core'
 import {
-    createConversation,
-    sortConversation,
-    createInform
-} from '@/utils/handleSomeData'
-import Message from './message'
-import { EaseChatClient } from '@/IM/initwebsdk'
+    createInform,
+    checkLastMsgIsHasMention
+} from '@/utils/handleSomeData/index'
+import { EMClient } from '@/IM'
 import { informType, messageType } from '@/constant'
 const { INFORM_FROM } = informType
 const { CHAT_TYPE } = messageType
 const Conversation = {
     state: {
         informDetail: [],
-        conversationListData: {}
+        conversationListFromLocal: []
     },
     mutations: {
-        //初始化会话列表的数据（根据登陆的id取其对应的会话数据）
-        INIT_CONVERSATION_STATE: (state) => {
-            const storageId = EaseChatClient.user
-            state.informDetail = useLocalStorage(
-                `EASEIM_${storageId}_INFORM`,
-                []
-            )
-            state.conversationListData = useLocalStorage(
-                `EASEIM_${storageId}_conversationList`,
-                {}
-            )
-        },
         //清空系统通知
         CLEAR_INFORM_LIST: (state) => {
             state.informDetail = []
@@ -47,56 +33,53 @@ const Conversation = {
             toBeUpdateInform.unshift(informBody)
             state.informDetail = toBeUpdateInform
         },
-        //更新已有会话
-        UPDATE_CONVERSATION_LIST: (state, payload) => {
-            console.log('>>>>>>>开始更新会话', payload)
-            const sortedData = sortConversation(
-                _.assign(_.cloneDeep(state.conversationListData), payload)
+        //获取会话列表
+        GET_CONVERSATION_LIST_FROM_LOCAL: (state, payload) => {
+            state.conversationListFromLocal = payload
+        },
+        //更新本地缓存的会话列表数据
+        UPDATE_CONVERSATION_LIST_FROM_LOCAL: (state, conversationItem) => {
+            const _index = state.conversationListFromLocal.findIndex(
+                (c) => c.conversationId === conversationItem.conversationId
             )
-            state.conversationListData = sortedData
+            if (_index > -1) {
+                state.conversationListFromLocal.splice(_index, 1)
+                state.conversationListFromLocal.unshift(conversationItem)
+            } else {
+                state.conversationListFromLocal.unshift(conversationItem)
+            }
         },
         //删除某条会话
-        DELETE_ONE_CONVERSATION: (state, key) => {
-            console.log('>>>>>>>执行删除会话操作', key)
-            const toUpdateConversation = _.assign(
-                {},
-                state.conversationListData
+        DELETE_CONVERSATION_ITEM_FROM_LOCAL: (state, conversationId) => {
+            const _index = state.conversationListFromLocal.findIndex(
+                (v) => v.conversationId === conversationId
             )
-            if (toUpdateConversation[key]) {
-                delete toUpdateConversation[key]
+            if (_index > -1) {
+                state.conversationListFromLocal.splice(_index, 1)
             }
-            console.log('删除后toUpdateConversation', toUpdateConversation)
-            state.conversationListData = _.assign({}, toUpdateConversation)
         },
         //清除会话未读状态
-        CLEAR_UNREAD_NUM: (state, key) => {
-            state.conversationListData[key].unreadMessageNum = 0
+        CLEAR_CONVERSATION_ITEM_UNREAD_COUNT: (state, conversationId) => {
+            state.conversationListFromLocal.forEach((conversationItem) => {
+                if (conversationItem.conversationId === conversationId) {
+                    conversationItem.unReadCount = 0
+                }
+            })
         },
         //清除会话@状态
-        CLEAR_AT_STATUS: (state, index) => {
-            console.log('>>>>>>>执行清除会话@状态', index)
-            state.conversationListData[index].isMention = false
+        CLEAR_CONVERSATION_ITEM_MENTION_STATUS: (state, conversationId) => {
+            state.conversationListFromLocal.map((conversationItem) => {
+                if (conversationItem.conversationId === conversationId) {
+                    conversationItem.customField.mention = false
+                }
+            })
         },
         //清除信息卡片未读
         CLEAR_UNTREATED_STATUS: (state, index) => {
-            console.log('>>>>>执行清除卡片未读', index)
             state.informDetail[index].untreated = 0
         },
-
-        //清除会话未读状态
-        CLEAR_UNREAD_STATUS: (state, index) => {
-            console.log('>>>>>>>执行清除会话未读状态', index)
-            state.conversationListData[index].unreadMessageNum = 0
-        },
-        //更新会话未读状态
-        UPDATE_UNREAD_STATUS: (state, index) => {
-            console.log('>>>>>>>执行更新会话未读状态', index)
-            state.conversationListData[index].unreadMessageNum++
-        },
-        //更新会话@状态
         //更改卡片消息的按钮状态
         UPDATE_INFORM_BTNSTATUS: (state, { index: index, btnStatus }) => {
-            console.log('>>>>触发了按钮更新状态', index, btnStatus)
             state.informDetail[index].operationStatus = btnStatus
         }
     },
@@ -104,7 +87,7 @@ const Conversation = {
         //添加新系统通知
         createNewInform: ({ dispatch, commit }, params) => {
             const { fromType, informContent } = params
-            console.log('>>>>>>>>>createNewInform', fromType, informContent)
+
             const result = createInform(fromType, informContent)
             commit('UPDATE_INFORM_LIST', result)
 
@@ -234,7 +217,6 @@ const Conversation = {
                         break
                     case 'acceptRequest':
                         {
-                            console.log('>>>>>>>收到了群组同意加入事件')
                             setTimeout(() => {
                                 dispatch('fetchGroupList', {
                                     pageNum: 1,
@@ -245,7 +227,6 @@ const Conversation = {
                         break
                     case 'memberAttributesUpdate':
                         {
-                            console.log('>>>>>>>收到了群组成员属性更新事件')
                             informMsg.msg = `${informContent.from}修改群内昵称为【${informContent?.attributes?.nickName}】`
                             dispatch('createInformMessage', informMsg)
                             commit('SET_GROUP_MEMBERS_INFO', {
@@ -269,13 +250,136 @@ const Conversation = {
             //memberPresence 群成员加入群组需要进行群组人数+1操作。
             // commit('UPDATE_GROUP_INFOS',{})
         },
+        //从本地加载会话列表数据
+        getConversationListFromLocal: async ({ commit }, params) => {
+            try {
+                const result = await EMClient.localCache.getLocalConversations()
 
-        //收集会话依赖数据
-        gatherConversation: ({ commit }, key) => {
-            const corresMessage = _.cloneDeep(Message.state.messageList[key])
-            const res = createConversation(corresMessage)
-            commit('UPDATE_CONVERSATION_LIST', res)
+                if (result.data.length) {
+                    commit('GET_CONVERSATION_LIST_FROM_LOCAL', [...result.data])
+                } else {
+                    //默认只取50条远端数据数据，实际可自行加载更多。
+                    const result = await EMClient.getServerConversations({
+                        pageSize: 50,
+                        cursor: ''
+                    })
+                    if (result.data.length) {
+                        commit('GET_CONVERSATION_LIST_FROM_LOCAL', [
+                            ...result.data
+                        ])
+                    }
+                }
+            } catch (error) {}
+        },
+        //更新会话列表
+        updateLocalConversation: async ({ dispatch, commit }, params) => {
+            const { conversationId, chatType } = params
+
+            try {
+                const result = await EMClient.localCache.getLocalConversation({
+                    conversationId,
+                    conversationType: chatType
+                })
+
+                const toBeUpdateConversationItem = { ...result?.data }
+                //检查更新的lastmsg中是否包含提及
+                const isMention = toBeUpdateConversationItem?.customField
+                    ?.mention
+                    ? true
+                    : checkLastMsgIsHasMention(
+                          toBeUpdateConversationItem.lastMessage
+                      )
+                const customField = (toBeUpdateConversationItem.customField && {
+                    ...toBeUpdateConversationItem.customField,
+                    mention: isMention
+                }) || { mention: isMention }
+                //设置会话级别提及状态clear
+                await dispatch('setLocalConversationCustomAttributes', {
+                    conversationId,
+                    conversationType: chatType,
+                    customField: customField
+                })
+                toBeUpdateConversationItem.customField = { ...customField }
+                commit('UPDATE_CONVERSATION_LIST_FROM_LOCAL', {
+                    ...toBeUpdateConversationItem
+                })
+            } catch (error) {}
+        },
+        //删除会话列表（本地以及远端）
+        removeLocalConversation: async ({ dispatch, commit }, params) => {
+            const { conversationId, conversationType } = params
+            const options = {
+                // 会话 ID：单聊为对方的用户 ID，群聊为群组 ID。
+                channel: conversationId,
+                // 会话类型：（默认） `singleChat`：单聊；`groupChat`：群聊。
+                chatType: conversationType,
+                // 删除会话时是否同时删除服务端漫游消息。
+                deleteRoam: false
+            }
+            try {
+                //会话列表删除时，需要先删除远端会话列表，再删除本地数据库，这样跨端获取会话列表才能同步。
+                await EMClient.deleteConversation(options)
+                //删除本地数据库数据
+                await EMClient.localCache.removeLocalConversation({
+                    conversationId,
+                    conversationType
+                })
+                commit('DELETE_CONVERSATION_ITEM_FROM_LOCAL', conversationId)
+            } catch (error) {}
+        },
+        //设置会话已读（发送会话已读回执。）
+        clearConversationUnreadCount: async ({ dispatch, commit }, params) => {
+            const { conversationId, chatType } = params
+
+            const option = {
+                chatType: chatType, // 会话类型，设置为单聊。
+                type: 'channel', // 消息类型。
+                to: conversationId // 接收消息对象的用户 ID。
+            }
+            try {
+                //只有发送了会话已读回执远端服务器的会话未读数才会清空。
+                const msg = EMClient.Message.create(option)
+                const res = await EMClient.send(msg)
+
+                //同步清空本地数据库未读数。
+                await EMClient.localCache.clearConversationUnreadCount({
+                    conversationId,
+                    conversationType: chatType
+                })
+                //通知更新缓存中的会话未读数。
+                commit('CLEAR_CONVERSATION_ITEM_UNREAD_COUNT', conversationId)
+            } catch (error) {}
+        },
+        //清除会话@提及状态
+        clearConversationMention: async ({ dispatch, commit }, params) => {
+            const { conversationId, conversationType, customField } = params
+            customField.mention = false
+            try {
+                await EMClient.localCache.setLocalConversationCustomField({
+                    conversationId,
+                    conversationType,
+                    customField: { ...customField }
+                })
+                commit('CLEAR_CONVERSATION_ITEM_MENTION_STATUS', conversationId)
+            } catch (error) {}
+        },
+        //设置本地会话自定义属性
+        setLocalConversationCustomAttributes: async (
+            { dispatch, commit },
+            params
+        ) => {
+            const { conversationId, conversationType, customField } = params
+            try {
+                await EMClient.localCache.setLocalConversationCustomField({
+                    conversationId,
+                    conversationType,
+                    customField: { ...customField }
+                })
+            } catch (error) {}
         }
+    },
+    getters: {
+        conversationListFromLocal: (state) => state.conversationListFromLocal
     }
 }
 export default Conversation

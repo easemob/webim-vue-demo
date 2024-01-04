@@ -1,6 +1,6 @@
 <script setup>
 import { ref, toRefs, toRaw, computed, watch } from 'vue'
-import { EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import {
     CircleClose,
     Search,
@@ -35,7 +35,7 @@ const { groupDetail, memberRole } = toRefs(props)
  * 中间涉及到一些权限判断，大量使用了 v-if 后续建议挪到计算属性中处理。
  **/
 /* 当前登陆的id */
-const loginUserId = computed(() => EaseChatClient.user)
+const loginUserId = computed(() => EMClient.user)
 /* 数据获取 */
 //群组成员
 const groupMembers = computed(() => {
@@ -384,7 +384,7 @@ defineExpose({ saveHandleMembers })
     height: 36px;
 }
 
-::v-deep .el-input__prefix {
+:deep(.el-input__prefix) {
     margin-left: 3px;
 }
 

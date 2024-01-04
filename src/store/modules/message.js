@@ -1,4 +1,4 @@
-import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import { setMessageKey, createMessage } from '@/utils/handleSomeData'
 import _ from 'lodash'
 // import { ref, toRaw } from 'vue';
@@ -46,44 +46,44 @@ const Message = {
         CHANGE_MESSAGE_BODAY: (state, payload) => {
             const { type, key, mid } = payload
             switch (type) {
-                case CHANGE_MESSAGE_BODAY_TYPE.RECALL:
-                    {
-                        if (state.messageList[key]) {
-                            const res = _.find(
-                                state.messageList[key],
-                                (o) => o.id === mid
-                            )
-                            res.isRecall = true
-                        }
+            case CHANGE_MESSAGE_BODAY_TYPE.RECALL:
+                {
+                    if (state.messageList[key]) {
+                        const res = _.find(
+                            state.messageList[key],
+                            (o) => o.id === mid
+                        )
+                        res.isRecall = true
                     }
+                }
 
-                    break
-                case CHANGE_MESSAGE_BODAY_TYPE.DELETE:
-                    {
-                        if (state.messageList[key]) {
-                            const sourceData = state.messageList[key]
-                            const index = _.findIndex(
-                                state.messageList[key],
-                                (o) => o.id === mid
-                            )
-                            sourceData.splice(index, 1)
-                            state.messageList[key] = _.assign([], sourceData)
-                        }
+                break
+            case CHANGE_MESSAGE_BODAY_TYPE.DELETE:
+                {
+                    if (state.messageList[key]) {
+                        const sourceData = state.messageList[key]
+                        const index = _.findIndex(
+                            state.messageList[key],
+                            (o) => o.id === mid
+                        )
+                        sourceData.splice(index, 1)
+                        state.messageList[key] = _.assign([], sourceData)
                     }
-                    break
-                case CHANGE_MESSAGE_BODAY_TYPE.MODIFY:
-                    {
-                        if (state.messageList[key]) {
-                            const res = _.find(
-                                state.messageList[key],
-                                (o) => o.id === mid
-                            )
-                            _.assign(res, payload?.message)
-                        }
+                }
+                break
+            case CHANGE_MESSAGE_BODAY_TYPE.MODIFY:
+                {
+                    if (state.messageList[key]) {
+                        const res = _.find(
+                            state.messageList[key],
+                            (o) => o.id === mid
+                        )
+                        _.assign(res, payload?.message)
                     }
-                    break
-                default:
-                    break
+                }
+                break
+            default:
+                break
             }
         }
     },
@@ -95,7 +95,10 @@ const Message = {
             commit('UPDATE_MESSAGE_LIST', params)
             //目前根据全局配置进行新消息声音提示，后续计划根据会话级别可进行设置是否声音提示，比如设定免打扰。
             if (isOpenPlayRing.value) playRing()
-            dispatch('gatherConversation', key)
+            dispatch('updateLocalConversation', {
+                conversationId: key,
+                chatType: params.chatType
+            })
         },
         //获取历史消息
         getHistoryMessage: async ({ state, dispatch, commit }, params) => {
@@ -108,7 +111,7 @@ const Message = {
                     chatType: chatType,
                     searchDirection: 'up'
                 }
-                EaseChatClient.getHistoryMessages(options)
+                EMClient.getHistoryMessages(options)
                     .then((res) => {
                         const { cursor, messages } = res
                         messages.length > 0 &&
@@ -122,7 +125,10 @@ const Message = {
                         })
                         if (!state.messageList[id]) {
                             //提示会话列表更新
-                            dispatch('gatherConversation', id)
+                            dispatch('updateLocalConversation', {
+                                conversationId: id,
+                                chatType: chatType
+                            })
                         }
                     })
                     .catch((error) => {
@@ -138,21 +144,21 @@ const Message = {
                 const errorCallback = (error) => {
                     reject(error)
                 }
-                const options = createMessage.createOptions(
+                const options = createMessage().createOptions(
                     params,
                     errorCallback
                 )
-                const msg = EaseChatSDK.message.create(options)
-                EaseChatClient.send(msg)
+                const msg = EMClient.Message.create(options)
+                EMClient.send(msg)
                     .then((res) => {
-                        const { serverMsgId } = res
-                        console.log('>>>>发送成功', res)
-                        msg.id = serverMsgId
-                        msg.from = EaseChatClient.user
-                        const msgBody = createMessage.createMsgBody(msg)
-                        commit('UPDATE_MESSAGE_LIST', msgBody)
+                        const { message } = res
+
+                        commit('UPDATE_MESSAGE_LIST', message)
                         // 提示会话列表更新
-                        dispatch('gatherConversation', msgBody.to)
+                        dispatch('updateLocalConversation', {
+                            conversationId: message.to,
+                            chatType: message.chatType
+                        })
                         resolve('OK')
                     })
                     .catch((error) => {
@@ -173,16 +179,19 @@ const Message = {
             const msgBody = _.cloneDeep(params)
             msgBody.type = ALL_MESSAGE_TYPE.INFORM
             const key = setMessageKey(params)
-            console.log('>>>>>>添加系统消息', params)
+
             commit('UPDATE_MESSAGE_LIST', msgBody)
-            dispatch('gatherConversation', key)
+            dispatch('updateLocalConversation', {
+                conversationId: key,
+                chatType: msgBody.chatType
+            })
         },
         //删除消息
         removeMessage: ({ dispatch, commit }, params) => {
             const { id: mid, from: targetId, chatType } = params
             const key = setMessageKey(params)
             return new Promise((resolve, reject) => {
-                EaseChatClient.removeHistoryMessages({
+                EMClient.removeHistoryMessages({
                     targetId: targetId,
                     chatType: chatType,
                     messageIds: [mid]
@@ -193,7 +202,10 @@ const Message = {
                             key: key,
                             mid
                         })
-                        dispatch('gatherConversation', key)
+                        dispatch('updateLocalConversation', {
+                            conversationId: key,
+                            chatType
+                        })
                         resolve('OK')
                     })
                     .catch((error) => {
@@ -205,14 +217,17 @@ const Message = {
         recallMessage: async ({ dispatch, commit }, params) => {
             const { mid, to, chatType } = params
             return new Promise((resolve, reject) => {
-                EaseChatClient.recallMessage({ mid, to, chatType })
+                EMClient.recallMessage({ mid, to, chatType })
                     .then(() => {
                         commit('CHANGE_MESSAGE_BODAY', {
                             type: CHANGE_MESSAGE_BODAY_TYPE.RECALL,
                             key: to,
                             mid
                         })
-                        dispatch('gatherConversation', to)
+                        dispatch('updateLocalConversation', {
+                            conversationId: to,
+                            chatType
+                        })
                         resolve('OK')
                     })
                     .catch((error) => {
@@ -224,19 +239,18 @@ const Message = {
         modifyMessage: async ({ dispatch, commit }, params) => {
             const { id: mid, to, chatType, msg } = params
             return new Promise((resolve, reject) => {
-                const textMessage = EaseChatSDK.message.create({
+                const textMessage = EMClient.Message.create({
                     type: 'txt',
                     msg: msg,
                     to: to,
                     chatType: chatType
                 })
-                console.log('textMessage', textMessage)
-                EaseChatClient.modifyMessage({
+
+                EMClient.modifyMessage({
                     messageId: mid,
                     modifiedMessage: textMessage
                 })
                     .then((res) => {
-                        console.log(res.message, 'modifiedMessage')
                         const { message } = res || {}
                         commit('CHANGE_MESSAGE_BODAY', {
                             type: CHANGE_MESSAGE_BODAY_TYPE.MODIFY,
@@ -244,11 +258,13 @@ const Message = {
                             mid,
                             message
                         })
-                        dispatch('gatherConversation', to)
+                        dispatch('updateLocalConversation', {
+                            conversationId: to,
+                            chatType
+                        })
                         resolve(res)
                     })
                     .catch((e) => {
-                        console.log(e)
                         reject(e)
                     })
             })

@@ -1,23 +1,36 @@
 <script setup>
 import { ref } from 'vue'
 import { mountAllEMListener } from '@/IM/listener'
-import { EaseChatSDK, EaseChatClient } from '@/IM/initwebsdk'
+import { EMClient } from '@/IM'
 import ring from '@/assets/ring.mp3'
 /* callkit */
 import EaseCallKit from '@/components/EaseCallKit'
 import InviteCallMembers from '@/components/InviteCallMembers'
+import { ElMessage } from 'element-plus'
 /* 【重要】挂载IM相关监听回调。 */
 mountAllEMListener()
 /* 重新登陆 */
 //读取本地EASEIM_loginUser
 const EASEIM_loginUser = window.localStorage.getItem('EASEIM_loginUser')
 const loginUserFromStorage = JSON.parse(EASEIM_loginUser) || {}
-const handleRelogin = () => {
-    console.log('重新登陆')
-    EaseChatClient.open({
-        user: loginUserFromStorage.user,
-        accessToken: loginUserFromStorage.accessToken
-    })
+const handleRelogin = async () => {
+    try {
+        await EMClient.open({
+            username: loginUserFromStorage.user,
+            accessToken: loginUserFromStorage.accessToken
+        })
+        ElMessage({
+            type: 'success',
+            center: true,
+            message: '登录成功'
+        })
+    } catch (error) {
+        ElMessage({
+            type: 'error',
+            center: true,
+            message: error.message
+        })
+    }
 }
 if (loginUserFromStorage?.user && loginUserFromStorage?.accessToken) {
     handleRelogin()
@@ -27,12 +40,10 @@ const easeCallKit = ref(null)
 const inviteCallComp = ref(null)
 //多人会议使用-弹出邀请模态框
 const showModal = ({ groupId }) => {
-    console.log('可以弹出邀请框', groupId)
     inviteCallComp.value.alertDialog(groupId)
 }
 //多人会议使用-传递给邀请组件发送邀请消息
 const sendMulitInviteMsg = (targetIMId) => {
-    console.log('targetIMIdtargetIMIdtargetIMId', targetIMId)
     const callType = 2
     easeCallKit.value.inMultiChanelSendInviteMsg(targetIMId, callType)
 }
@@ -52,8 +63,8 @@ const sendMulitInviteMsg = (targetIMId) => {
     <!-- About EaseCallKit -->
     <EaseCallKit
         ref="easeCallKit"
-        :EaseIMClient="EaseChatClient"
-        :msgCreateFunc="EaseChatSDK.message"
+        :EaseIMClient="EMClient"
+        :msgCreateFunc="EMClient.Message"
         @onInviteMembers="showModal"
     />
     <InviteCallMembers

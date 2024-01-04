@@ -111,7 +111,7 @@
     border-radius: 0 0 3px 0;
 }
 
-::v-deep .el-drawer {
+:deep(.el-drawer) {
     margin-top: 60px;
     width: 150px;
     height: calc(100% - 60px);

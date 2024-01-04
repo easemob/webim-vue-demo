@@ -86,7 +86,7 @@ npm run build --report
 
 ## 群组
 
-代码目录：src/views/chat/components/AboutGroups
+代码目录： src/views/chat/components/AboutGroups
 
 -   群组发送消息和单人是一样的只是 type 不同
 -   AboutGroups 下为群组设置的代码
@@ -113,6 +113,13 @@ const EaseChatClient = new EaseChatSDK.connection({
     appKey: 'YOUR APPKEY'
 })
 export { EaseChatSDK, EaseChatClient }
+```
+
+```javascript
+//实例化miniCore版本 环信SDK
+const miniCore = new MiniCore({
+    appKey: DEFAULT_EASEMOB_APPKEY
+})
 ```
 
 2. 确保已在 Agora 声网创建项目生成 appId【与 Appkey 概念相同】，并在项目中安装 Agora 声网相关 SDK。
@@ -184,7 +191,6 @@ const {
     UN_SUB_CHANNEL_ENENT
 } = useCallKitEvent()
 SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
-    console.log('%c>>>>>>订阅事件触发', 'color:blue', param)
     /* 
 事件对外抛出包含有对应的事件type，type/code 可以自行判断处理，ext字段内有对外传出的事件中文描述，可自行选择是否使用。
 */

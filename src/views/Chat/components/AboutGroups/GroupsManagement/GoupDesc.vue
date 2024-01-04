@@ -27,30 +27,28 @@ const editGroupsDesc = async (type, oldGroupDesc) => {
         groupDescValue.value = oldGroupDesc
     }
     if (type === 'save') {
-        if (groupDescValue.value === oldGroupDesc) return isEdit.value = false
+        if (groupDescValue.value === oldGroupDesc) return (isEdit.value = false)
         const params = {
             groupid: groupDetail.value.id,
             modifyType: 1,
             content: groupDescValue.value
         }
         try {
-            console.log('>>>>>保存编辑')
             await store.dispatch('modifyGroupInfo', params)
             ElMessage({
                 message: '群组详情修改成功~',
                 type: 'success',
-                center: true,
+                center: true
             })
             isEdit.value = false
         } catch (error) {
             ElMessage({
                 message: '群组详情修改失败~',
                 type: 'error',
-                center: true,
+                center: true
             })
             isEdit.value = false
         }
-
     }
 }
 onMounted(() => {
@@ -61,12 +59,26 @@ onMounted(() => {
 </script>
 <template>
     <div class="app_container">
-        <p class="group_desc" v-if="!isEdit" @click="editGroupsDesc('edit', groupDetail.description)">
+        <p
+            class="group_desc"
+            v-if="!isEdit"
+            @click="editGroupsDesc('edit', groupDetail.description)"
+        >
             {{ groupDetail.description || '暂无群描述' }}
         </p>
-        <el-input v-if="isEdit" v-model="groupDescValue" ref="introduceRef" maxlength="50" show-word-limit
-            :autosize="{ minRows: 2, maxRows: 4 }" type="textarea" class="notice_detail" placeholder="请输入群组详情~"
-            resize="none" @blur="editGroupsDesc('save', groupDetail.description)" />
+        <el-input
+            v-if="isEdit"
+            v-model="groupDescValue"
+            ref="introduceRef"
+            maxlength="50"
+            show-word-limit
+            :autosize="{ minRows: 2, maxRows: 4 }"
+            type="textarea"
+            class="notice_detail"
+            placeholder="请输入群组详情~"
+            resize="none"
+            @blur="editGroupsDesc('save', groupDetail.description)"
+        />
     </div>
 </template>
 <style lang="scss" scoped>
@@ -84,7 +96,7 @@ onMounted(() => {
     cursor: pointer;
 }
 
-::v-deep .el-textarea__inner {
+:deep(.el-textarea__inner) {
     border-radius: 5px;
 }
 </style>

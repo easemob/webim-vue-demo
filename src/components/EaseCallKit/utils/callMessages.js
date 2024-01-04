@@ -23,8 +23,8 @@ export default class CallKitMessages {
                 callId: callId, // 随机uuid，每次呼叫都不同，代表一次呼叫
                 ts: Date.now(),
                 msgType: MSG_TYPE,
-                callerIMName: this.IMClient.context.jid.name,
-            },
+                callerIMName: this.IMClient.context.jid.name
+            }
         }
         //如果是多人邀请并且groupId有参数时，在ext扩展字段中再增加一个ext并传入groupId
         if (callType === 2 && channelInfors.groupId) {
@@ -36,12 +36,12 @@ export default class CallKitMessages {
             this.IMClient.send(msg)
                 .then((res) => {
                     // 消息成功发送回调。
-                    console.log('invite Success', res)
+
                     resolve(res)
                 })
                 .catch((e) => {
                     // 消息发送失败回调。
-                    console.log('invite Fail', e)
+
                     reject(e)
                 })
         })
@@ -49,7 +49,7 @@ export default class CallKitMessages {
     //发送告知主叫方confim确认中
     sendConfirmRing(payload) {
         const { status, targetId, sendBody } = payload
-        console.log('>>>>>告知对方确认响铃', payload)
+
         const option = {
             type: 'cmd',
             chatType: 'singleChat',
@@ -62,24 +62,21 @@ export default class CallKitMessages {
                 calleeDevId: sendBody.calleeDevId,
                 callId: sendBody.callId,
                 ts: Date.now(),
-                msgType: MSG_TYPE,
-            },
+                msgType: MSG_TYPE
+            }
         }
         const msg = this.msgCreateFn.create(option)
         // // 调用 `send` 方法发送该透传消息。
         this.IMClient.send(msg)
             .then((res) => {
                 // 消息成功发送回调。
-                console.log('ConfirmRing Success', res)
             })
             .catch((e) => {
                 // 消息发送失败回调。
-                console.log('ConfirmRing Fail', e)
             })
     }
     //发送视频转语音信令
     sendVideoToVioce(targetId, callId) {
-        console.log('targetId', targetId)
         try {
             const option = {
                 type: 'cmd',
@@ -90,27 +87,23 @@ export default class CallKitMessages {
                     action: CALL_ACTIONS_TYPE.VIDEO_TO_VOICE,
                     callId: callId,
                     ts: Date.now(),
-                    msgType: MSG_TYPE,
-                },
+                    msgType: MSG_TYPE
+                }
             }
             const msg = this.msgCreateFn.create(option)
             this.IMClient.send(msg)
                 .then((res) => {
                     // 消息成功发送回调。
-                    console.log('videotovioce Success', res)
                 })
                 .catch((e) => {
                     // 消息发送失败回调。
-                    console.log('videotovioc Fail', e)
                 })
-        } catch (error) {
-            console.log('>>>>>失败', error)
-        }
+        } catch (error) {}
     }
     //发送给对方确认后的结果
     sendConfirmCallee(payload) {
         const { targetId, sendBody } = payload
-        console.log('sendConfirmCalllee', payload)
+
         try {
             const option = {
                 type: 'cmd',
@@ -124,24 +117,20 @@ export default class CallKitMessages {
                     calleeDevId: sendBody.calleeDevId,
                     callId: sendBody.callId,
                     ts: Date.now(),
-                    msgType: MSG_TYPE,
-                },
+                    msgType: MSG_TYPE
+                }
             }
             const msg = this.msgCreateFn.create(option)
-            console.log('%ccallee msg', 'color:purple', msg)
+
             // // 调用 `send` 方法发送该透传消息。
             this.IMClient.send(msg)
                 .then((res) => {
                     // 消息成功发送回调。
-                    console.log('Calllee Success', res)
                 })
                 .catch((e) => {
                     // 消息发送失败回调。
-                    console.log('Calllee Fail', e)
                 })
-        } catch (error) {
-            console.log('>>>>>失败', error)
-        }
+        } catch (error) {}
     }
     //发送通知弹出待接听窗口信令
     sendAlertMsg(payload) {
@@ -157,20 +146,18 @@ export default class CallKitMessages {
                 callerDevId: ext.callerDevId,
                 callId: ext.callId,
                 ts: Date.now(),
-                msgType: MSG_TYPE,
-            },
+                msgType: MSG_TYPE
+            }
         }
-        console.log('>>>>>>>option', option)
+
         const msg = this.msgCreateFn.create(option)
         // // 调用 `send` 方法发送该透传消息。
         this.IMClient.send(msg)
             .then((res) => {
                 // 消息成功发送回调。
-                console.log('answer Success', res)
             })
             .catch((e) => {
                 // 消息发送失败回调。
-                console.log('anser Fail', e)
             })
     }
     //发送应答消息
@@ -191,24 +178,21 @@ export default class CallKitMessages {
                 calleeDevId: this.IMClient.context.jid.clientResource,
                 callId: sendBody.callId,
                 ts: Date.now(),
-                msgType: MSG_TYPE,
-            },
+                msgType: MSG_TYPE
+            }
         }
         const msg = this.msgCreateFn.create(option)
         // // 调用 `send` 方法发送该透传消息。
         this.IMClient.send(msg)
             .then((res) => {
                 // 消息成功发送回调。
-                console.log('answer Success', res)
             })
             .catch((e) => {
                 // 消息发送失败回调。
-                console.log('anser Fail', e)
             })
     }
     //发送取消呼叫消息
     sendCannelMsg(payload) {
-        console.log('>>>>>>>发送取消通话信令', payload)
         const { targetId, callId } = payload
         const option = {
             type: 'cmd',
@@ -223,19 +207,17 @@ export default class CallKitMessages {
                 callerDevId: this.IMClient.context.jid.clientResource,
                 callId: callId || '',
                 ts: Date.now(),
-                msgType: MSG_TYPE,
-            },
+                msgType: MSG_TYPE
+            }
         }
         const msg = this.msgCreateFn.create(option)
         // // 调用 `send` 方法发送该透传消息。
         this.IMClient.send(msg)
             .then((res) => {
                 // 消息成功发送回调。
-                console.log('Cannel Success', res)
             })
             .catch((e) => {
                 // 消息发送失败回调。
-                console.log('Cannel Fail', e, option)
             })
     }
 }
