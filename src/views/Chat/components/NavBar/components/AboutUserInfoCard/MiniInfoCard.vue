@@ -180,7 +180,7 @@ const showShareInfoModal = () => {
     }
 }
 
-::v-deep .el-dialog__header {
+:deep(.el-dialog__header) {
     background: #f2f2f2;
     margin: 0;
 }

@@ -371,7 +371,7 @@ const handleEscapeKey = () => {
     </div>
 </template>
 <style lang="scss" scoped>
-::v-deep .el-input__wrapper {
+:deep(.el-input__wrapper) {
     box-shadow: none;
 }
 

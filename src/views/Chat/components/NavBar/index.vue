@@ -576,36 +576,36 @@ const toSendFeedback = () => window.open('mailto:yunying@easemob.com')
 }
 
 .components {
-    ::v-deep .edit_userinfo_diglog {
+    :deep(.edit_userinfo_diglog) {
         border-radius: 4px;
         overflow: hidden;
     }
 
-    ::v-deep .setting_func_diglog > .el-dialog__body {
+    :deep(.setting_func_diglog) > .el-dialog__body {
         padding: 28px 24px 24px 24px;
     }
 
-    ::v-deep .setting_func_diglog > .el-dialog__header {
+    :deep(.setting_func_diglog) > .el-dialog__header {
         background: #f2f2f2;
         margin: 0;
     }
 
-    ::v-deep .edit_userinfo_diglog > .el-dialog__header {
+    :deep(.edit_userinfo_diglog) > .el-dialog__header {
         padding: 0;
         margin-right: 0px;
     }
 
-    ::v-deep .edit_userinfo_diglog > .el-dialog__body {
+    :deep(.edit_userinfo_diglog) > .el-dialog__body {
         padding: 0;
         border-radius: 4px;
     }
 
-    ::v-deep .login_diglog > .el-dialog__header {
+    :deep(.login_diglog) > .el-dialog__header {
         background: #f2f2f2;
         margin: 0;
     }
 
-    ::v-deep .personal_setting_card > .el-dialog__header {
+    :deep(.personal_setting_card) > .el-dialog__header {
         background: #f2f2f2;
         margin: 0;
     }

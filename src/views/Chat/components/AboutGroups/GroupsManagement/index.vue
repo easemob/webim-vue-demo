@@ -92,7 +92,7 @@ const save = () => {
 </template>
 
 <style lang="scss" scoped>
-::v-deep .el-dialog > .el-dialog__body {
+:deep(.el-dialog) > .el-dialog__body {
     padding: 0;
 }
 </style>

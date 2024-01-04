@@ -111,7 +111,7 @@ const resetTheModalStatus = () => {
     height: 40px;
 }
 
-::v-deep .addFriends_input > .el-input__wrapper {
+:deep(.addFriends_input) > .el-input__wrapper {
     border-radius: 5px;
 }
 

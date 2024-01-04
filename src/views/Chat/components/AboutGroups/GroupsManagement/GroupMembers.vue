@@ -384,7 +384,7 @@ defineExpose({ saveHandleMembers })
     height: 36px;
 }
 
-::v-deep .el-input__prefix {
+:deep(.el-input__prefix) {
     margin-left: 3px;
 }
 

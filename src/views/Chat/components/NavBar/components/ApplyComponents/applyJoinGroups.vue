@@ -147,7 +147,7 @@ const resetTheModalStatus = () => {
     height: 40px;
 }
 
-::v-deep .applyJoinGoups_input > .el-input__wrapper {
+:deep(.applyJoinGoups_input) > .el-input__wrapper {
     border-radius: 5px;
 }
 </style>

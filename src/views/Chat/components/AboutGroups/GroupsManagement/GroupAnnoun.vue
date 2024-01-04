@@ -94,7 +94,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-::v-deep .el-textarea__inner {
+:deep(.el-textarea__inner) {
     border-radius: 5px;
 }
 </style>

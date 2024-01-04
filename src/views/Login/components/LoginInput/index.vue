@@ -186,7 +186,7 @@ const startCountDown = () => {
     padding: 0 16px;
 }
 
-::v-deep .el-input__inner {
+:deep(.el-input__inner) {
     padding: 0 20px;
     font-style: normal;
     font-weight: 400;
@@ -207,16 +207,16 @@ const startCountDown = () => {
     }
 }
 
-::v-deep .el-input__suffix-inner {
+:deep(.el-input__suffix-inner) {
     font-size: 20px;
     margin-right: 15px;
 }
 
-::v-deep .el-form-item__error {
+:deep(.el-form-item__error) {
     margin-left: 16px;
 }
 
-::v-deep .el-input-group__append {
+:deep(.el-input-group__append) {
     background: linear-gradient(90deg, #04aef0 0%, #5a5dd0 100%);
     width: 60px;
     color: #fff;

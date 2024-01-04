@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage,ElNotification } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { createImageCode, fetchAuthCode, registerUser } from '@/api/register'
 /* emits */
@@ -16,21 +16,46 @@ const registerValue = reactive({
 const rules = reactive({
     username: [
         { required: true, message: '请输入注册ID', trigger: 'blur' },
-        { min: 1, max: 20, message: '注册ID应>1,<20', trigger: ['blur', 'change'] },
-        { pattern: /^\w+$/, message: '由数字、26个英文字母或者下划线组成的注册ID', trigger: ['blur', 'change'] }
+        {
+            min: 1,
+            max: 20,
+            message: '注册ID应>1,<20',
+            trigger: ['blur', 'change']
+        },
+        {
+            pattern: /^\w+$/,
+            message: '由数字、26个英文字母或者下划线组成的注册ID',
+            trigger: ['blur', 'change']
+        }
     ],
     password: [
-        { required: true, message: '请输入注册密码', trigger: ['blur', 'change'] },
+        {
+            required: true,
+            message: '请输入注册密码',
+            trigger: ['blur', 'change']
+        }
     ],
     phoneNumber: [
         { required: true, message: '请输入手机号', trigger: 'blur' },
-        { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: ['blur', 'change'] }
+        {
+            pattern: /^1[3-9]\d{9}$/,
+            message: '请输入正确的手机号',
+            trigger: ['blur', 'change']
+        }
     ],
     imageCode: [
-        { required: true, message: '请输入图片验证码', trigger: ['blur', 'change'] },
+        {
+            required: true,
+            message: '请输入图片验证码',
+            trigger: ['blur', 'change']
+        }
     ],
     smsCode: [
-        { required: true, message: '请输入短信验证码', trigger: ['blur', 'change'] },
+        {
+            required: true,
+            message: '请输入短信验证码',
+            trigger: ['blur', 'change']
+        }
     ]
 })
 
@@ -52,11 +77,9 @@ const sendImageCode = async () => {
             imageCodeInfo.imgUrl = `${window.location.protocol}//a1.easemob.com/inside/app/image/${data.image_id}`
             imageCodeInfo.imageId = data.image_id
         }
-
     } catch (error) {
         ElMessage.error('图片验证码获取失败请稍后重试！')
     }
-
 }
 onMounted(() => {
     sendImageCode()
@@ -81,23 +104,23 @@ const sendMessageAuthCode = async () => {
             handleSDKErrorNotifi(code, errorInfo)
         }
     }
-
 }
 const startCountDown = () => {
     isSenedAuthCode.value = true
     let timer = null
     timer = setInterval(() => {
-        if (authCodeNextCansendTime.value <= 60 && authCodeNextCansendTime.value > 0) {
+        if (
+            authCodeNextCansendTime.value <= 60 &&
+            authCodeNextCansendTime.value > 0
+        ) {
             authCodeNextCansendTime.value--
-        }
-        else {
+        } else {
             clearInterval(timer)
             timer = null
             authCodeNextCansendTime.value = 60
             isSenedAuthCode.value = false
         }
     }, 1000)
-
 }
 
 /* 发起注册 */
@@ -117,7 +140,7 @@ const registerIM = async (formEl) => {
                     title: 'Easemob',
                     message: '注册成功！',
                     center: true,
-                    type: 'success',
+                    type: 'success'
                 })
                 //通知改变为登陆模式
                 emits('changeToLogin')
@@ -127,7 +150,6 @@ const registerIM = async (formEl) => {
                     handleSDKErrorNotifi(code, errorInfo)
                 }
             }
-
         }
     })
 }
@@ -136,21 +158,44 @@ const registerIM = async (formEl) => {
 <template>
     <el-form ref="registerFormEl" :model="registerValue" :rules="rules">
         <el-form-item prop="username">
-            <el-input class="login_input_style" v-model="registerValue.username" placeholder="请输入用户名"  clearable/>
+            <el-input
+                class="login_input_style"
+                v-model="registerValue.username"
+                placeholder="请输入用户名"
+                clearable
+            />
         </el-form-item>
         <el-form-item prop="password">
-            <el-input class="login_input_style" type="password" v-model="registerValue.password" placeholder="请输入注册密码"
-                show-password />
+            <el-input
+                class="login_input_style"
+                type="password"
+                v-model="registerValue.password"
+                placeholder="请输入注册密码"
+                show-password
+            />
         </el-form-item>
         <el-form-item prop="phoneNumber">
-            <el-input class="login_input_style" v-model="registerValue.phoneNumber" placeholder="请输入手机号" clearable>
+            <el-input
+                class="login_input_style"
+                v-model="registerValue.phoneNumber"
+                placeholder="请输入手机号"
+                clearable
+            >
                 <template #prepend>+86</template>
             </el-input>
         </el-form-item>
         <el-form-item prop="imageCode">
-            <el-input class="login_input_style" v-model="registerValue.imageCode" placeholder="请输入右侧图片验证码">
+            <el-input
+                class="login_input_style"
+                v-model="registerValue.imageCode"
+                placeholder="请输入右侧图片验证码"
+            >
                 <template #append>
-                    <el-image @click="changeImageCode" class="auth_code" :src="imageCodeInfo.imgUrl">
+                    <el-image
+                        @click="changeImageCode"
+                        class="auth_code"
+                        :src="imageCodeInfo.imgUrl"
+                    >
                         <template #placeholder>
                             <span>加载中...</span>
                         </template>
@@ -159,10 +204,22 @@ const registerIM = async (formEl) => {
             </el-input>
         </el-form-item>
         <el-form-item prop="smsCode">
-            <el-input class="login_input_style" v-model="registerValue.smsCode" placeholder="请输入短信验证码">
+            <el-input
+                class="login_input_style"
+                v-model="registerValue.smsCode"
+                placeholder="请输入短信验证码"
+            >
                 <template #append>
-                    <el-button type="primary" :disabled="isSenedAuthCode" @click="sendMessageAuthCode"
-                        v-text="isSenedAuthCode ? `${authCodeNextCansendTime}s后重新获取` : '获取验证码'"></el-button>
+                    <el-button
+                        type="primary"
+                        :disabled="isSenedAuthCode"
+                        @click="sendMessageAuthCode"
+                        v-text="
+                            isSenedAuthCode
+                                ? `${authCodeNextCansendTime}s后重新获取`
+                                : '获取验证码'
+                        "
+                    ></el-button>
                 </template>
             </el-input>
         </el-form-item>
@@ -172,7 +229,6 @@ const registerIM = async (formEl) => {
             </div>
         </el-form-item>
     </el-form>
-
 </template>
 
 <style lang="scss" scoped>
@@ -189,7 +245,7 @@ const registerIM = async (formEl) => {
         border: none;
         font-weight: 300;
         font-size: 17px;
-        color: #F4F4F4;
+        color: #f4f4f4;
 
         &:active {
             background: linear-gradient(90deg, #0b83b2 0%, #363df4 100%);
@@ -204,14 +260,14 @@ const registerIM = async (formEl) => {
     padding: 0 16px;
 }
 
-::v-deep .el-input__inner {
+:deep(.el-input__inner) {
     padding: 0 20px;
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
     line-height: 20px;
     letter-spacing: 1.75px;
-    color: #3A3A3A;
+    color: #3a3a3a;
 
     &::placeholder {
         font-family: 'PingFang SC';
@@ -224,15 +280,15 @@ const registerIM = async (formEl) => {
         letter-spacing: 1.75px;
         text-transform: uppercase;
 
-        color: #CCCCCC;
+        color: #cccccc;
     }
 }
-::v-deep .el-form-item__error{
-    margin-left:16px;
+:deep(.el-form-item__error) {
+    margin-left: 16px;
 }
-::v-deep .el-input__suffix-inner {
-  font-size: 20px;
-  margin-right: 15px;
+:deep(.el-input__suffix-inner) {
+    font-size: 20px;
+    margin-right: 15px;
 }
 .login_text {
     font-family: 'PingFang SC';
@@ -245,13 +301,13 @@ const registerIM = async (formEl) => {
     .login_text_isuserid {
         display: inline-block;
         // width: 100px;
-        color: #F9F9F9;
+        color: #f9f9f9;
     }
 
     .login_text_tologin {
         margin-right: 20px;
         width: 80px;
-        color: #05B5F1;
+        color: #05b5f1;
         cursor: pointer;
 
         &:hover {

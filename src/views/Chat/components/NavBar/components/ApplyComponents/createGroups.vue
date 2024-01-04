@@ -344,7 +344,7 @@ defineExpose({ handleRenderFiendList })
 </template>
 
 <style lang="scss" scoped>
-::v-deep .search_friend_input > .el-input__wrapper {
+:deep(.search_friend_input) > .el-input__wrapper {
     background: #f7f7f7;
     box-shadow: none;
 }
@@ -454,11 +454,11 @@ defineExpose({ handleRenderFiendList })
 }
 
 /* 改掉当前组件 el-form-item的部分默认样式 */
-::v-deep .el-form-item__content {
+:deep(.el-form-item__content) {
     justify-content: flex-end;
 }
 
-::v-deep .create_groups > .el-input__wrapper {
+:deep(.create_groups) > .el-input__wrapper {
     border-radius: 5px;
     height: 40px;
 }

@@ -129,7 +129,7 @@ const informDetail = computed(() => {
 }
 
 /* 修改el-collapse 的一部分默认样式 */
-::v-deep .el-collapse-item__header {
+:deep(.el-collapse-item__header) {
     padding: 0 8px;
     font-family: 'PingFang SC';
     font-style: normal;
@@ -140,7 +140,7 @@ const informDetail = computed(() => {
     color: #333333;
 }
 
-::v-deep .el-collapse-item__content {
+:deep(.el-collapse-item__content) {
     padding: 0;
 }
 

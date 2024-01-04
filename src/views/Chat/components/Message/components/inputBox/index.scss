@@ -55,7 +55,7 @@
 }
 
 /* loading svg大小调整 */
-::v-deep .circular {
+:deep(.circular) {
     margin-top: 8px;
     width: 25px;
     height: 25px;

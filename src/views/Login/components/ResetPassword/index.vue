@@ -330,7 +330,7 @@ const submitNewPassword = (formEl) => {
     padding: 0 16px;
 }
 
-::v-deep .el-input__inner {
+:deep(.el-input__inner) {
     padding: 0 20px;
     font-style: normal;
     font-weight: 400;
@@ -349,17 +349,16 @@ const submitNewPassword = (formEl) => {
 
         letter-spacing: 1.75px;
         text-transform: uppercase;
-
         color: #cccccc;
     }
 }
 
-::v-deep .el-input__suffix-inner {
+:deep(.el-input__suffix-inner) {
     font-size: 20px;
     margin-right: 15px;
 }
 
-::v-deep .el-form-item__error {
+:deep(.el-form-item__error) {
     margin-left: 16px;
 }
 

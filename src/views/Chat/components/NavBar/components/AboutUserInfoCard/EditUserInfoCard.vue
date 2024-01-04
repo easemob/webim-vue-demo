@@ -418,12 +418,12 @@ defineExpose({
     }
 }
 
-::v-deep .input_style > .el-input__wrapper {
+:deep(.input_style) > .el-input__wrapper {
     border-radius: 5px;
     box-shadow: none;
 }
 
-::v-deep .textarea_style > .el-textarea__inner {
+:deep(.textarea_style) > .el-textarea__inner {
     border-radius: 5px;
     // box-shadow: none;
 }

@@ -277,8 +277,8 @@ const toChatMessage = () => {
     }
 }
 
-//干掉原有样式里面的竖线
-::v-deep .el-page-header__left::after {
+//干掉原有样式里面的横线
+:deep(.el-page-header__left)::after {
     width: 0px !important;
 }
 </style>
