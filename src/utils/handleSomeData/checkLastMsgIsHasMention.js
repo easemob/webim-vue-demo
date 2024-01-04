@@ -3,6 +3,7 @@ import { EMClient } from '@/IM'
 const { SESSION_MESSAGE_TYPE, CHAT_TYPE, ALL_MESSAGE_TYPE, CUSTOM_TYPE } =
     messageType
 export default function (toDoUpdateMsg, toDoUpdateConversation) {
+    if (!toDoUpdateMsg) return
     const { ext, type, from } = toDoUpdateMsg
     const EM_AT_LIST = 'em_at_list'
     //当前要更新会话状态如果已为提及则不做处理仍返回true

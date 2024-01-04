@@ -45,6 +45,8 @@ const Conversation = {
             if (_index > -1) {
                 state.conversationListFromLocal.splice(_index, 1)
                 state.conversationListFromLocal.unshift(conversationItem)
+            } else {
+                state.conversationListFromLocal.unshift(conversationItem)
             }
         },
         //删除某条会话
@@ -265,10 +267,11 @@ const Conversation = {
                         pageSize: 50,
                         cursor: ''
                     })
-                    result?.data &&
+                    if (result.data.length) {
                         commit('GET_CONVERSATION_LIST_FROM_LOCAL', [
                             ...result.data
                         ])
+                    }
                 }
             } catch (error) {
                 console.log('>>>>>>>>从本地获取会话列表失败', error)
@@ -283,6 +286,7 @@ const Conversation = {
                     conversationId,
                     conversationType: chatType
                 })
+                console.log('result', result)
                 let toBeUpdateConversationItem = { ...result?.data }
                 //检查更新的lastmsg中是否包含提及
                 const isMention = toBeUpdateConversationItem?.customField
@@ -302,6 +306,10 @@ const Conversation = {
                     customField: customField
                 })
                 toBeUpdateConversationItem.customField = { ...customField }
+                console.log(
+                    'toBeUpdateConversationItem',
+                    toBeUpdateConversationItem
+                )
                 commit('UPDATE_CONVERSATION_LIST_FROM_LOCAL', {
                     ...toBeUpdateConversationItem
                 })
