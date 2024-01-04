@@ -11,22 +11,9 @@ const { CHAT_TYPE } = messageType
 const Conversation = {
     state: {
         informDetail: [],
-        conversationListData: {},
         conversationListFromLocal: []
     },
     mutations: {
-        //初始化会话列表的数据（根据登陆的id取其对应的会话数据）
-        INIT_CONVERSATION_STATE: (state) => {
-            const storageId = EMClient.user
-            state.informDetail = useLocalStorage(
-                `EASEIM_${storageId}_INFORM`,
-                []
-            )
-            state.conversationListData = useLocalStorage(
-                `EASEIM_${storageId}_conversationList`,
-                {}
-            )
-        },
         //清空系统通知
         CLEAR_INFORM_LIST: (state) => {
             state.informDetail = []
@@ -90,17 +77,6 @@ const Conversation = {
             console.log('>>>>>执行清除卡片未读', index)
             state.informDetail[index].untreated = 0
         },
-        //清除会话未读状态
-        CLEAR_UNREAD_STATUS: (state, index) => {
-            console.log('>>>>>>>执行清除会话未读状态', index)
-            state.conversationListData[index].unreadMessageNum = 0
-        },
-        //更新会话未读状态
-        UPDATE_UNREAD_STATUS: (state, index) => {
-            console.log('>>>>>>>执行更新会话未读状态', index)
-            state.conversationListData[index].unreadMessageNum++
-        },
-        //更新会话@状态
         //更改卡片消息的按钮状态
         UPDATE_INFORM_BTNSTATUS: (state, { index: index, btnStatus }) => {
             console.log('>>>>触发了按钮更新状态', index, btnStatus)

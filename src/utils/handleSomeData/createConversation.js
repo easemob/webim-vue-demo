@@ -86,7 +86,7 @@ export default function (corresMessage) {
     //根据传入的消息进入会话列表进行查询
     const findIncludesConversation = (msgBody) => {
         const localConversationList =
-            store.state.Conversation.conversationListData
+            store.state.Conversation.conversationListFromLocal
         const listKey = setMessageKey(msgBody)
         //不存在则创建
         if (!localConversationList[listKey]) {
@@ -96,7 +96,7 @@ export default function (corresMessage) {
         //存在则更新
         else if (localConversationList && localConversationList[listKey]) {
             const theData = _.cloneDeep(
-                store.state.Conversation.conversationListData[listKey]
+                store.state.Conversation.conversationListFromLocal[listKey]
             )
             const updatedCoversation = buildConversationItem(
                 'update',
