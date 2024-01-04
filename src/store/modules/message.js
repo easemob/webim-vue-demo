@@ -144,23 +144,20 @@ const Message = {
                 const errorCallback = (error) => {
                     reject(error)
                 }
-                const options = createMessage.createOptions(
+                const options = createMessage().createOptions(
                     params,
                     errorCallback
                 )
                 const msg = EMClient.Message.create(options)
                 EMClient.send(msg)
                     .then((res) => {
-                        const { serverMsgId } = res
+                        const { message } = res
                         console.log('>>>>发送成功', res)
-                        msg.id = serverMsgId
-                        msg.from = EMClient.user
-                        const msgBody = createMessage.createMsgBody(msg)
-                        commit('UPDATE_MESSAGE_LIST', msgBody)
+                        commit('UPDATE_MESSAGE_LIST', message)
                         // 提示会话列表更新
                         dispatch('updateLocalConversation', {
-                            conversationId: msgBody.to,
-                            chatType: msgBody.chatType
+                            conversationId: message.to,
+                            chatType: message.chatType
                         })
                         resolve('OK')
                     })
