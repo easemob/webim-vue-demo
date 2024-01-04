@@ -81,10 +81,12 @@ const handleLastMsgNickName = computed(() => {
             lastMessage
         } = conversationItem
         const { from } = lastMessage || {}
-        if (conversationType === CHAT_TYPE.GROUP) {
-            const userInfoFromGroupNickname =
-                groupsInfos[groupId]?.groupMemberInfo?.[from]?.nickName
-            const friendUserInfoNickname = friendList[from]?.nickname
+        const userInfoFromGroupNickname =
+            groupsInfos[groupId]?.groupMemberInfo?.[from]?.nickName
+        const friendUserInfoNickname = friendList[from]?.nickname
+        if (!from || from === loginUserId.value) {
+            return '我：'
+        } else {
             return `${
                 userInfoFromGroupNickname || friendUserInfoNickname || from
             }：`
