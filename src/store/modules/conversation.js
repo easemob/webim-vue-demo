@@ -13,7 +13,8 @@ const { CHAT_TYPE } = messageType
 const Conversation = {
     state: {
         informDetail: [],
-        conversationListData: {}
+        conversationListData: {},
+        conversationListFromLocal: []
     },
     mutations: {
         //初始化会话列表的数据（根据登陆的id取其对应的会话数据）
@@ -47,13 +48,19 @@ const Conversation = {
             toBeUpdateInform.unshift(informBody)
             state.informDetail = toBeUpdateInform
         },
-        //更新已有会话
-        UPDATE_CONVERSATION_LIST: (state, payload) => {
-            console.log('>>>>>>>开始更新会话', payload)
-            const sortedData = sortConversation(
-                _.assign(_.cloneDeep(state.conversationListData), payload)
+        //获取会话列表
+        GET_CONVERSATION_LIST_FROM_LOCAL: (state, payload) => {
+            state.conversationListFromLocal = payload
+        },
+        //更新本地缓存的会话列表数据
+        UPDATE_CONVERSATION_LIST_FROM_LOCAL: (state, conversationItem) => {
+            const _index = state.conversationListFromLocal.findIndex(
+                (c) => c.conversationId === conversationItem.conversationId
             )
-            state.conversationListData = sortedData
+            if (_index > -1) {
+                state.conversationListFromLocal.splice(_index, 1)
+                state.conversationListFromLocal.unshift(conversationItem)
+            }
         },
         //删除某条会话
         DELETE_ONE_CONVERSATION: (state, key) => {
@@ -82,7 +89,6 @@ const Conversation = {
             console.log('>>>>>执行清除卡片未读', index)
             state.informDetail[index].untreated = 0
         },
-
         //清除会话未读状态
         CLEAR_UNREAD_STATUS: (state, index) => {
             console.log('>>>>>>>执行清除会话未读状态', index)
@@ -269,13 +275,53 @@ const Conversation = {
             //memberPresence 群成员加入群组需要进行群组人数+1操作。
             // commit('UPDATE_GROUP_INFOS',{})
         },
-
+        //从本地加载会话列表数据
+        getConversationListFromLocal: async ({ commit }, params) => {
+            try {
+                const result = await EMClient.localCache.getLocalConversations()
+                console.log('>>>>>>>>从本地获取会话列表成功', result)
+                if (result.data.length) {
+                    commit('GET_CONVERSATION_LIST_FROM_LOCAL', [...result.data])
+                } else {
+                    //默认只取50条远端数据数据，实际可自行加载更多。
+                    const result = await EMClient.getServerConversations({
+                        pageSize: 50,
+                        cursor: ''
+                    })
+                    result?.data &&
+                        commit('GET_CONVERSATION_LIST_FROM_LOCAL', [
+                            ...result.data
+                        ])
+                }
+            } catch (error) {
+                console.log('>>>>>>>>从本地获取会话列表失败', error)
+            }
+        },
+        //更新会话列表
+        updateLocalConversation: async ({ dispatch, commit }, params) => {
+            const { conversationId, chatType } = params
+            console.log('conversationId', conversationId, chatType)
+            try {
+                const result = await EMClient.localCache.getLocalConversation({
+                    conversationId,
+                    conversationType: chatType
+                })
+                commit('UPDATE_CONVERSATION_LIST_FROM_LOCAL', {
+                    ...result.data
+                })
+            } catch (error) {
+                console.log('>>>>>>>获取本地会话更新失败', error)
+            }
+        },
         //收集会话依赖数据
         gatherConversation: ({ commit }, key) => {
             const corresMessage = _.cloneDeep(Message.state.messageList[key])
             const res = createConversation(corresMessage)
             commit('UPDATE_CONVERSATION_LIST', res)
         }
+    },
+    getters: {
+        conversationListFromLocal: (state) => state.conversationListFromLocal
     }
 }
 export default Conversation

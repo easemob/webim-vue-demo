@@ -3,7 +3,7 @@ import { messageType } from '@/constant'
 import { setMessageKey } from '@/utils/handleSomeData'
 import store from '@/store'
 export const imReviceMessageListener = () => {
-    const { CHANGE_MESSAGE_BODAY_TYPE } = messageType
+    const { CHANGE_MESSAGE_BODAY_TYPE, CHAT_TYPE } = messageType
     //接收的消息往store中push
     const pushNewMessage = (message) => {
         store.dispatch('createNewMessage', message)
@@ -15,16 +15,21 @@ export const imReviceMessageListener = () => {
         //单对单的撤回to必然为登陆的用户id，群组发起撤回to必然为群组id 所以key可以这样来区分群组或者单人。
         const key = to === EMClient.user ? from : to
         console.log('>>>>>收到他人撤回', key)
+        const chatType =
+            to === EMClient.user ? CHAT_TYPE.SINGLE : CHAT_TYPE.GROUP
         store.commit('CHANGE_MESSAGE_BODAY', {
             type: CHANGE_MESSAGE_BODAY_TYPE.RECALL,
             key,
             mid
         })
-        store.dispatch('gatherConversation', key)
+        store.dispatch('updateLocalConversation', {
+            conversationId: key,
+            chatType
+        })
     }
     //收到消息修改指令
     const otherModifyMessage = (message) => {
-        const { from, to, id: mid } = message
+        const { from, to, id: mid, chatType } = message
         //单对单的撤回to必然为登陆的用户id，群组发起撤回to必然为群组id 所以key可以这样来区分群组或者单人。
         if (!to) return
         const key = to === EMClient.user ? from : to
@@ -34,7 +39,10 @@ export const imReviceMessageListener = () => {
             mid,
             message
         })
-        store.dispatch('gatherConversation', key)
+        store.dispatch('updateLocalConversation', {
+            conversationId: key,
+            chatType
+        })
     }
     const mountReviceMessageEventListener = () => {
         /* message 相关监听 */

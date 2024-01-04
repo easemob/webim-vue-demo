@@ -95,7 +95,10 @@ const Message = {
             commit('UPDATE_MESSAGE_LIST', params)
             //目前根据全局配置进行新消息声音提示，后续计划根据会话级别可进行设置是否声音提示，比如设定免打扰。
             if (isOpenPlayRing.value) playRing()
-            dispatch('gatherConversation', key)
+            dispatch('updateLocalConversation', {
+                conversationId: key,
+                chatType: params.chatType
+            })
         },
         //获取历史消息
         getHistoryMessage: async ({ state, dispatch, commit }, params) => {
@@ -122,7 +125,10 @@ const Message = {
                         })
                         if (!state.messageList[id]) {
                             //提示会话列表更新
-                            dispatch('gatherConversation', id)
+                            dispatch('updateLocalConversation', {
+                                conversationId: id,
+                                chatType: chatType
+                            })
                         }
                     })
                     .catch((error) => {
@@ -152,7 +158,10 @@ const Message = {
                         const msgBody = createMessage.createMsgBody(msg)
                         commit('UPDATE_MESSAGE_LIST', msgBody)
                         // 提示会话列表更新
-                        dispatch('gatherConversation', msgBody.to)
+                        dispatch('updateLocalConversation', {
+                            conversationId: msgBody.to,
+                            chatType: msgBody.chatType
+                        })
                         resolve('OK')
                     })
                     .catch((error) => {
@@ -175,7 +184,10 @@ const Message = {
             const key = setMessageKey(params)
             console.log('>>>>>>添加系统消息', params)
             commit('UPDATE_MESSAGE_LIST', msgBody)
-            dispatch('gatherConversation', key)
+            dispatch('updateLocalConversation', {
+                conversationId: key,
+                chatType: msgBody.chatType
+            })
         },
         //删除消息
         removeMessage: ({ dispatch, commit }, params) => {
@@ -193,7 +205,10 @@ const Message = {
                             key: key,
                             mid
                         })
-                        dispatch('gatherConversation', key)
+                        dispatch('updateLocalConversation', {
+                            conversationId: key,
+                            chatType
+                        })
                         resolve('OK')
                     })
                     .catch((error) => {
@@ -212,7 +227,10 @@ const Message = {
                             key: to,
                             mid
                         })
-                        dispatch('gatherConversation', to)
+                        dispatch('updateLocalConversation', {
+                            conversationId: to,
+                            chatType
+                        })
                         resolve('OK')
                     })
                     .catch((error) => {
@@ -244,7 +262,10 @@ const Message = {
                             mid,
                             message
                         })
-                        dispatch('gatherConversation', to)
+                        dispatch('updateLocalConversation', {
+                            conversationId: to,
+                            chatType
+                        })
                         resolve(res)
                     })
                     .catch((e) => {

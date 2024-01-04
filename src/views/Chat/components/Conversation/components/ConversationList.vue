@@ -7,6 +7,8 @@ import _ from 'lodash'
 import { useRouter, useRoute } from 'vue-router'
 /* 头像相关 */
 import informIcon from '@/assets/images/avatar/inform.png'
+import defaultAvatar from '@/assets/images/avatar/theme2x.png'
+import defaultGroupAvatar from '@/assets/images/avatar/jiaqun2x.png'
 /* route */
 const route = useRoute()
 /* router */
@@ -32,44 +34,59 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
 
 //取会话数据
 const conversationList = computed(() => {
-    return store.state.Conversation.conversationListData
+    return store.getters.conversationListFromLocal
 })
 
 //处理会话name
 const handleConversationName = computed(() => {
-    return (item) => {
-        if (item.conversationType === CHAT_TYPE.SINGLE) {
-            const friend = friendList.value[item.conversationKey]
-            return friend?.nickname || item.conversationInfo.name
+    return (conversationItem) => {
+        const { conversationType, conversationId } = conversationItem
+        if (conversationType === CHAT_TYPE.SINGLE) {
+            const friend = friendList.value[conversationId]
+            return friend?.nickname || conversationId
         }
-        if (item.conversationType === CHAT_TYPE.GROUP) {
-            const group = joinedGroupList.value[item.conversationKey]
+        if (conversationType === CHAT_TYPE.GROUP) {
+            const group = joinedGroupList.value[conversationId]
             if (group?.groupDetail) {
                 return group.groupDetail.name
             } else if (group?.groupname) {
                 return group.groupname
             }
         }
-        return item.conversationKey
+        return conversationId
+    }
+})
+//处理会话头像
+const handleConversationAvatar = computed(() => {
+    return (conversationItem) => {
+        const { conversationType, conversationId } = conversationItem
+        if (conversationType === CHAT_TYPE.SINGLE) {
+            const friend = friendList.value[conversationId]
+            return friend?.avatarurl || defaultAvatar
+        }
+        //群组暂使用默认群头像
+        if (conversationType === CHAT_TYPE.GROUP) {
+            return defaultGroupAvatar
+        }
     }
 })
 //处理lastmsg的from昵称
 const handleLastMsgNickName = computed(() => {
     const friendList = store.state.Contacts.friendList
     const groupsInfos = store.state.Groups.groupsInfos
-    return (conversation) => {
+    return (conversationItem) => {
         const {
-            conversationKey: groupId,
+            conversationId: groupId,
             conversationType,
-            fromInfo
-        } = conversation
-        const { fromId } = fromInfo || {}
+            lastMessage
+        } = conversationItem
+        const { from } = lastMessage || {}
         if (conversationType === CHAT_TYPE.GROUP) {
             const userInfoFromGroupNickname =
-                groupsInfos[groupId]?.groupMemberInfo?.[fromId]?.nickName
-            const friendUserInfoNickname = friendList[fromId]?.nickname
+                groupsInfos[groupId]?.groupMemberInfo?.[from]?.nickName
+            const friendUserInfoNickname = friendList[from]?.nickname
             return `${
-                userInfoFromGroupNickname || friendUserInfoNickname || fromId
+                userInfoFromGroupNickname || friendUserInfoNickname || from
             }：`
         }
     }
@@ -82,21 +99,22 @@ const networkStatus = computed(() => {
 const emit = defineEmits(['toInformDetails', 'toChatMessage'])
 //普通会话
 const checkedConverItemIndex = ref(null)
-const toChatMessage = (item, itemKey, index) => {
+const toChatMessage = (conversationItem, index) => {
     checkedConverItemIndex.value = index
-    if (item && item.unreadMessageNum > 0)
-        store.commit('CLEAR_UNREAD_NUM', itemKey)
-    if (item.isMention) store.commit('CLEAR_AT_STATUS', itemKey)
+    const { conversationId, unReadCount, conversationType } = conversationItem
+    if (unReadCount > 0) store.commit('CLEAR_UNREAD_NUM', conversationId)
+    if (conversationItem.isMention)
+        store.commit('CLEAR_AT_STATUS', conversationId)
     //跳转至对应的消息界面
-
-    emit('toChatMessage', itemKey, item.conversationType)
+    emit('toChatMessage', conversationId, conversationType)
 }
 //删除某条会话
-const deleteConversation = (itemKey) => {
-    console.log('选中的会话key', itemKey, route.query)
-    store.commit('DELETE_ONE_CONVERSATION', itemKey)
+const deleteConversation = (conversationItem) => {
+    const { conversationId } = conversationItem
+    console.log('选中的会话key', conversationId, route.query)
+    store.commit('DELETE_ONE_CONVERSATION', conversationId)
     //如果删除的itemKey与当前的message会话页的id一致则跳转至会话默认页。
-    if (route?.query?.id && route.query.id === itemKey) {
+    if (route?.query?.id && route.query.id === conversationId) {
         router.push('/chat/conversation')
     }
 }
@@ -153,11 +171,11 @@ const deleteConversation = (itemKey) => {
             </div>
         </li>
         <!-- 普通会话 -->
-        <template v-if="Object.keys(conversationList).length > 0">
+        <template v-if="conversationList.length > 0">
             <li
-                v-for="(item, itemKey, index) in conversationList"
-                :key="itemKey"
-                @click="toChatMessage(item, itemKey, index)"
+                v-for="(item, index) in conversationList"
+                :key="item.conversationId"
+                @click="toChatMessage(item, index)"
                 :style="{
                     background:
                         checkedConverItemIndex === index ? '#E5E5E5' : ''
@@ -176,16 +194,7 @@ const deleteConversation = (itemKey) => {
                                 <div class="session_other_avatar">
                                     <el-avatar
                                         :size="34"
-                                        :src="
-                                            friendList[item.conversationKey] &&
-                                            friendList[item.conversationKey]
-                                                .avatarurl
-                                                ? friendList[
-                                                      item.conversationKey
-                                                  ].avatarurl
-                                                : item.conversationInfo
-                                                      .avatarUrl
-                                        "
+                                        :src="handleConversationAvatar(item)"
                                     >
                                     </el-avatar>
                                 </div>
@@ -207,7 +216,7 @@ const deleteConversation = (itemKey) => {
                                         "
                                         >{{ handleLastMsgNickName(item) }}</span
                                     >
-                                    {{ item.latestMessage.msg }}
+                                    {{ item.lastMessage?.msg }}
                                 </div>
                             </div>
                             <div class="item_body item_right">
@@ -236,7 +245,7 @@ const deleteConversation = (itemKey) => {
                     <template #default>
                         <div
                             class="session_list_delete"
-                            @click="deleteConversation(itemKey)"
+                            @click="deleteConversation(item)"
                         >
                             删除会话
                         </div>
