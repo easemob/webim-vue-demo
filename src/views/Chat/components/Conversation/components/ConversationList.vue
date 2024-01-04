@@ -15,7 +15,8 @@ const route = useRoute()
 const router = useRouter()
 /* store */
 const store = useStore()
-const { CHAT_TYPE } = messageType
+const { CHAT_TYPE, SESSION_MESSAGE_TYPE, ALL_MESSAGE_TYPE, CUSTOM_TYPE } =
+    messageType
 //登录用户ID
 const loginUserId = computed(() => store.state.loginUserInfo.hxId)
 //取系统通知数据
@@ -93,6 +94,28 @@ const handleLastMsgNickName = computed(() => {
         }
     }
 })
+//处理lastmsg预览内容
+const handleLastMsgContent = computed(() => {
+    return (msgBody) => {
+        const { type, msg } = msgBody
+        let resultContent = ''
+        //如果消息类型，在预设非展示文本类型中，就返回预设值
+        if (SESSION_MESSAGE_TYPE[type]) {
+            resultContent = SESSION_MESSAGE_TYPE[type]
+        } else if (type === ALL_MESSAGE_TYPE.CUSTOM) {
+            //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
+            if (msgBody.customEvent) {
+                ;(CUSTOM_TYPE[msgBody.customEvent] &&
+                    (resultContent = CUSTOM_TYPE[msgBody.customEvent])) ||
+                    ''
+            }
+        } else {
+            resultContent = msg
+        }
+        return resultContent
+    }
+})
+
 //取网络状态
 const networkStatus = computed(() => {
     return store.state.networkStatus
@@ -224,7 +247,7 @@ const deleteConversation = (conversationItem) => {
                                         "
                                         >{{ handleLastMsgNickName(item) }}</span
                                     >
-                                    {{ item.lastMessage?.msg }}
+                                    {{ handleLastMsgContent(item.lastMessage) }}
                                 </div>
                             </div>
                             <div class="item_body item_right">
