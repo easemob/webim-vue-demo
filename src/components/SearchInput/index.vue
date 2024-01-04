@@ -1,8 +1,8 @@
 <script setup>
-import { ref, toRaw, watch, defineProps, defineEmits } from 'vue'
+import { ref, toRaw, watch, computed, defineProps, defineEmits } from 'vue'
 import { EMClient } from '@/IM'
 import { Search } from '@element-plus/icons-vue'
-import { useLocalStorage } from '@vueuse/core'
+import { useLocalStorage, onKeyStroke } from '@vueuse/core'
 import _ from 'lodash'
 import { onClickOutside } from '@vueuse/core'
 import { messageType } from '@/constant'
@@ -10,7 +10,8 @@ import dateFormater from '@/utils/dateFormater'
 /* 单人头像 */
 import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png'
-const { CHAT_TYPE } = messageType
+const { CHAT_TYPE, SESSION_MESSAGE_TYPE, ALL_MESSAGE_TYPE, CUSTOM_TYPE } =
+    messageType
 const props = defineProps({
     searchType: {
         type: String,
@@ -34,30 +35,20 @@ const searchHistory = useLocalStorage(
 )
 //点击非搜索部分关闭页面
 const searchBox = ref(null)
+const suuggestInputComps = ref(null)
 onClickOutside(searchBox, () => (isShowResultContent.value = false))
 //筛选出来的搜索建议
-const searchSuggest = ref({})
+const searchSuggest = ref([])
 //搜索相匹配的值
 const querySearch = () => {
     console.log('>>>>>>>>触发搜索')
     if (inputValue.value) {
         //搜索会话 conversation
-        //todo 后续计划在会话数据结构中加keywords字段 通过keywords字段实现更多条件的搜索
         if (props.searchType === 'conversation') {
-            const resObj = {}
-            const resultList = _.filter(props.searchData, (o) =>
-                o.conversationInfo.name.includes(inputValue.value)
-            )
-            resultList.length > 0 &&
-                resultList.forEach((item) => {
-                    if (resObj[item.conversationType]) {
-                        resObj[item.conversationType].push(item)
-                    } else {
-                        resObj[item.conversationType] = []
-                        resObj[item.conversationType].push(item)
-                    }
-                })
-            searchSuggest.value = resObj
+            const resultList = _.filter(props.searchData, (o) => {
+                return o.conversationId.indexOf(inputValue.value) > -1
+            })
+            searchSuggest.value = resultList
         }
         //搜索联系人 contacts
         if (props.searchType === 'contacts') {
@@ -86,9 +77,31 @@ const querySearch = () => {
     }
     //监听输入框为空字符串的时候置空搜索建议
     watch(inputValue, (newVal) => {
-        if (newVal === '') searchSuggest.value = {}
+        if (newVal === '') searchSuggest.value = []
     })
 }
+//处理lastmsg预览内容
+const handleLastMsgContent = computed(() => {
+    return (msgBody) => {
+        console.log('first msgBody', msgBody)
+        const { type, msg } = msgBody
+        let resultContent = ''
+        //如果消息类型，在预设非展示文本类型中，就返回预设值
+        if (SESSION_MESSAGE_TYPE[type]) {
+            resultContent = SESSION_MESSAGE_TYPE[type]
+        } else if (type === ALL_MESSAGE_TYPE.CUSTOM) {
+            //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
+            if (msgBody.customEvent) {
+                ;(CUSTOM_TYPE[msgBody.customEvent] &&
+                    (resultContent = CUSTOM_TYPE[msgBody.customEvent])) ||
+                    ''
+            }
+        } else {
+            resultContent = msg
+        }
+        return resultContent
+    }
+})
 //点击历史记录通知对应类型的不同的组件跳转 例如 通知会话部分 通知联系人部分
 const clickHistoryItem = (historyItem) => {
     console.log('>>>>>>>>>触发跳转', historyItem)
@@ -119,29 +132,25 @@ const emitConversation = (fromType, item) => {
     }
     if (fromType === 1) {
         const searchItem = {
-            label: item.conversationInfo.name,
-            value: item.conversationKey,
+            label: item.conversationId,
+            value: item.conversationId,
             chatType: item.conversationType
         }
         const _rawSearchHistory = _.cloneDeep(toRaw(searchHistory.value))
-        console.log('searchHistory', _rawSearchHistory)
         if (_rawSearchHistory.length === 0 || _rawSearchHistory === null) {
             console.log('>>>>>>_rawSearchHistory为空是新建一条')
             searchHistory.value.unshift(searchItem)
-        }
-        if (_rawSearchHistory.length > 0) {
+        } else {
             console.log('>>>>>>_rawSearchHistory不为空时开始筛选')
-            const _index = _rawSearchHistory.findIndex((v) => {
-                return v.value === item.conversationKey
-            })
-            if (_index === -1) {
-                searchHistory.value.unshift(searchItem)
-            } else {
+            const _index = _rawSearchHistory.findIndex(
+                (v) => v.value === item.conversationId
+            )
+            if (_index !== -1) {
                 searchHistory.value.splice(_index, 1)
-                searchHistory.value.unshift(searchItem)
             }
+            searchHistory.value.unshift(searchItem)
         }
-        emit('toChatMessage', item.conversationKey, item.conversationType)
+        emit('toChatMessage', item.conversationId, item.conversationType)
     }
     inputValue.value = ''
     searchSuggest.value = []
@@ -158,16 +167,26 @@ const emitContacts = (item) => {
         emit('toContacts', { id: item.groupid, chatType: CHAT_TYPE.GROUP })
     }
 }
+
+//监听ESC键关闭搜索会话
+const handleEscapeKey = () => {
+    inputValue.value = ''
+    searchSuggest.value = []
+    isShowResultContent.value = false
+    suuggestInputComps.value.blur()
+}
 </script>
 <template>
     <div class="search_box" ref="searchBox">
         <div>
             <el-input
+                ref="suuggestInputComps"
                 v-model.trim="inputValue"
                 placeholder="搜索"
                 @focus="isShowResultContent = true"
                 @clear="isShowResultContent = false"
                 @input="querySearch"
+                @keydown.escape="handleEscapeKey"
                 :prefix-icon="Search"
                 clearable
             />
@@ -209,90 +228,68 @@ const emitContacts = (item) => {
             </div>
             <div v-if="searchType === 'conversation'">
                 <div
-                    v-for="(serchResult, SerchKey, index) in searchSuggest"
+                    v-for="(conversationItem, index) in searchSuggest"
                     :key="index"
                 >
-                    <template v-if="SerchKey === CHAT_TYPE.SINGLE">
-                        <div class="title">联系人</div>
-                        <template
-                            v-for="item in serchResult"
-                            :key="item.fromInfo.fromId"
-                        >
-                            <div
-                                class="search_result_item"
-                                @click="emitConversation(1, item)"
-                            >
-                                <div class="item_body item_left">
-                                    <div class="session_other_avatar">
-                                        <el-avatar
-                                            :size="34"
-                                            :src="
-                                                item.conversationInfo.avatarUrl
-                                            "
-                                        ></el-avatar>
-                                    </div>
-                                </div>
-                                <div class="item_body item_main">
-                                    <div class="name">
-                                        {{ item.conversationInfo.name }}
-                                    </div>
-                                    <div class="last_msg_body">
-                                        {{ item.fromInfo.fromId }}：{{
-                                            item.latestMessage.msg
-                                        }}
-                                    </div>
-                                </div>
-                                <div class="item_body item_right">
-                                    <span class="time">{{
-                                        dateFormater(
-                                            'MM/DD/HH:mm',
-                                            item.latestSendTime
-                                        )
-                                    }}</span>
-                                </div>
+                    <div
+                        v-if="
+                            conversationItem.conversationType ===
+                            CHAT_TYPE.SINGLE
+                        "
+                        class="title"
+                    >
+                        联系人
+                    </div>
+                    <div
+                        class="title"
+                        v-if="
+                            conversationItem.conversationType ===
+                            CHAT_TYPE.GROUP
+                        "
+                    >
+                        群组
+                    </div>
+                    <div
+                        class="search_result_item"
+                        @click="emitConversation(1, conversationItem)"
+                    >
+                        <div class="item_body item_left">
+                            <div class="session_other_avatar">
+                                <el-avatar
+                                    :size="34"
+                                    :src="
+                                        conversationItem.conversationType ===
+                                        CHAT_TYPE.SINGLE
+                                            ? defaultSingleAvatar
+                                            : defaultGroupAvatarUrl
+                                    "
+                                ></el-avatar>
                             </div>
-                        </template>
-                    </template>
-                    <template v-if="SerchKey === CHAT_TYPE.GROUP">
-                        <div class="title">群组</div>
-                        <template
-                            v-for="item in serchResult"
-                            :key="item.fromInfo.fromId"
-                        >
-                            <div
-                                class="search_result_item"
-                                @click="emitConversation(1, item)"
-                            >
-                                <div class="item_body item_left">
-                                    <div class="session_other_avatar">
-                                        <el-avatar
-                                            :src="
-                                                item.conversationInfo.avatarUrl
-                                            "
-                                        ></el-avatar>
-                                    </div>
-                                </div>
-                                <div class="item_body item_main">
-                                    <div class="name">
-                                        {{ item.conversationInfo.name }}
-                                    </div>
-                                    <div class="last_msg_body">
-                                        {{ item.fromInfo.fromId }}：{{
-                                            item.latestMessage.msg
-                                        }}
-                                    </div>
-                                </div>
-                                <div class="item_body item_right">
-                                    <span class="time">{{
-                                        dateFormater(
-                                            'MM/DD/HH:mm',
-                                            item.latestSendTime
-                                        )
-                                    }}</span>
-                                </div>
+                        </div>
+                        <div class="item_body item_main">
+                            <div class="name">
+                                {{ conversationItem.conversationId }}
                             </div>
-                        </template>
-                    </template>
+                            <div
+                                v-if="conversationItem.lastMessage"
+                                class="last_msg_body"
+                            >
+                                {{
+                                    handleLastMsgContent(
+                                        conversationItem.lastMessage
+                                    )
+                                }}
+                            </div>
+                        </div>
+                        <div class="item_body item_right">
+                            <span class="time">{{
+                                dateFormater(
+                                    'MM/DD/HH:mm',
+                                    conversationItem?.lastMessage?.time
+                                )
+                            }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div v-if="searchType === 'contacts'">
