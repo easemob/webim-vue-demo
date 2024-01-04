@@ -19,6 +19,5 @@ if (Object.keys(miniCore).length) {
     miniCore.usePlugin(groupPlugin)
     miniCore.usePlugin(presencePlugin)
     miniCore.usePlugin(localCachePlugin, 'localCache')
-    console.log('>>>>>IM 插件已注册', miniCore)
 }
 export default miniCore

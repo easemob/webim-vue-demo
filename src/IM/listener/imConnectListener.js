@@ -8,7 +8,6 @@ export const imConnectListener = () => {
         const { isOpenPlayRing, clickRing } = usePlayRing()
         EMClient.addEventHandler('connection', {
             onConnected: () => {
-                console.log('>>>>>环信连接成功')
                 store.commit('CHANGE_LOGIN_STATUS', true)
                 if (isOpenPlayRing.value) clickRing()
                 fetchLoginUsersInitData()
@@ -25,7 +24,6 @@ export const imConnectListener = () => {
                 store.commit('CHANGE_NETWORK_STATUS', false)
             }, // 本机网络掉线。
             onError: (error) => {
-                console.log('on error', error)
                 handleSDKErrorNotifi(error.type, error.message)
             }
         })

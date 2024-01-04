@@ -24,7 +24,6 @@ const toInformDetails = () => {
 
 //路由跳转-对应好友会话
 const toChatMessage = (id, chatType) => {
-    console.log('>>>>>>>id', id)
     router.push({
         path: '/chat/conversation/message',
         query: {

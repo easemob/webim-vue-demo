@@ -6,7 +6,6 @@ const Groups = {
     },
     mutations: {
         SET_GORUPS_ADMINS: (state, payload) => {
-            console.log('>>>>>开始赋值群组管理员', payload)
             const { groupId, admin } = payload
             if (!state.groupsInfos[groupId]) {
                 state.groupsInfos[groupId] = {}
@@ -80,7 +79,6 @@ const Groups = {
         },
         //群组成员
         fetchGoupsMember: async ({ dispatch, commit }, params) => {
-            console.log('>>>>>>>开始拉取群组成员', params)
             //暂时定死就获取1000个
             const pageNum = 1,
                 pageSize = 1000
@@ -100,10 +98,10 @@ const Groups = {
         fetchGroupMemberAttributes: async ({ dispatch, commit }, params) => {
             const { groupId, members } = params
             const membersList = _.chunk(members, 10)
-            let requestTrack = []
+            const requestTrack = []
             membersList.forEach((list) => {
                 const goupMemberList = _.flatten(_.map(list, _.values))
-                console.log('goupMemberList', list, goupMemberList)
+
                 requestTrack.push(
                     EMClient.getGroupMembersAttributes({
                         groupId: groupId,
@@ -114,31 +112,29 @@ const Groups = {
             try {
                 const res = await Promise.all(requestTrack)
                 const groupUsersInfo = _.map(res, 'data')
-                console.log('>>>>批量获取群组成员属性成功', groupUsersInfo)
+
                 commit('SET_GROUP_MEMBERS_INFO', {
                     groupId: groupId,
                     inGroupInfo: groupUsersInfo
                 })
-            } catch (error) {
-                console.log('>>>>批量获取群组成员属性失败', error)
-            }
+            } catch (error) {}
         },
         //获取登录用户在某群的群组属性
         // fetchInTheGroupInfo: async ({ commit }, groupId) => {
-        //     console.log('>>>>>>>开始拉取群组信息', groupId)
+        //
         //     try {
         //         const { data: inGroupInfo } =
         //             await EMClient.getGroupMemberAttributes({
         //                 groupId: groupId,
         //                 userId: EMClient.user
         //             })
-        //         console.log('>>>>>>拉取群组信息成功', inGroupInfo)
+        //
         //         commit('SET_LOGINUSER_GROUP_INFO', {
         //             groupId: groupId,
         //             inGroupInfo: inGroupInfo
         //         })
         //     } catch (error) {
-        //         console.log('>>>>>获取当前登录用户群组属性失败', error)
+        //
         //     }
 
         //     // commit('SET_GROUP_INFOS', {
@@ -148,7 +144,6 @@ const Groups = {
         // },
         //设置登录用户在某群的群组属性
         setInTheGroupInfo: async ({ commit }, params) => {
-            console.log('>>>>>>>开始拉取群组信息', params)
             const { groupId, nickName } = params
             try {
                 await EMClient.setGroupMemberAttributes({
@@ -162,9 +157,7 @@ const Groups = {
                     groupId: groupId,
                     inGroupInfo: [{ [EMClient.user]: { nickName } }]
                 })
-            } catch (error) {
-                console.log('>>>>>获取当前登录用户群组属性失败', error)
-            }
+            } catch (error) {}
         },
 
         //获取群公告
@@ -190,7 +183,6 @@ const Groups = {
         },
         //群禁言列表
         fetchGoupsMuteList: async ({ dispatch, commit }, params) => {
-            console.log('>>>>>>>成功触发拉取禁言列表', params)
             try {
                 const { data } = await EMClient.getGroupMuteList({
                     groupId: params
@@ -199,9 +191,7 @@ const Groups = {
                     groupId: params,
                     mutelist: data
                 })
-            } catch (error) {
-                console.log('>>>>禁言接口获取失败', error)
-            }
+            } catch (error) {}
         },
         // 修改群名或者群详情
         modifyGroupInfo: async ({ dispatch, commit }, params) => {
@@ -257,7 +247,6 @@ const Groups = {
                     type: 'success'
                 })
             } catch (error) {
-                console.log('>>>>群组邀请失败', error)
                 ElMessage({
                     message: '群组邀请失败，请稍后重试~',
                     type: 'error'
@@ -283,7 +272,6 @@ const Groups = {
                     message: '该群成员移出失败，请稍后重试！',
                     type: 'error'
                 })
-                console.log('<<>>>>>>>>移出失败', error)
             }
         },
         //添加用户到黑名单
@@ -307,7 +295,6 @@ const Groups = {
                 //通知更新群详情
                 dispatch('getAssignGroupDetail', groupId)
             } catch (error) {
-                console.log('>>>>>error', error)
                 ElMessage({
                     message: '黑名单添加失败，请稍后重试~',
                     type: 'error'
@@ -326,7 +313,6 @@ const Groups = {
                 //重新获取黑名单列表
                 dispatch('fetchGoupsBlackList', groupId)
             } catch (error) {
-                console.log('>>>>>>黑名单移除失败')
                 ElMessage({
                     message: '黑名单移除失败，请稍后重试~',
                     type: 'error'
@@ -335,7 +321,6 @@ const Groups = {
         },
         //添加用户到禁言列表
         addMemberToMuteList: async ({ dispatch }, params) => {
-            console.log('>>>>>>调用了禁言操作', params)
             const { groupId, usernames } = params
             //todo 此处处理方式为并发请求多次，后续SDK将支持传入数组形式，实现禁言多人
             const requestTrack = []
@@ -398,7 +383,6 @@ const Groups = {
                     type: 'error'
                 })
             }
-            console.log('>>>>>>调用了移出禁言操作', params)
         },
         //退出群组
         leaveIntheGroup: async ({ commit }, params) => {
@@ -425,7 +409,7 @@ const Groups = {
             if (!params.groupId) return
             const { groupId } = params
             return new Promise((resolve, reject) => {
-                let option = {
+                const option = {
                     groupId: groupId
                 }
                 EMClient.destroyGroup(option)

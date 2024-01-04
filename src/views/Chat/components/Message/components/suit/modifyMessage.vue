@@ -73,7 +73,7 @@ const initModifyMessage = (msgBody) => {
     nextTick(() => {
         if (msgBody) {
             const { id, msg, to, chatType } = msgBody
-            // console.log('>>>>>>', id, msg, to, chatType)
+            //
             editMessageContent.msg = msg
             editMessageContent.to = to
             editMessageContent.id = id

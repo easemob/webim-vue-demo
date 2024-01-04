@@ -1,5 +1,4 @@
 export default function parseDownloadResponse(response) {
-    console.log('response', response)
     return (response &&
         response.type &&
         response.type === 'application/json') ||

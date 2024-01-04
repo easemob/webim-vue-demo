@@ -10,11 +10,10 @@ export const imReviceMessageListener = () => {
     }
     //收到他人的撤回指令
     const otherRecallMessage = (message) => {
-        console.log('>>>>>收到他人撤回', message)
         const { from, to, mid } = message
         //单对单的撤回to必然为登陆的用户id，群组发起撤回to必然为群组id 所以key可以这样来区分群组或者单人。
         const key = to === EMClient.user ? from : to
-        console.log('>>>>>收到他人撤回', key)
+
         const chatType =
             to === EMClient.user ? CHAT_TYPE.SINGLE : CHAT_TYPE.GROUP
         store.commit('CHANGE_MESSAGE_BODAY', {
@@ -48,8 +47,6 @@ export const imReviceMessageListener = () => {
         /* message 相关监听 */
         EMClient.addEventHandler('messageListen', {
             onTextMessage: function (message) {
-                console.log('>>>>>>>App mesage', message)
-                console.log('setMessageKey', setMessageKey(message))
                 pushNewMessage(message)
             }, // 收到文本消息。
             onEmojiMessage: function (message) {
@@ -58,9 +55,7 @@ export const imReviceMessageListener = () => {
             onImageMessage: function (message) {
                 pushNewMessage(message)
             }, // 收到图片消息。
-            onCmdMessage: function (message) {
-                console.log('>>>>>收到命令消息', message)
-            }, // 收到命令消息。
+            onCmdMessage: function (message) {}, // 收到命令消息。
             onAudioMessage: function (message) {
                 pushNewMessage(message)
             }, // 收到音频消息。
@@ -80,7 +75,6 @@ export const imReviceMessageListener = () => {
                 otherRecallMessage(message)
             }, // 收到消息撤回回执。
             onModifiedMessage: function (message) {
-                console.log('>>>>>收到修改消息', message)
                 otherModifyMessage(message)
             }
         })

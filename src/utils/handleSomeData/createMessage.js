@@ -5,7 +5,6 @@ const { ALL_MESSAGE_TYPE } = messageType
 export default function createMessage() {
     //创建消息options
     const createOptions = ({ msgType, msgOptions }, errorCallback) => {
-        console.log('>>>msgType, msgOptions', msgType, msgOptions)
         const theMessageOptions = {
             [ALL_MESSAGE_TYPE.TEXT]: {
                 chatType: msgOptions.chatType, // 会话类型，设置为单聊。
@@ -28,17 +27,14 @@ export default function createMessage() {
                 onFileUploadError: (error) => {
                     // 消息上传失败。
                     errorCallback(error)
-                    console.log('onFileUploadError', error)
 
                     //TO DO 4.10.0版本修复上传文件失败不从error中抛出问题
                 },
                 onFileUploadProgress: (progress) => {
                     // 上传进度的回调。
-                    console.log(progress)
                 },
                 onFileUploadComplete: function (res) {
                     // 消息上传成功。
-                    console.log('onFileUploadComplete', res)
                 }
             },
             [ALL_MESSAGE_TYPE.FILE]: {
@@ -54,17 +50,15 @@ export default function createMessage() {
                     } || {},
                 onFileUploadError: function (error) {
                     errorCallback(error)
-                    console.log('>>>>>onFileUploadError>>>>>')
-                    // console.log('onFileUploadError');
+
+                    //
                     // 消息上传失败。
                 },
                 onFileUploadProgress: function (progress) {
                     // 上传进度的回调。
-                    console.log(progress)
                 },
                 onFileUploadComplete: function () {
                     // 消息上传成功。
-                    console.log('onFileUploadComplete')
                 }
             },
             [ALL_MESSAGE_TYPE.AUDIO]: {
@@ -81,15 +75,12 @@ export default function createMessage() {
                 onFileUploadError: function (error) {
                     // 消息上传失败。
                     errorCallback(error)
-                    console.log('onFileUploadError')
                 },
                 onFileUploadProgress: function (progress) {
                     // 上传进度的回调。
-                    console.log(progress)
                 },
                 onFileUploadComplete: function () {
                     // 消息上传成功。
-                    console.log('onFileUploadComplete')
                 }
             },
             [ALL_MESSAGE_TYPE.CUSTOM]: {

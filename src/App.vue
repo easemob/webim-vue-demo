@@ -14,7 +14,6 @@ mountAllEMListener()
 const EASEIM_loginUser = window.localStorage.getItem('EASEIM_loginUser')
 const loginUserFromStorage = JSON.parse(EASEIM_loginUser) || {}
 const handleRelogin = async () => {
-    console.log('重新登陆')
     try {
         await EMClient.open({
             username: loginUserFromStorage.user,
@@ -26,7 +25,6 @@ const handleRelogin = async () => {
             message: '登录成功'
         })
     } catch (error) {
-        console.log('>>>>error>>>>', error)
         ElMessage({
             type: 'error',
             center: true,
@@ -42,12 +40,10 @@ const easeCallKit = ref(null)
 const inviteCallComp = ref(null)
 //多人会议使用-弹出邀请模态框
 const showModal = ({ groupId }) => {
-    console.log('可以弹出邀请框', groupId)
     inviteCallComp.value.alertDialog(groupId)
 }
 //多人会议使用-传递给邀请组件发送邀请消息
 const sendMulitInviteMsg = (targetIMId) => {
-    console.log('targetIMIdtargetIMIdtargetIMId', targetIMId)
     const callType = 2
     easeCallKit.value.inMultiChanelSendInviteMsg(targetIMId, callType)
 }

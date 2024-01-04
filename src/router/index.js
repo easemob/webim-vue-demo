@@ -3,12 +3,12 @@ import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
 import store from '@/store'
 import Login from '../views/Login'
-console.log(store.state.loginState)
+
 const routes = [
     {
         path: '/',
         name: 'login',
-        component: Login,
+        component: Login
     },
     /* 登陆页 */
     {
@@ -16,8 +16,8 @@ const routes = [
         name: 'Login',
         component: () => import('../views/Login'),
         meta: {
-            title: '登陆环信',
-        },
+            title: '登陆环信'
+        }
     },
     /* 聊天页 */
     {
@@ -26,7 +26,7 @@ const routes = [
         redirect: '/chat/conversation',
         component: () => import('../views/Chat'),
         meta: {
-            title: '开始聊天',
+            title: '开始聊天'
         },
         children: [
             /* 会话列表 */
@@ -35,21 +35,24 @@ const routes = [
                 name: 'Conversation',
                 meta: {
                     title: '会话',
-                    requiresAuth: true,
+                    requiresAuth: true
                 },
-                component: () => import('../views/Chat/components/Conversation'),
+                component: () =>
+                    import('../views/Chat/components/Conversation'),
                 children: [
                     //系统通知详情框
                     {
                         path: 'informdetails',
-                        component: () => import('../views/Chat/components/InformDetails'),
+                        component: () =>
+                            import('../views/Chat/components/InformDetails')
                     },
                     //聊天对话框
                     {
                         path: 'message',
-                        component: () => import('../views/Chat/components/Message'),
-                    },
-                ],
+                        component: () =>
+                            import('../views/Chat/components/Message')
+                    }
+                ]
             },
             /* 联系人页 */
             {
@@ -57,36 +60,38 @@ const routes = [
                 name: 'Contacts',
                 meta: {
                     title: '联系页',
-                    requiresAuth: true,
+                    requiresAuth: true
                 },
                 component: () => import('../views/Chat/components/Contacts'),
                 children: [
                     {
                         path: 'message',
 
-                        component: () => import('../views/Chat/components/Message'),
+                        component: () =>
+                            import('../views/Chat/components/Message')
                     },
                     //系统通知详情框
                     {
                         path: 'informdetails',
-                        component: () => import('../views/Chat/components/InformDetails'),
+                        component: () =>
+                            import('../views/Chat/components/InformDetails')
                     },
                     {
                         path: 'contactInfo',
                         component: () =>
                             import(
                                 '../views/Chat/components/Contacts/components/contactInfo.vue'
-                            ),
-                    },
-                ],
-            },
-        ],
-    },
+                            )
+                    }
+                ]
+            }
+        ]
+    }
 ]
 
 const router = createRouter({
     history: createWebHistory(process.env.BASE_URL),
-    routes,
+    routes
 })
 router.beforeEach((to, from, next) => {
     NProgress.start()
@@ -94,7 +99,7 @@ router.beforeEach((to, from, next) => {
     const EASEIM_loginUser = window.localStorage.getItem('EASEIM_loginUser')
     const loginUserFromStorage = JSON.parse(EASEIM_loginUser) || {}
     if (to.matched.some((record) => record.meta.requiresAuth)) {
-    //需要登陆
+        //需要登陆
         if (loginUserFromStorage.user && loginUserFromStorage.accessToken) {
             //token存在，放行
             next()

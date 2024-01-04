@@ -45,7 +45,6 @@ watch(
     () => route.query.id,
     () => {
         if (route.query.chatType === CHAT_TYPE.SINGLE) {
-            console.log('>>>>>监听变化赋值黑名单状态', isInBlackList.value)
             blackStatus.value = isInBlackList.value
         }
     }
@@ -54,7 +53,6 @@ watch(
 const changeBlackStatus = async () => {
     switchStatus.value = true
     if (blackStatus.value && route.query.id) {
-        console.log('>>>>>移除黑明单')
         // 当前 removeUserFromBlackList 以及 addUsersToBlacklist 暂不支持promise 返回所以暂时获取不到其请求状态。
         EMClient.removeUserFromBlocklist({
             name: [route.query.id]
@@ -62,7 +60,6 @@ const changeBlackStatus = async () => {
         blackStatus.value = false
         switchStatus.value = false
     } else {
-        console.log('>>>>加入黑名单')
         EMClient.addUsersToBlocklist({
             name: [route.query.id]
         })
@@ -76,7 +73,6 @@ const changeBlackStatus = async () => {
 
 /* 单人删除好友 */
 const delTheFriend = () => {
-    console.log('>>>>>>>删除好友')
     if (!route.query.id) return
     const targetId = route.query.id
     EMClient.deleteContact(targetId)
@@ -85,7 +81,6 @@ const delTheFriend = () => {
 
 /* 进入会话 */
 const toChatMessage = () => {
-    console.log('>>>>>>>...route.query')
     router.push({
         path: '/chat/conversation/message',
         query: {

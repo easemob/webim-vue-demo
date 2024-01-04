@@ -38,7 +38,7 @@ export default function (fromType, informContnet) {
     }
     if (fromType === INFORM_FROM.GROUP) {
         let informBody = {}
-        console.log('>>>>>收到了群组事件', informContnet)
+
         const { operation, from, to, id } = informContnet
         //收到群组邀请加入通知
         if (operation === 'inviteToJoin') {

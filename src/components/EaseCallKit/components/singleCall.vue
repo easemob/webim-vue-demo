@@ -94,7 +94,6 @@ CallKitClient = AgoraRTC.createClient({ mode: 'live', codec: 'h264' })
 CallKitClient.setClientRole('host')
 //媒体设备检查
 const checkMediaDevice = async (callType) => {
-    console.log('%c开启媒体检查', 'color:green')
     const eventParams = {
         type: {},
         ext: {},
@@ -109,7 +108,6 @@ const checkMediaDevice = async (callType) => {
             eventParams.ext.message = '未发现音频输入设备，请检查麦克风'
             PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
         }
-        console.log('getMicrophones devices', devices)
     }
     if (callType === CALL_TYPES.SINGLE_VIDEO) {
         const devices = await AgoraRTC.getCameras()
@@ -126,26 +124,21 @@ const checkMediaDevice = async (callType) => {
             eventParams.ext.message = '未发现音频输入设备，请检查麦克风'
             PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams })
         }
-        console.log('getCameras devices', devices, devices2)
     }
 }
 //Agora listenner
 const setAgoraRtcListener = () => {
-    console.log('>>>>>AgoraRtc监听挂载完毕')
     //监听用户发布流
     CallKitClient.on('user-published', async (user, mediaType) => {
         await CallKitClient.subscribe(user, mediaType)
         if (mediaType === 'video') {
-            console.log('>>>>>>视频类型')
             const remoteVideoTrack = user.videoTrack
-            console.log('remoteVideoTrack', remoteVideoTrack)
+
             setTimeout(() => {
                 remoteVideoTrack.play(mainContainer.value)
-                console.log('%c 远端流已播放', 'color:green')
             }, 300)
         }
         if (mediaType === 'audio') {
-            console.log('>>>>>>音视类型')
             const remoteAudioTrack = user.audioTrack
             // Play the remote audio track. No need to pass any DOM element.
             remoteAudioTrack.play()
@@ -153,17 +146,13 @@ const setAgoraRtcListener = () => {
     })
     //监听用户关闭推流
     CallKitClient.on('user-unpublished', (user, mediaType) => {
-        console.log('>>>>>>监听到流移除', user, mediaType)
         if (mediaType === 'video') {
-            console.log('>>>>>取消发布了视频流')
         }
         if (mediaType === 'audio') {
-            console.log('>>>>>>取消发布了音频流')
         }
     })
     //监听用户离开回调
     CallKitClient.on('user-left', (user, reason) => {
-        console.log('>>>>>>用户离开回调触发,离开原因', reason)
         leaveChannel(false)
     })
 }
@@ -177,7 +166,6 @@ onMounted(() => {
 watch(
     () => callKitStatus.value.localClientStatus,
     (newVal, oldVal) => {
-        console.log('>>>>>>> single组件监听是否可加入房间', newVal, oldVal)
         if (newVal === CALLSTATUS.confirmCallee) {
             emitChannelToken()
         }
@@ -190,7 +178,6 @@ watch(
 //通知获取频道token
 const emitChannelToken = () => {
     const callback = async () => {
-        console.log('>>>>触发了子组件的callback')
         await joinChannel()
     }
     emits('getAgoraRtcToken', callback)
@@ -202,7 +189,7 @@ const startInChannelTimer = () => {
     inChannelTimer.value && clearInterval(inChannelTimer.value)
     inChannelTimer.value = setInterval(() => {
         timeCount.value++
-        // console.log('%c通话计时开启中...', 'color:green', timeCount);
+        //
     }, 1000)
 }
 const formatTime = computed(() => {
@@ -229,7 +216,7 @@ const joinChannel = async () => {
             agoraChannelToken,
             agoraUserId
         )
-        console.log('>>>>加入频道成功')
+
         //开启房间通话计时
         startInChannelTimer()
         localVoiceTrack = await AgoraRTC.createMicrophoneAudioTrack()
@@ -239,7 +226,6 @@ const joinChannel = async () => {
         if (callType === CALL_TYPES.SINGLE_VOICE) {
             localVoiceTrack && (await CallKitClient.publish(localVoiceTrack))
             handleLocalStreamPublish('voice')
-            console.log('%c---本地轨道音频推流成功', 'color:green')
         }
         if (callType === CALL_TYPES.SINGLE_VIDEO) {
             if (localVoiceTrack && localVideoTrack)
@@ -248,13 +234,11 @@ const joinChannel = async () => {
                 localVideoTrack.play(smallContainer.value)
             }, 300)
             handleLocalStreamPublish('allPlay')
-            console.log('%c---本地轨道音频以及视频推流成功', 'color:green')
         }
         isStreamPlay.value = true
     } catch (error) {
         localVoiceTrack && localVoiceTrack.close()
         localVideoTrack && localVideoTrack.close()
-        console.log('%c>>>>加入频道失败', 'color:red', error)
     }
 }
 //取消呼叫
@@ -264,7 +248,6 @@ const cancelCall = () => {
 }
 //离开频道【挂断&对方挂断】
 const leaveChannel = async (isHangUp) => {
-    console.log('》》》》》挂断')
     await CallKitClient.leave()
     //leaveType 主动挂断发送cannel信令
     if (isHangUp) {
@@ -305,7 +288,6 @@ const changeStreamContainer = () =>
     (defaultStreamContainerClass.value = !defaultStreamContainerClass.value)
 //组件卸载
 onBeforeUnmount(() => {
-    console.log('>>>>>>监听到组件卸载')
     localVoiceTrack && localVoiceTrack.close()
     localVideoTrack && localVideoTrack.close()
     //清除通话计时

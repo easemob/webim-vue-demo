@@ -8,7 +8,6 @@ import {
 // 读取自定义配置（因demo需要自定义配置，非必须）
 const webimConfig = window.localStorage.getItem('webimConfig')
 const CUSTOM_CONFIG = (webimConfig && JSON.parse(webimConfig)) || {}
-console.log('>>>>>>webimConfig', CUSTOM_CONFIG)
 
 //存放实例化后所有的方法
 // let EaseIMClient = {};
@@ -33,5 +32,5 @@ const EaseChatClient = new EaseChatSDK.connection({
 })
 //向EaseChatClient下添加构建消息方法。
 EaseChatClient.Message = EaseChatSDK.message
-console.log('EaseChatClient', EaseChatClient)
+
 export { EaseChatSDK, EaseChatClient }

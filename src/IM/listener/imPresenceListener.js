@@ -8,7 +8,6 @@ export const imPresenceListener = () => {
     const mountPresenceEventListener = () => {
         EMClient.addEventHandler('presenceStatusChange', {
             onPresenceStatusChange: (status) => {
-                console.log('>>>>>presenceStatusChange', status)
                 getUserPresence(...status)
             }
         })

@@ -46,28 +46,25 @@ const rules = reactive({
 })
 const alertReportMsgModal = (msgBody) => {
     const msg = Object.assign({}, msgBody)
-    console.log('>>>>调用弹出', msgBody)
+
     if (msg.id) {
         reportMessageForm.mid = msg.id
-        console.log('reportMessageForm.mid', reportMessageForm.mid)
+
         dialogVisible.value = true
     }
 }
 const reportMsgForm = ref(null)
 const confimReportMessage = (formEl) => {
-    console.log('formEl', formEl)
     if (!formEl) return
     formEl.validate(async (valid) => {
         if (valid) {
-            console.log('submit!')
             try {
-                console.log('confimReportMessage', reportMessageForm.mid)
                 const params = {
                     reportType: reportMessageForm.reportType, // 举报类型。
                     reportReason: reportMessageForm.reportReason, // 举报原因。
                     messageId: reportMessageForm.mid.toString() // 消息 ID
                 }
-                console.log('>>>>>>要传入的举报参数', params)
+
                 await EMClient.reportMessage({ ...params })
                 cannelReport(formEl)
                 ElMessage({
@@ -76,7 +73,6 @@ const confimReportMessage = (formEl) => {
                     center: true
                 })
             } catch (error) {
-                console.log('举报error', error)
                 ElMessage({
                     type: 'error',
                     message: '举报失败！',

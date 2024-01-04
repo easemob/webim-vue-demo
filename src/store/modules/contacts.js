@@ -49,12 +49,10 @@ const Contacts = {
                         groupDetail: data
                     }
                 }
-                console.log('>>>>>补充群详情', data)
             }
         },
         //示例优化方向--减少群组详情的调用，转为更新本地群组详情数据
         UPDATE_GROUP_INFOS: (state, payload) => {
-            console.log('>>>>>>开始修改', payload)
             const { groupId, type, params } = payload
             //key(群id)，type（群详情对应要修改的字段）
             if (
@@ -62,39 +60,38 @@ const Contacts = {
                 state.groupList[groupId].groupDetail
             ) {
                 switch (type) {
-                    //修改群名
-                    case 'groupName':
-                        {
-                            console.log('>>>>>>进入群组名称修改')
-                            state.groupList[groupId].groupDetail.name = params
-                        }
-                        break
-                    case 'groupDescription':
-                        {
-                            state.groupList[groupId].groupDetail.description =
+                //修改群名
+                case 'groupName':
+                    {
+                        state.groupList[groupId].groupDetail.name = params
+                    }
+                    break
+                case 'groupDescription':
+                    {
+                        state.groupList[groupId].groupDetail.description =
                                 params
-                        }
-                        break
-                    case 'addAffiliationsCount':
-                        {
-                            state.groupList[
-                                groupId
-                            ].groupDetail.affiliations_count =
+                    }
+                    break
+                case 'addAffiliationsCount':
+                    {
+                        state.groupList[
+                            groupId
+                        ].groupDetail.affiliations_count =
                                 state.groupList[groupId].groupDetail
                                     .affiliations_count + 1
-                        }
-                        break
-                    case 'delAffiliationsCount':
-                        {
-                            state.groupList[
-                                groupId
-                            ].groupDetail.affiliations_count =
+                    }
+                    break
+                case 'delAffiliationsCount':
+                    {
+                        state.groupList[
+                            groupId
+                        ].groupDetail.affiliations_count =
                                 state.groupList[groupId].groupDetail
                                     .affiliations_count - 1
-                        }
-                        break
-                    default:
-                        break
+                    }
+                    break
+                default:
+                    break
                 }
             }
         },
@@ -102,11 +99,9 @@ const Contacts = {
         UPDATE_GROUP_LIST: (state, payload) => {
             const { type, groupId, groupName } = payload
             if (type === 'updateGroupName') {
-                console.log('>>>>>更新本地群组列表群名')
                 state.groupList[groupId].groupname = groupName
             }
             if (type === 'deleteFromList') {
-                console.log('>>>>>从本地群组列表中删除某个群')
                 state.groupList[groupId] && delete state.groupList[groupId]
             }
         }
@@ -142,20 +137,17 @@ const Contacts = {
         },
         //新增联系人
         onAddedNewFriend: async ({ dispatch, commit }, params) => {
-            console.log('onAddedNewFriend params', params)
             const { from: userId } = params
-            let friendData = {}
+            const friendData = {}
             friendData[userId] = { hxId: userId }
             try {
                 const newfriendInfos = await dispatch('getOtherUserInfo', [
                     userId
                 ])
-                console.log('newfriendInfos', newfriendInfos)
+
                 _.merge(friendData, newfriendInfos)
                 commit('SET_ADD_NEW_FRIEND', friendData)
-            } catch (error) {
-                console.log('>>>>新增好友数据处理失败', error)
-            }
+            } catch (error) {}
             //订阅新增联系人
             dispatch('subFriendsPresence', [userId])
         },
@@ -226,20 +218,16 @@ const Contacts = {
                 const tobeCommitRes =
                     usersPresenceList.length > 0 &&
                     usersPresenceList.filter((p) => p.uid !== '')
-                console.log('resultData', resultData)
+
                 commit('SET_FRIEND_PRESENCE', tobeCommitRes)
-            } catch (error) {
-                console.log('>>>>>>订阅失败', error)
-            }
+            } catch (error) {}
         },
         //取消订阅
         unsubFriendsPresence: async ({ commit }, user) => {
             const option = {
                 usernames: [...user]
             }
-            EMClient.unsubscribePresence(option).then((res) => {
-                console.log('>>>>>>>成功取消订阅', res)
-            })
+            EMClient.unsubscribePresence(option).then((res) => {})
         },
         //获取群组列表
         fetchGroupList: async ({ commit }, params) => {
@@ -250,7 +238,6 @@ const Contacts = {
             })
             const goupListData = _.keyBy(res.data, 'groupid')
             commit('SET_GROUP_LIST', { setType: 'init', data: goupListData })
-            console.log('>>>>>触发了拉取群组列表更新')
         },
         //获取指定群详情
         getAssignGroupDetail: async ({ dispatch, commit }, goupsId) => {
@@ -258,7 +245,7 @@ const Contacts = {
                 groupId: goupsId // 群组id
             }
             const result = await EMClient.getGroupInfo(options)
-            // console.log('>>>>>>>群详情获取成功result', result);
+            //
             result.data &&
                 commit('SET_GROUP_LIST', {
                     setType: 'replenish',

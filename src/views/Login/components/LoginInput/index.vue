@@ -51,7 +51,7 @@ const loginIM = async () => {
     //   });
     //   window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: loginValue.username, accessToken: accessToken }))
     // } catch (error) {
-    //   console.log('>>>>登陆失败', error);
+    //
     //   const { data: { extraInfo } } = error
     //   handleSDKErrorNotifi(error.type, extraInfo.errDesc);
     //   loginValue.username = '';
@@ -68,7 +68,6 @@ const loginIM = async () => {
     try {
         const res = await fetchUserLoginToken(params)
         if (res?.code === 200) {
-            console.log('>>>>>>登陆token获取成功', res.token)
             EMClient.open({
                 username: res.chatUserName.toLowerCase(),
                 accessToken: res.token
@@ -82,7 +81,6 @@ const loginIM = async () => {
             )
         }
     } catch (error) {
-        console.log('>>>>登陆失败', error)
         if (error.response?.data) {
             const { code, errorInfo } = error.response.data
             if (errorInfo.includes('does not exist.')) {

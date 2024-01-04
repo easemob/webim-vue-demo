@@ -76,12 +76,10 @@ const Conversation = {
         },
         //清除信息卡片未读
         CLEAR_UNTREATED_STATUS: (state, index) => {
-            console.log('>>>>>执行清除卡片未读', index)
             state.informDetail[index].untreated = 0
         },
         //更改卡片消息的按钮状态
         UPDATE_INFORM_BTNSTATUS: (state, { index: index, btnStatus }) => {
-            console.log('>>>>触发了按钮更新状态', index, btnStatus)
             state.informDetail[index].operationStatus = btnStatus
         }
     },
@@ -89,7 +87,7 @@ const Conversation = {
         //添加新系统通知
         createNewInform: ({ dispatch, commit }, params) => {
             const { fromType, informContent } = params
-            console.log('>>>>>>>>>createNewInform', fromType, informContent)
+
             const result = createInform(fromType, informContent)
             commit('UPDATE_INFORM_LIST', result)
 
@@ -219,7 +217,6 @@ const Conversation = {
                         break
                     case 'acceptRequest':
                         {
-                            console.log('>>>>>>>收到了群组同意加入事件')
                             setTimeout(() => {
                                 dispatch('fetchGroupList', {
                                     pageNum: 1,
@@ -230,7 +227,6 @@ const Conversation = {
                         break
                     case 'memberAttributesUpdate':
                         {
-                            console.log('>>>>>>>收到了群组成员属性更新事件')
                             informMsg.msg = `${informContent.from}修改群内昵称为【${informContent?.attributes?.nickName}】`
                             dispatch('createInformMessage', informMsg)
                             commit('SET_GROUP_MEMBERS_INFO', {
@@ -258,7 +254,7 @@ const Conversation = {
         getConversationListFromLocal: async ({ commit }, params) => {
             try {
                 const result = await EMClient.localCache.getLocalConversations()
-                console.log('>>>>>>>>从本地获取会话列表成功', result)
+
                 if (result.data.length) {
                     commit('GET_CONVERSATION_LIST_FROM_LOCAL', [...result.data])
                 } else {
@@ -273,21 +269,19 @@ const Conversation = {
                         ])
                     }
                 }
-            } catch (error) {
-                console.log('>>>>>>>>从本地获取会话列表失败', error)
-            }
+            } catch (error) {}
         },
         //更新会话列表
         updateLocalConversation: async ({ dispatch, commit }, params) => {
             const { conversationId, chatType } = params
-            console.log('conversationId', conversationId, chatType)
+
             try {
                 const result = await EMClient.localCache.getLocalConversation({
                     conversationId,
                     conversationType: chatType
                 })
-                console.log('result', result)
-                let toBeUpdateConversationItem = { ...result?.data }
+
+                const toBeUpdateConversationItem = { ...result?.data }
                 //检查更新的lastmsg中是否包含提及
                 const isMention = toBeUpdateConversationItem?.customField
                     ?.mention
@@ -306,16 +300,10 @@ const Conversation = {
                     customField: customField
                 })
                 toBeUpdateConversationItem.customField = { ...customField }
-                console.log(
-                    'toBeUpdateConversationItem',
-                    toBeUpdateConversationItem
-                )
                 commit('UPDATE_CONVERSATION_LIST_FROM_LOCAL', {
                     ...toBeUpdateConversationItem
                 })
-            } catch (error) {
-                console.log('>>>>>>>获取本地会话更新失败', error)
-            }
+            } catch (error) {}
         },
         //删除会话列表（本地以及远端）
         removeLocalConversation: async ({ dispatch, commit }, params) => {
@@ -337,14 +325,12 @@ const Conversation = {
                     conversationType
                 })
                 commit('DELETE_CONVERSATION_ITEM_FROM_LOCAL', conversationId)
-            } catch (error) {
-                console.log('>>>>>会话列表删除失败', error)
-            }
+            } catch (error) {}
         },
         //设置会话已读（发送会话已读回执。）
         clearConversationUnreadCount: async ({ dispatch, commit }, params) => {
             const { conversationId, chatType } = params
-            console.log('>>>>>>>clearConversationUnreadCount', params)
+
             const option = {
                 chatType: chatType, // 会话类型，设置为单聊。
                 type: 'channel', // 消息类型。
@@ -354,7 +340,7 @@ const Conversation = {
                 //只有发送了会话已读回执远端服务器的会话未读数才会清空。
                 const msg = EMClient.Message.create(option)
                 const res = await EMClient.send(msg)
-                console.log('>>>>>>channel ack send success', res)
+
                 //同步清空本地数据库未读数。
                 await EMClient.localCache.clearConversationUnreadCount({
                     conversationId,
@@ -362,9 +348,7 @@ const Conversation = {
                 })
                 //通知更新缓存中的会话未读数。
                 commit('CLEAR_CONVERSATION_ITEM_UNREAD_COUNT', conversationId)
-            } catch (error) {
-                console.log('>>>>>未读数清空失败', error)
-            }
+            } catch (error) {}
         },
         //清除会话@提及状态
         clearConversationMention: async ({ dispatch, commit }, params) => {
@@ -377,9 +361,7 @@ const Conversation = {
                     customField: { ...customField }
                 })
                 commit('CLEAR_CONVERSATION_ITEM_MENTION_STATUS', conversationId)
-            } catch (error) {
-                console.log('>>>>>>清除会话提及状态失败', error)
-            }
+            } catch (error) {}
         },
         //设置本地会话自定义属性
         setLocalConversationCustomAttributes: async (
@@ -393,9 +375,7 @@ const Conversation = {
                     conversationType,
                     customField: { ...customField }
                 })
-            } catch (error) {
-                console.log('>>>>>>会话自定义属性设置失败', error)
-            }
+            } catch (error) {}
         }
     },
     getters: {

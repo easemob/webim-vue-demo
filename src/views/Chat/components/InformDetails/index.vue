@@ -21,7 +21,6 @@ const clearUnread = (inform, index) => {
 }
 //清空所有通知
 const clearAllInform = () => {
-    console.log('>>>>>调用清除')
     ElMessageBox.confirm('确认清除所有系统通知?', '清除系统通知', {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
@@ -37,14 +36,12 @@ const clearAllInform = () => {
 
 //处理申请
 const handleClickBtn = ({ informData, index, type }) => {
-    console.log('handleClick', informData)
     const loginUserId = EMClient.user
     const { fromType, from } = informData
     //好友申请操作相关
     if (fromType === INFORM_FROM.FRIEND) {
         const handleFriendApply = {
             agree: () => {
-                console.log('agree')
                 EMClient.acceptContactInvite(from)
                 store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 })
             },
@@ -56,7 +53,7 @@ const handleClickBtn = ({ informData, index, type }) => {
         }
         handleFriendApply[type]()
     }
-    console.log('informData', informData.operation)
+
     //邀请群组操作相关
     if (
         fromType === INFORM_FROM.GROUP &&
@@ -111,7 +108,6 @@ const handleClickBtn = ({ informData, index, type }) => {
     ) {
         const handleGroupInvite = {
             agree: async () => {
-                console.log('>>>>>agree requestToJoin')
                 try {
                     EMClient.acceptGroupJoinRequest({
                         applicant: from,
@@ -131,7 +127,6 @@ const handleClickBtn = ({ informData, index, type }) => {
                 }
             },
             refuse: async () => {
-                console.log('>>>>>refuse requestToJoin')
                 EMClient.rejectGroupJoinRequest({
                     applicant: from,
                     groupId: informData.groupId,

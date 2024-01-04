@@ -46,14 +46,14 @@ const { getTheGroupNickNameById, getLoginNickNameById } = useGetUserMapInfo()
 const { ALL_MESSAGE_TYPE, SESSION_MESSAGE_TYPE, CHAT_TYPE } = messageType
 /* stores */
 const store = useStore()
-console.log(store.state)
+
 const loginUserInfo = computed(() => {
     return store.state.loginUserInfo
 })
 //是否开启引用展示框
 const isShowQuoteMsgBox = ref(false)
 //引用消息必传参数
-let msgQuote = reactive({
+const msgQuote = reactive({
     msgID: '', //引用消息id
     msgPreview: '', //引用消息预览
     msgSender: '', //引用消息发送人

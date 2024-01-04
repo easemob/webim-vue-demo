@@ -15,7 +15,6 @@ export const useSetEMLogConfig = () => {
     }
     const donwLoadEMLog = () => EMClient.logger.download()
     watchEffect(() => {
-        console.log('>>>>isOpenedEMLog', isOpenedEMLog.value)
         if (isOpenedEMLog.value) {
             openEMLog()
         } else {

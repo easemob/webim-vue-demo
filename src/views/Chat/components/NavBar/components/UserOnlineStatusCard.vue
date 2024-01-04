@@ -9,7 +9,6 @@ const store = useStore()
 const loginUserOnlineStatus = computed(() => store.state.loginUserOnlineStatus)
 
 const selectOnlineMode = async (statusType) => {
-    console.log('checkedStatusType', statusType)
     const option = {
         description: statusType
     }

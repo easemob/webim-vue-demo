@@ -41,7 +41,6 @@ onClickOutside(searchBox, () => (isShowResultContent.value = false))
 const searchSuggest = ref([])
 //搜索相匹配的值
 const querySearch = () => {
-    console.log('>>>>>>>>触发搜索')
     if (inputValue.value) {
         //搜索会话 conversation
         if (props.searchType === 'conversation') {
@@ -61,7 +60,6 @@ const querySearch = () => {
                     (o.groupid && o.groupid.includes(inputValue.value)) ||
                     (o.groupname && o.groupname.includes(inputValue.value))
             )
-            console.log('>>>>>>搜索给出结果', resultList)
             resultList.length > 0 &&
                 resultList.forEach((item) => {
                     const key = item.hxId ? CHAT_TYPE.SINGLE : CHAT_TYPE.GROUP
@@ -83,7 +81,6 @@ const querySearch = () => {
 //处理lastmsg预览内容
 const handleLastMsgContent = computed(() => {
     return (msgBody) => {
-        console.log('first msgBody', msgBody)
         const { type, msg } = msgBody
         let resultContent = ''
         //如果消息类型，在预设非展示文本类型中，就返回预设值
@@ -104,26 +101,19 @@ const handleLastMsgContent = computed(() => {
 })
 //点击历史记录通知对应类型的不同的组件跳转 例如 通知会话部分 通知联系人部分
 const clickHistoryItem = (historyItem) => {
-    console.log('>>>>>>>>>触发跳转', historyItem)
     if (props.searchType === 'conversation') {
         emitConversation(0, historyItem)
     }
     if (props.searchType === 'contacts') {
-        console.log('.....')
     }
 }
 //选中则通知会话组件跳转
 const emitConversation = (fromType, item) => {
-    console.log('>>>>>>fromType,item', fromType, item)
     // fromType 0 为来自历史 1 为来自搜索
     if (fromType === 0) {
         searchHistory.value.length > 0 &&
             searchHistory.value.forEach((v, index) => {
                 if (item.value === v.value) {
-                    console.log(
-                        '>> searchHistory.value[index]>>>',
-                        searchHistory.value[index]
-                    )
                     searchHistory.value.splice(index, 1)
                     searchHistory.value.unshift(item)
                 }
@@ -138,10 +128,8 @@ const emitConversation = (fromType, item) => {
         }
         const _rawSearchHistory = _.cloneDeep(toRaw(searchHistory.value))
         if (_rawSearchHistory.length === 0 || _rawSearchHistory === null) {
-            console.log('>>>>>>_rawSearchHistory为空是新建一条')
             searchHistory.value.unshift(searchItem)
         } else {
-            console.log('>>>>>>_rawSearchHistory不为空时开始筛选')
             const _index = _rawSearchHistory.findIndex(
                 (v) => v.value === item.conversationId
             )
@@ -159,7 +147,6 @@ const emitConversation = (fromType, item) => {
 
 //选中通知联系人跳转 联系人搜索暂不写入本地存储
 const emitContacts = (item) => {
-    console.log('>>>>>>联系人触发', item)
     if (item.hxId) {
         emit('toContacts', { id: item.hxId, chatType: CHAT_TYPE.SINGLE })
     }

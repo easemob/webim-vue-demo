@@ -11,13 +11,11 @@ const members = ref([])
 
 /* 弹出dialog */
 const alertDialog = (groupId) => {
-    console.log('groupIdgroupId', groupId)
     dialogVisible.value = true
     getGroupMemberList(groupId)
 }
 //获取该群对应的群成员
 const getGroupMemberList = async (groupId) => {
-    console.log('getGroupMemberList', groupId)
     if (!groupId) return
     const memberList = []
     const sourceMembers = store.state.Groups.groupsInfos[groupId]?.members || []
@@ -28,7 +26,6 @@ const getGroupMemberList = async (groupId) => {
             })
         members.value = memberList
     } else {
-        console.log('>>>>>主动获取群成员数据')
         await store.dispatch('fetchGoupsMember', groupId)
         const sourceMembers =
             store.state.Groups.groupsInfos[groupId]?.members || []

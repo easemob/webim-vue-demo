@@ -46,44 +46,44 @@ const Message = {
         CHANGE_MESSAGE_BODAY: (state, payload) => {
             const { type, key, mid } = payload
             switch (type) {
-                case CHANGE_MESSAGE_BODAY_TYPE.RECALL:
-                    {
-                        if (state.messageList[key]) {
-                            const res = _.find(
-                                state.messageList[key],
-                                (o) => o.id === mid
-                            )
-                            res.isRecall = true
-                        }
+            case CHANGE_MESSAGE_BODAY_TYPE.RECALL:
+                {
+                    if (state.messageList[key]) {
+                        const res = _.find(
+                            state.messageList[key],
+                            (o) => o.id === mid
+                        )
+                        res.isRecall = true
                     }
+                }
 
-                    break
-                case CHANGE_MESSAGE_BODAY_TYPE.DELETE:
-                    {
-                        if (state.messageList[key]) {
-                            const sourceData = state.messageList[key]
-                            const index = _.findIndex(
-                                state.messageList[key],
-                                (o) => o.id === mid
-                            )
-                            sourceData.splice(index, 1)
-                            state.messageList[key] = _.assign([], sourceData)
-                        }
+                break
+            case CHANGE_MESSAGE_BODAY_TYPE.DELETE:
+                {
+                    if (state.messageList[key]) {
+                        const sourceData = state.messageList[key]
+                        const index = _.findIndex(
+                            state.messageList[key],
+                            (o) => o.id === mid
+                        )
+                        sourceData.splice(index, 1)
+                        state.messageList[key] = _.assign([], sourceData)
                     }
-                    break
-                case CHANGE_MESSAGE_BODAY_TYPE.MODIFY:
-                    {
-                        if (state.messageList[key]) {
-                            const res = _.find(
-                                state.messageList[key],
-                                (o) => o.id === mid
-                            )
-                            _.assign(res, payload?.message)
-                        }
+                }
+                break
+            case CHANGE_MESSAGE_BODAY_TYPE.MODIFY:
+                {
+                    if (state.messageList[key]) {
+                        const res = _.find(
+                            state.messageList[key],
+                            (o) => o.id === mid
+                        )
+                        _.assign(res, payload?.message)
                     }
-                    break
-                default:
-                    break
+                }
+                break
+            default:
+                break
             }
         }
     },
@@ -152,7 +152,7 @@ const Message = {
                 EMClient.send(msg)
                     .then((res) => {
                         const { message } = res
-                        console.log('>>>>发送成功', res)
+
                         commit('UPDATE_MESSAGE_LIST', message)
                         // 提示会话列表更新
                         dispatch('updateLocalConversation', {
@@ -179,7 +179,7 @@ const Message = {
             const msgBody = _.cloneDeep(params)
             msgBody.type = ALL_MESSAGE_TYPE.INFORM
             const key = setMessageKey(params)
-            console.log('>>>>>>添加系统消息', params)
+
             commit('UPDATE_MESSAGE_LIST', msgBody)
             dispatch('updateLocalConversation', {
                 conversationId: key,
@@ -245,13 +245,12 @@ const Message = {
                     to: to,
                     chatType: chatType
                 })
-                console.log('textMessage', textMessage)
+
                 EMClient.modifyMessage({
                     messageId: mid,
                     modifiedMessage: textMessage
                 })
                     .then((res) => {
-                        console.log(res.message, 'modifiedMessage')
                         const { message } = res || {}
                         commit('CHANGE_MESSAGE_BODAY', {
                             type: CHANGE_MESSAGE_BODAY_TYPE.MODIFY,
@@ -266,7 +265,6 @@ const Message = {
                         resolve(res)
                     })
                     .catch((e) => {
-                        console.log(e)
                         reject(e)
                     })
             })

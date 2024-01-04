@@ -34,7 +34,6 @@ export default createStore({
             state.loginUserInfo = Object.assign(state.loginUserInfo, infos)
         },
         SET_LOGIN_USER_ONLINE_STATUS: (state, payload) => {
-            console.log('payload', payload)
             state.loginUserOnlineStatus = payload
         }
     },
@@ -48,7 +47,7 @@ export default createStore({
         //修改登陆用户的用户属性
         updateMyUserInfo: async ({ commit }, params) => {
             const { data } = await EMClient.updateUserInfo({ ...params })
-            console.log('>>>>>>修改成功', data)
+
             commit('SET_LOGIN_USER_INFO', data)
         },
         //处理在线状态订阅变更（包含他人的用户状态）
@@ -60,8 +59,6 @@ export default createStore({
                     statusType ? statusType : 'Unset'
                 )
             } else {
-                console.log('>>>>>>不是自己的状态')
-
                 commit('SET_FRIEND_PRESENCE', [{ ...status }])
             }
         }

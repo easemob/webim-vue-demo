@@ -58,7 +58,6 @@ watch(
             skipRouterName.value = 'conversation'
         }
         if (newPath.includes('/chat/contacts')) {
-            console.log('>>>>>存在赋值为联系人样式')
             skipRouterName.value = 'contacts'
         }
     }
@@ -91,7 +90,6 @@ onClickOutside(settingPopover, () => (isShowPopover.value = false))
 const showInputModal = (type) => {
     modalType.value = type
     settingComp.value.dialogVisible = true
-    console.log('>>>>>>跳转对应modal')
 }
 
 /* 更多操作部分more_settings */

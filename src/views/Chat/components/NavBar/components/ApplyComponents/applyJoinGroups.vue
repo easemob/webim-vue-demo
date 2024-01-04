@@ -17,10 +17,9 @@ const applyJoinGroupsForm = reactive({
 })
 //判断是否为公开群
 const getTheGroupIsPublic = async (groupId) => {
-    console.log('groupId', groupId)
     try {
         const res = await EMClient.getGroupInfo({ groupId: groupId + '' })
-        console.log('>>>>获取成功', res)
+
         if (res && res?.data && res.data[0]?.public === false) {
             Promise.resolve(false)
             return ElNotification({
@@ -32,7 +31,6 @@ const getTheGroupIsPublic = async (groupId) => {
             return Promise.resolve(true)
         }
     } catch (error) {
-        console.log('>>>>>>>获取群组信息失败', error)
         if (error.type === 17) {
             ElNotification({
                 title: '申请入群',
@@ -54,7 +52,7 @@ const joinGroups = async () => {
         })
     //如果获取到期群组详情中的public为false代表为私有群（私有群不可主动申请加入）
     const isPublic = await getTheGroupIsPublic(applyJoinGroupsForm.groupId)
-    console.log('isPublic', isPublic)
+
     if (!isPublic) return
     const options = {
         groupId: applyJoinGroupsForm.groupId + '', // 群组ID
@@ -69,7 +67,7 @@ const joinGroups = async () => {
         })
     } catch (error) {
         const { type, data, message } = error
-        console.log('>>>>>申请失败', error)
+
         if (error.data) {
             if (JSON.parse(data).error_description.includes('blacklist')) {
                 handleSDKErrorNotifi(type, 'blacklist')
@@ -79,18 +77,15 @@ const joinGroups = async () => {
                 handleSDKErrorNotifi(type, message)
             }
         } else {
-            console.log(error)
             handleSDKErrorNotifi(null, '未知错误！')
         }
     } finally {
         resetTheModalStatus()
-        console.log('>>>>执行重置表单')
     }
 }
 //监听关闭初始化form内容
 watch(dialogVisible, (newVal) => {
     if (!newVal) {
-        console.log('>>>>>监听到关闭', newVal)
         resetTheModalStatus()
     }
 })

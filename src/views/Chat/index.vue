@@ -24,7 +24,6 @@ const {
     UN_SUB_CHANNEL_ENENT
 } = useCallKitEvent()
 SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
-    console.log('%c>>>>>>订阅事件触发', 'color:blue', param)
     /* 
 事件对外抛出包含有对应的事件type，type/code 可以自行判断处理，ext字段内有对外传出的事件中文描述，可自行选择是否使用。
 */

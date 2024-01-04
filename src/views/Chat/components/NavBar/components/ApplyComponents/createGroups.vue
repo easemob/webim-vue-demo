@@ -68,13 +68,12 @@ const serachInputValue = ref('')
 const isShowSearchContent = ref(false) //控制检索内容显隐
 const searchResultList = ref([])
 const searchFriend = () => {
-    console.log('>>>>>serachInputValue.value ', serachInputValue.value === '')
     if (serachInputValue.value) {
         const resultArr = _.filter(renderFriendList.value, (v) =>
             v.keywords.includes(serachInputValue.value)
         )
         searchResultList.value = resultArr
-        console.log('>>>>>>>执行搜索', resultArr)
+
         resultArr.length > 0 && (isShowSearchContent.value = true)
     } else {
         return (isShowSearchContent.value = false)
@@ -113,7 +112,6 @@ const sourceForm = () => {
 }
 //创建群组
 const createNewGroups = async () => {
-    console.log('checkedUserArrcheckedUserArr', checkedUserArr)
     groupCreateForm.members = checkedUserArr.value
     if (groupCreateForm.groupname === '')
         return ElNotification.error('请设置群组名称！')
@@ -146,9 +144,7 @@ const createNewGroups = async () => {
         if (error && error.type && error.message) {
             const errorDesc = JSON.parse(error.message)
             handleSDKErrorNotifi(error.type, errorDesc.error_description)
-            console.log('>>>errorDesc>>>', errorDesc)
         } else {
-            console.log(error)
             handleSDKErrorNotifi(null, '未知错误')
         }
     }

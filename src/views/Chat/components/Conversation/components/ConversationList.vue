@@ -26,7 +26,7 @@ const informDetail = computed(() => {
     const untreated = _.sumBy(informDetailArr, 'untreated') || 0
     return { untreated, lastInformDeatail }
 })
-// console.log('>>>>>informDetail', informDetail.lastInformDeatail)
+//
 //取好友列表(主要使用好友下的用户属性相关)
 const friendList = computed(() => store.state.Contacts.friendList)
 
@@ -105,7 +105,7 @@ const handleLastMsgContent = computed(() => {
         } else if (type === ALL_MESSAGE_TYPE.CUSTOM) {
             //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
             if (msgBody.customEvent) {
-                ;(CUSTOM_TYPE[msgBody.customEvent] &&
+                (CUSTOM_TYPE[msgBody.customEvent] &&
                     (resultContent = CUSTOM_TYPE[msgBody.customEvent])) ||
                     ''
             }
@@ -131,7 +131,6 @@ const toChatMessage = (conversationItem, index) => {
     const { conversationId, unReadCount, customField, conversationType } =
         conversationItem
     if (unReadCount > 0) {
-        console.log('>>>>>执行清除会话未读数')
         store.dispatch('clearConversationUnreadCount', {
             conversationId: conversationId,
             chatType: conversationType
@@ -153,7 +152,7 @@ const deleteConversation = (conversationItem) => {
 }
 //加载到底拉取新数据
 // const load = () => {
-//   console.log('>>>>>加载到底');
+//
 // };
 </script>
 <template>

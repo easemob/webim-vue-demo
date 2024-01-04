@@ -6,7 +6,6 @@ const isClearStorage = ref(true)
 
 const logoutTheUser = () => {
     if (isClearStorage.value) {
-        console.log('>>>>>选择清空本地缓存')
         clearLocalStorage()
         dialogVisible.value = false
         EMClient.close()

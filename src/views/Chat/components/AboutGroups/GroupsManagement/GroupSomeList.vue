@@ -4,7 +4,7 @@ import {
     CircleClose,
     Search,
     // Star,
-    CircleCheckFilled,
+    CircleCheckFilled
 } from '@element-plus/icons-vue'
 import getArrDifference from '@/utils/getArrdifference'
 import store from '@/store'
@@ -38,12 +38,11 @@ const groupMembers = computed(() => {
 const blackMemberList = computed(() => {
     return store.state.Groups.groupsInfos[groupDetail.value.id].blacklist
 })
-console.log('blackMemberList>>>>', blackMemberList.value)
+
 //禁言列表
 const muteMemberList = computed(() => {
     return store.state.Groups.groupsInfos[groupDetail.value.id].mutelist
 })
-console.log('muteMemberList>>>', muteMemberList.value)
 
 /* 黑名单相关逻辑 */
 //群组列表
@@ -63,19 +62,26 @@ const sortedMembersList = computed(() => {
 })
 //操作群成员在黑名单中的状态变更
 const handleMembersToBlack = (item) => {
-    console.log('>>>>>>添加引入黑名单', item)
     if (item.isChecked && insideTheBlackList.value.includes(item.member)) {
-        insideTheBlackList.value.map((m, idx) => { if (m === item.member) { insideTheBlackList.value.splice(idx, 1) } })
+        insideTheBlackList.value.map((m, idx) => {
+            if (m === item.member) {
+                insideTheBlackList.value.splice(idx, 1)
+            }
+        })
         item.isChecked = false
     } else {
-        if (!insideTheBlackList.value.includes(item.member)) insideTheBlackList.value.push(item.member)
+        if (!insideTheBlackList.value.includes(item.member))
+            insideTheBlackList.value.push(item.member)
         item.isChecked = true
     }
 }
 //从黑名单列表中删除
 const deleteMembersFromBlack = (memberId, index) => {
     insideTheBlackList.value.splice(index, 1)
-    renderBlackMembers.value.map(m => { if (m.member === memberId) m.isChecked = false; return })
+    renderBlackMembers.value.map((m) => {
+        if (m.member === memberId) m.isChecked = false
+        return
+    })
 }
 //调用SDK方法改变黑名单列表
 const handleBlackFromSDK = (difArr) => {
@@ -85,7 +91,7 @@ const handleBlackFromSDK = (difArr) => {
     //待提交给SDK移除 的数组
     const toBeRemoveList = []
     //遍历difArr如果再原黑名单中存在则说明需要移出，如果不存在说明需要添加
-    difArr.forEach(member => {
+    difArr.forEach((member) => {
         if (blackMemberList.value.includes(member)) {
             toBeRemoveList.push(member)
         } else {
@@ -93,13 +99,18 @@ const handleBlackFromSDK = (difArr) => {
         }
     })
     if (toBeAddList.length > 0) {
-        store.dispatch('addMemberToBlackList', { groupId, usernames: toBeAddList })
+        store.dispatch('addMemberToBlackList', {
+            groupId,
+            usernames: toBeAddList
+        })
     }
     if (toBeRemoveList.length > 0) {
-        store.dispatch('removeTheMemberFromBlackList', { groupId, usernames: toBeRemoveList })
+        store.dispatch('removeTheMemberFromBlackList', {
+            groupId,
+            usernames: toBeRemoveList
+        })
     }
     return
-
 }
 //调用SDK方法移出黑名单
 
@@ -122,10 +133,14 @@ const sortedMuteMembersList = computed(() => {
 //操作群成员在禁言列表中的状态变更
 const handleMembersToMute = (item) => {
     const memberList = []
-    insideTheMuteList.value.map(m => memberList.push(m.user))
-    console.log('>>>>>>添加引入禁言列表', item)
+    insideTheMuteList.value.map((m) => memberList.push(m.user))
+
     if (item.isChecked && memberList.includes(item.member)) {
-        insideTheMuteList.value.map((m, idx) => { if (m.user === item.member) { insideTheMuteList.value.splice(idx, 1) } })
+        insideTheMuteList.value.map((m, idx) => {
+            if (m.user === item.member) {
+                insideTheMuteList.value.splice(idx, 1)
+            }
+        })
         item.isChecked = false
     } else {
         if (!memberList.includes(item.member)) {
@@ -137,7 +152,10 @@ const handleMembersToMute = (item) => {
 //从禁言列表中删除
 const deleteMembersFromMute = (item, index) => {
     insideTheMuteList.value.splice(index, 1)
-    renderMuteMembers.value.map(m => { if (m.member === item.user) m.isChecked = false; return })
+    renderMuteMembers.value.map((m) => {
+        if (m.member === item.user) m.isChecked = false
+        return
+    })
 }
 //调用SDK方法改变禁言列表
 const handleMuteFromSDK = (difArr, oldMuteList) => {
@@ -147,7 +165,7 @@ const handleMuteFromSDK = (difArr, oldMuteList) => {
     //待提交给SDK移除 的数组
     const toBeRemoveList = []
     //遍历difArr如果再原黑名单中存在则说明需要移出，如果不存在说明需要添加
-    difArr.forEach(member => {
+    difArr.forEach((member) => {
         if (oldMuteList.includes(member)) {
             toBeRemoveList.push(member)
         } else {
@@ -155,21 +173,22 @@ const handleMuteFromSDK = (difArr, oldMuteList) => {
         }
     })
     if (toBeAddList.length > 0) {
-        console.log('>>>>>>添加禁言', toBeAddList)
-        store.dispatch('addMemberToMuteList', { groupId, usernames: toBeAddList })
+        store.dispatch('addMemberToMuteList', {
+            groupId,
+            usernames: toBeAddList
+        })
     }
     if (toBeRemoveList.length > 0) {
-        console.log('>>>>>移出禁言', toBeRemoveList)
-        store.dispatch('removeTheMemberFromMuteList', { groupId, usernames: toBeRemoveList })
+        store.dispatch('removeTheMemberFromMuteList', {
+            groupId,
+            usernames: toBeRemoveList
+        })
     }
     return
-
 }
-
 
 /* 黑名单以及禁言共用逻辑部分 */
 onMounted(() => {
-    console.log('>>>>>组件渲染')
     //黑名单初始化数据
     if (groupModalTitle.value.type === 1) {
         renderBlackMembers.value = sortedMembersList.value
@@ -191,17 +210,20 @@ const searchUsers = () => {
     if (serachInputValue.value) {
         isShowSearchContent.value = true
         if (groupModalTitle.value.type === 1) {
-            const resultArr = _.filter(sortedMembersList.value, (v) => v.keywords.includes(serachInputValue.value))
-            return searchResultList.value = resultArr
+            const resultArr = _.filter(sortedMembersList.value, (v) =>
+                v.keywords.includes(serachInputValue.value)
+            )
+            return (searchResultList.value = resultArr)
         }
         if (groupModalTitle.value.type === 2) {
-            const resultArr = _.filter(sortedMuteMembersList.value, (v) => v.keywords.includes(serachInputValue.value))
-            return searchResultList.value = resultArr
+            const resultArr = _.filter(sortedMuteMembersList.value, (v) =>
+                v.keywords.includes(serachInputValue.value)
+            )
+            return (searchResultList.value = resultArr)
         }
     } else {
-        return isShowSearchContent.value = false
+        return (isShowSearchContent.value = false)
     }
-
 }
 
 //保存修改
@@ -209,7 +231,10 @@ const searchUsers = () => {
 const saveHandleMembers = async () => {
     if (groupModalTitle.value.type === 1) {
         //返回比对后的数组
-        const difArr = getArrDifference(insideTheBlackList.value, blackMemberList.value)
+        const difArr = getArrDifference(
+            insideTheBlackList.value,
+            blackMemberList.value
+        )
         //无差异会返回空数组
         if (difArr.length <= 0) return
         //有差异开始执行
@@ -218,15 +243,13 @@ const saveHandleMembers = async () => {
     if (groupModalTitle.value.type === 2) {
         const checkMuteList = []
         const oldMuteList = []
-        insideTheMuteList.value.map(m => checkMuteList.push(m.user))
-        muteMemberList.value.map(m => oldMuteList.push(m.user))
-        console.log('checkMuteList', checkMuteList, 'oldMuteList', oldMuteList)
+        insideTheMuteList.value.map((m) => checkMuteList.push(m.user))
+        muteMemberList.value.map((m) => oldMuteList.push(m.user))
+
         const difArr = getArrDifference(checkMuteList, oldMuteList)
-        console.log('>>>>>>待提交', difArr)
+
         return handleMuteFromSDK(difArr, oldMuteList)
     }
-
-
 }
 
 //抛出保存方法
@@ -237,33 +260,60 @@ defineExpose({ saveHandleMembers })
         <div class="taboo_left">
             <!-- 搜索栏 -->
             <div class="search_friend_box">
-                <el-input style="height: 36px;" v-model="serachInputValue" placeholder="搜索" @input="searchUsers"
-                    :prefix-icon="Search">
+                <el-input
+                    style="height: 36px"
+                    v-model="serachInputValue"
+                    placeholder="搜索"
+                    @input="searchUsers"
+                    :prefix-icon="Search"
+                >
                 </el-input>
-                <div v-if="isShowSearchContent" class="search_friend_box_content">
+                <div
+                    v-if="isShowSearchContent"
+                    class="search_friend_box_content"
+                >
                     <el-scrollbar>
-                        <div v-for="(item, index) in searchResultList" :key="item + index">
+                        <div
+                            v-for="(item, index) in searchResultList"
+                            :key="item + index"
+                        >
                             <!-- item.owner 代表是群主 列表中不展示群主只展示群成员 -->
                             <template v-if="!item.owner">
                                 <div class="friend_user_list">
                                     <div class="friend_user_list_left">
-                                        <el-avatar :src="defaultAvatar"></el-avatar>
-                                        <b class="friend_list_username">{{ item.member }}</b>
+                                        <el-avatar
+                                            :src="defaultAvatar"
+                                        ></el-avatar>
+                                        <b class="friend_list_username">{{
+                                            item.member
+                                        }}</b>
                                     </div>
                                     <template v-if="memberRole">
-                                        <el-icon class="checked_btn"
-                                            @click="searchResultList[index].isChecked = !searchResultList[index].isChecked">
-                                            <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
-                                            <span v-else class="unChecked_icon"></span>
+                                        <el-icon
+                                            class="checked_btn"
+                                            @click="
+                                                searchResultList[
+                                                    index
+                                                ].isChecked =
+                                                    !searchResultList[index]
+                                                        .isChecked
+                                            "
+                                        >
+                                            <CircleCheckFilled
+                                                v-if="item.isChecked"
+                                                class="checked_icon"
+                                            />
+                                            <span
+                                                v-else
+                                                class="unChecked_icon"
+                                            ></span>
                                         </el-icon>
                                     </template>
                                 </div>
-                                <el-divider style="margin:12px 0;" />
+                                <el-divider style="margin: 12px 0" />
                             </template>
                         </div>
                     </el-scrollbar>
-
-
                 </div>
             </div>
             <!-- <div style="text-align: left; margin-top: 5px;">
@@ -276,26 +326,46 @@ defineExpose({ saveHandleMembers })
             </div> -->
             <!-- 黑名单群成员邀请列表 -->
             <template v-if="groupModalTitle.type === 1">
-                <el-row style="height: 100%;margin-top: 5px;" v-if="renderBlackMembers">
+                <el-row
+                    style="height: 100%; margin-top: 5px"
+                    v-if="renderBlackMembers"
+                >
                     <el-col :span="24" class="friend_user_list_box">
                         <el-scrollbar>
-                            <div v-for="(item, index) in renderBlackMembers" :key="item.member">
+                            <div
+                                v-for="(item, index) in renderBlackMembers"
+                                :key="item.member"
+                            >
                                 <template v-if="!item.owner">
                                     <div class="friend_user_list">
                                         <div class="friend_user_list_left">
-                                            <el-avatar :src="defaultAvatar"></el-avatar>
-                                            <b class="friend_list_username">{{ item.member }}</b>
+                                            <el-avatar
+                                                :src="defaultAvatar"
+                                            ></el-avatar>
+                                            <b class="friend_list_username">{{
+                                                item.member
+                                            }}</b>
                                         </div>
                                         <!-- 群主管理员级别才可操作邀请加入群组 -->
                                         <template v-if="memberRole">
-                                            <el-icon class="checked_btn" @click="handleMembersToBlack(item)">
-                                                <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
-                                                <span v-else class="unChecked_icon"></span>
+                                            <el-icon
+                                                class="checked_btn"
+                                                @click="
+                                                    handleMembersToBlack(item)
+                                                "
+                                            >
+                                                <CircleCheckFilled
+                                                    v-if="item.isChecked"
+                                                    class="checked_icon"
+                                                />
+                                                <span
+                                                    v-else
+                                                    class="unChecked_icon"
+                                                ></span>
                                             </el-icon>
                                         </template>
-
                                     </div>
-                                    <el-divider style="margin:12px 0;" />
+                                    <el-divider style="margin: 12px 0" />
                                 </template>
                             </div>
                         </el-scrollbar>
@@ -304,26 +374,46 @@ defineExpose({ saveHandleMembers })
             </template>
             <!-- 禁言群成员邀请列表 -->
             <template v-if="groupModalTitle.type === 2">
-                <el-row style="height: 100%;margin-top: 5px;" v-if="renderMuteMembers">
+                <el-row
+                    style="height: 100%; margin-top: 5px"
+                    v-if="renderMuteMembers"
+                >
                     <el-col :span="24" class="friend_user_list_box">
                         <el-scrollbar>
-                            <div v-for="(item, index) in renderMuteMembers" :key="item.member">
+                            <div
+                                v-for="(item, index) in renderMuteMembers"
+                                :key="item.member"
+                            >
                                 <template v-if="!item.owner">
                                     <div class="friend_user_list">
                                         <div class="friend_user_list_left">
-                                            <el-avatar :src="defaultAvatar"></el-avatar>
-                                            <b class="friend_list_username">{{ item.member }}</b>
+                                            <el-avatar
+                                                :src="defaultAvatar"
+                                            ></el-avatar>
+                                            <b class="friend_list_username">{{
+                                                item.member
+                                            }}</b>
                                         </div>
                                         <!-- 群主管理员级别才可操作邀请加入群组 -->
                                         <template v-if="memberRole">
-                                            <el-icon class="checked_btn" @click="handleMembersToMute(item)">
-                                                <CircleCheckFilled v-if="item.isChecked" class="checked_icon" />
-                                                <span v-else class="unChecked_icon"></span>
+                                            <el-icon
+                                                class="checked_btn"
+                                                @click="
+                                                    handleMembersToMute(item)
+                                                "
+                                            >
+                                                <CircleCheckFilled
+                                                    v-if="item.isChecked"
+                                                    class="checked_icon"
+                                                />
+                                                <span
+                                                    v-else
+                                                    class="unChecked_icon"
+                                                ></span>
                                             </el-icon>
                                         </template>
-
                                     </div>
-                                    <el-divider style="margin:12px 0;" />
+                                    <el-divider style="margin: 12px 0" />
                                 </template>
                             </div>
                         </el-scrollbar>
@@ -334,57 +424,98 @@ defineExpose({ saveHandleMembers })
         <div class="taboo_right">
             <template v-if="groupModalTitle.type === 1">
                 <p>加入黑名单成员：{{ insideTheBlackList.length }}</p>
-                <el-row style="height: 100%;margin-top: 5px;overflow: auto">
+                <el-row style="height: 100%; margin-top: 5px; overflow: auto">
                     <el-col :span="24" class="friend_user_list_box">
                         <template v-if="insideTheBlackList.length > 0">
                             <el-scrollbar>
-                                <div v-for="(item, index) in insideTheBlackList" :key="item">
+                                <div
+                                    v-for="(item, index) in insideTheBlackList"
+                                    :key="item"
+                                >
                                     <div class="friend_user_list">
                                         <div class="friend_user_list_left">
-                                            <el-avatar :src="defaultAvatar"></el-avatar>
-                                            <b class="friend_list_username">{{ item }}</b>
+                                            <el-avatar
+                                                :src="defaultAvatar"
+                                            ></el-avatar>
+                                            <b class="friend_list_username">{{
+                                                item
+                                            }}</b>
                                         </div>
-                                        <el-icon class="checked_btn" @click="deleteMembersFromBlack(item, index)">
+                                        <el-icon
+                                            class="checked_btn"
+                                            @click="
+                                                deleteMembersFromBlack(
+                                                    item,
+                                                    index
+                                                )
+                                            "
+                                        >
                                             <CircleClose class="checked_icon" />
                                         </el-icon>
                                     </div>
-                                    <el-divider style="margin:12px 0;" />
+                                    <el-divider style="margin: 12px 0" />
                                 </div>
                             </el-scrollbar>
-
                         </template>
                         <template v-else>
-                            <el-empty :image-size="200" description="暂无黑名单成员~" />
+                            <el-empty
+                                :image-size="200"
+                                description="暂无黑名单成员~"
+                            />
                         </template>
                     </el-col>
                 </el-row>
             </template>
             <template v-if="groupModalTitle.type === 2">
                 <p>加入禁言列表成员：{{ insideTheMuteList.length }}</p>
-                <el-row style="height: 100%;margin-top: 5px;overflow: auto">
+                <el-row style="height: 100%; margin-top: 5px; overflow: auto">
                     <el-col :span="24" class="friend_user_list_box">
                         <template v-if="insideTheMuteList.length > 0">
                             <el-scrollbar>
-                                <div v-for="(item, index) in insideTheMuteList" :key="item">
+                                <div
+                                    v-for="(item, index) in insideTheMuteList"
+                                    :key="item"
+                                >
                                     <div class="friend_user_list">
                                         <div class="friend_user_list_left">
-                                            <el-avatar :src="defaultAvatar"></el-avatar>
-                                            <b class="friend_list_username">{{ item.user }}</b>
-                                            <sup v-if="item.expire" style="font: size 7px;">【失效时间：{{
-                                            dateFormater('MM-DD-HH:mm', item.expire)
-                                            }}】</sup>
+                                            <el-avatar
+                                                :src="defaultAvatar"
+                                            ></el-avatar>
+                                            <b class="friend_list_username">{{
+                                                item.user
+                                            }}</b>
+                                            <sup
+                                                v-if="item.expire"
+                                                style="font: size 7px"
+                                                >【失效时间：{{
+                                                    dateFormater(
+                                                        'MM-DD-HH:mm',
+                                                        item.expire
+                                                    )
+                                                }}】</sup
+                                            >
                                         </div>
-                                        <el-icon class="checked_btn" @click="deleteMembersFromMute(item, index)">
+                                        <el-icon
+                                            class="checked_btn"
+                                            @click="
+                                                deleteMembersFromMute(
+                                                    item,
+                                                    index
+                                                )
+                                            "
+                                        >
                                             <CircleClose class="checked_icon" />
                                         </el-icon>
                                     </div>
-                                    <el-divider style="margin:12px 0;" />
+                                    <el-divider style="margin: 12px 0" />
                                 </div>
                             </el-scrollbar>
-
                         </template>
                         <template v-else>
-                            <el-empty :image-size="200" description="暂无禁言成员~" />
+                            <el-empty
+                                :image-size="200"
+                                description="暂无禁言成员~"
+                            />
                         </template>
                     </el-col>
                 </el-row>
@@ -392,7 +523,6 @@ defineExpose({ saveHandleMembers })
         </div>
     </div>
 </template>
-
 
 <style lang="scss" scoped>
 ::v-deep .el-input__prefix {
@@ -423,7 +553,7 @@ defineExpose({ saveHandleMembers })
     max-height: 466px;
     min-height: 266px;
     overflow: hidden;
-    border-right: 1px solid #DCDFE6;
+    border-right: 1px solid #dcdfe6;
     padding: 0 12px 0 0;
 
     .friend_user_list_box {
@@ -456,7 +586,7 @@ defineExpose({ saveHandleMembers })
         width: 100%;
         height: 430px;
         overflow-y: auto;
-        background: #FFF;
+        background: #fff;
         z-index: 99;
     }
 }
@@ -511,7 +641,7 @@ defineExpose({ saveHandleMembers })
 
         .checked_icon {
             font-size: 20px;
-            color: #0091FF;
+            color: #0091ff;
         }
 
         .unChecked_icon {
@@ -521,7 +651,6 @@ defineExpose({ saveHandleMembers })
             border: 2px solid #979797;
             border-radius: 50%;
         }
-
     }
 }
 </style>

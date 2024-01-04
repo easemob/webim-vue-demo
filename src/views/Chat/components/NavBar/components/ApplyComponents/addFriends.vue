@@ -23,7 +23,7 @@ const applyAddFriendsForm = reactive({
     applyFriendMessage: ''
 })
 const friendList = computed(() => store.state.Contacts.friendList)
-console.log('>>>>>好友列表', friendList.value)
+
 const applyAddFriends = () => {
     if (!applyAddFriendsForm.username)
         return ElNotification({
@@ -57,7 +57,6 @@ const applyAddFriends = () => {
             type: 'success'
         })
     } catch (error) {
-        console.log('>>>>>添加失败', error)
     } finally {
         resetTheModalStatus()
     }
@@ -65,7 +64,6 @@ const applyAddFriends = () => {
 //监听关闭初始化form内容
 watch(dialogVisible, (newVal) => {
     if (!newVal) {
-        console.log('>>>>>监听到关闭', newVal)
         resetTheModalStatus()
     }
 })

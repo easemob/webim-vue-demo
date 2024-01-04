@@ -94,7 +94,6 @@ const localStreamStatus = reactive({
 //已在频道中的用户list
 const inChannelUsersList = reactive([])
 const setAgoraRtcListener = () => {
-    console.log('>>>>>AgoraRtc监听挂载完毕')
     //监听到用用户加入了频道
     CallKitClient.on('user-joined', (user) => {
         const remoteUserId = user.uid.toString()

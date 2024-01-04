@@ -25,7 +25,10 @@ const initConfigForm = () => {
 // appley rules
 const appKeyRules = ref([
     { type: 'string', message: 'appkey为string类型' },
-    { pattern: /^[a-zA-Z0-9-]+#[a-zA-Z0-9-]+$/, message: '请输入正确格式appKey' }
+    {
+        pattern: /^[a-zA-Z0-9-]+#[a-zA-Z0-9-]+$/,
+        message: '请输入正确格式appKey'
+    }
 ])
 
 //save config
@@ -35,7 +38,7 @@ const saveImConfig = (configRef) => {
         if (valid) {
             webimConfig.value = _.cloneDeep(configForm.value)
             resetForm(configRef)
-            console.log('submit!')
+
             ElMessage({
                 type: 'success',
                 message: '配置保存成功~'
@@ -47,7 +50,6 @@ const saveImConfig = (configRef) => {
                 type: 'error',
                 message: '保存失败，请检查后重试~'
             })
-            console.log('error submit!', fields)
         }
     })
 }
@@ -59,8 +61,15 @@ const resetForm = (configRef) => {
 defineExpose({ centerDialogVisible })
 </script>
 <template>
-    <el-dialog v-model="centerDialogVisible" title="服务器配置" width="30%" center modal :show-close="false"
-        @open="initConfigForm">
+    <el-dialog
+        v-model="centerDialogVisible"
+        title="服务器配置"
+        width="30%"
+        center
+        modal
+        :show-close="false"
+        @open="initConfigForm"
+    >
         <el-form ref="configRef" :model="configForm" label-width="120px">
             <el-form-item prop="appKey" label="AppKey" :rules="appKeyRules">
                 <el-input v-model="configForm.appKey" />
@@ -68,23 +77,42 @@ defineExpose({ centerDialogVisible })
             <el-form-item prop="isPrivate" label="私有化配置">
                 <el-switch v-model="configForm.isPrivate" />
             </el-form-item>
-            <el-form-item v-if="configForm.isPrivate" prop="imServer" label="IM服务器地址">
-                <el-input v-model="configForm.imServer" placeholder="//im-api-v2.easemob.com/ws" />
+            <el-form-item
+                v-if="configForm.isPrivate"
+                prop="imServer"
+                label="IM服务器地址"
+            >
+                <el-input
+                    v-model="configForm.imServer"
+                    placeholder="//im-api-v2.easemob.com/ws"
+                />
             </el-form-item>
-            <el-form-item v-if="configForm.isPrivate" prop="port" label="端口号">
+            <el-form-item
+                v-if="configForm.isPrivate"
+                prop="port"
+                label="端口号"
+            >
                 <el-input v-model="configForm.port" placeholder="8080" />
             </el-form-item>
-            <el-form-item v-if="configForm.isPrivate" prop="restServer" label="Rest服务器地址">
-                <el-input v-model="configForm.restServer" placeholder="//a1.easemob.com" />
+            <el-form-item
+                v-if="configForm.isPrivate"
+                prop="restServer"
+                label="Rest服务器地址"
+            >
+                <el-input
+                    v-model="configForm.restServer"
+                    placeholder="//a1.easemob.com"
+                />
             </el-form-item>
         </el-form>
         <template #footer>
             <span class="dialog-footer">
                 <el-button @click="resetForm(configRef)">取消配置</el-button>
-                <el-button type="primary" @click="saveImConfig(configRef)">保存配置</el-button>
+                <el-button type="primary" @click="saveImConfig(configRef)"
+                    >保存配置</el-button
+                >
             </span>
         </template>
     </el-dialog>
 </template>
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>
