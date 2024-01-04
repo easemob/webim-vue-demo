@@ -63,17 +63,13 @@ const Conversation = {
             }
         },
         //删除某条会话
-        DELETE_ONE_CONVERSATION: (state, key) => {
-            console.log('>>>>>>>执行删除会话操作', key)
-            const toUpdateConversation = _.assign(
-                {},
-                state.conversationListData
+        DELETE_CONVERSATION_ITEM_FROM_LOCAL: (state, conversationId) => {
+            const _index = state.conversationListFromLocal.findIndex(
+                (v) => v.conversationId === conversationId
             )
-            if (toUpdateConversation[key]) {
-                delete toUpdateConversation[key]
+            if (_index > -1) {
+                state.conversationListFromLocal.splice(_index, 1)
             }
-            console.log('删除后toUpdateConversation', toUpdateConversation)
-            state.conversationListData = _.assign({}, toUpdateConversation)
         },
         //清除会话未读状态
         CLEAR_CONVERSATION_ITEM_UNREAD_COUNT: (state, conversationId) => {
@@ -315,6 +311,30 @@ const Conversation = {
                 })
             } catch (error) {
                 console.log('>>>>>>>获取本地会话更新失败', error)
+            }
+        },
+        //删除会话列表（本地以及远端）
+        removeLocalConversation: async ({ dispatch, commit }, params) => {
+            const { conversationId, conversationType } = params
+            const options = {
+                // 会话 ID：单聊为对方的用户 ID，群聊为群组 ID。
+                channel: conversationId,
+                // 会话类型：（默认） `singleChat`：单聊；`groupChat`：群聊。
+                chatType: conversationType,
+                // 删除会话时是否同时删除服务端漫游消息。
+                deleteRoam: false
+            }
+            try {
+                //会话列表删除时，需要先删除远端会话列表，再删除本地数据库，这样跨端获取会话列表才能同步。
+                await EMClient.deleteConversation(options)
+                //删除本地数据库数据
+                await EMClient.localCache.removeLocalConversation({
+                    conversationId,
+                    conversationType
+                })
+                commit('DELETE_CONVERSATION_ITEM_FROM_LOCAL', conversationId)
+            } catch (error) {
+                console.log('>>>>>会话列表删除失败', error)
             }
         },
         //设置会话已读（发送会话已读回执。）

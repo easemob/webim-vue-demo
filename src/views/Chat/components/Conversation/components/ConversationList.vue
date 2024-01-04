@@ -117,8 +117,7 @@ const toChatMessage = (conversationItem, index) => {
 //删除某条会话
 const deleteConversation = (conversationItem) => {
     const { conversationId } = conversationItem
-    console.log('选中的会话key', conversationId, route.query)
-    store.commit('DELETE_ONE_CONVERSATION', conversationId)
+    store.dispatch('removeLocalConversation', conversationItem)
     //如果删除的itemKey与当前的message会话页的id一致则跳转至会话默认页。
     if (route?.query?.id && route.query.id === conversationId) {
         router.push('/chat/conversation')
