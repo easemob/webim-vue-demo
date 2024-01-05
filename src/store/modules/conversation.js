@@ -263,9 +263,9 @@ const Conversation = {
                         pageSize: 50,
                         cursor: ''
                     })
-                    if (result.data.length) {
+                    if (result.data?.conversations?.length) {
                         commit('GET_CONVERSATION_LIST_FROM_LOCAL', [
-                            ...result.data
+                            ...result.data.conversations
                         ])
                     }
                 }
