@@ -274,13 +274,12 @@ const Conversation = {
         //更新会话列表
         updateLocalConversation: async ({ dispatch, commit }, params) => {
             const { conversationId, chatType } = params
-
             try {
                 const result = await EMClient.localCache.getLocalConversation({
                     conversationId,
                     conversationType: chatType
                 })
-
+                if (!result?.data) return
                 const toBeUpdateConversationItem = { ...result?.data }
                 //检查更新的lastmsg中是否包含提及
                 const isMention = toBeUpdateConversationItem?.customField
@@ -303,7 +302,9 @@ const Conversation = {
                 commit('UPDATE_CONVERSATION_LIST_FROM_LOCAL', {
                     ...toBeUpdateConversationItem
                 })
-            } catch (error) {}
+            } catch (error) {
+                console.log('error', error)
+            }
         },
         //删除会话列表（本地以及远端）
         removeLocalConversation: async ({ dispatch, commit }, params) => {

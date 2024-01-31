@@ -89,7 +89,7 @@ const handleLastMsgContent = computed(() => {
         } else if (type === ALL_MESSAGE_TYPE.CUSTOM) {
             //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
             if (msgBody.customEvent) {
-                ;(CUSTOM_TYPE[msgBody.customEvent] &&
+                (CUSTOM_TYPE[msgBody.customEvent] &&
                     (resultContent = CUSTOM_TYPE[msgBody.customEvent])) ||
                     ''
             }
