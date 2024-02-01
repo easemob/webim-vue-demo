@@ -225,7 +225,16 @@ const searchUsers = () => {
         return (isShowSearchContent.value = false)
     }
 }
-
+const handleSearchCheckoutStatus = (item, index) => {
+    searchResultList.value[index].isChecked =
+        !searchResultList.value[index].isChecked
+    if (groupModalTitle.value.type === 1) {
+        handleMembersToBlack(item)
+    }
+    if (groupModalTitle.value.type === 2) {
+        handleMembersToMute(item)
+    }
+}
 //保存修改
 /* 完成操作 */
 const saveHandleMembers = async () => {
@@ -292,11 +301,10 @@ defineExpose({ saveHandleMembers })
                                         <el-icon
                                             class="checked_btn"
                                             @click="
-                                                searchResultList[
+                                                handleSearchCheckoutStatus(
+                                                    item,
                                                     index
-                                                ].isChecked =
-                                                    !searchResultList[index]
-                                                        .isChecked
+                                                )
                                             "
                                         >
                                             <CircleCheckFilled
