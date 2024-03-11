@@ -46,44 +46,44 @@ const Message = {
         CHANGE_MESSAGE_BODAY: (state, payload) => {
             const { type, key, mid } = payload
             switch (type) {
-            case CHANGE_MESSAGE_BODAY_TYPE.RECALL:
-                {
-                    if (state.messageList[key]) {
-                        const res = _.find(
-                            state.messageList[key],
-                            (o) => o.id === mid
-                        )
-                        res.isRecall = true
+                case CHANGE_MESSAGE_BODAY_TYPE.RECALL:
+                    {
+                        if (state.messageList[key]) {
+                            const res = _.find(
+                                state.messageList[key],
+                                (o) => o.id === mid
+                            )
+                            res.isRecall = true
+                        }
                     }
-                }
 
-                break
-            case CHANGE_MESSAGE_BODAY_TYPE.DELETE:
-                {
-                    if (state.messageList[key]) {
-                        const sourceData = state.messageList[key]
-                        const index = _.findIndex(
-                            state.messageList[key],
-                            (o) => o.id === mid
-                        )
-                        sourceData.splice(index, 1)
-                        state.messageList[key] = _.assign([], sourceData)
+                    break
+                case CHANGE_MESSAGE_BODAY_TYPE.DELETE:
+                    {
+                        if (state.messageList[key]) {
+                            const sourceData = state.messageList[key]
+                            const index = _.findIndex(
+                                state.messageList[key],
+                                (o) => o.id === mid
+                            )
+                            sourceData.splice(index, 1)
+                            state.messageList[key] = _.assign([], sourceData)
+                        }
                     }
-                }
-                break
-            case CHANGE_MESSAGE_BODAY_TYPE.MODIFY:
-                {
-                    if (state.messageList[key]) {
-                        const res = _.find(
-                            state.messageList[key],
-                            (o) => o.id === mid
-                        )
-                        _.assign(res, payload?.message)
+                    break
+                case CHANGE_MESSAGE_BODAY_TYPE.MODIFY:
+                    {
+                        if (state.messageList[key]) {
+                            const res = _.find(
+                                state.messageList[key],
+                                (o) => o.id === mid
+                            )
+                            _.assign(res, payload?.message)
+                        }
                     }
-                }
-                break
-            default:
-                break
+                    break
+                default:
+                    break
             }
         }
     },
@@ -188,11 +188,11 @@ const Message = {
         },
         //删除消息
         removeMessage: ({ dispatch, commit }, params) => {
-            const { id: mid, from: targetId, chatType } = params
+            const { id: mid, chatType } = params
             const key = setMessageKey(params)
             return new Promise((resolve, reject) => {
                 EMClient.removeHistoryMessages({
-                    targetId: targetId,
+                    targetId: key,
                     chatType: chatType,
                     messageIds: [mid]
                 })
