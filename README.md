@@ -7,7 +7,7 @@ webim-vue3-demo 是基于环信 sdk 开发的一款具有单聊、群聊等功�
 # 运行起来
 
 -   说明：发送语音功能需要使用 https。
--   环境：Node 版本要最高于 14.18，建议使用 Node 16 及以上。（Node 版本要求主要参考 Vue 官方文档，以及 ElementPlus 官方文档）。
+-   环境：Node 版本要最高于 14.18，建议使用 `Node 16、17`不推荐Node 18 及以上。（Node 版本要求主要参考 Vue 官方文档，以及 ElementPlus 官方文档）。
 
 ```bash
 # install dependencies
