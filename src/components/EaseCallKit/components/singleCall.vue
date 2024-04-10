@@ -216,26 +216,27 @@ const joinChannel = async () => {
             agoraChannelToken,
             agoraUserId
         )
-
         //开启房间通话计时
         startInChannelTimer()
         localVoiceTrack = await AgoraRTC.createMicrophoneAudioTrack()
-        // Create a local video track from the video captured by a camera.
-        localVideoTrack = await AgoraRTC.createCameraVideoTrack()
-
         if (callType === CALL_TYPES.SINGLE_VOICE) {
             localVoiceTrack && (await CallKitClient.publish(localVoiceTrack))
             handleLocalStreamPublish('voice')
+            isStreamPlay.value = true
+            return
         }
         if (callType === CALL_TYPES.SINGLE_VIDEO) {
+            // Create a local video track from the video captured by a camera.
+            localVideoTrack = await AgoraRTC.createCameraVideoTrack()
             if (localVoiceTrack && localVideoTrack)
                 await CallKitClient.publish([localVoiceTrack, localVideoTrack])
             setTimeout(() => {
                 localVideoTrack.play(smallContainer.value)
             }, 300)
             handleLocalStreamPublish('allPlay')
+            isStreamPlay.value = true
+            return
         }
-        isStreamPlay.value = true
     } catch (error) {
         localVoiceTrack && localVoiceTrack.close()
         localVideoTrack && localVideoTrack.close()
@@ -333,7 +334,9 @@ onBeforeUnmount(() => {
                         CALLSTATUS.confirmCallee
                     "
                 >
-                    <div class="time">{{ formatTime }}</div>
+                    <div class="time">
+                        {{ isStreamPlay ? formatTime : '接通中...' }}
+                    </div>
                     <!--  语音通话      -->
                     <div
                         class="stream_audio_container"
@@ -404,7 +407,7 @@ onBeforeUnmount(() => {
                     <template
                         v-if="
                             callKitStatus.localClientStatus ===
-                            CALLSTATUS.confirmCallee
+                                CALLSTATUS.confirmCallee && isStreamPlay
                         "
                     >
                         <div
