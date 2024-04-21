@@ -4,22 +4,26 @@ import _ from 'lodash'
 // import { ref, toRaw } from 'vue';
 import { messageType } from '@/constant'
 import { usePlayRing } from '@/hooks'
-const { ALL_MESSAGE_TYPE, CHANGE_MESSAGE_BODAY_TYPE } = messageType
+const { ALL_MESSAGE_TYPE, CHANGE_MESSAGE_BODAY_TYPE, CHAT_TYPE } = messageType
 const Message = {
     state: {
-        messageList: {}
+        messageList: {},
+        messageIdsCollection: {
+            [CHAT_TYPE.SINGLE]: new Map(),
+            [CHAT_TYPE.GROUP]: new Map()
+        }
     },
     mutations: {
         UPDATE_MESSAGE_LIST: (state, msgBody) => {
-            const toUpdateMsgList = _.assign({}, state.messageList)
             const listKey = setMessageKey(msgBody)
-            if (!toUpdateMsgList[listKey]) {
-                toUpdateMsgList[listKey] = []
-                _.unionBy(toUpdateMsgList[listKey].push(msgBody), (m) => m.id)
-            } else {
-                _.unionBy(toUpdateMsgList[listKey].push(msgBody), (m) => m.id)
+            if (!state.messageList[listKey]) {
+                state.messageList[listKey] = []
             }
-            state.messageList = toUpdateMsgList
+            state.messageList[listKey] = _.unionBy(
+                state.messageList[listKey],
+                [msgBody],
+                (m) => m.id
+            )
         },
         UPDATE_HISTORY_MESSAGE: (state, payload) => {
             const { listKey, historyMessage } = payload
