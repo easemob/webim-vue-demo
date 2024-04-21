@@ -9,7 +9,7 @@ import { ElMessage } from 'element-plus'
 import { Close } from '@element-plus/icons-vue'
 import waterMark from '@/utils/waterMark'
 /* 组件 */
-import MessageList from './components/messageList'
+import MessageListItem from './components/messageListItem'
 import InputBox from './components/inputBox'
 import UserStatus from '@/components/UserStatus'
 import GroupsDetails from '@/views/Chat/components/AboutGroups/GroupsDetails'
@@ -337,7 +337,7 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
                             >
                         </div>
                     </div>
-                    <MessageList
+                    <MessageListItem
                         :nowPickInfo="nowPickInfo"
                         :messageData="messageData"
                         @scrollMessageList="scrollMessageList"

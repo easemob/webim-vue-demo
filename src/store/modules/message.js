@@ -1,46 +1,91 @@
 import { EMClient } from '@/IM'
 import { setMessageKey, createMessage } from '@/utils/handleSomeData'
 import _ from 'lodash'
-// import { ref, toRaw } from 'vue';
-import { messageType } from '@/constant'
+import {
+    MESSAGE_STATUS_TYPE,
+    ALL_MESSAGE_TYPE,
+    CHANGE_MESSAGE_BODAY_TYPE,
+    CHAT_TYPE,
+    MAX_MESSAGE_LIST_COUNT
+} from '@/constant'
 import { usePlayRing } from '@/hooks'
-const { ALL_MESSAGE_TYPE, CHANGE_MESSAGE_BODAY_TYPE, CHAT_TYPE } = messageType
 const Message = {
     state: {
         messageList: {},
         messageIdsCollection: {
-            [CHAT_TYPE.SINGLE]: new Map(),
-            [CHAT_TYPE.GROUP]: new Map()
+            // 'pfh':new Map(),
+            // 'pfh1':new Map(),
         }
     },
     mutations: {
         UPDATE_MESSAGE_LIST: (state, msgBody) => {
+            const { id: serverMsgId } = msgBody
             const listKey = setMessageKey(msgBody)
             if (!state.messageList[listKey]) {
                 state.messageList[listKey] = []
+            }
+            if (!state.messageIdsCollection[listKey]) {
+                state.messageIdsCollection[listKey] = new Map()
             }
             state.messageList[listKey] = _.unionBy(
                 state.messageList[listKey],
                 [msgBody],
                 (m) => m.id
             )
-        },
-        UPDATE_HISTORY_MESSAGE: (state, payload) => {
-            const { listKey, historyMessage } = payload
-            const toUpdateMsgList = _.assign({}, state.messageList)
-            if (!toUpdateMsgList[listKey]) {
-                toUpdateMsgList[listKey] = []
-                _.unionBy(
-                    toUpdateMsgList[listKey].push(...historyMessage),
-                    (m) => m.id
-                )
-            } else {
-                _.unionBy(
-                    toUpdateMsgList[listKey].unshift(...historyMessage),
-                    (m) => m.id
+            // 限制数组的长度为 MAX_MESSAGE_LIST_COUNT
+            if (state.messageList[listKey].length > MAX_MESSAGE_LIST_COUNT) {
+                state.messageList[listKey] = state.messageList[listKey].slice(
+                    -MAX_MESSAGE_LIST_COUNT
                 )
             }
-            state.messageList = toUpdateMsgList
+            if (msgBody.from === EMClient.user) {
+                state.messageIdsCollection[listKey].set(serverMsgId, {
+                    [MESSAGE_STATUS_TYPE.READ_STATUS]: false
+                })
+            }
+        },
+        UPDATE_HISTORY_MESSAGE: (state, payload) => {
+            const { listKey, historyMessageList } = payload
+            if (!state.messageList[listKey]) {
+                state.messageList[listKey] = []
+            }
+            state.messageList[listKey] = _.unionBy(
+                historyMessageList,
+                state.messageList[listKey],
+                (m) => m.id
+            )
+        },
+        UPDATE_MESSAGE_IDS_COLLECTION: (state, payload) => {
+            const { id: serverMsgId, key, type } = payload
+            switch (type) {
+                case MESSAGE_STATUS_TYPE.READ_STATUS:
+                    {
+                        if (state.messageIdsCollection[key]) {
+                            state.messageIdsCollection[key].set(serverMsgId, {
+                                [MESSAGE_STATUS_TYPE.READ_STATUS]: true
+                            })
+                        }
+                    }
+                    break
+                case MESSAGE_STATUS_TYPE.CHANLE_STATUS:
+                    {
+                        if (state.messageIdsCollection[key]) {
+                            const READ_STATUS_KEY =
+                                MESSAGE_STATUS_TYPE.READ_STATUS
+                            // 直接使用Map的forEach方法
+                            state.messageIdsCollection[key].forEach(
+                                (value, key) => {
+                                    if (value[READ_STATUS_KEY] !== true) {
+                                        value[READ_STATUS_KEY] = true
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    break
+                default:
+                    break
+            }
         },
         //清除某条会话消息
         CLEAR_SOMEONE_MESSAGE: (state, payload) => {
@@ -125,7 +170,7 @@ const Message = {
                         resolve({ messages, cursor })
                         commit('UPDATE_HISTORY_MESSAGE', {
                             listKey: id,
-                            historyMessage: _.reverse(messages)
+                            historyMessageList: _.reverse(messages)
                         })
                         if (!state.messageList[id]) {
                             //提示会话列表更新
@@ -272,6 +317,11 @@ const Message = {
                         reject(e)
                     })
             })
+        }
+    },
+    getters: {
+        getMessageIdsCollectionMap: (state) => (messageIdsCollectionKey) => {
+            return state.messageIdsCollection[messageIdsCollectionKey]
         }
     }
 }

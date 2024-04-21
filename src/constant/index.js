@@ -4,11 +4,5 @@ import messageType from './messageType'
 import informType from './informType'
 import emojis from './emojis'
 import warningText from './warningText'
-export {
-    errorCode,
-    onLineStatus,
-    messageType,
-    informType,
-    emojis,
-    warningText,
-}
+export * from './messageType'
+export { errorCode, onLineStatus, messageType, informType, emojis, warningText }
