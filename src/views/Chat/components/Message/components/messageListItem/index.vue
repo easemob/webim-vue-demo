@@ -500,8 +500,9 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                     <div class="message_item_status">
                         <img
                             class="message_item_readed_icon"
-                            v-show="msgReadStatus(msgBody) && isMyself(msgBody)"
+                            v-if="msgReadStatus(msgBody) && isMyself(msgBody)"
                             :src="messageReadedIcon"
+                            title="消息已读"
                         />
                     </div>
                 </div>

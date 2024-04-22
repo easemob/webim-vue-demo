@@ -105,7 +105,7 @@ const handleLastMsgContent = computed(() => {
         } else if (type === ALL_MESSAGE_TYPE.CUSTOM) {
             //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
             if (msgBody.customEvent) {
-                (CUSTOM_TYPE[msgBody.customEvent] &&
+                ;(CUSTOM_TYPE[msgBody.customEvent] &&
                     (resultContent = CUSTOM_TYPE[msgBody.customEvent])) ||
                     ''
             }
@@ -126,6 +126,12 @@ const networkStatus = computed(() => {
 const emit = defineEmits(['toInformDetails', 'toChatMessage'])
 //普通会话
 const checkedConverItemIndex = ref(null)
+const debouncedToChatMessage = _.debounce(
+    (conversationId, conversationType) => {
+        emit('toChatMessage', conversationId, conversationType)
+    },
+    300
+) // 300毫秒内的连续触发将被防抖处理
 const toChatMessage = (conversationItem, index) => {
     checkedConverItemIndex.value = index
     const { conversationId, unReadCount, customField, conversationType } =
@@ -139,7 +145,8 @@ const toChatMessage = (conversationItem, index) => {
     if (customField?.mention)
         store.dispatch('clearConversationMention', conversationItem)
     //跳转至对应的消息界面
-    emit('toChatMessage', conversationId, conversationType)
+    // 使用防抖函数来跳转至对应的消息界面
+    debouncedToChatMessage(conversationId, conversationType)
 }
 //删除某条会话
 const deleteConversation = (conversationItem) => {

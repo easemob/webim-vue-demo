@@ -24,9 +24,7 @@ const Message = {
             if (!state.messageList[listKey]) {
                 state.messageList[listKey] = []
             }
-            if (!state.messageIdsCollection[listKey]) {
-                state.messageIdsCollection[listKey] = new Map()
-            }
+
             state.messageList[listKey] = _.unionBy(
                 state.messageList[listKey],
                 [msgBody],
@@ -38,7 +36,20 @@ const Message = {
                     -MAX_MESSAGE_LIST_COUNT
                 )
             }
-            if (msgBody.from === EMClient.user) {
+            /**
+             * 暂只实现以单对单已读回执
+             * 群组已读回执可通过Reaction方案实现
+             */
+            if (
+                !state.messageIdsCollection[listKey] &&
+                msgBody.chatType === CHAT_TYPE.SINGLE
+            ) {
+                state.messageIdsCollection[listKey] = new Map()
+            }
+            if (
+                msgBody.from === EMClient.user &&
+                msgBody.chatType === CHAT_TYPE.SINGLE
+            ) {
                 state.messageIdsCollection[listKey].set(serverMsgId, {
                     [MESSAGE_STATUS_TYPE.READ_STATUS]: false
                 })
