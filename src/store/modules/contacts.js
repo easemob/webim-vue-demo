@@ -60,38 +60,38 @@ const Contacts = {
                 state.groupList[groupId].groupDetail
             ) {
                 switch (type) {
-                //修改群名
-                case 'groupName':
-                    {
-                        state.groupList[groupId].groupDetail.name = params
-                    }
-                    break
-                case 'groupDescription':
-                    {
-                        state.groupList[groupId].groupDetail.description =
+                    //修改群名
+                    case 'groupName':
+                        {
+                            state.groupList[groupId].groupDetail.name = params
+                        }
+                        break
+                    case 'groupDescription':
+                        {
+                            state.groupList[groupId].groupDetail.description =
                                 params
-                    }
-                    break
-                case 'addAffiliationsCount':
-                    {
-                        state.groupList[
-                            groupId
-                        ].groupDetail.affiliations_count =
+                        }
+                        break
+                    case 'addAffiliationsCount':
+                        {
+                            state.groupList[
+                                groupId
+                            ].groupDetail.affiliations_count =
                                 state.groupList[groupId].groupDetail
                                     .affiliations_count + 1
-                    }
-                    break
-                case 'delAffiliationsCount':
-                    {
-                        state.groupList[
-                            groupId
-                        ].groupDetail.affiliations_count =
+                        }
+                        break
+                    case 'delAffiliationsCount':
+                        {
+                            state.groupList[
+                                groupId
+                            ].groupDetail.affiliations_count =
                                 state.groupList[groupId].groupDetail
                                     .affiliations_count - 1
-                    }
-                    break
-                default:
-                    break
+                        }
+                        break
+                    default:
+                        break
                 }
             }
         },
@@ -230,13 +230,15 @@ const Contacts = {
             EMClient.unsubscribePresence(option).then((res) => {})
         },
         //获取群组列表
-        fetchGroupList: async ({ commit }, params) => {
+        fetchGroupList: async ({ dispatch, commit }, params) => {
             const res = await EMClient.getJoinedGroups({
                 // needAffiliations: true,
                 // needRole: true,
                 ...params
             })
             const goupListData = _.keyBy(res.data, 'groupid')
+            const groupIdList = _.map(res.data, 'groupid')
+            dispatch('fetchGroupDetailFromServer', groupIdList)
             commit('SET_GROUP_LIST', { setType: 'init', data: goupListData })
         },
         //获取指定群详情

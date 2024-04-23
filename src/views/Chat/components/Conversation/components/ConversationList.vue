@@ -30,9 +30,8 @@ const informDetail = computed(() => {
 //取好友列表(主要使用好友下的用户属性相关)
 const friendList = computed(() => store.state.Contacts.friendList)
 
-//取群组列表（展示群组名称）
-const joinedGroupList = computed(() => store.state.Contacts.groupList)
-
+//获取群组详情（展示群组名称等信息）
+const groupDetailMap = computed(() => store.getters.getGroupDetailMap)
 //取会话数据
 const conversationList = computed(() => {
     return store.getters.conversationListFromLocal
@@ -47,12 +46,8 @@ const handleConversationName = computed(() => {
             return friend?.nickname || conversationId
         }
         if (conversationType === CHAT_TYPE.GROUP) {
-            const group = joinedGroupList.value[conversationId]
-            if (group?.groupDetail) {
-                return group.groupDetail.name
-            } else if (group?.groupname) {
-                return group.groupname
-            }
+            const groupDetail = groupDetailMap.value.get(conversationId)
+            return groupDetail?.name || conversationId
         }
         return conversationId
     }

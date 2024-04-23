@@ -251,12 +251,12 @@ const Conversation = {
             // commit('UPDATE_GROUP_INFOS',{})
         },
         //从本地加载会话列表数据
-        getConversationListFromLocal: async ({ commit }, params) => {
+        getConversationListFromLocal: async ({ dispatch, commit }, params) => {
+            let conversationList = []
             try {
                 const result = await EMClient.localCache.getLocalConversations()
-
                 if (result.data.length) {
-                    commit('GET_CONVERSATION_LIST_FROM_LOCAL', [...result.data])
+                    conversationList = [...result.data]
                 } else {
                     //默认只取50条远端数据数据，实际可自行加载更多。
                     const result = await EMClient.getServerConversations({
@@ -264,12 +264,19 @@ const Conversation = {
                         cursor: ''
                     })
                     if (result.data?.conversations?.length) {
-                        commit('GET_CONVERSATION_LIST_FROM_LOCAL', [
-                            ...result.data.conversations
-                        ])
+                        conversationList = [...result.data.conversations]
                     }
                 }
-            } catch (error) {}
+                //挑出为群组的会话id，用于获取群组详情
+                const groupConversationIds = _.chain(conversationList)
+                    .filter({ conversationType: CHAT_TYPE.GROUP })
+                    .map('conversationId')
+                    .value()
+                dispatch('fetchGroupDetailFromServer', groupConversationIds)
+                commit('GET_CONVERSATION_LIST_FROM_LOCAL', conversationList)
+            } catch (error) {
+                console.error('获取会话列表失败', error)
+            }
         },
         //更新会话列表
         updateLocalConversation: async ({ dispatch, commit }, params) => {

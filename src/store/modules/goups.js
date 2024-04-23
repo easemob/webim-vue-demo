@@ -2,9 +2,26 @@ import { ElMessage } from 'element-plus'
 import { EMClient } from '@/IM'
 const Groups = {
     state: {
-        groupsInfos: {}
+        groupsInfos: {},
+        joinedGroup: {
+            joinedGroupList: [],
+            joinedGroupListTotal: 0
+        },
+        groupDetails: new Map()
     },
     mutations: {
+        SET_JOINED_GROUP: (state, payload) => {
+            const { total, entities: joinedGroupList } = payload
+            state.joinedGroup.joinedGroupListTotal = total
+            state.joinedGroup.joinedGroupList = joinedGroupList
+        },
+        SET_GROUP_DETAILS: (state, payload) => {
+            const { groupDetailsList } = payload
+            groupDetailsList.length > 0 &&
+                groupDetailsList.forEach((groupDetail) => {
+                    state.groupDetails.set(groupDetail.id, groupDetail)
+                })
+        },
         SET_GORUPS_ADMINS: (state, payload) => {
             const { groupId, admin } = payload
             if (!state.groupsInfos[groupId]) {
@@ -70,6 +87,53 @@ const Groups = {
             //普通群成员无权调用禁言列表
             dispatch('fetchGoupsMuteList', groupid)
         },
+        //从服务端获取加入的群组列表
+        fetchJoinedGroupListFromServer: async (
+            { commit },
+            { pageNum = 0, pageSize = 20 }
+        ) => {
+            try {
+                const res = await EMClient.getJoinedGroups({
+                    pageNum: pageNum,
+                    pageSize: pageSize,
+                    needAffiliations: true,
+                    needRole: true
+                })
+                commit('SET_JOINED_GROUP', res)
+            } catch (error) {
+                console.error('加入的群组列表获取失败', error)
+            }
+        },
+        //从服务端获取群组详情
+        fetchGroupDetailFromServer: async ({ commit }, groupIds = []) => {
+            if (groupIds.length === 0) throw new Error('群组id不能为空')
+            const requestTrack = []
+            let groupDetails = []
+            try {
+                if (groupIds.length > 1) {
+                    const groupIdsArr = _.chunk([...groupIds], 20) //分拆groupIds 一次不能超过20个
+                    groupIdsArr.forEach((groupIds) => {
+                        requestTrack.push(
+                            EMClient.getGroupInfo({
+                                groupId: groupIds
+                            })
+                        )
+                    })
+                    const result = await Promise.all(requestTrack)
+                    groupDetails = _.map(result, 'data').flat()
+                } else {
+                    const result = await EMClient.getGroupInfo({
+                        groupId: groupIds
+                    })
+                    groupDetails = result.data
+                }
+                commit('SET_GROUP_DETAILS', {
+                    groupDetailsList: [...groupDetails]
+                })
+            } catch (error) {
+                console.error('>>>群详情获取失败', error)
+            }
+        },
         //群管理员
         fetchGoupsAdmin: async ({ commit }, params) => {
             const { data } = await EMClient.getGroupAdmin({
@@ -119,29 +183,6 @@ const Groups = {
                 })
             } catch (error) {}
         },
-        //获取登录用户在某群的群组属性
-        // fetchInTheGroupInfo: async ({ commit }, groupId) => {
-        //
-        //     try {
-        //         const { data: inGroupInfo } =
-        //             await EMClient.getGroupMemberAttributes({
-        //                 groupId: groupId,
-        //                 userId: EMClient.user
-        //             })
-        //
-        //         commit('SET_LOGINUSER_GROUP_INFO', {
-        //             groupId: groupId,
-        //             inGroupInfo: inGroupInfo
-        //         })
-        //     } catch (error) {
-        //
-        //     }
-
-        //     // commit('SET_GROUP_INFOS', {
-        //     //     groupId: params,
-        //     //     groupInfo: data,
-        //     // })
-        // },
         //设置登录用户在某群的群组属性
         setInTheGroupInfo: async ({ commit }, params) => {
             const { groupId, nickName } = params
@@ -159,7 +200,6 @@ const Groups = {
                 })
             } catch (error) {}
         },
-
         //获取群公告
         fetchAnnounment: async ({ dispatch, commit }, params) => {
             const option = {
@@ -426,7 +466,9 @@ const Groups = {
             })
         }
     },
-    getters: {}
+    getters: {
+        getGroupDetailMap: (state) => state.groupDetails
+    }
 }
 
 export default Groups
