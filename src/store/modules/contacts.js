@@ -259,6 +259,10 @@ const Contacts = {
         //返回排序后的好友列表
         sortedFriendList: (state) => {
             return sortPinyinFriendItem(state.friendList)
+        },
+        //获取基础好友列表
+        getFriendList: (state) => {
+            return state.friendList
         }
     }
 }

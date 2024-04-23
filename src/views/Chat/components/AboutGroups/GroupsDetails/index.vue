@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRaw, toRefs, computed, nextTick } from 'vue'
+import { ref, toRaw, toRefs, computed, nextTick, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 /* IMSDK */
 import { EMClient } from '@/IM'
@@ -10,8 +10,7 @@ import { ArrowRight, Edit, View } from '@element-plus/icons-vue'
 import store from '@/store'
 /* porps */
 const props = defineProps({
-    groupDetail: { type: Object, required: true, default: () => ({}) },
-    nowGroupId: {
+    groupId: {
         type: String,
         required: true,
         default: ''
@@ -23,40 +22,40 @@ const emits = defineEmits(['handleDrawer'])
  * groupDetail（群详情接口返回的数据）
  * 主要包含群名称，群主id，群组desc，群组人数，群组禁言状态是否容许邀请...。
  **/
-const { nowGroupId } = toRefs(props)
-
-const groupDetail = computed(() => {
-    return (
-        store.state.Contacts.groupList[nowGroupId.value] &&
-        store.state.Contacts.groupList[nowGroupId.value].groupDetail
-    )
+const { groupId } = toRefs(props)
+//获取加入的群组列表
+const getJoinedGroupList = computed(() => store.getters.getJoinedGroupList)
+//获取群组详情（展示群组名称等信息）
+const getGroupDetailFromGroupList = computed(() => {
+    const group = getJoinedGroupList.value.filter((groupItem) => {
+        if (groupItem.groupId === groupId.value) {
+            return groupItem
+        }
+    })
+    return group[0]
 })
-
 /* 群组展示相关核心数据获取 */
-const goupsInfos = computed(() => {
-    return (
-        groupDetail.value.id &&
-        store.state.Groups.groupsInfos[groupDetail.value.id]
-    )
-})
 //权限判断（黑名单以及禁言列表的获取，只有群主管理员）
 const memberRole = computed(() => {
-    let allGroupAdmin = []
-    //群主
-    const owner = groupDetail.value && groupDetail.value.owner
-    //管理员列表
-    const groupAdmin = (goupsInfos.value && toRaw(goupsInfos.value.admin)) || []
-    //登陆人id
-    const loginUser = EMClient.user
-    //合并两者名单
-    allGroupAdmin = [...groupAdmin, owner]
     //判断是否在权限名单内
-    return allGroupAdmin.includes(loginUser)
+    if (
+        getGroupDetailFromGroupList.value.role === 'admin' ||
+        getGroupDetailFromGroupList.value.role === 'owner'
+    ) {
+        return true
+    } else {
+        return false
+    }
 })
+
 /* 群组管理 */
 const groupmanagement = ref(null)
 const modalType = ref('')
 const groupModalTitle = ref({ title: '', type: 0 })
+//群公告
+const getGroupAnnouncement = computed(() => {
+    return store.getters.getGroupDetailMap.get(groupId.value)?.announcement
+})
 //弹出群管理相关modal框
 const alertManagementModal = (type, groupType) => {
     const titleType = {
@@ -79,11 +78,10 @@ const editGroupName = async (type, oldGroupName) => {
     if (type === 'save') {
         if (groupName.value === oldGroupName) return (isEdit.value = false)
         const params = {
-            groupid: groupDetail.value.id,
+            groupId: groupId.value,
             modifyType: 0,
             content: groupName.value
         }
-
         try {
             await store.dispatch('modifyGroupInfo', params)
             ElMessage({
@@ -93,6 +91,7 @@ const editGroupName = async (type, oldGroupName) => {
             })
             isEdit.value = false
         } catch (error) {
+            console.error(error)
             ElMessage({
                 message: '群组名称修改失败~',
                 type: 'error',
@@ -119,7 +118,7 @@ const editMyGroupNickName = async (type, oldMyGroupNickname) => {
         if (myGroupNickname.value === oldMyGroupNickname)
             return (isEditMyGroupNickname.value = false)
         const params = {
-            groupId: nowGroupId.value,
+            groupId: groupId.value,
             nickName: myGroupNickname.value
         }
 
@@ -152,15 +151,14 @@ const editMyGroupNickName = async (type, oldMyGroupNickname) => {
 const inTheGroupNickname = computed(() => {
     const loginUser = EMClient.user
     const myNickname =
-        store.state.Groups.groupsInfos[nowGroupId.value]?.groupMemberInfo[
+        store.state.Groups.groupsInfos[groupId.value]?.groupMemberInfo[
             loginUser
         ]?.nickName
     return myNickname
 })
 //退出、解散群组
 const quitThisGroup = async () => {
-    if (!groupDetail.value.id) return
-    const groupId = groupDetail.value.id
+    const groupId = groupId.value
     try {
         await ElMessageBox.confirm(
             '将要从本群退出，确认要退出此群吗？',
@@ -184,8 +182,7 @@ const quitThisGroup = async () => {
     }
 }
 const dissolveThisGroup = async () => {
-    if (!groupDetail.value.id) return
-    const groupId = groupDetail.value.id
+    const groupId = groupId.value
     try {
         await ElMessageBox.confirm(
             '将要将本群解散，确认要解散此群吗？',
@@ -208,9 +205,49 @@ const dissolveThisGroup = async () => {
         }
     }
 }
+
+//群组黑名单人数
+const groupBlacklist = computed(() => {
+    return store.getters.getGroupDetailMap.get(groupId.value)?.blacklist
+})
+//群组禁言人数
+const groupMutelist = computed(() => {
+    return store.getters.getGroupDetailMap.get(groupId.value)?.mutelist
+})
+//群组经验名单
+const handleUpdateGroupData = async () => {
+    //更新群组公告
+    if (!getGroupAnnouncement.value && getGroupAnnouncement.value !== '') {
+        try {
+            await store.dispatch('fetchAnnounmentFromServer', groupId.value)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    //获取当前群组内禁言名单或管理员名单（仅群主或管理员有权限调用）
+    if (memberRole.value) {
+        try {
+            !groupBlacklist.value &&
+                (await store.dispatch(
+                    'fetchGoupsBlackListFromServer',
+                    groupId.value
+                ))
+            !groupMutelist.value &&
+                (await store.dispatch(
+                    'fetchGoupsMuteListFromServer',
+                    groupId.value
+                ))
+        } catch (error) {
+            console.error(error)
+        }
+    }
+}
+onMounted(() => {
+    handleUpdateGroupData()
+})
 </script>
 <template>
-    <div class="app_container" v-if="groupDetail">
+    <div class="app_container" v-if="getGroupDetailFromGroupList">
         <!-- 群名称 -->
         <div class="group_func_card group_name">
             <div class="title">
@@ -218,13 +255,20 @@ const dissolveThisGroup = async () => {
                 <el-icon
                     class="icon"
                     v-if="memberRole"
-                    @click="editGroupName('edit', groupDetail.name)"
+                    @click="
+                        editGroupName(
+                            'edit',
+                            getGroupDetailFromGroupList.groupName
+                        )
+                    "
                 >
                     <Edit />
                 </el-icon>
             </div>
             <div class="content">
-                <div v-if="!isEdit">{{ groupDetail.name || '' }}</div>
+                <div v-if="!isEdit">
+                    {{ getGroupDetailFromGroupList.groupName || '' }}
+                </div>
                 <el-input
                     v-else
                     class="group_name_input"
@@ -233,7 +277,12 @@ const dissolveThisGroup = async () => {
                     size="small"
                     maxlength="15"
                     show-word-limit
-                    @blur="editGroupName('save', groupDetail.name)"
+                    @blur="
+                        editGroupName(
+                            'save',
+                            getGroupDetailFromGroupList.groupName
+                        )
+                    "
                 >
                 </el-input>
             </div>
@@ -245,14 +294,13 @@ const dissolveThisGroup = async () => {
                 群描述
                 <el-icon
                     class="icon"
-                    v-if="memberRole"
                     @click="alertManagementModal('groupDesc')"
                 >
-                    <Edit />
+                    <Edit v-if="memberRole" />
                 </el-icon>
             </div>
             <div class="content">
-                {{ groupDetail.description || '暂无群描述~' }}
+                {{ getGroupDetailFromGroupList.description || '暂无群描述~' }}
             </div>
         </div>
         <el-divider style="margin: 0" />
@@ -285,7 +333,7 @@ const dissolveThisGroup = async () => {
         </div>
         <el-divider style="margin: 0" />
         <!-- 群公告 -->
-        <div v-if="goupsInfos" class="group_func_card group_announcements">
+        <div class="group_func_card group_announcements">
             <div class="title">
                 群公告
                 <el-icon
@@ -297,7 +345,7 @@ const dissolveThisGroup = async () => {
                 </el-icon>
             </div>
             <div class="content" title="查看更多">
-                {{ goupsInfos.announcement || '暂无群公告~' }}
+                {{ getGroupAnnouncement || '暂无群公告~' }}
             </div>
         </div>
         <el-divider style="margin: 0" />
@@ -307,9 +355,9 @@ const dissolveThisGroup = async () => {
             <div class="main">
                 <div class="member_count">
                     {{
-                        `${groupDetail.affiliations_count || '0'}/${
-                            groupDetail.maxusers || '500'
-                        }`
+                        `${
+                            getGroupDetailFromGroupList.affiliationsCount || '0'
+                        }/${getGroupDetailFromGroupList.maxUsers || '500'}`
                     }}
                 </div>
                 <div
@@ -323,14 +371,11 @@ const dissolveThisGroup = async () => {
         <el-divider style="margin: 0" />
         <template v-if="memberRole">
             <!-- 黑名单 -->
-            <div
-                class="group_list_card group_blacklist"
-                v-if="goupsInfos.blacklist"
-            >
+            <div class="group_list_card group_blacklist">
                 <div class="label">黑名单</div>
                 <div class="main">
                     <div class="member_count">
-                        {{ goupsInfos.blacklist.length || '暂无' }}
+                        {{ groupBlacklist?.length || '暂无' }}
                     </div>
                     <div
                         class="more_list"
@@ -342,14 +387,11 @@ const dissolveThisGroup = async () => {
             </div>
             <el-divider style="margin: 0" />
             <!-- 禁言名单 -->
-            <div
-                class="group_list_card group_mutelist"
-                v-if="goupsInfos.mutelist"
-            >
+            <div class="group_list_card group_mutelist">
                 <div class="label">禁言名单</div>
                 <div class="main">
                     <div class="member_count">
-                        {{ goupsInfos.mutelist.length || '暂无' }}
+                        {{ groupMutelist?.length || '暂无' }}
                     </div>
                     <div
                         class="more_list"
@@ -363,7 +405,9 @@ const dissolveThisGroup = async () => {
         </template>
         <!-- 群组操作按钮 -->
         <div class="group_list_handle_box">
-            <template v-if="groupDetail.owner === EMClient.user">
+            <template
+                v-if="getGroupDetailFromGroupList.owner === EMClient.user"
+            >
                 <el-button
                     type="danger"
                     class="group_list_card_btn"
@@ -388,7 +432,7 @@ const dissolveThisGroup = async () => {
             :modalType="modalType"
             :groupModalTitle="groupModalTitle"
             :memberRole="memberRole"
-            :groupDetail="groupDetail"
+            :groupId="groupId"
         />
     </div>
 </template>

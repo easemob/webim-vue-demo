@@ -4,6 +4,12 @@ import { useStore } from 'vuex'
 import { useClipboard, usePermission } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { EMClient } from '@/IM'
+import {
+    ALL_MESSAGE_TYPE,
+    CUSTOM_TYPE,
+    CHAT_TYPE,
+    MESSAGE_STATUS_TYPE
+} from '@/constant'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import fileSizeFormat from '@/utils/fileSizeFormat'
 import dateFormat from '@/utils/dateFormater'
@@ -25,24 +31,20 @@ const props = defineProps({
         type: [Array, Object],
         default: () => []
     },
-    nowPickInfo: {
+    routeQueryData: {
         type: Object,
-        default: () => ({}),
+        default: () => ({
+            id: '',
+            chatType: CHAT_TYPE.SINGLE
+        }),
         required: true
     }
 })
-const { nowPickInfo } = toRefs(props)
+const { routeQueryData } = toRefs(props)
 /* emits */
 const emit = defineEmits(['scrollMessageList', 'reEditMessage', 'messageQuote'])
 const { messageData } = toRefs(props)
-/* constant */
-const {
-    ALL_MESSAGE_TYPE,
-    CUSTOM_TYPE,
-    CHAT_TYPE,
-    CHANGE_MESSAGE_BODAY_TYPE,
-    MESSAGE_STATUS_TYPE
-} = messageType
+
 /* login hxId */
 const loginUserId = EMClient.user
 
@@ -54,9 +56,9 @@ const isMyself = computed(() => {
 })
 /* 获取消息id集合 */
 const getMessageIdsCollectionMap = computed(() => {
-    if (nowPickInfo.value.id) {
-        console.log(nowPickInfo.value.id)
-        return store.getters.getMessageIdsCollectionMap(nowPickInfo.value.id)
+    if (routeQueryData.value.id) {
+        console.log(routeQueryData.value.id)
+        return store.getters.getMessageIdsCollectionMap(routeQueryData.value.id)
     }
 })
 /* 消息已读未读逻辑 */
@@ -94,7 +96,7 @@ const otherUserInfo = computed(() => {
 })
 //处理聊天对方昵称展示
 const handleNickName = computed(() => {
-    const { chatType, id } = nowPickInfo.value
+    const { chatType, id } = routeQueryData.value
     const friendList = store.state.Contacts.friendList
     const groupsInfos = store.state.Groups.groupsInfos
     return (hxId) => {

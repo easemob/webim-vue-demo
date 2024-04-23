@@ -9,10 +9,10 @@ import { ElMessage } from 'element-plus'
 import { Close } from '@element-plus/icons-vue'
 import waterMark from '@/utils/waterMark'
 /* 组件 */
-import MessageListItem from './components/messageListItem'
-import InputBox from './components/inputBox'
-import UserStatus from '@/components/UserStatus'
+import ChatMessageListItem from './components/ChatMessageListItem'
+import ChatInputBox from './components/ChatInputBox'
 import GroupsDetails from '@/views/Chat/components/AboutGroups/GroupsDetails'
+import ChatContainerHeader from './components/ChatContainerHeader'
 /* store */
 const store = useStore()
 /* route */
@@ -20,6 +20,7 @@ const route = useRoute()
 const { CHAT_TYPE } = messageType
 const { EASEIM_HINT, SWINDLER_GO_DIE, WARM_TIP } = warningText
 const nowPickInfo = ref({})
+
 const friendList = computed(() => store.state.Contacts.friendList)
 const groupList = computed(() => store.state.Contacts.groupList)
 /* loginstatus */
@@ -79,13 +80,22 @@ const getIdInfo = async ({ id, chatType }) => {
         }
     }
 }
+const routeQueryData = ref({
+    id: '',
+    chatType: CHAT_TYPE.SINGLE
+})
+const getRouteQueryWithIdInfo = (data) => {
+    const { id, chatType } = data
+    routeQueryData.value.id = id
+    routeQueryData.value.chatType = chatType
+}
 //监听路由改变获取对应的getIdInfo
 const stopWatchRoute = watch(
     () => route.query,
     (routeVal) => {
         if (routeVal) {
             nowPickInfo.value = { ...routeVal }
-            loginState.value && getIdInfo(routeVal)
+            getRouteQueryWithIdInfo(routeVal)
         }
     },
     {
@@ -109,13 +119,13 @@ const isMoreHistoryMsg = ref(true) //加载文案展示为加载更多还是已�
 const notScrollBottom = ref(false) //是否滚动置底
 //获取历史记录
 const fechHistoryMessage = (loadType) => {
-    if (!nowPickInfo.value) return []
+    if (!routeQueryData.value) return []
     return async () => {
         loadingHistoryMsg.value = true
         notScrollBottom.value = true
         if (loadType == 'fistLoad') {
             const { messages } = await store.dispatch('getHistoryMessage', {
-                ...nowPickInfo.value,
+                ...routeQueryData.value,
                 cursor: -1
             })
             if (messages.length > 0) {
@@ -132,7 +142,7 @@ const fechHistoryMessage = (loadType) => {
             const fistMessageId =
                 messageData.value[0] && messageData.value[0].id
             const { messages } = await store.dispatch('getHistoryMessage', {
-                ...nowPickInfo.value,
+                ...routeQueryData.value,
                 cursor: fistMessageId
             })
             if (messages.length > 0) {
@@ -153,8 +163,8 @@ const messageData = computed(() => {
     //如果Message.messageList中不存在的话调用拉取漫游取一下历史消息
     if (loginState.value) {
         return (
-            (nowPickInfo.value.id &&
-                store.state.Message.messageList[nowPickInfo.value.id]) ||
+            (routeQueryData.value.id &&
+                store.state.Message.messageList[routeQueryData.value.id]) ||
             fechHistoryMessage('fistLoad')()
         )
     }
@@ -204,7 +214,7 @@ watch(
 watch(
     () => route.query,
     () => {
-        if (Object.keys(nowPickInfo.value).length > 0) {
+        if (Object.keys(routeQueryData.value).length > 0) {
             nextTick(() => {
                 scrollMessageList('bottom')
             })
@@ -220,58 +230,15 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
 </script>
 <template>
     <el-container v-if="loginState" class="app_container">
-        <el-header class="chat_message_header">
-            <template v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE">
-                <div v-if="nowPickInfo.userInfo" class="chat_user_box">
-                    <span class="chat_user_name">
-                        {{
-                            nowPickInfo.userInfo.nickname || nowPickInfo.id
-                        }}</span
-                    >
-                    <UserStatus :userStatus="nowPickInfo.userInfo.userStatus" />
-                </div>
-                <div v-else>
-                    {{ nowPickInfo.id
-                    }}<span style="font-size: 10px">(非好友)</span>
-                </div>
-            </template>
-            <template v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP">
-                <div v-if="nowPickInfo.groupDetail" class="chat_user_box">
-                    <span class="chat_user_name">
-                        {{ groupDetail.name || '' }}
-                        {{ `(${groupDetail?.affiliations_count || ''})` }}
-                    </span>
-                </div>
-                <div v-else class="chat_user_box">
-                    <span class="chat_user_name">
-                        {{ groupDetail.name || nowPickInfo.id }}
-                    </span>
-                </div>
-            </template>
-            <!-- 群组展示抽屉 -->
-            <span
-                class="more"
-                v-if="
-                    nowPickInfo.groupDetail &&
-                    nowPickInfo.chatType === CHAT_TYPE.GROUP
-                "
-                @click="handleDrawer"
-            >
-                <svg
-                    width="18"
-                    height="4"
-                    viewBox="0 0 18 4"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+        <!-- 聊天页头部 -->
+        <ChatContainerHeader :routeQueryData="routeQueryData">
+            <template v-slot:more>
+                <!-- 群组展示抽屉 -->
+                <div
+                    class="more"
+                    v-if="routeQueryData.chatType === CHAT_TYPE.GROUP"
+                    @click="handleDrawer"
                 >
-                    <circle cx="2" cy="2" r="2" fill="#333333" />
-                    <circle cx="9" cy="2" r="2" fill="#333333" />
-                    <circle cx="16" cy="2" r="2" fill="#333333" />
-                </svg>
-            </span>
-            <!-- 单人展示删除拉黑 -->
-            <span class="more" v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE">
-                <el-dropdown placement="bottom-end" trigger="click">
                     <svg
                         width="18"
                         height="4"
@@ -283,19 +250,49 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
                         <circle cx="9" cy="2" r="2" fill="#333333" />
                         <circle cx="16" cy="2" r="2" fill="#333333" />
                     </svg>
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                            <el-dropdown-item @click="delTheFriend">
-                                删除好友
-                            </el-dropdown-item>
-                            <!-- <el-dropdown-item @click="addFriendToBlackList">
+                </div>
+                <div
+                    class="more"
+                    v-if="routeQueryData.chatType === CHAT_TYPE.SINGLE"
+                >
+                    <el-dropdown placement="bottom-end" trigger="click">
+                        <svg
+                            width="18"
+                            height="4"
+                            viewBox="0 0 18 4"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <circle cx="2" cy="2" r="2" fill="#333333" />
+                            <circle cx="9" cy="2" r="2" fill="#333333" />
+                            <circle cx="16" cy="2" r="2" fill="#333333" />
+                        </svg>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item @click="delTheFriend">
+                                    删除好友
+                                </el-dropdown-item>
+                                <!-- <el-dropdown-item @click="addFriendToBlackList">
                 加入黑名单
               </el-dropdown-item> -->
-                        </el-dropdown-menu>
-                    </template>
-                </el-dropdown>
-            </span>
-        </el-header>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+                </div>
+            </template>
+            <svg
+                width="18"
+                height="4"
+                viewBox="0 0 18 4"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <circle cx="2" cy="2" r="2" fill="#333333" />
+                <circle cx="9" cy="2" r="2" fill="#333333" />
+                <circle cx="16" cy="2" r="2" fill="#333333" />
+            </svg>
+        </ChatContainerHeader>
+        <!-- 友情提示框 -->
         <div v-if="isShowWarningTips" class="easeim_safe_tips">
             <p>{{ EASEIM_HINT }}</p>
             <p>【防骗提示】{{ randomTips }}</p>
@@ -313,6 +310,7 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
                 </el-icon>
             </span>
         </div>
+        <!-- 消息内容区域 -->
         <el-main class="chat_message_main">
             <el-scrollbar class="main_container" ref="messageContainer">
                 <div class="innerRef">
@@ -337,8 +335,8 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
                             >
                         </div>
                     </div>
-                    <MessageListItem
-                        :nowPickInfo="nowPickInfo"
+                    <ChatMessageListItem
+                        :routeQueryData="routeQueryData"
                         :messageData="messageData"
                         @scrollMessageList="scrollMessageList"
                         @reEditMessage="reEditMessage"
@@ -347,21 +345,23 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
                 </div>
             </el-scrollbar>
         </el-main>
+        <!-- 输入框区别 -->
         <el-footer class="chat_message_inputbar">
-            <InputBox ref="inputBox" :nowPickInfo="nowPickInfo" />
+            <ChatInputBox ref="inputBox" :routeQueryData="routeQueryData" />
         </el-footer>
+        <!-- 聊天右侧抽屉 -->
         <el-drawer
-            v-if="nowPickInfo.chatType === CHAT_TYPE.GROUP"
             v-model="drawer"
             :show-close="false"
             :close-on-click-modal="true"
+            :destroy-on-close="true"
             direction="rtl"
             :modal="true"
             size="280px"
         >
             <GroupsDetails
-                :nowGroupId="nowPickInfo.id"
-                :groupDetail="groupDetail"
+                ref="groupsDetailsComponent"
+                :groupId="routeQueryData.id"
                 @handleDrawer="handleDrawer"
             />
         </el-drawer>

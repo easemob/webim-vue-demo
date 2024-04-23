@@ -38,26 +38,30 @@ const Groups = {
         },
         SET_GROUPS_BLIACK_LIST: (state, payload) => {
             const { groupId, blacklist } = payload
-            if (!state.groupsInfos[groupId]) {
-                state.groupsInfos[groupId] = {}
+            if (!state.groupDetails.has(groupId)) {
+                state.groupDetails.set(groupId, { blacklist })
             }
-            state.groupsInfos[groupId].blacklist = blacklist
+            state.groupDetails.get(groupId).blacklist = blacklist
         },
         SET_GOUPS_MUTE_LIST: (state, payload) => {
             const { groupId, mutelist } = payload
-            if (!state.groupsInfos[groupId]) {
-                state.groupsInfos[groupId] = {}
+            if (!state.groupDetails.has(groupId)) {
+                state.groupDetails.set(groupId, { mutelist })
             }
-            state.groupsInfos[groupId].mutelist = mutelist
+            state.groupDetails.get(groupId).mutelist = mutelist
         },
         SET_GOUPS_ANNOUN: (state, payload) => {
             const { groupId, announcement } = payload
-            if (state.groupsInfos[groupId]) {
-                state.groupsInfos[groupId].announcement = announcement
-            } else {
-                state.groupsInfos[groupId] = {}
-                state.groupsInfos[groupId].announcement = announcement
+            // if (state.groupsInfos[groupId]) {
+            //     state.groupsInfos[groupId].announcement = announcement
+            // } else {
+            //     state.groupsInfos[groupId] = {}
+            //     state.groupsInfos[groupId].announcement = announcement
+            // }
+            if (!state.groupDetails.has(groupId)) {
+                state.groupDetails.set(groupId, { announcement: announcement })
             }
+            state.groupDetails.get(groupId).announcement = announcement
         },
         //设置用户在群组中的群组属性
         SET_GROUP_MEMBERS_INFO: (state, payload) => {
@@ -75,6 +79,31 @@ const Groups = {
                 state.groupsInfos[groupId].groupMemberInfo,
                 groupMemberInfo
             )
+        },
+        //更新本地缓存群组信息
+        UPDATE_CACHE_GROUP_INFO: (state, payload) => {
+            const { groupId, type, params } = payload
+            console.log('>>>>>执行更新', payload)
+            //更新群组列表内数据
+            if (type === 'groupName') {
+                state.joinedGroup.joinedGroupList.length > 0 &&
+                    state.joinedGroup.joinedGroupList.map((groupItem) => {
+                        if (groupItem.groupId === groupId) {
+                            groupItem.groupName = params
+                        }
+                    })
+                state.groupDetails.get(groupId).name = params
+            }
+            if (type === 'groupDescription') {
+                state.joinedGroup.joinedGroupList.length > 0 &&
+                    state.joinedGroup.joinedGroupList.map((groupItem) => {
+                        if (groupItem.groupId === groupId) {
+                            groupItem.description = params
+                        }
+                    })
+                state.groupDetails.get(groupId).description = params
+            }
+            //更新群组详情内的数据
         }
     },
     actions: {
@@ -201,28 +230,36 @@ const Groups = {
             } catch (error) {}
         },
         //获取群公告
-        fetchAnnounment: async ({ dispatch, commit }, params) => {
+        fetchAnnounmentFromServer: async ({ dispatch, commit }, groupId) => {
             const option = {
-                groupId: params
+                groupId: groupId
             }
-            const { data } = await EMClient.fetchGroupAnnouncement(option)
-            commit('SET_GOUPS_ANNOUN', {
-                groupId: params,
-                announcement: data.announcement
-            })
+            try {
+                const { data } = await EMClient.fetchGroupAnnouncement(option)
+                commit('SET_GOUPS_ANNOUN', {
+                    groupId: groupId,
+                    announcement: data.announcement
+                })
+            } catch (error) {
+                console.error('>>>>>群组公告获取失败', error)
+            }
         },
         //群黑名单
-        fetchGoupsBlackList: async ({ dispatch, commit }, params) => {
-            const { data } = await EMClient.getGroupBlocklist({
-                groupId: params
-            })
-            commit('SET_GROUPS_BLIACK_LIST', {
-                groupId: params,
-                blacklist: data
-            })
+        fetchGoupsBlackListFromServer: async ({ commit }, groupId) => {
+            try {
+                const { data } = await EMClient.getGroupBlocklist({
+                    groupId: groupId
+                })
+                commit('SET_GROUPS_BLIACK_LIST', {
+                    groupId: groupId,
+                    blacklist: data
+                })
+            } catch (error) {
+                console.error(error)
+            }
         },
         //群禁言列表
-        fetchGoupsMuteList: async ({ dispatch, commit }, params) => {
+        fetchGoupsMuteListFromServer: async ({ dispatch, commit }, params) => {
             try {
                 const { data } = await EMClient.getGroupMuteList({
                     groupId: params
@@ -231,40 +268,37 @@ const Groups = {
                     groupId: params,
                     mutelist: data
                 })
-            } catch (error) {}
+            } catch (error) {
+                console.error(error)
+            }
         },
-        // 修改群名或者群详情
+        // 修改群名或者群描述
         modifyGroupInfo: async ({ dispatch, commit }, params) => {
-            const { groupid, modifyType, content } = params
+            const { groupId, modifyType, content } = params
             //0 是修改群名
             if (modifyType === 0) {
                 const option = {
-                    groupId: groupid,
+                    groupId: groupId,
                     groupName: content
                 }
                 await EMClient.modifyGroup(option)
                 //更新本地缓存数据
-                commit('UPDATE_GROUP_INFOS', {
-                    groupId: groupid,
+                commit('UPDATE_CACHE_GROUP_INFO', {
+                    groupId: groupId,
                     type: 'groupName',
                     params: content
-                })
-                commit('UPDATE_GROUP_LIST', {
-                    type: 'updateGroupName',
-                    groupId: groupid,
-                    groupName: content
                 })
             }
             //1 是修改群详情
             if (modifyType === 1) {
                 const option = {
-                    groupId: groupid,
+                    groupId: groupId,
                     description: content
                 }
                 await EMClient.modifyGroup(option)
                 //更新本地缓存数据
-                commit('UPDATE_GROUP_INFOS', {
-                    groupId: groupid,
+                commit('UPDATE_CACHE_GROUP_INFO', {
+                    groupId: groupId,
                     type: 'groupDescription',
                     params: content
                 })
@@ -467,7 +501,8 @@ const Groups = {
         }
     },
     getters: {
-        getGroupDetailMap: (state) => state.groupDetails
+        getGroupDetailMap: (state) => state.groupDetails,
+        getJoinedGroupList: (state) => state.joinedGroup.joinedGroupList
     }
 }
 

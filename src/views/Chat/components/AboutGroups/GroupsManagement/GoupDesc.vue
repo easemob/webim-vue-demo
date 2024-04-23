@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, onMounted, nextTick } from 'vue'
+import { ref, toRefs, onMounted, computed, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import store from '@/store'
 const props = defineProps({
@@ -8,13 +8,23 @@ const props = defineProps({
         required: true,
         default: false
     },
-    groupDetail: {
-        type: Object,
+    groupId: {
+        type: String,
         required: true,
-        default: () => ({})
+        default: ''
     }
 })
-const { groupDetail } = toRefs(props)
+const { memberRole, groupId } = toRefs(props)
+//获取加入的群组列表
+const getJoinedGroupList = computed(() => store.getters.getJoinedGroupList)
+const getGroupDetailFromGroupList = computed(() => {
+    const group = getJoinedGroupList.value.filter((groupItem) => {
+        if (groupItem.groupId === groupId.value) {
+            return groupItem
+        }
+    })
+    return group[0]
+})
 const introduceRef = ref(null)
 const isEdit = ref(false)
 const groupDescValue = ref('')
@@ -29,7 +39,7 @@ const editGroupsDesc = async (type, oldGroupDesc) => {
     if (type === 'save') {
         if (groupDescValue.value === oldGroupDesc) return (isEdit.value = false)
         const params = {
-            groupid: groupDetail.value.id,
+            groupId: groupId.value,
             modifyType: 1,
             content: groupDescValue.value
         }
@@ -53,7 +63,7 @@ const editGroupsDesc = async (type, oldGroupDesc) => {
 }
 onMounted(() => {
     nextTick(() => {
-        editGroupsDesc('edit', groupDetail.value.description)
+        editGroupsDesc('edit', getGroupDetailFromGroupList.value.description)
     })
 })
 </script>
@@ -62,9 +72,11 @@ onMounted(() => {
         <p
             class="group_desc"
             v-if="!isEdit"
-            @click="editGroupsDesc('edit', groupDetail.description)"
+            @click="
+                editGroupsDesc('edit', getGroupDetailFromGroupList.description)
+            "
         >
-            {{ groupDetail.description || '暂无群描述' }}
+            {{ getGroupDetailFromGroupList.description || '暂无群描述' }}
         </p>
         <el-input
             v-if="isEdit"
@@ -77,7 +89,9 @@ onMounted(() => {
             class="notice_detail"
             placeholder="请输入群组详情~"
             resize="none"
-            @blur="editGroupsDesc('save', groupDetail.description)"
+            @blur="
+                editGroupsDesc('save', getGroupDetailFromGroupList.description)
+            "
         />
     </div>
 </template>

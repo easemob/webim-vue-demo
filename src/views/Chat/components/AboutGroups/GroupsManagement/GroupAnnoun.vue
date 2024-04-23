@@ -8,10 +8,10 @@ const props = defineProps({
         required: true,
         default: false
     },
-    groupDetail: {
-        type: Object,
+    groupId: {
+        type: String,
         required: true,
-        default: () => ({})
+        default: ''
     }
 })
 const { memberRole, groupDetail } = toRefs(props)

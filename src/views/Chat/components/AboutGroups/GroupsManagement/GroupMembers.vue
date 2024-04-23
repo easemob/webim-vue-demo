@@ -17,10 +17,10 @@ import _ from 'lodash'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 /* props */
 const props = defineProps({
-    groupDetail: {
-        type: Object,
+    groupId: {
+        type: String,
         required: true,
-        default: () => ({})
+        default: ''
     },
     memberRole: {
         type: Boolean,

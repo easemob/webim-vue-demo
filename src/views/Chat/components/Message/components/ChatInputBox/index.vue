@@ -5,7 +5,7 @@ import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { ElLoading, ElMessageBox } from 'element-plus'
 import { onClickOutside } from '@vueuse/core'
 import { emojis } from '@/constant'
-import { messageType } from '@/constant'
+import { ALL_MESSAGE_TYPE, CHAT_TYPE, MENTION_ALL } from '@/constant'
 import _ from 'lodash'
 import { EMClient } from '@/IM'
 import parseDownloadResponse from '@/utils/parseDownloadResponse'
@@ -22,14 +22,16 @@ import { useManageChannel } from '@/components/EaseCallKit/hooks'
 import InviteCallMembers from '@/components/InviteCallMembers'
 const store = useStore()
 const props = defineProps({
-    nowPickInfo: {
+    routeQueryData: {
         type: Object,
         required: true,
-        default: () => ({})
+        default: () => ({
+            id: '',
+            chatType: CHAT_TYPE.SINGLE
+        })
     }
 })
-const { ALL_MESSAGE_TYPE, CHAT_TYPE, MENTION_ALL } = messageType
-const { nowPickInfo } = toRefs(props)
+const { routeQueryData } = toRefs(props)
 //附件类上传加载状态
 const loadingBox = ref(null)
 /** /
@@ -41,7 +43,7 @@ const { getTheGroupNickNameById } = useGetUserMapInfo()
 //AT 逻辑
 const atMembersList = computed(() => {
     const members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }]
-    const groupId = nowPickInfo.value?.id
+    const groupId = routeQueryData.value?.id
     //TODO text部分应为获取群组成员的自定义属性，待后续增加可设置自定在群组当中的自定义属性。
     if (groupId) {
         const sourceMembers =
@@ -140,8 +142,8 @@ const sendTextMessage = _.debounce(async () => {
 
     checkAtMembers(textContent.value)
     const msgOptions = {
-        id: nowPickInfo.value.id,
-        chatType: nowPickInfo.value.chatType,
+        id: routeQueryData.value.id,
+        chatType: routeQueryData.value.chatType,
         msg: textContent.value,
         ext: {
             em_at_list: isAtAll.value
@@ -187,8 +189,8 @@ const sendImagesMessage = async (type, fileObj) => {
     const url = window.URL || window.webkitURL
     const img = new Image() //手动创建一个Image对象
     const msgOptions = {
-        id: nowPickInfo.value.id,
-        chatType: nowPickInfo.value.chatType,
+        id: routeQueryData.value.id,
+        chatType: routeQueryData.value.chatType,
         file: file,
         width: 0,
         height: 0
@@ -301,8 +303,8 @@ const sendFilesMessages = async () => {
     }
 
     const msgOptions = {
-        id: nowPickInfo.value.id,
-        chatType: nowPickInfo.value.chatType,
+        id: routeQueryData.value.id,
+        chatType: routeQueryData.value.chatType,
         file: file
     }
     const loadingInstance = ElLoading.service({
@@ -349,8 +351,8 @@ const sendAudioMessages = async (audioData) => {
     }
 
     const msgOptions = {
-        id: nowPickInfo.value.id,
-        chatType: nowPickInfo.value.chatType,
+        id: routeQueryData.value.id,
+        chatType: routeQueryData.value.chatType,
         file: file,
         length: audioData.length
     }
@@ -377,7 +379,7 @@ const clearScreen = () => {
         type: 'warning'
     })
         .then(() => {
-            const key = nowPickInfo.value.id
+            const key = routeQueryData.value.id
             store.commit('CLEAR_SOMEONE_MESSAGE', key)
         })
         .catch(() => {
@@ -422,7 +424,7 @@ const all_func = [
 const { CALL_TYPES, sendInviteMessage } = useManageChannel()
 //处理发起的音视频呼叫类型
 const handleInviteCall = (handleType) => {
-    const toId = nowPickInfo.value.id
+    const toId = routeQueryData.value.id
     //语音类型
     if (handleType === 'voice') {
         const callType = CALL_TYPES.SINGLE_VOICE
@@ -437,7 +439,7 @@ const handleInviteCall = (handleType) => {
         store.dispatch('createInformMessage', params)
     }
     if (handleType === 'video') {
-        if (nowPickInfo.value?.chatType === CHAT_TYPE.SINGLE) {
+        if (routeQueryData.value?.chatType === CHAT_TYPE.SINGLE) {
             const callType = CALL_TYPES.SINGLE_VIDEO
             sendInviteMessage(toId, callType)
             //发送邀请信息后创建一条本地系统通知类消息上屏展示
@@ -448,7 +450,7 @@ const handleInviteCall = (handleType) => {
                 msg: `邀请【${toId}】进行视频通话`
             }
             store.dispatch('createInformMessage', params)
-        } else if (nowPickInfo.value?.chatType === CHAT_TYPE.GROUP) {
+        } else if (routeQueryData.value?.chatType === CHAT_TYPE.GROUP) {
             //群组则弹出多人模态框
             showInviteCallMembersModal()
         }
@@ -457,7 +459,7 @@ const handleInviteCall = (handleType) => {
 const inviteCallMembersComp = ref(null)
 //调起多人邀请组件
 const showInviteCallMembersModal = () => {
-    const groupId = nowPickInfo.value.id
+    const groupId = routeQueryData.value.id
     if (groupId) {
         inviteCallMembersComp.value.alertDialog(groupId)
     } else {
@@ -466,7 +468,7 @@ const showInviteCallMembersModal = () => {
 //发送多人场景邀请信息的方法
 const sendMulitInviteMsg = (targetIMId) => {
     const callType = CALL_TYPES.MULTI_VIDEO
-    const groupId = nowPickInfo.value.id
+    const groupId = routeQueryData.value.id
     sendInviteMessage(targetIMId, callType, groupId)
     const params = {
         from: EMClient.user,
@@ -499,7 +501,7 @@ defineExpose({
                 class="iconfont icon-31dianhua"
                 style="font-size: 20px"
                 title="语音通话"
-                v-show="nowPickInfo.chatType === CHAT_TYPE.SINGLE"
+                v-show="routeQueryData.chatType === CHAT_TYPE.SINGLE"
                 @click="handleInviteCall('voice')"
             ></span>
             <span
@@ -557,7 +559,7 @@ defineExpose({
         <!-- 附件上传加载容器 -->
         <div ref="loadingBox" class="loading_box"></div>
     </div>
-    <template v-if="nowPickInfo.chatType === CHAT_TYPE.SINGLE">
+    <template v-if="routeQueryData.chatType === CHAT_TYPE.SINGLE">
         <textarea
             ref="editable"
             v-model="textContent"
@@ -570,7 +572,7 @@ defineExpose({
         >
         </textarea>
     </template>
-    <template v-else-if="nowPickInfo.chatType === CHAT_TYPE.GROUP">
+    <template v-else-if="routeQueryData.chatType === CHAT_TYPE.GROUP">
         <vue-at :members="atMembersList" name-key="text" @insert="onInsert">
             <textarea
                 ref="editable"

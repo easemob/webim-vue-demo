@@ -20,10 +20,10 @@ const props = defineProps({
         required: true,
         default: false
     },
-    groupDetail: {
-        type: Object,
+    groupId: {
+        type: String,
         required: true,
-        default: () => ({})
+        default: ''
     }
 })
 const dialogVisible = ref(false)
@@ -78,7 +78,7 @@ const save = () => {
             :is="diffModal[modalType] && diffModal[modalType].components"
             :groupModalTitle="groupModalTitle"
             :memberRole="memberRole"
-            :groupDetail="groupDetail"
+            :groupId="groupId"
             @save="save"
         >
         </component>

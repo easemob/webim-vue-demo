@@ -16,10 +16,10 @@ const props = defineProps({
         type: Object,
         default: () => ({ title: '', type: 0 }) //type 1 黑名单 type 2 禁言
     },
-    groupDetail: {
-        type: Object,
+    groupId: {
+        type: String,
         required: true,
-        default: () => ({})
+        default: ''
     },
     memberRole: {
         type: Boolean,
