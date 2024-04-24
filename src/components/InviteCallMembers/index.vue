@@ -26,7 +26,7 @@ const getGroupMemberList = async (groupId) => {
             })
         members.value = memberList
     } else {
-        await store.dispatch('fetchGoupsMember', groupId)
+        await store.dispatch('fetchGoupsMemberFromServer', groupId)
         const sourceMembers =
             store.state.Groups.groupsInfos[groupId]?.members || []
         sourceMembers.length > 0 &&

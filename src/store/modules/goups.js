@@ -1,5 +1,6 @@
 import { ElMessage } from 'element-plus'
 import { EMClient } from '@/IM'
+
 const Groups = {
     state: {
         groupsInfos: {},
@@ -7,7 +8,8 @@ const Groups = {
             joinedGroupList: [],
             joinedGroupListTotal: 0
         },
-        groupDetails: new Map()
+        groupDetails: new Map(), //key:groupId value:groupDetail
+        groupMembers: new Map() //key:groupId value:groupMemberList
     },
     mutations: {
         SET_JOINED_GROUP: (state, payload) => {
@@ -31,10 +33,15 @@ const Groups = {
         },
         SET_GOUPS_MEMBERS: (state, payload) => {
             const { groupId, members } = payload
-            if (!state.groupsInfos[groupId]) {
-                state.groupsInfos[groupId] = {}
+            state.groupMembers.set(groupId, [...members])
+            //同步更新群组列表里面的群人数
+            if (state.joinedGroup.joinedGroupList.length) {
+                state.joinedGroup.joinedGroupList.map((groupItem) => {
+                    if (groupItem.groupId === groupId) {
+                        groupItem.affiliationsCount = members.length
+                    }
+                })
             }
-            state.groupsInfos[groupId].members = members
         },
         SET_GROUPS_BLIACK_LIST: (state, payload) => {
             const { groupId, blacklist } = payload
@@ -112,7 +119,7 @@ const Groups = {
             dispatch('fetchGoupsAdmin', groupid)
             dispatch('fetchAnnounment', groupid)
             dispatch('fetchGoupsBlackList', groupid)
-            dispatch('fetchGoupsMember', groupid)
+            dispatch('fetchGoupsMemberFromServer', groupid)
             //普通群成员无权调用禁言列表
             dispatch('fetchGoupsMuteList', groupid)
         },
@@ -171,7 +178,7 @@ const Groups = {
             commit('SET_GORUPS_ADMINS', { groupId: params, admin: data })
         },
         //群组成员
-        fetchGoupsMember: async ({ dispatch, commit }, params) => {
+        fetchGoupsMemberFromServer: async ({ dispatch, commit }, params) => {
             //暂时定死就获取1000个
             const pageNum = 1,
                 pageSize = 1000
@@ -186,6 +193,21 @@ const Groups = {
                 members: data
             })
             commit('SET_GOUPS_MEMBERS', { groupId: params, members: data })
+        },
+        //获取群组成员
+        fetchGoupsMemberFromServer: async ({ commit }, groupId) => {
+            //此接口支持分页，如果群组成员大于1000人，需要分页获取。
+            const options = {
+                pageNum: 1,
+                pageSize: 1000,
+                groupId: groupId
+            }
+            try {
+                const { data } = await EMClient.listGroupMembers(options)
+                commit('SET_GOUPS_MEMBERS', { groupId: groupId, members: data })
+            } catch (error) {
+                console.error('>>>>>群组成员获取失败', error)
+            }
         },
         //获取群成员对应的群组属性
         fetchGroupMemberAttributes: async ({ dispatch, commit }, params) => {
@@ -227,7 +249,9 @@ const Groups = {
                     groupId: groupId,
                     inGroupInfo: [{ [EMClient.user]: { nickName } }]
                 })
-            } catch (error) {}
+            } catch (error) {
+                console.error(error)
+            }
         },
         //获取群公告
         fetchAnnounmentFromServer: async ({ dispatch, commit }, groupId) => {
@@ -307,8 +331,13 @@ const Groups = {
         // 设置/修改群组公告
         modifyGroupAnnouncement: async ({ dispatch }, params) => {
             //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
-            await EMClient.updateGroupAnnouncement(params)
-            dispatch('fetchAnnounment', params.groupId)
+            const { groupId, announcement } = params
+            try {
+                await EMClient.updateGroupAnnouncement({ ...params })
+                dispatch('fetchAnnounmentFromServer', groupId)
+            } catch (error) {
+                console.error('群公告修改失败', error)
+            }
         },
         //邀请群成员
         inviteUserJoinTheGroup: async ({ dispatch }, params) => {
@@ -340,7 +369,7 @@ const Groups = {
                 //通知更新群详情
                 dispatch('getAssignGroupDetail', groupId)
                 //更新群成员
-                dispatch('fetchGoupsMember', groupId)
+                dispatch('fetchGoupsMemberFromServer', groupId)
             } catch (error) {
                 ElMessage({
                     message: '该群成员移出失败，请稍后重试！',
@@ -363,7 +392,7 @@ const Groups = {
                     type: 'success'
                 })
                 //移出黑名单，还要调用拉取群组列表，原因为将群成员加入黑名单还会将其踢出群组。
-                dispatch('fetchGoupsMember', groupId)
+                dispatch('fetchGoupsMemberFromServer', groupId)
                 //重新获取黑名单列表
                 dispatch('fetchGoupsBlackList', groupId)
                 //通知更新群详情
@@ -502,6 +531,7 @@ const Groups = {
     },
     getters: {
         getGroupDetailMap: (state) => state.groupDetails,
+        getGroupMembersMap: (state) => state.groupMembers,
         getJoinedGroupList: (state) => state.joinedGroup.joinedGroupList
     }
 }

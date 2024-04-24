@@ -64,8 +64,7 @@ const alertManagementModal = (type, groupType) => {
     }
     modalType.value = type
     groupmanagement.value.dialogVisible = true
-
-    if (groupType !== undefined) {
+    if (groupType > -1) {
         groupModalTitle.value.title = titleType[groupType]
         groupModalTitle.value.type = groupType
     }

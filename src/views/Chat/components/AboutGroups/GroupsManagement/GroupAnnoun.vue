@@ -14,12 +14,9 @@ const props = defineProps({
         default: ''
     }
 })
-const { memberRole, groupDetail } = toRefs(props)
-const goupsInfos = computed(() => {
-    return (
-        groupDetail.value.id &&
-        store.state.Groups.groupsInfos[groupDetail.value.id]
-    )
+const { memberRole, groupId } = toRefs(props)
+const getGroupAnnouncement = computed(() => {
+    return store.getters.getGroupDetailMap.get(groupId.value)?.announcement
 })
 const announcementRef = ref(null)
 const isEdit = ref(false)
@@ -37,7 +34,7 @@ const editAnnouncment = async (type, oldAnnouncment) => {
             return (isEdit.value = false)
 
         const params = {
-            groupId: groupDetail.value.id,
+            groupId: groupId.value,
             announcement: announcmentValue.value
         }
         try {
@@ -60,7 +57,7 @@ const editAnnouncment = async (type, oldAnnouncment) => {
 }
 onMounted(() => {
     nextTick(() => {
-        editAnnouncment('edit', goupsInfos.value.announcement)
+        editAnnouncment('edit', getGroupAnnouncement.value)
     })
 })
 </script>
@@ -70,9 +67,9 @@ onMounted(() => {
         <template v-if="memberRole">
             <p
                 v-if="!isEdit"
-                @click="editAnnouncment('edit', goupsInfos.announcement)"
+                @click="editAnnouncment('edit', getGroupAnnouncement)"
             >
-                {{ goupsInfos.announcement || '暂无群公告~' }}
+                {{ getGroupAnnouncement || '暂无群公告~' }}
             </p>
             <el-input
                 v-if="isEdit"
@@ -85,11 +82,11 @@ onMounted(() => {
                 class="announcment_detail"
                 placeholder="请输入群组公告~"
                 resize="none"
-                @blur="editAnnouncment('save', goupsInfos.announcement)"
+                @blur="editAnnouncment('save', getGroupAnnouncement)"
             />
         </template>
         <!-- 仅供查看 -->
-        <p v-else>{{ goupsInfos.announcement || '暂无群公告~' }}</p>
+        <p v-else>{{ getGroupAnnouncement || '暂无群公告~' }}</p>
     </div>
 </template>
 

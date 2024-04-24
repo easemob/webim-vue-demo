@@ -128,7 +128,10 @@ const Conversation = {
                                 groupId: informContent.id,
                                 type: 'addAffiliationsCount'
                             })
-                            dispatch('fetchGoupsMember', informContent.id)
+                            dispatch(
+                                'fetchGoupsMemberFromServer',
+                                informContent.id
+                            )
                             informMsg.msg = `${informContent.from}加入了群组`
                             dispatch('createInformMessage', informMsg)
                         }
@@ -140,7 +143,10 @@ const Conversation = {
                                 groupId: informContent.id,
                                 type: 'delAffiliationsCount'
                             })
-                            dispatch('fetchGoupsMember', informContent.id)
+                            dispatch(
+                                'fetchGoupsMemberFromServer',
+                                informContent.id
+                            )
                             informMsg.msg = `${informContent.from}退出了群组`
                             dispatch('createInformMessage', informMsg)
                         }

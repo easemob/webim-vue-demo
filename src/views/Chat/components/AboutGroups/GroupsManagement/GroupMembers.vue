@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, toRaw, computed, watch } from 'vue'
+import { ref, toRefs, toRaw, computed, watch, onMounted } from 'vue'
 import { EMClient } from '@/IM'
 import {
     CircleClose,
@@ -28,7 +28,7 @@ const props = defineProps({
         default: false
     }
 })
-const { groupDetail, memberRole } = toRefs(props)
+const { groupId, memberRole } = toRefs(props)
 /*
  * 此组件主要功能为邀请好友入群，
  * 以及简单的管理群成员（移出群成员）。
@@ -38,16 +38,23 @@ const { groupDetail, memberRole } = toRefs(props)
 const loginUserId = computed(() => EMClient.user)
 /* 数据获取 */
 //群组成员
-const groupMembers = computed(() => {
-    return store.state.Groups.groupsInfos[groupDetail.value.id].members
+const getGroupMembersList = computed(() => {
+    return store.getters.getGroupMembersMap.get(groupId.value)
 })
-
+onMounted(async () => {
+    if (!getGroupMembersList.value) {
+        store.dispatch('fetchGoupsMemberFromServer', groupId.value)
+    }
+})
+//群组详情
+const groupDetail = computed(() => {
+    return store.getters.getGroupDetailMap.get(groupId.value)
+})
 /* 群成员操作相关 */
 //获取id对应的昵称（群成员属性昵称>用户属性>环信id）
 const { getTheGroupNickNameById } = useGetUserMapInfo()
 const getNickNameById = (hxId) => {
-    const groupId = groupDetail.value.id
-    return getTheGroupNickNameById(groupId, hxId)
+    return getTheGroupNickNameById(groupId.value, hxId)
 }
 const showGroupsMembersName = computed(() => {
     return (item) => {
@@ -81,8 +88,10 @@ const sortedFriendList = computed(() => {
             v.name = getNickNameById(v.hxId)
             v.isChecked = false
             v.exitTheGroup =
-                groupMembers.value &&
-                toRaw(groupMembers.value).some((m) => m.member === v.hxId)
+                getGroupMembersList.value &&
+                toRaw(getGroupMembersList.value).some(
+                    (m) => m.member === v.hxId
+                )
             v.keywords = `${v.hxId && v.hxId}${
                 (v.nickname && v.nickname) || ''
             }`
@@ -93,7 +102,7 @@ const sortedFriendList = computed(() => {
 
 //监听到选择群id变化重新进行赋值
 watch(
-    () => groupDetail.value.id,
+    () => groupId.value,
     () => {
         renderGroupMembers.value = sortedFriendList.value
     },
@@ -109,15 +118,19 @@ const cancelCheck = (params) => {
 //移出群成员
 const removeTheMember = async (params) => {
     const { member } = params
-    const groupId = groupDetail.value && groupDetail.value.id
-    store.dispatch('removeTheGroupMember', { username: member, groupId })
+    store.dispatch('removeTheGroupMember', {
+        username: member,
+        groupId: groupId.value
+    })
 }
 /* 完成操作 */
 const saveHandleMembers = async () => {
     if (checkedInviteMembers.value && checkedInviteMembers.value.length) {
         const users = _.map(checkedInviteMembers.value, 'hxId')
-        const groupId = groupDetail.value && groupDetail.value.id
-        await store.dispatch('inviteUserJoinTheGroup', { users, groupId })
+        await store.dispatch('inviteUserJoinTheGroup', {
+            users,
+            groupId: groupId.value
+        })
     }
 }
 
@@ -173,7 +186,7 @@ defineExpose({ saveHandleMembers })
                             </div>
                             <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
                             <el-icon
-                                v-if="!groupDetail.public || memberRole"
+                                v-if="!groupDetail?.public || memberRole"
                                 class="checked_btn"
                             >
                                 <template v-if="!item.exitTheGroup">
@@ -276,19 +289,19 @@ defineExpose({ saveHandleMembers })
             <el-scrollbar>
                 <div
                     class="group_members_handle_box"
-                    v-if="groupMembers.length"
+                    v-if="getGroupMembersList && getGroupMembersList.length > 0"
                 >
                     <p class="title">
                         群成员
                         {{
-                            `${groupMembers.length}/${
+                            `${getGroupMembersList.length}/${
                                 groupDetail.maxusers || '500'
                             }`
                         }}
                     </p>
                     <div class="now_exit_group_members">
                         <div
-                            v-for="(item, index) in groupMembers"
+                            v-for="(item, index) in getGroupMembersList"
                             :key="item.member"
                         >
                             <div class="friend_user_list">
@@ -316,7 +329,7 @@ defineExpose({ saveHandleMembers })
                         </p>
                         <div class="checked_invite_members">
                             <div
-                                v-for="(item, index) in checkedInviteMembers"
+                                v-for="item in checkedInviteMembers"
                                 :key="item.hxId"
                             >
                                 <div class="friend_user_list">
