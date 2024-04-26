@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import router from '@/router'
 import _ from 'lodash'
@@ -15,8 +15,9 @@ const store = useStore()
 //好友列表
 const friendList = computed(() => store.state.Contacts.friendList)
 //群组列表
-const joinedGroupList = computed(() => store.state.Contacts.groupList)
-
+const joinedGroupList = computed(() => store.getters.getJoinedGroupList)
+//加入的群组总数
+const joinedGroupTotal = computed(() => store.getters.getJoinedGroupTotal)
 //搜索部分的总数据
 const searchData = computed(() => {
     const totalsearchData = Object.assign(
@@ -51,6 +52,40 @@ const informDetail = computed(() => {
     const untreated = _.sumBy(informDetailArr, 'untreated') || 0
     return { untreated, lastInformDeatail }
 })
+
+/* 联系人折叠面板相关逻辑 */
+const CONTACTS_TYPE = {
+    FRIEND: '1',
+    GROUP: '2'
+}
+const activeName = ref(CONTACTS_TYPE.FRIEND)
+//处理滚动加载更多
+const loadingStatus = ref(false)
+const loadMore = async () => {
+    if (activeName.value === CONTACTS_TYPE.GROUP) {
+        loadingStatus.value = true
+        try {
+            store.dispatch('fetchJoinedGroupListFromServer')
+        } catch (error) {
+            console.log('>>>>>>>接口获取失败', error)
+        } finally {
+            loadingStatus.value = false
+        }
+    }
+}
+const scrollbarComp = ref(null)
+const onScrollToBottom = (event) => {
+    const { scrollTop } = event
+    // 获取滚动条的容器元素
+    const scrollWrap = scrollbarComp.value?.wrap$
+    // 检查滚动位置是否接近底部
+    const isNearBottom =
+        scrollWrap.scrollHeight - scrollTop <= scrollWrap.clientHeight + 1
+    if (isNearBottom) {
+        if (loadingStatus.value) return
+        loadMore()
+    }
+}
 </script>
 
 <template>
@@ -61,7 +96,13 @@ const informDetail = computed(() => {
                 :searchData="searchData"
                 @toContacts="toContacts"
             />
-            <el-scrollbar class="contacts_collapse" tag="div" :always="false">
+            <el-scrollbar
+                ref="scrollbarComp"
+                class="contacts_collapse"
+                tag="div"
+                :always="false"
+                @scroll="onScrollToBottom"
+            >
                 <div class="offline_hint" v-if="!networkStatus">
                     <span class="plaint_icon">!</span>
                     网络不给力，请检查网络设置。
@@ -80,9 +121,21 @@ const informDetail = computed(() => {
                 </div>
 
                 <!-- 联系人群组列表 -->
-                <el-collapse>
+                <el-collapse v-model="activeName" accordion>
+                    <el-collapse-item
+                        :title="`群聊 ( ${joinedGroupTotal} )`"
+                        :name="CONTACTS_TYPE.GROUP"
+                    >
+                        <template v-if="joinedGroupList?.length > 0">
+                            <GroupItem @toContacts="toContacts" />
+                        </template>
+                        <template v-else>
+                            <el-empty description="暂无加入的群组..." />
+                        </template>
+                    </el-collapse-item>
                     <el-collapse-item
                         :title="`联系人 ( ${Object.keys(friendList).length} )`"
+                        :name="CONTACTS_TYPE.FRIEND"
                     >
                         <template v-if="Object.keys(friendList).length > 0">
                             <FriendItem @toContacts="toContacts" />
@@ -91,24 +144,10 @@ const informDetail = computed(() => {
                             <el-empty description="暂无联系人..." />
                         </template>
                     </el-collapse-item>
-                    <el-collapse-item
-                        :title="`群聊 ( ${
-                            Object.keys(joinedGroupList).length
-                        } )`"
-                    >
-                        <template
-                            v-if="Object.keys(joinedGroupList).length > 0"
-                        >
-                            <GroupItem @toContacts="toContacts" />
-                        </template>
-                        <template v-else>
-                            <el-empty description="暂无加入的群组..." />
-                        </template>
-                    </el-collapse-item>
                 </el-collapse>
             </el-scrollbar>
         </el-aside>
-        <el-main class="contacts_infors_main_box">
+        <el-main ref class="contacts_infors_main_box">
             <router-view></router-view>
             <Welcome />
         </el-main>

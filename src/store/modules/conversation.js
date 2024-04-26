@@ -273,13 +273,13 @@ const Conversation = {
                         conversationList = [...result.data.conversations]
                     }
                 }
+                commit('GET_CONVERSATION_LIST_FROM_LOCAL', conversationList)
                 //挑出为群组的会话id，用于获取群组详情
                 const groupConversationIds = _.chain(conversationList)
                     .filter({ conversationType: CHAT_TYPE.GROUP })
                     .map('conversationId')
                     .value()
                 dispatch('fetchGroupDetailFromServer', groupConversationIds)
-                commit('GET_CONVERSATION_LIST_FROM_LOCAL', conversationList)
             } catch (error) {
                 console.error('获取会话列表失败', error)
             }
@@ -339,7 +339,9 @@ const Conversation = {
                     conversationType
                 })
                 commit('DELETE_CONVERSATION_ITEM_FROM_LOCAL', conversationId)
-            } catch (error) {}
+            } catch (error) {
+                console.error(error)
+            }
         },
         //设置会话已读（发送会话已读回执。）
         clearConversationUnreadCount: async ({ dispatch, commit }, params) => {

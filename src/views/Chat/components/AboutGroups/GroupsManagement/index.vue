@@ -2,8 +2,9 @@
 import { ref, toRefs } from 'vue'
 import GroupDesc from './GoupDesc.vue'
 import GroupAnnoun from './GroupAnnoun.vue'
-import GroupSomeList from './GroupSomeList.vue'
 import GroupMembers from './GroupMembers.vue'
+import GroupBlackList from './GroupBlackList.vue'
+import GroupMuteList from './GroupMuteList.vue'
 const props = defineProps({
     modalType: {
         type: String,
@@ -48,9 +49,15 @@ const diffModal = {
         title: '群成员',
         components: GroupMembers
     },
-    groupsomelist: {
+    groupBlacklist: {
         width: '840px',
-        components: GroupSomeList
+        title: '群组黑名单',
+        components: GroupBlackList
+    },
+    groupMutelist: {
+        width: '840px',
+        title: '群组禁言名单',
+        components: GroupMuteList
     }
 }
 

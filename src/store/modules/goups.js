@@ -1,10 +1,14 @@
-import { ElMessage } from 'element-plus'
+import { checkTagEmits, ElMessage } from 'element-plus'
 import { EMClient } from '@/IM'
 
 const Groups = {
     state: {
         groupsInfos: {},
         joinedGroup: {
+            pagingParams: {
+                pageNum: 0,
+                pageSize: 20
+            },
             joinedGroupList: [],
             joinedGroupListTotal: 0
         },
@@ -14,8 +18,12 @@ const Groups = {
     mutations: {
         SET_JOINED_GROUP: (state, payload) => {
             const { total, entities: joinedGroupList } = payload
+            state.joinedGroup.pagingParams.pageNum++
             state.joinedGroup.joinedGroupListTotal = total
-            state.joinedGroup.joinedGroupList = joinedGroupList
+            state.joinedGroup.joinedGroupList = [
+                ...state.joinedGroup.joinedGroupList,
+                ...joinedGroupList
+            ]
         },
         SET_GROUP_DETAILS: (state, payload) => {
             const { groupDetailsList } = payload
@@ -59,12 +67,6 @@ const Groups = {
         },
         SET_GOUPS_ANNOUN: (state, payload) => {
             const { groupId, announcement } = payload
-            // if (state.groupsInfos[groupId]) {
-            //     state.groupsInfos[groupId].announcement = announcement
-            // } else {
-            //     state.groupsInfos[groupId] = {}
-            //     state.groupsInfos[groupId].announcement = announcement
-            // }
             if (!state.groupDetails.has(groupId)) {
                 state.groupDetails.set(groupId, { announcement: announcement })
             }
@@ -101,6 +103,7 @@ const Groups = {
                     })
                 state.groupDetails.get(groupId).name = params
             }
+            //更新群组详情内的数据
             if (type === 'groupDescription') {
                 state.joinedGroup.joinedGroupList.length > 0 &&
                     state.joinedGroup.joinedGroupList.map((groupItem) => {
@@ -110,32 +113,23 @@ const Groups = {
                     })
                 state.groupDetails.get(groupId).description = params
             }
-            //更新群组详情内的数据
         }
     },
     actions: {
-        //初始群信息需要多个请求
-        fetchMultiGoupsInfos: async ({ dispatch }, groupid) => {
-            dispatch('fetchGoupsAdmin', groupid)
-            dispatch('fetchAnnounment', groupid)
-            dispatch('fetchGoupsBlackList', groupid)
-            dispatch('fetchGoupsMemberFromServer', groupid)
-            //普通群成员无权调用禁言列表
-            dispatch('fetchGoupsMuteList', groupid)
-        },
         //从服务端获取加入的群组列表
-        fetchJoinedGroupListFromServer: async (
-            { commit },
-            { pageNum = 0, pageSize = 20 }
-        ) => {
+        fetchJoinedGroupListFromServer: async ({ state, commit }) => {
+            const {
+                pagingParams: { pageNum, pageSize }
+            } = state.joinedGroup
             try {
-                const res = await EMClient.getJoinedGroups({
+                const { total, entities } = await EMClient.getJoinedGroups({
                     pageNum: pageNum,
                     pageSize: pageSize,
                     needAffiliations: true,
                     needRole: true
                 })
-                commit('SET_JOINED_GROUP', res)
+                if (entities?.length === 0) return
+                commit('SET_JOINED_GROUP', { total, entities })
             } catch (error) {
                 console.error('加入的群组列表获取失败', error)
             }
@@ -143,31 +137,50 @@ const Groups = {
         //从服务端获取群组详情
         fetchGroupDetailFromServer: async ({ commit }, groupIds = []) => {
             if (groupIds.length === 0) throw new Error('群组id不能为空')
-            const requestTrack = []
             let groupDetails = []
-            try {
-                if (groupIds.length > 1) {
-                    const groupIdsArr = _.chunk([...groupIds], 20) //分拆groupIds 一次不能超过20个
-                    groupIdsArr.forEach((groupIds) => {
-                        requestTrack.push(
-                            EMClient.getGroupInfo({
-                                groupId: groupIds
-                            })
-                        )
-                    })
-                    const result = await Promise.all(requestTrack)
-                    groupDetails = _.map(result, 'data').flat()
-                } else {
+            async function fetchDetailsForGroupIds(groupIdArray) {
+                try {
                     const result = await EMClient.getGroupInfo({
-                        groupId: groupIds
+                        groupId: groupIdArray
                     })
-                    groupDetails = result.data
+                    groupDetails = groupDetails.concat(result.data)
+                    commit('SET_GROUP_DETAILS', {
+                        groupDetailsList: groupDetails
+                    })
+                } catch (error) {
+                    console.error('>>>群详情获取失败', error)
+                    if (error?.data) {
+                        const { error_description } = JSON.parse(error.data)
+                        if (
+                            error_description.includes(
+                                'do not find this group:'
+                            )
+                        ) {
+                            // 使用正则表达式截取不存在的群组ID
+                            const groupIdMatch =
+                                error_description.match(/group:(\d+)/)
+                            if (groupIdMatch) {
+                                const nonExistentGroupId = groupIdMatch[1]
+                                // 从groupIds数组中去除不存在的群组ID
+                                _.pull(groupIdArray, nonExistentGroupId)
+                                // 重新发起请求
+                                await fetchDetailsForGroupIds(groupIdArray)
+                            }
+                        } else {
+                            // 如果是其他类型的错误，可以在这里处理
+                            console.error('发生未知错误:', error)
+                        }
+                    }
                 }
-                commit('SET_GROUP_DETAILS', {
-                    groupDetailsList: [...groupDetails]
-                })
-            } catch (error) {
-                console.error('>>>群详情获取失败', error)
+            }
+
+            if (groupIds.length > 1) {
+                const groupIdsArr = _.chunk([...groupIds], 20)
+                for (const groupIdsChunk of groupIdsArr) {
+                    await fetchDetailsForGroupIds(groupIdsChunk)
+                }
+            } else {
+                await fetchDetailsForGroupIds(groupIds)
             }
         },
         //群管理员
@@ -176,23 +189,6 @@ const Groups = {
                 groupId: params
             })
             commit('SET_GORUPS_ADMINS', { groupId: params, admin: data })
-        },
-        //群组成员
-        fetchGoupsMemberFromServer: async ({ dispatch, commit }, params) => {
-            //暂时定死就获取1000个
-            const pageNum = 1,
-                pageSize = 1000
-            const options = {
-                pageNum: pageNum,
-                pageSize: pageSize,
-                groupId: params
-            }
-            const { data } = await EMClient.listGroupMembers(options)
-            dispatch('fetchGroupMemberAttributes', {
-                groupId: params,
-                members: data
-            })
-            commit('SET_GOUPS_MEMBERS', { groupId: params, members: data })
         },
         //获取群组成员
         fetchGoupsMemberFromServer: async ({ commit }, groupId) => {
@@ -391,12 +387,10 @@ const Groups = {
                     message: '黑名单添加成功~',
                     type: 'success'
                 })
-                //移出黑名单，还要调用拉取群组列表，原因为将群成员加入黑名单还会将其踢出群组。
-                dispatch('fetchGoupsMemberFromServer', groupId)
                 //重新获取黑名单列表
-                dispatch('fetchGoupsBlackList', groupId)
-                //通知更新群详情
-                dispatch('getAssignGroupDetail', groupId)
+                dispatch('fetchGoupsBlackListFromServer', groupId)
+                //重新获取成员列表
+                dispatch('fetchGoupsMemberFromServer', groupId)
             } catch (error) {
                 ElMessage({
                     message: '黑名单添加失败，请稍后重试~',
@@ -414,8 +408,9 @@ const Groups = {
                     type: 'success'
                 })
                 //重新获取黑名单列表
-                dispatch('fetchGoupsBlackList', groupId)
+                dispatch('fetchGoupsBlackListFromServer', groupId)
             } catch (error) {
+                console.log('error', error)
                 ElMessage({
                     message: '黑名单移除失败，请稍后重试~',
                     type: 'error'
@@ -424,28 +419,23 @@ const Groups = {
         },
         //添加用户到禁言列表
         addMemberToMuteList: async ({ dispatch }, params) => {
-            const { groupId, usernames } = params
-            //todo 此处处理方式为并发请求多次，后续SDK将支持传入数组形式，实现禁言多人
-            const requestTrack = []
+            const { groupId, username } = params
 
             try {
-                usernames.length > 0 &&
-                    usernames.map((userId) => {
-                        requestTrack.push = EMClient.muteGroupMember({
-                            groupId,
-                            username: userId,
-                            muteDuration: 886400000
-                        })
-                    })
-                await Promise.all(requestTrack)
+                await EMClient.muteGroupMember({
+                    groupId,
+                    username: username,
+                    muteDuration: 886400000
+                })
                 ElMessage({
                     message: '禁言成功~',
                     type: 'success'
                 })
                 setTimeout(() => {
-                    dispatch('fetchGoupsMuteList', groupId)
+                    dispatch('fetchGoupsMuteListFromServer', groupId)
                 }, 800)
             } catch (error) {
+                console.log('>>>>>error', error)
                 ElMessage({
                     message: '禁言失败，请稍后重试~',
                     type: 'error'
@@ -461,26 +451,21 @@ const Groups = {
         },
         //从禁言列表中移出
         removeTheMemberFromMuteList: async ({ dispatch }, params) => {
-            const { groupId, usernames } = params
-            //todo 此处处理方式为并发请求多次，后续SDK将支持传入数组形式，实现移出禁言多人
-            const requestTrack = []
+            const { groupId, username } = params
             try {
-                usernames.length > 0 &&
-                    usernames.map((userId) => {
-                        requestTrack.push = EMClient.unmuteGroupMember({
-                            groupId,
-                            username: userId
-                        })
-                    })
-                await Promise.all(requestTrack)
+                await EMClient.unmuteGroupMember({
+                    groupId,
+                    username: username
+                })
                 ElMessage({
                     message: '移除禁言成功~',
                     type: 'success'
                 })
                 setTimeout(() => {
-                    dispatch('fetchGoupsMuteList', groupId)
+                    dispatch('fetchGoupsMuteListFromServer', groupId)
                 }, 800)
             } catch (error) {
+                console.log('>>>>>error', error)
                 ElMessage({
                     message: '移除禁言失败，请稍后重试~',
                     type: 'error'
@@ -532,7 +517,8 @@ const Groups = {
     getters: {
         getGroupDetailMap: (state) => state.groupDetails,
         getGroupMembersMap: (state) => state.groupMembers,
-        getJoinedGroupList: (state) => state.joinedGroup.joinedGroupList
+        getJoinedGroupList: (state) => state.joinedGroup.joinedGroupList,
+        getJoinedGroupTotal: (state) => state.joinedGroup.joinedGroupListTotal
     }
 }
 

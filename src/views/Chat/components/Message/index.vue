@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, toRaw, nextTick, computed, onMounted } from 'vue'
+import { ref, watch, nextTick, computed, onMounted } from 'vue'
 import _ from 'lodash'
 import { EMClient } from '@/IM'
 import { useStore } from 'vuex'
@@ -19,10 +19,7 @@ const store = useStore()
 const route = useRoute()
 const { CHAT_TYPE } = messageType
 const { EASEIM_HINT, SWINDLER_GO_DIE, WARM_TIP } = warningText
-const nowPickInfo = ref({})
 
-const friendList = computed(() => store.state.Contacts.friendList)
-const groupList = computed(() => store.state.Contacts.groupList)
 /* loginstatus */
 const loginState = computed(() => store.state.loginState)
 /* header 操作 */
@@ -32,8 +29,8 @@ const handleDrawer = () => {
 }
 //删除好友
 const delTheFriend = () => {
-    if (nowPickInfo.value?.id) {
-        const targetId = nowPickInfo.value.id
+    if (routeQueryData.value?.id) {
+        const targetId = routeQueryData.value.id
         EMClient.deleteContact(targetId)
         ElMessage({ type: 'success', center: true, message: '好友已删除~' })
     }
@@ -54,32 +51,6 @@ onMounted(() => {
 })
 const closeWarningTips = () => store.commit('CLOSE_WARNING_TIPS')
 /* userInfo */
-//获取路由ID对应的信息
-const getIdInfo = async ({ id, chatType }) => {
-    //类型为单聊
-    if (chatType === CHAT_TYPE.SINGLE) {
-        if (friendList.value[id]) {
-            nowPickInfo.value.userInfo = friendList.value[id]
-        } else {
-            return
-        }
-    }
-    //类型为群组
-    if (chatType === CHAT_TYPE.GROUP) {
-        const goupid =
-            groupList.value[id]?.groupid && groupList.value[id]?.groupid
-        goupid && (await store.dispatch('fetchMultiGoupsInfos', goupid))
-        if (groupList.value[id]?.groupDetail) {
-            return (nowPickInfo.value.groupDetail =
-                groupList.value[id].groupDetail)
-        } else {
-            //如果不存在用户属性则请求获取该群群详情。
-            await store.dispatch('getAssignGroupDetail', id)
-            return (nowPickInfo.value.groupDetail =
-                groupList.value[id].groupDetail)
-        }
-    }
-}
 const routeQueryData = ref({
     id: '',
     chatType: CHAT_TYPE.SINGLE
@@ -94,7 +65,6 @@ const stopWatchRoute = watch(
     () => route.query,
     (routeVal) => {
         if (routeVal) {
-            nowPickInfo.value = { ...routeVal }
             getRouteQueryWithIdInfo(routeVal)
         }
     },
@@ -102,13 +72,7 @@ const stopWatchRoute = watch(
         immediate: true
     }
 )
-//获取群组详情
-const groupDetail = computed(
-    () =>
-        (groupList.value[nowPickInfo.value.id] &&
-            groupList.value[nowPickInfo.value.id].groupDetail) ||
-        {}
-)
+
 //离开该路由销毁route监听
 onBeforeRouteLeave(() => {
     stopWatchRoute()
@@ -210,7 +174,6 @@ watch(
         immediate: true
     }
 )
-//监听到nowPickInfo改变 让消息直接置底
 watch(
     () => route.query,
     () => {
@@ -296,12 +259,7 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
         <div v-if="isShowWarningTips" class="easeim_safe_tips">
             <p>{{ EASEIM_HINT }}</p>
             <p>【防骗提示】{{ randomTips }}</p>
-            <p
-                v-show="
-                    nowPickInfo.chatType === CHAT_TYPE.GROUP &&
-                    nowPickInfo?.groupDetail?.custom !== 'default'
-                "
-            >
+            <p v-show="routeQueryData.chatType === CHAT_TYPE.GROUP">
                 {{ WARM_TIP }}
             </p>
             <span class="easeim_close_tips" @click="closeWarningTips">

@@ -16,6 +16,13 @@ const store = useStore()
 /* route */
 const route = useRoute()
 const { CHAT_TYPE } = messageType
+
+//取好友列表(主要使用好友下的用户属性相关)
+const friendList = computed(() => store.state.Contacts.friendList)
+
+//群组列表
+const joinedGroupList = computed(() => store.getters.getJoinedGroupList)
+
 //当前选中id的info
 const nowContactInfo = computed(() => {
     if (route.query.chatType === CHAT_TYPE.SINGLE) {
@@ -26,6 +33,32 @@ const nowContactInfo = computed(() => {
     }
 })
 
+const getContactsName = computed(() => {
+    const id = route.query.id
+    const chatType = route.query.chatType
+    if (chatType === CHAT_TYPE.SINGLE) {
+        const friend = friendList.value[id]
+        return friend?.nickname || id
+    }
+    if (chatType === CHAT_TYPE.GROUP) {
+        const groupDetail = joinedGroupList.value.find((gourpItem) => {
+            return gourpItem.groupId === id
+        })
+        return groupDetail?.groupName || groupDetail?.groupId
+    }
+})
+const getContactsAvatar = computed(() => {
+    const id = route.query.id
+    const chatType = route.query.chatType
+    if (chatType === CHAT_TYPE.SINGLE) {
+        const friend = friendList.value[id]
+        return friend?.avatarurl || defaultSingleAvatar
+    }
+    //群组暂使用默认群头像
+    if (chatType === CHAT_TYPE.GROUP) {
+        return defaultGroupAvatarUrl
+    }
+})
 /* 单人黑名单状态的处理 */
 const blackStatus = ref(false)
 const switchStatus = ref(false)
@@ -105,38 +138,13 @@ const toChatMessage = () => {
             <div class="contactInfo_main_card">
                 <div class="contactInfo_box">
                     <div class="avatar">
-                        <el-avatar
-                            class="avatar_img"
-                            v-if="$route.query.chatType === CHAT_TYPE.SINGLE"
-                            :src="
-                                nowContactInfo.avatarurl
-                                    ? nowContactInfo.avatarurl
-                                    : defaultSingleAvatar
-                            "
-                        >
+                        <el-avatar class="avatar_img" :src="getContactsAvatar">
                         </el-avatar>
                         <!-- <UserStatus :userStatus="nowContactInfo.userStatus && nowContactInfo.userStatus" /> -->
-                        <el-avatar
-                            class="avatar_img"
-                            v-if="$route.query.chatType === CHAT_TYPE.GROUP"
-                            :src="defaultGroupAvatarUrl"
-                        >
-                        </el-avatar>
                     </div>
                     <div class="name">
-                        <p v-if="$route.query.chatType === CHAT_TYPE.SINGLE">
-                            {{
-                                nowContactInfo.nickname
-                                    ? `${nowContactInfo.nickname}(${nowContactInfo.hxId})`
-                                    : nowContactInfo.hxId
-                            }}
-                        </p>
-                        <p v-if="$route.query.chatType === CHAT_TYPE.GROUP">
-                            {{
-                                nowContactInfo.groupname
-                                    ? `${nowContactInfo.groupname}(${nowContactInfo.groupid})`
-                                    : nowContactInfo.groupid
-                            }}
+                        <p>
+                            {{ getContactsName }}
                         </p>
                     </div>
                     <div class="func_box">

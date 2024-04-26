@@ -213,7 +213,6 @@ const groupBlacklist = computed(() => {
 const groupMutelist = computed(() => {
     return store.getters.getGroupDetailMap.get(groupId.value)?.mutelist
 })
-//群组经验名单
 const handleUpdateGroupData = async () => {
     //更新群组公告
     if (!getGroupAnnouncement.value && getGroupAnnouncement.value !== '') {
@@ -378,7 +377,7 @@ onMounted(() => {
                     </div>
                     <div
                         class="more_list"
-                        @click="alertManagementModal('groupsomelist', 1)"
+                        @click="alertManagementModal('groupBlacklist')"
                     >
                         <ArrowRight />
                     </div>
@@ -394,7 +393,7 @@ onMounted(() => {
                     </div>
                     <div
                         class="more_list"
-                        @click="alertManagementModal('groupsomelist', 2)"
+                        @click="alertManagementModal('groupMutelist')"
                     >
                         <ArrowRight />
                     </div>

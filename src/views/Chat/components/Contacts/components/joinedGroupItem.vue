@@ -3,30 +3,42 @@ import { computed } from 'vue'
 import { useStore } from 'vuex'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png'
 import { messageType } from '@/constant'
+
 const store = useStore()
 
 //点击对应联系人跳转至用户详情页
 const { CHAT_TYPE } = messageType
-//获取当前加入的群组列表
-const joinedGroupList = computed(() => store.state.Contacts.groupList)
+//群组列表
+const joinedGroupList = computed(() => store.getters.getJoinedGroupList)
 </script>
 <template>
     <div class="joinedGroupItem_container">
-        <el-row v-for=" groupItem in  joinedGroupList" :key="groupItem.groupid">
-            <el-col class="groupItem_box" :span="24"
-                @click="$emit('toContacts', { id: groupItem.groupid, chatType: CHAT_TYPE.GROUP })">
-                <el-avatar style="margin-right: 11px;" :size="33.03" :src="defaultGroupAvatarUrl">
+        <el-row v-for="groupItem in joinedGroupList" :key="groupItem.groupId">
+            <el-col
+                class="groupItem_box"
+                :span="24"
+                @click="
+                    $emit('toContacts', {
+                        id: groupItem.groupId,
+                        chatType: CHAT_TYPE.GROUP
+                    })
+                "
+            >
+                <el-avatar
+                    style="margin-right: 11px"
+                    :size="33.03"
+                    :src="defaultGroupAvatarUrl"
+                >
                 </el-avatar>
                 <span class="group_name">
-                    {{ groupItem.groupname }}
+                    {{
+                        `${groupItem.groupName}（${groupItem.affiliationsCount}）`
+                    }}
                 </span>
-
             </el-col>
         </el-row>
     </div>
 </template>
-
-
 
 <style lang="scss" scoped>
 .groupItem_box {
@@ -37,7 +49,7 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
     align-items: center;
     justify-content: flex-start;
     padding: 0 23px;
-    background: #EFEFEF;
+    background: #efefef;
     font-weight: 500;
     font-size: 14px;
     line-height: 20px;
@@ -56,7 +68,12 @@ const joinedGroupList = computed(() => store.state.Contacts.groupList)
     }
 
     &:hover {
-        background: #DCDCDC;
+        background: #dcdcdc;
     }
+}
+.loading_container {
+    height: 30px;
+    // background: #000;
+    color: #333333;
 }
 </style>
