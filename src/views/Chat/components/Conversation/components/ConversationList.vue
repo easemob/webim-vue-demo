@@ -16,6 +16,7 @@ const route = useRoute()
 const router = useRouter()
 /* store */
 const store = useStore()
+const emit = defineEmits(['toInformDetails', 'toChatMessage'])
 const { CHAT_TYPE, SESSION_MESSAGE_TYPE, ALL_MESSAGE_TYPE, CUSTOM_TYPE } =
     messageType
 //登录用户ID
@@ -34,7 +35,6 @@ const groupDetailMap = computed(() => store.getters.getGroupDetailMap)
 const conversationList = computed(() => {
     return store.getters.conversationListFromLocal
 })
-
 //处理会话name
 const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()
 const handleConversationName = computed(() => {
@@ -108,13 +108,10 @@ const handleLastMsgContent = computed(() => {
         return resultContent
     }
 })
-
 //取网络状态
 const networkStatus = computed(() => {
     return store.state.networkStatus
 })
-
-const emit = defineEmits(['toInformDetails', 'toChatMessage'])
 //普通会话
 const checkedConverItemIndex = ref(null)
 const debouncedToChatMessage = _.debounce(

@@ -46,14 +46,14 @@ const Contacts = {
         SET_BLACK_LIST: (state, payload) => {
             state.friendBlackList = _.assign([], payload)
         },
-        SET_FRIEND_PRESENCE: (state, status) => {
-            const friendList = state.friendList
-            status.length > 0 &&
-                status.forEach((item) => {
-                    const commonStatus = handlePresence(item)
-                    if (friendList[commonStatus.uid]) {
-                        friendList[commonStatus.uid].userStatus = commonStatus
-                    }
+        SET_CONTACTS_PRESENCE_TO_MAP: (state, usersPresenceList) => {
+            usersPresenceList.length > 0 &&
+                usersPresenceList.forEach((presenceItem) => {
+                    const commonStatus = handlePresence(presenceItem)
+                    state.contactsUsersPresenceMap.set(
+                        presenceItem.uid,
+                        commonStatus
+                    )
                 })
         },
         //legacy
@@ -130,6 +130,10 @@ const Contacts = {
             if (type === 'deleteFromList') {
                 state.groupList[groupId] && delete state.groupList[groupId]
             }
+        },
+        DELETE_CONTACTS_PRESENCE_TO_MAP: (state, payload) => {
+            state.contactsUsersPresenceMap.has(payload) &&
+                state.contactsUsersPresenceMap.delete(payload)
         }
     },
     actions: {
@@ -201,7 +205,7 @@ const Contacts = {
         onDeleteFriend: async ({ dispatch, commit }, params) => {
             //取消订阅好友状态。
             const { from: userId } = params
-            dispatch('unsubFriendsPresence', [userId])
+            dispatch('unsubFriendsPresence', userId)
             //从本地好友列表中删除此好友
             commit('DELETE_CONTACTS_FROM_MAP', userId)
         },
@@ -296,16 +300,20 @@ const Contacts = {
                 const tobeCommitRes =
                     usersPresenceList.length > 0 &&
                     usersPresenceList.filter((p) => p.uid !== '')
-
-                commit('SET_FRIEND_PRESENCE', tobeCommitRes)
+                commit('SET_CONTACTS_PRESENCE_TO_MAP', tobeCommitRes)
             } catch (error) {}
         },
         //取消订阅
         unsubFriendsPresence: async ({ commit }, user) => {
-            const option = {
-                usernames: [...user]
+            try {
+                const option = {
+                    usernames: [user]
+                }
+                const res = await EMClient.unsubscribePresence(option)
+                commit('DELETE_CONTACTS_PRESENCE_TO_MAP', user)
+            } catch {
+                console.error('取消订阅好友状态失败', error)
             }
-            EMClient.unsubscribePresence(option).then((res) => {})
         },
         //获取群组列表 //legacy
         fetchGroupList: async ({ dispatch, commit }, params) => {
@@ -349,6 +357,9 @@ const Contacts = {
         },
         getContactsWithRemarkMap: (state) => {
             return state.contactsWithRemarkMap
+        },
+        getContactsUsersPresenceMap: (state) => {
+            return state.contactsUsersPresenceMap
         }
     }
 }

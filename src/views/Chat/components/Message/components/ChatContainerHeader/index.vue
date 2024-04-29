@@ -1,5 +1,5 @@
 <script setup>
-import { toRefs, computed } from 'vue'
+import { toRefs, computed, onMounted } from 'vue'
 import UserStatus from '@/components/UserStatus'
 import { CHAT_TYPE } from '@/constant'
 import store from '@/store'
@@ -20,10 +20,6 @@ const { getContactsNickNameById } = useGetUserMapInfo()
 const getContactsNickName = computed(() => {
     return getContactsNickNameById(routeQueryData.value.id)
 })
-//获取个人在线状态信息
-const getPersonUserStatus = computed(() => {
-    return presonUserInfo.value?.userStatus ?? {}
-})
 
 //获取群组相关信息
 const groupDetail = computed(() => {
@@ -34,13 +30,36 @@ const groupDetail = computed(() => {
     })
     return groupDetail[0] ?? {}
 })
+
+//获取某用户的在订阅状态
+const getPersonUserStatus = computed(() => {
+    return (
+        store.getters.getContactsUsersPresenceMap.get(
+            routeQueryData.value.id
+        ) ?? {}
+    )
+})
+const isSubscribedUserPresence = computed(() => {
+    return (userId) => {
+        return store.getters.getContactsUsersPresenceMap.has(userId)
+    }
+})
+onMounted(() => {
+    const { chatType, id: conversationId } = routeQueryData.value
+    if (
+        chatType !== CHAT_TYPE.GROUP &&
+        !isSubscribedUserPresence.value(conversationId)
+    ) {
+        store.dispatch('subFriendsPresence', [conversationId])
+    }
+})
 </script>
 <template>
     <el-header class="chat_message_header">
         <template v-if="routeQueryData.chatType === CHAT_TYPE.SINGLE">
             <div class="chat_user_box">
                 <span class="chat_user_name"> {{ getContactsNickName }}</span>
-                <!-- <UserStatus :userStatus="getPersonUserStatus" /> -->
+                <UserStatus :userStatus="getPersonUserStatus" />
             </div>
         </template>
         <template v-if="routeQueryData.chatType === CHAT_TYPE.GROUP">
