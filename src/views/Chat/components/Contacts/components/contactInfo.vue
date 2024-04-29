@@ -23,16 +23,6 @@ const friendList = computed(() => store.state.Contacts.friendList)
 //群组列表
 const joinedGroupList = computed(() => store.getters.getJoinedGroupList)
 
-//当前选中id的info
-const nowContactInfo = computed(() => {
-    if (route.query.chatType === CHAT_TYPE.SINGLE) {
-        return store.state.Contacts.friendList[route.query.id] ?? {}
-    }
-    if (route.query.chatType === CHAT_TYPE.GROUP) {
-        return store.state.Contacts.groupList[route.query.id] ?? {}
-    }
-})
-
 const getContactsName = computed(() => {
     const id = route.query.id
     const chatType = route.query.chatType
@@ -105,11 +95,16 @@ const changeBlackStatus = async () => {
 }
 
 /* 单人删除好友 */
-const delTheFriend = () => {
+const delTheFriend = async () => {
     if (!route.query.id) return
     const targetId = route.query.id
-    EMClient.deleteContact(targetId)
-    router.push('/chat/contacts')
+    try {
+        await EMClient.deleteContact(targetId)
+        store.commit('DELETE_CONTACTS_FROM_MAP', targetId)
+        router.push('/chat/contacts')
+    } catch (error) {
+        console.error('>>>>删除失败')
+    }
 }
 
 /* 进入会话 */
@@ -140,11 +135,19 @@ const toChatMessage = () => {
                     <div class="avatar">
                         <el-avatar class="avatar_img" :src="getContactsAvatar">
                         </el-avatar>
-                        <!-- <UserStatus :userStatus="nowContactInfo.userStatus && nowContactInfo.userStatus" /> -->
                     </div>
                     <div class="name">
                         <p>
                             {{ getContactsName }}
+                        </p>
+                    </div>
+                    <div class="contacts_id">
+                        <p>
+                            {{
+                                $route.query.chatType === CHAT_TYPE.GROUP
+                                    ? '群组ID：'
+                                    : '好友ID：'
+                            }}{{ $route.query.id }}
                         </p>
                     </div>
                     <div class="func_box">
@@ -247,10 +250,15 @@ const toChatMessage = () => {
                 }
 
                 .name {
+                    text-align: center;
                     margin-top: 15px;
                     font-size: 22px;
                 }
-
+                .contacts_id {
+                    text-align: center;
+                    margin-top: 15px;
+                    font-size: 13px;
+                }
                 .func_box {
                     width: 100%;
 

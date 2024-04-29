@@ -28,11 +28,14 @@ const handleDrawer = () => {
     drawer.value = !drawer.value
 }
 //删除好友
-const delTheFriend = () => {
+const delTheFriend = async () => {
     if (routeQueryData.value?.id) {
         const targetId = routeQueryData.value.id
-        EMClient.deleteContact(targetId)
-        ElMessage({ type: 'success', center: true, message: '好友已删除~' })
+        try {
+            await EMClient.deleteContact(targetId)
+            store.commit('DELETE_CONTACTS_FROM_MAP', targetId)
+            ElMessage({ type: 'success', center: true, message: '好友已删除~' })
+        } catch (error) {}
     }
 }
 //加入好友到黑名单

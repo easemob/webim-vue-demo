@@ -6,14 +6,16 @@ import _ from 'lodash'
 /* 相关组件 */
 import SearchInput from '@/components/SearchInput'
 import Welcome from '@/components/Welcome'
-import FriendItem from './components/friendItem.vue'
-import GroupItem from './components/joinedGroupItem.vue'
+import FriendItem from './components/FriendItem.vue'
+import JoinedGroupItem from './components/JoinedGroupItem.vue'
 /* 头像相关 */
 import informIcon from '@/assets/images/avatar/inform.png'
 /* store */
 const store = useStore()
 //好友列表
 const friendList = computed(() => store.state.Contacts.friendList)
+//联系人列表数
+const contactsSize = computed(() => store.getters.getContactsWithRemarkMap.size)
 //群组列表
 const joinedGroupList = computed(() => store.getters.getJoinedGroupList)
 //加入的群组总数
@@ -127,17 +129,17 @@ const onScrollToBottom = (event) => {
                         :name="CONTACTS_TYPE.GROUP"
                     >
                         <template v-if="joinedGroupList?.length > 0">
-                            <GroupItem @toContacts="toContacts" />
+                            <JoinedGroupItem @toContacts="toContacts" />
                         </template>
                         <template v-else>
                             <el-empty description="暂无加入的群组..." />
                         </template>
                     </el-collapse-item>
                     <el-collapse-item
-                        :title="`联系人 ( ${Object.keys(friendList).length} )`"
+                        :title="`联系人 ( ${contactsSize} )`"
                         :name="CONTACTS_TYPE.FRIEND"
                     >
-                        <template v-if="Object.keys(friendList).length > 0">
+                        <template v-if="contactsSize > 0">
                             <FriendItem @toContacts="toContacts" />
                         </template>
                         <template v-else>

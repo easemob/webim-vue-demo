@@ -80,7 +80,7 @@ const routes = [
                         path: 'contactInfo',
                         component: () =>
                             import(
-                                '../views/Chat/components/Contacts/components/contactInfo.vue'
+                                '../views/Chat/components/Contacts/components/ContactInfo.vue'
                             )
                     }
                 ]

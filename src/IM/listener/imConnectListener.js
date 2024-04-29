@@ -45,15 +45,13 @@ export const imConnectListener = () => {
     }
     //获取好友列表
     const fetchFriendList = () => {
-        // const { value = {} } = useLocalStorage('friendList')
-        // if (Object.values(JSON.parse(value)).length > 0) return
-        store.dispatch('fetchAllFriendListFromServer')
+        store.dispatch('fetchAllContactsListWithRemarkFromServer')
     }
     //获取黑名单列表
     const fetchTheLoginUserBlickList = () => store.dispatch('fetchBlackList')
     //获取加入的群组列表
     const fetchGroupList = () =>
-        store.dispatch('fetchJoinedGroupListFromServer', {})
+        store.dispatch('fetchJoinedGroupListFromServer')
     return {
         mountConnectEventListener,
         fetchLoginUsersInitData,

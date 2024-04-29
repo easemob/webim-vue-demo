@@ -5,19 +5,21 @@ import { useStore } from 'vuex'
 import { messageType } from '@/constant'
 /* 默认头像 */
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
+import { useSordedContactsWithPinyin, useGetUserMapInfo } from '@/hooks'
 /* store */
 const store = useStore()
 
-//处理friendList进行分类处理
-const classifyFriendList = computed(() => store.getters.sortedFriendList)
 //点击对应联系人跳转至用户详情页
 const { CHAT_TYPE } = messageType
+//获取处理排序后的好友列表
+const { sortedFriendListWithRemark } = useSordedContactsWithPinyin()
+const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()
 </script>
 
 <template>
     <div class="friendItem_container">
         <div
-            v-for="(friendName, friendItemKey) in classifyFriendList"
+            v-for="(friendName, friendItemKey) in sortedFriendListWithRemark"
             :key="friendItemKey"
         >
             <div class="friend_main">
@@ -37,11 +39,11 @@ const { CHAT_TYPE } = messageType
                     <el-col
                         class="friendItem_box"
                         :span="24"
-                        v-for="item in friendName"
-                        :key="item.hxId"
+                        v-for="{ userId } in friendName"
+                        :key="userId"
                         @click="
                             $emit('toContacts', {
-                                id: item.hxId,
+                                id: userId,
                                 chatType: CHAT_TYPE.SINGLE
                             })
                         "
@@ -49,13 +51,11 @@ const { CHAT_TYPE } = messageType
                         <el-avatar
                             style="margin-right: 11px"
                             :size="33.03"
-                            :src="
-                                item.avatarurl ? item.avatarurl : defaultAvatar
-                            "
+                            :src="getContactsAvatarById(userId)"
                         >
                         </el-avatar>
                         <span class="friend_name">
-                            {{ item.nickname ? item.nickname : item.hxId }}
+                            {{ getContactsNickNameById(userId) }}
                         </span>
                     </el-col>
                 </el-row>
