@@ -3,6 +3,7 @@ import { toRefs, computed } from 'vue'
 import UserStatus from '@/components/UserStatus'
 import { CHAT_TYPE } from '@/constant'
 import store from '@/store'
+import { useGetUserMapInfo } from '@/hooks'
 const props = defineProps({
     routeQueryData: {
         type: Object,
@@ -15,8 +16,9 @@ const props = defineProps({
 })
 const { routeQueryData } = toRefs(props)
 //处理获取单人用户昵称等信息。
-const presonUserInfo = computed(() => {
-    return store.getters.getFriendList[routeQueryData.value.id] ?? {}
+const { getContactsNickNameById } = useGetUserMapInfo()
+const getContactsNickName = computed(() => {
+    return getContactsNickNameById(routeQueryData.value.id)
 })
 //获取个人在线状态信息
 const getPersonUserStatus = computed(() => {
@@ -24,7 +26,6 @@ const getPersonUserStatus = computed(() => {
 })
 
 //获取群组相关信息
-
 const groupDetail = computed(() => {
     const groupDetail = store.getters.getJoinedGroupList.filter((item) => {
         if (item.groupId === routeQueryData.value.id) {
@@ -38,10 +39,8 @@ const groupDetail = computed(() => {
     <el-header class="chat_message_header">
         <template v-if="routeQueryData.chatType === CHAT_TYPE.SINGLE">
             <div class="chat_user_box">
-                <span class="chat_user_name">
-                    {{ presonUserInfo?.nickname || routeQueryData.id }}</span
-                >
-                <UserStatus :userStatus="getPersonUserStatus" />
+                <span class="chat_user_name"> {{ getContactsNickName }}</span>
+                <!-- <UserStatus :userStatus="getPersonUserStatus" /> -->
             </div>
         </template>
         <template v-if="routeQueryData.chatType === CHAT_TYPE.GROUP">

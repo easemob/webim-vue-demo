@@ -9,6 +9,7 @@ import { useRouter, useRoute } from 'vue-router'
 import informIcon from '@/assets/images/avatar/inform.png'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatar from '@/assets/images/avatar/jiaqun2x.png'
+import { useGetUserMapInfo } from '@/hooks'
 /* route */
 const route = useRoute()
 /* router */
@@ -26,9 +27,6 @@ const informDetail = computed(() => {
     const untreated = _.sumBy(informDetailArr, 'untreated') || 0
     return { untreated, lastInformDeatail }
 })
-//
-//取好友列表(主要使用好友下的用户属性相关)
-const friendList = computed(() => store.state.Contacts.friendList)
 
 //获取群组详情（展示群组名称等信息）
 const groupDetailMap = computed(() => store.getters.getGroupDetailMap)
@@ -38,12 +36,12 @@ const conversationList = computed(() => {
 })
 
 //处理会话name
+const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()
 const handleConversationName = computed(() => {
     return (conversationItem) => {
         const { conversationType, conversationId } = conversationItem
         if (conversationType === CHAT_TYPE.SINGLE) {
-            const friend = friendList.value[conversationId]
-            return friend?.nickname || conversationId
+            return getContactsNickNameById(conversationId)
         }
         if (conversationType === CHAT_TYPE.GROUP) {
             const groupDetail = groupDetailMap.value.get(conversationId)
@@ -57,8 +55,7 @@ const handleConversationAvatar = computed(() => {
     return (conversationItem) => {
         const { conversationType, conversationId } = conversationItem
         if (conversationType === CHAT_TYPE.SINGLE) {
-            const friend = friendList.value[conversationId]
-            return friend?.avatarurl || defaultAvatar
+            return getContactsAvatarById(conversationId)
         }
         //群组暂使用默认群头像
         if (conversationType === CHAT_TYPE.GROUP) {
@@ -68,7 +65,6 @@ const handleConversationAvatar = computed(() => {
 })
 //处理lastmsg的from昵称
 const handleLastMsgNickName = computed(() => {
-    const friendList = store.state.Contacts.friendList
     const groupsInfos = store.state.Groups.groupsInfos
     return (conversationItem) => {
         const {
@@ -79,7 +75,7 @@ const handleLastMsgNickName = computed(() => {
         const { from } = lastMessage || {}
         const userInfoFromGroupNickname =
             groupsInfos[groupId]?.groupMemberInfo?.[from]?.nickName
-        const friendUserInfoNickname = friendList[from]?.nickname
+        const friendUserInfoNickname = getContactsAvatarById(from)
         if (!from || from === loginUserId.value) {
             return '我：'
         } else {

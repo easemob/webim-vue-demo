@@ -207,8 +207,12 @@ const Contacts = {
         },
         //获取黑名单列表
         fetchBlackList: async ({ dispatch, commit }, params) => {
-            const { data } = await EMClient.getBlocklist()
-            commit('SET_BLACK_LIST', data)
+            try {
+                const { data } = await EMClient.getBlocklist()
+                commit('SET_BLACK_LIST', data)
+            } catch (error) {
+                console.error('获取黑名单列表失败', error)
+            }
         },
         //获取他人用户属性 //legacy
         getOtherUserInfo: async ({ commit }, users) => {

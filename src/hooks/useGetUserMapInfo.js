@@ -3,6 +3,7 @@ import { useStore } from 'vuex'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 const useGetUserMapInfo = () => {
     const store = useStore()
+    /* 联系人相关依赖源数据 */
     const getContactsWithRemarkMap = computed(() => {
         return store.getters.getContactsWithRemarkMap
     })
@@ -10,19 +11,16 @@ const useGetUserMapInfo = () => {
     const getContactsUserInfosMap = computed(() => {
         return store.getters.getContactsUserInfosMap
     })
+    /* 群组相关依赖数据源 */
+    //TODO 待改动群组昵称获取方式
     const getTheGroupNickNameById = (groupId, targetId) => {
         const userInfoFromGroupNickname = computed(() => {
             return store.state.Groups.groupsInfos[groupId]?.groupMemberInfo?.[
                 targetId
             ]?.nickName
         })
-        const friendUserInfoNickname = computed(() => {
-            return store.state.Contacts.friendList?.[targetId]?.nickname
-        })
         return (
-            userInfoFromGroupNickname.value ||
-            friendUserInfoNickname.value ||
-            targetId
+            userInfoFromGroupNickname.value || getContactsNickNameById(targetId)
         )
     }
     const getLoginNickNameById = () => {

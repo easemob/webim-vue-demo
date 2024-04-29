@@ -10,6 +10,7 @@ import {
     CHAT_TYPE,
     MESSAGE_STATUS_TYPE
 } from '@/constant'
+import { useGetUserMapInfo } from '@/hooks'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import fileSizeFormat from '@/utils/fileSizeFormat'
 import dateFormat from '@/utils/dateFormater'
@@ -86,28 +87,26 @@ const isLink = computed(() => {
 const loginUserInfo = computed(() => store.state.loginUserInfo)
 
 /* 获取他人的用户信息 */
+const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()
 const otherUserInfo = computed(() => {
     return (otherId) => {
-        const otherInfos = store.state.Contacts.friendList[otherId] || {
-            avatarurl: defaultAvatar
-        }
-        return otherInfos
+        return getContactsAvatarById(otherId)
     }
 })
 //处理聊天对方昵称展示
+
 const handleNickName = computed(() => {
     const { chatType, id } = routeQueryData.value
-    const friendList = store.state.Contacts.friendList
     const groupsInfos = store.state.Groups.groupsInfos
     return (hxId) => {
         if (chatType === CHAT_TYPE.SINGLE) {
-            return friendList[hxId]?.nickname || hxId
+            return getContactsNickNameById(hxId)
         }
         if (chatType === CHAT_TYPE.GROUP) {
             const userInfoFromGroupNickname =
                 groupsInfos[id]?.groupMemberInfo?.[hxId]?.nickName
-            const friendUserInfoNickname = friendList[hxId]?.nickname
-            return userInfoFromGroupNickname || friendUserInfoNickname || hxId
+            const friendUserInfoNickname = getContactsNickNameById(hxId)
+            return userInfoFromGroupNickname || friendUserInfoNickname
         }
     }
 })
