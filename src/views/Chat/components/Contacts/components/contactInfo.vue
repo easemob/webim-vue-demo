@@ -6,6 +6,7 @@ import router from '@/router'
 import { useRoute } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { messageType } from '@/constant'
+import { useGetUserMapInfo } from '@/hooks'
 /* 组件 */
 // import UserStatus from '@/components/UserStatus'
 /* 单人头像 */
@@ -22,13 +23,12 @@ const friendList = computed(() => store.state.Contacts.friendList)
 
 //群组列表
 const joinedGroupList = computed(() => store.getters.getJoinedGroupList)
-
+const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()
 const getContactsName = computed(() => {
     const id = route.query.id
     const chatType = route.query.chatType
     if (chatType === CHAT_TYPE.SINGLE) {
-        const friend = friendList.value[id]
-        return friend?.nickname || id
+        return getContactsNickNameById(id)
     }
     if (chatType === CHAT_TYPE.GROUP) {
         const groupDetail = joinedGroupList.value.find((gourpItem) => {
@@ -41,8 +41,7 @@ const getContactsAvatar = computed(() => {
     const id = route.query.id
     const chatType = route.query.chatType
     if (chatType === CHAT_TYPE.SINGLE) {
-        const friend = friendList.value[id]
-        return friend?.avatarurl || defaultSingleAvatar
+        return getContactsAvatarById(id)
     }
     //群组暂使用默认群头像
     if (chatType === CHAT_TYPE.GROUP) {
