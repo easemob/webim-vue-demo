@@ -340,12 +340,13 @@ const Groups = {
             //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
             const { users, groupId } = params
             try {
-                await EMClient.inviteUsersToGroup({ users, groupId })
+                await EMClient.inviteUsersToGroup({ users: [users], groupId })
                 ElMessage({
                     message: '群组邀请成功送出~',
                     type: 'success'
                 })
             } catch (error) {
+                console.log('>>>>邀请失败', error)
                 ElMessage({
                     message: '群组邀请失败，请稍后重试~',
                     type: 'error'
@@ -362,8 +363,6 @@ const Groups = {
                     message: `已将${username}移出群组!`,
                     type: 'success'
                 })
-                //通知更新群详情
-                dispatch('getAssignGroupDetail', groupId)
                 //更新群成员
                 dispatch('fetchGoupsMemberFromServer', groupId)
             } catch (error) {
