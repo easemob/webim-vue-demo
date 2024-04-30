@@ -12,6 +12,7 @@ import { useGetUserMapInfo } from '@/hooks'
 /* 单人头像 */
 import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png'
+import ContactsRemark from './ContactsRemark.vue'
 /* store */
 const store = useStore()
 /* route */
@@ -154,6 +155,9 @@ const toChatMessage = () => {
                             class="single_func"
                             v-if="$route.query.chatType === CHAT_TYPE.SINGLE"
                         >
+                            <ContactsRemark :userId="$route.query.id">
+                                <el-divider />
+                            </ContactsRemark>
                             <div class="add_black_list">
                                 <p>加入黑名单</p>
                                 <el-switch

@@ -36,6 +36,7 @@ const useSortedContactsWithPinyin = () => {
         getContactsWithRemarkMap,
         (newMap) => {
             if (newMap.size > 0) {
+                const resultObj = {}
                 const containerObj = {}
                 for (const [key, value] of newMap) {
                     const pinyinKey = pinyin(_getUserNickName(key), {
@@ -48,8 +49,9 @@ const useSortedContactsWithPinyin = () => {
                 }
                 const keys = _.sortBy(_.keys(containerObj))
                 keys.forEach((k) => {
-                    state.sortedFriendListWithRemark[k] = containerObj[k]
+                    resultObj[k] = containerObj[k]
                 })
+                state.sortedFriendListWithRemark = { ...resultObj }
             }
         },
         {

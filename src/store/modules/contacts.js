@@ -134,6 +134,13 @@ const Contacts = {
         DELETE_CONTACTS_PRESENCE_TO_MAP: (state, payload) => {
             state.contactsUsersPresenceMap.has(payload) &&
                 state.contactsUsersPresenceMap.delete(payload)
+        },
+        SET_CONTACTS_REMARK_TO_MAP: (state, payload) => {
+            const { userId, remark } = payload
+            state.contactsWithRemarkMap.set(userId, {
+                userId,
+                remark
+            })
         }
     },
     actions: {
@@ -313,6 +320,21 @@ const Contacts = {
                 commit('DELETE_CONTACTS_PRESENCE_TO_MAP', user)
             } catch {
                 console.error('取消订阅好友状态失败', error)
+            }
+        },
+        //设置联系人备注
+        setContactsRemark: async ({ commit }, params) => {
+            const { userId, remark } = params
+            if (!userId && !remark)
+                throw new Error('userId or remark is required')
+            try {
+                EMClient.setContactRemark({
+                    userId, // 添加备注的目标好友的用户 ID
+                    remark // 好友备注
+                })
+                commit('SET_CONTACTS_REMARK_TO_MAP', { userId, remark })
+            } catch (error) {
+                console.error('设置联系人备注失败', error)
             }
         },
         //获取群组列表 //legacy

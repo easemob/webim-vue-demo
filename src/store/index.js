@@ -59,7 +59,7 @@ export default createStore({
                     statusType ? statusType : 'Unset'
                 )
             } else {
-                commit('SET_FRIEND_PRESENCE', [{ ...status }])
+                commit('SET_CONTACTS_PRESENCE_TO_MAP', [{ ...status }])
             }
         }
     },
