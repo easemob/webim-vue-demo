@@ -67,22 +67,24 @@ watch(
                 <span v-if="!isEdit">
                     {{ userRemark || '暂未设置好友备注...' }}</span
                 >
+                <el-input
+                    v-show="isEdit"
+                    ref="editRemarkInputComp"
+                    v-model.trim="userRemark"
+                    class="edit_remark_input"
+                    maxlength="15"
+                    @blur="saveEditedRemark"
+                ></el-input>
+                <el-icon class="edit_remark_icon" title="保存备注">
+                    <Select
+                        v-show="isEdit"
+                        @click.prevent.stop="changeRemarkEditMode"
+                    />
+                </el-icon>
             </p>
-            <el-input
-                v-show="isEdit"
-                ref="editRemarkInputComp"
-                v-model.trim="userRemark"
-                class="edit_remark_input"
-                :max="15"
-                @blur="saveEditedRemark"
-            ></el-input>
-            <el-icon class="edit_remark_icon">
+            <el-icon class="edit_remark_icon" title="编辑备注">
                 <Edit
                     v-show="!isEdit"
-                    @click.prevent.stop="changeRemarkEditMode"
-                />
-                <Select
-                    v-show="isEdit"
                     @click.prevent.stop="changeRemarkEditMode"
                 />
             </el-icon>
@@ -100,12 +102,18 @@ watch(
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
+}
+.contacts_edit_left {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
 .edit_remark_input {
-    width: 80%;
+    width: 70%;
 }
 .edit_remark_icon {
+    margin: 0 5px;
     transition: all 1 ease-in;
     &:hover {
         scale: 1.2;
