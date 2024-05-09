@@ -1,14 +1,7 @@
 <script setup>
 import { ref, toRefs, toRaw, computed, watch, onMounted } from 'vue'
 import { EMClient } from '@/IM'
-import {
-    CircleClose,
-    Search,
-    CircleCheckFilled,
-    Minus,
-    Plus,
-    Select
-} from '@element-plus/icons-vue'
+import { Search, Minus, Plus, Select } from '@element-plus/icons-vue'
 import { useGetUserMapInfo, useSordedContactsWithPinyin } from '@/hooks'
 /* store */
 import store from '@/store'
@@ -48,10 +41,15 @@ const groupDetail = computed(() => {
 })
 /* 群成员操作相关 */
 //获取id对应的昵称（群成员属性昵称>用户属性>环信id）
-const { getTheGroupNickNameById } = useGetUserMapInfo()
+const { getTheGroupNickNameById, getContactsAvatarById } = useGetUserMapInfo()
 const getNickNameById = (hxId) => {
     return getTheGroupNickNameById(groupId.value, hxId)
 }
+const getAvatarUrlById = computed(() => {
+    return (hxId) => {
+        return getContactsAvatarById(hxId)
+    }
+})
 const showGroupsMembersName = computed(() => {
     return (item) => {
         if (item.member) {
@@ -182,7 +180,11 @@ const searchUsers = (keyword) => {
                                     <div class="friend_user_list">
                                         <div class="friend_user_list_left">
                                             <el-avatar
-                                                :src="defaultAvatar"
+                                                :src="
+                                                    getAvatarUrlById(
+                                                        item.userId
+                                                    )
+                                                "
                                             ></el-avatar>
                                             <b class="friend_list_username">{{
                                                 `${
@@ -230,7 +232,7 @@ const searchUsers = (keyword) => {
                                 <div class="friend_user_list">
                                     <div class="friend_user_list_left">
                                         <el-avatar
-                                            :src="defaultAvatar"
+                                            :src="getAvatarUrlById(item.userId)"
                                         ></el-avatar>
                                         <b class="friend_list_username">{{
                                             `${item?.remark || item?.userId}`
@@ -287,7 +289,13 @@ const searchUsers = (keyword) => {
                         >
                             <div class="friend_user_list">
                                 <div class="friend_user_list_left">
-                                    <el-avatar :src="defaultAvatar"></el-avatar>
+                                    <el-avatar
+                                        :src="
+                                            getContactsAvatarById(
+                                                item.member || item.owner
+                                            )
+                                        "
+                                    ></el-avatar>
                                     <b class="friend_list_username">{{
                                         showGroupsMembersName(item)
                                     }}</b>

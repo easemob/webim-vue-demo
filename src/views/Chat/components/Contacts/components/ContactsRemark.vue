@@ -64,7 +64,7 @@ watch(
         <div class="contacts_edit_box">
             <p class="contacts_edit_left">
                 <span>备注：</span>
-                <span v-if="!isEdit">
+                <span v-if="!isEdit" class="contacts_edit_content">
                     {{ userRemark || '暂未设置好友备注...' }}</span
                 >
                 <el-input
@@ -108,6 +108,11 @@ watch(
     display: flex;
     flex-direction: row;
     align-items: center;
+    font-size: 17px;
+}
+.contacts_edit_content {
+    font-size: 13px;
+    color: #6a6868;
 }
 .edit_remark_input {
     width: 70%;

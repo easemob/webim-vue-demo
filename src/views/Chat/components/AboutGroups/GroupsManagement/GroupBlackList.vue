@@ -3,7 +3,7 @@ import { computed, ref, toRefs, onMounted } from 'vue'
 import store from '@/store'
 import { ElMessageBox } from 'element-plus'
 import { Search, Minus, Plus } from '@element-plus/icons-vue'
-
+import { useGetUserMapInfo } from '@/hooks'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 const props = defineProps({
     groupId: {
@@ -22,11 +22,13 @@ const groupBlacklist = computed(() => {
 const getGroupMembersList = computed(() => {
     return store.getters.getGroupMembersMap.get(groupId.value)
 })
+const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()
 onMounted(async () => {
     if (!getGroupMembersList.value) {
         await store.dispatch('fetchGoupsMemberFromServer', groupId.value)
     }
 })
+
 let tobeAddedBlackList = ref([])
 const handleAddBlackList = (memberId) => {
     ElMessageBox.alert('确定要操作该成员？', '成员变更', {
@@ -95,8 +97,12 @@ const searchUsers = () => {
                     <template v-if="member">
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
-                                <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{ member }}</b>
+                                <el-avatar
+                                    :src="getContactsAvatarById(member)"
+                                ></el-avatar>
+                                <b class="friend_list_username">{{
+                                    getContactsNickNameById(member)
+                                }}</b>
                             </div>
                             <el-button
                                 type="primary"
@@ -116,15 +122,13 @@ const searchUsers = () => {
                 <div v-for="member in inBlackMemberList" :key="member">
                     <div class="friend_user_list">
                         <div class="friend_user_list_left">
-                            <el-avatar :src="defaultAvatar"></el-avatar>
-                            <b class="friend_list_username">{{ member }}</b>
+                            <el-avatar
+                                :src="getContactsAvatarById(member)"
+                            ></el-avatar>
+                            <b class="friend_list_username">{{
+                                getContactsNickNameById(member)
+                            }}</b>
                         </div>
-                        <!-- <el-icon
-                            class="checked_btn"
-                            @click="handleAddBlackList(member)"
-                        >
-                            <CircleClose class="checked_icon" />
-                        </el-icon> -->
                         <el-button
                             type="danger"
                             :icon="Minus"

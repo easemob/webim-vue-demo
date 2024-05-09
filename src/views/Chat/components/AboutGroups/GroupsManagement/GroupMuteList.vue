@@ -1,9 +1,9 @@
 <script setup>
 import { computed, ref, toRefs, onMounted } from 'vue'
 import store from '@/store'
-import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 import { Search, Minus, Plus } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
+import { useGetUserMapInfo } from '@/hooks'
 import dateFormater from '@/utils/dateFormater'
 const props = defineProps({
     groupId: {
@@ -22,6 +22,8 @@ const groupMutelist = computed(() => {
 const getGroupMembersList = computed(() => {
     return store.getters.getGroupMembersMap.get(groupId.value)
 })
+
+const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()
 onMounted(async () => {
     if (!getGroupMembersList.value) {
         await store.dispatch('fetchGoupsMemberFromServer', groupId.value)
@@ -98,8 +100,12 @@ const searchUsers = () => {
                     <template v-if="member && !isInMuteList(member)">
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
-                                <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{ member }}</b>
+                                <el-avatar
+                                    :src="getContactsAvatarById(member)"
+                                ></el-avatar>
+                                <b class="friend_list_username">{{
+                                    getContactsNickNameById(member)
+                                }}</b>
                             </div>
                             <el-button
                                 type="primary"
@@ -119,9 +125,11 @@ const searchUsers = () => {
                 <div v-for="member in inMuteMemberList" :key="member">
                     <div class="friend_user_list">
                         <div class="friend_user_list_left">
-                            <el-avatar :src="defaultAvatar"></el-avatar>
+                            <el-avatar
+                                :src="getContactsAvatarById(member.user)"
+                            ></el-avatar>
                             <b class="friend_list_username">{{
-                                member.user
+                                getContactsNickNameById(member.user)
                             }}</b>
                             <sup v-if="member.expire" style="font: size 7px"
                                 >【失效时间：{{
