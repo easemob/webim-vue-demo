@@ -7,14 +7,14 @@ webim-vue3-demo 是基于环信 sdk 开发的一款具有单聊、群聊等功�
 # 运行起来
 
 -   说明：发送语音功能需要使用 https。
--   环境：Node 版本要最高于 14.18，建议使用 `Node 16、17`不推荐Node 18 及以上。（Node 版本要求主要参考 Vue 官方文档，以及 ElementPlus 官方文档）。
+-   环境：Node 版本建议使用 `Node 16、17`不推荐 Node 18 及以上。（Node 版本要求主要参考 Vue 官方文档，以及 ElementPlus 官方文档）。
 
 ```bash
 # install dependencies
 npm install or yarn install
 
-# serve with hot reload at localhost:8080
-npm start or yarn run dev
+# serve with hot reload at localhost:9001
+npm run dev or yarn run dev
 
 # build for production with minification
 npm run build or yarn build
@@ -152,11 +152,10 @@ const AgoraAppId = 'YOUR AOGRA APPID'
 export { AgoraAppId, AgoraRTC }
 ```
 
--   EaseCallKit 的 _utils_ 文件夹下分别有*getRtcToken.js* 以及*getChannelDetails.js* 这两个 js 文件。这两个 js 文件的作用为:
+-   EaseCallKit 的 _utils_ 文件夹下分别有`getRtcToken.js` 以及`getChannelDetails.js` 这两个 js 文件。这两个 js 文件的作用为:
 
-    > getRtcToken 向 AppServer 请求 channel 鉴权 token，在确保服务端已经搭建了 token 鉴权服务，请把地址以及请求参数替换为自己服务所要求的参数。
-
-    > getChannelDetails 后端提供的 rtc channel 中的 uid 映射对应用户身份的接口，Demo 映射的是对应的环信 ID，而实际我们的服务可以选择调整为映射自己用户体系当中的对应数据，非必须但是 EaseCallKit 有用到此接口，可以自行找到相关代码进行剔除。
+    -   getRtcToken 向 AppServer 请求 channel 鉴权 token，在确保服务端已经搭建了 token 鉴权服务，请把地址以及请求参数替换为自己服务所要求的参数，特别提醒：该接口主要用户获取加入频道的 channel token，以及生成加入频道的`uid`，`uid`字段主要用与频道内的唯一 id，该字段`强烈建议为int类型`，因为经验证该类型与其他移动端通信方为正常。`string 类型会有异常`。
+        > getChannelDetails 后端提供的 rtc channel 中的 uid 映射对应用户身份的接口，Demo 映射的是对应的环信 ID，而实际我们的服务可以选择调整为映射自己用户体系当中的对应数据，非必须但是 EaseCallKit 有用到此接口，可以自行找到相关代码进行剔除。
 
 -   在 App.vue 中引入 EaseCallKit 组件（实际项目中可以在所需位置引入），传入 EaseIMClient（也就是实例化后的 IM SDK），第二传入 msgCreateFunc ，（IMSDK 下的 message 方法）主要用于 EaseCallKit 当中信令消息构建使用。如果需要多人通话场景，那么多人中应该会有邀请他人通话的场景，当点击邀请的时候需要弹出对应的邀请弹框或者调到对应的邀请页面，EaseCallKit 组件内进行对外事件的触发 onInviteMembers，正是充当此作用。
 
@@ -180,7 +179,7 @@ sendInviteMessage(toId, callType)
 ```
 
 -   在外层使用这个 EaseCallKit 的时候如何知道其内部所产生的各种各项事件呢？比如对方挂断，拒接，通话结束？组件内使用类似发布订阅的模式对外抛出了时间，订阅则可以收到内部抛出的各种事件，具体用法是：
-    import EaseCallKit 下 hooks 中的 useCallKitEvent，并从中取出订阅方法，取消订阅方法以及一些事件常量，示例代码如下。
+    import EaseCallKit 下 hooks 中的 `useCallKitEvent`，并从中取出订阅方法，取消订阅方法以及一些事件常量，示例代码如下。
 
 ```javascript
 import { useCallKitEvent } from '@/components/EaseCallKit/hooks'
