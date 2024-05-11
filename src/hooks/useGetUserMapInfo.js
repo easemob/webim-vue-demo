@@ -12,6 +12,10 @@ const useGetUserMapInfo = () => {
         return store.getters.getContactsUserInfosMap
     })
     /* 群组相关依赖数据源 */
+    //获取加入的群组列表
+    const getJoinedGroupList = computed(() => store.getters.getJoinedGroupList)
+    //获取群组详情（展示群组名称等信息）
+    const groupDetailMap = computed(() => store.getters.getGroupDetailMap)
     //TODO 待改动群组昵称获取方式
     const getTheGroupNickNameById = (groupId, targetId) => {
         const userInfoFromGroupNickname = computed(() => {
@@ -22,6 +26,14 @@ const useGetUserMapInfo = () => {
         return (
             userInfoFromGroupNickname.value || getContactsNickNameById(targetId)
         )
+    }
+    //获取群组名
+    const getGroupNameByGroupId = (groupId) => {
+        const groupInfo = groupDetailMap.value.get(groupId)
+        const findJoinedGroup = getJoinedGroupList.value.find(
+            (groupItem) => groupItem.groupId === groupId
+        )
+        return groupInfo?.groupName || findJoinedGroup?.groupName || groupId
     }
     const getLoginNickNameById = () => {
         const loginUserInfoNickname = computed(() => {
@@ -60,6 +72,7 @@ const useGetUserMapInfo = () => {
     }
     return {
         getTheGroupNickNameById,
+        getGroupNameByGroupId,
         getLoginNickNameById,
         getContactsNickNameById,
         getContactsAvatarById

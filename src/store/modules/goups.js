@@ -1,6 +1,6 @@
 import { checkTagEmits, ElMessage } from 'element-plus'
+import { GROUP_OPERATION_TYPE, GROUP_ROLE_TYPE } from '@/IM/constant'
 import { EMClient } from '@/IM'
-
 const Groups = {
     state: {
         groupsInfos: {},
@@ -20,10 +20,11 @@ const Groups = {
             const { total, entities: joinedGroupList } = payload
             state.joinedGroup.pagingParams.pageNum++
             state.joinedGroup.joinedGroupListTotal = total
-            state.joinedGroup.joinedGroupList = [
-                ...state.joinedGroup.joinedGroupList,
-                ...joinedGroupList
-            ]
+            state.joinedGroup.joinedGroupList = _.unionBy(
+                [...joinedGroupList],
+                [...state.joinedGroup.joinedGroupList],
+                (g) => g.groupId
+            )
         },
         SET_GROUP_DETAILS: (state, payload) => {
             const { groupDetailsList } = payload
@@ -31,13 +32,6 @@ const Groups = {
                 groupDetailsList.forEach((groupDetail) => {
                     state.groupDetails.set(groupDetail.id, groupDetail)
                 })
-        },
-        SET_GORUPS_ADMINS: (state, payload) => {
-            const { groupId, admin } = payload
-            if (!state.groupsInfos[groupId]) {
-                state.groupsInfos[groupId] = {}
-            }
-            state.groupsInfos[groupId].admin = admin
         },
         SET_GOUPS_MEMBERS: (state, payload) => {
             const { groupId, members } = payload
@@ -98,32 +92,115 @@ const Groups = {
                 state.joinedGroup.joinedGroupList.length > 0 &&
                     state.joinedGroup.joinedGroupList.map((groupItem) => {
                         if (groupItem.groupId === groupId) {
-                            groupItem.groupName = params
+                            return (groupItem.groupName = params)
                         }
                     })
-                state.groupDetails.get(groupId).name = params
+                state.groupDetails.has(groupId) &&
+                    (state.groupDetails.get(groupId).name = params)
             }
             //更新群组详情内的数据
             if (type === 'groupDescription') {
                 state.joinedGroup.joinedGroupList.length > 0 &&
                     state.joinedGroup.joinedGroupList.map((groupItem) => {
                         if (groupItem.groupId === groupId) {
-                            groupItem.description = params
+                            return (groupItem.description = params)
                         }
                     })
-                state.groupDetails.get(groupId).description = params
+                state.groupDetails.has(groupId) &&
+                    (state.groupDetails.get(groupId).description = params)
+            }
+            //更新群成员数
+            if (type === 'groupMemberCount') {
+                state.joinedGroup.joinedGroupList.length > 0 &&
+                    state.joinedGroup.joinedGroupList.map((groupItem) => {
+                        return (groupItem.affiliationsCount = params)
+                    })
+                state.groupDetails.has(groupId) &&
+                    (state.groupDetails.get(groupId).affiliations_count =
+                        params)
+            }
+        },
+        //更新本地缓存群组成员
+        UPDATE_GROUP_MEMBERS: (state, payload) => {
+            const { groupId, member, type } = payload
+            switch (type) {
+                case GROUP_OPERATION_TYPE.MEMBER_PRESENCE:
+                    {
+                        state.groupMembers.has(groupId) &&
+                            state.groupMembers.get(groupId).push({ member })
+                    }
+                    break
+                case GROUP_OPERATION_TYPE.MEMBER_ABSENCE:
+                    {
+                        if (
+                            state.groupMembers.has(groupId) &&
+                            state.groupMembers.get(groupId).length > 0
+                        ) {
+                            const _index = state.groupMembers
+                                .get(groupId)
+                                .findIndex((item) => item === member)
+                            state.groupMembers.get(groupId).splice(_index, 1)
+                        }
+                    }
+                    break
+                default:
+                    break
+            }
+        },
+        //更新群组管理员
+        UPDATE_GORUPS_ADMIN: (state, payload) => {
+            const { type, groupId, userId } = payload
+            state.joinedGroup.joinedGroupList.length > 0 &&
+                state.joinedGroup.joinedGroupList.map((groupItem) => {
+                    if (groupItem.groupId === groupId) {
+                        if (type === GROUP_OPERATION_TYPE.SET_ADMIN) {
+                            return (groupItem.role = GROUP_ROLE_TYPE.ADMIN)
+                        } else if (type === GROUP_OPERATION_TYPE.REMOVE_ADMIN) {
+                            return (groupItem.role = GROUP_ROLE_TYPE.MEMBER)
+                        }
+                    }
+                })
+            if (type === GROUP_OPERATION_TYPE.SET_ADMIN) {
+                state.groupDetails.has(groupId) &&
+                    (state.groupDetails.get(groupId).adminlist = [userId])
+            } else if (type === GROUP_OPERATION_TYPE.REMOVE_ADMIN) {
+                if (
+                    state.groupDetails.has(groupId) &&
+                    state.groupDetails.get(groupId).adminlist?.length > 0
+                ) {
+                    const _index = state.groupDetails
+                        .get(groupId)
+                        .adminlist.findIndex((item) => item === userId)
+                    state.groupDetails.get(groupId).adminlist.splice(_index, 1)
+                }
+            }
+        },
+        //删除缓存群组列表
+        DELETE_JOINED_GROUP_LIST: (state, payload) => {
+            const { groupId } = payload
+            if (state.joinedGroup.joinedGroupList.length > 0) {
+                const _index = state.joinedGroup.joinedGroupList.findIndex(
+                    (item) => item.groupId === groupId
+                )
+                state.joinedGroup.joinedGroupList.splice(_index, 1)
+                state.joinedGroup.joinedGroupListTotal--
             }
         }
     },
     actions: {
         //从服务端获取加入的群组列表
-        fetchJoinedGroupListFromServer: async ({ state, commit }) => {
+        fetchJoinedGroupListFromServer: async (
+            { state, commit },
+            params = {}
+        ) => {
             const {
                 pagingParams: { pageNum, pageSize }
             } = state.joinedGroup
+            const { startPageNum } = params
             try {
                 const { total, entities } = await EMClient.getJoinedGroups({
-                    pageNum: pageNum,
+                    pageNum:
+                        startPageNum !== undefined ? startPageNum : pageNum,
                     pageSize: pageSize,
                     needAffiliations: true,
                     needRole: true
@@ -182,13 +259,6 @@ const Groups = {
             } else {
                 await fetchDetailsForGroupIds(groupIds)
             }
-        },
-        //群管理员
-        fetchGoupsAdmin: async ({ commit }, params) => {
-            const { data } = await EMClient.getGroupAdmin({
-                groupId: params
-            })
-            commit('SET_GORUPS_ADMINS', { groupId: params, admin: data })
         },
         //获取群组成员
         fetchGoupsMemberFromServer: async ({ commit }, groupId) => {
@@ -480,8 +550,7 @@ const Groups = {
                     groupId: groupId
                 })
                     .then((res) => {
-                        commit('UPDATE_GROUP_LIST', {
-                            type: 'deleteFromList',
+                        commit('DELETE_JOINED_GROUP_LIST', {
                             groupId: groupId
                         })
                         resolve(res)
@@ -502,8 +571,7 @@ const Groups = {
                 EMClient.destroyGroup(option)
                     .then((res) => {
                         resolve(res)
-                        commit('UPDATE_GROUP_LIST', {
-                            type: 'deleteFromList',
+                        commit('DELETE_JOINED_GROUP_LIST', {
                             groupId: groupId
                         })
                     })

@@ -6,6 +6,7 @@ import {
 } from '@/utils/handleSomeData/index'
 import { EMClient } from '@/IM'
 import { informType, messageType } from '@/constant'
+import { GROUP_OPERATION_TYPE } from '@/IM/constant'
 const { INFORM_FROM } = informType
 const { CHAT_TYPE } = messageType
 const Conversation = {
@@ -21,15 +22,6 @@ const Conversation = {
         //更新系统通知
         UPDATE_INFORM_LIST: (state, informBody) => {
             const toBeUpdateInform = _.assign([], state.informDetail)
-            // let _index = toBeUpdateInform.findIndex(
-            //   (v) => v.from === informBody.from
-            // );
-            // if (_index === -1) {
-            //   toBeUpdateInform.unshift(informBody);
-            // } else {
-            //   toBeUpdateInform.splice(_index, 1);
-            //   toBeUpdateInform.unshift(informBody);
-            // }
             toBeUpdateInform.unshift(informBody)
             state.informDetail = toBeUpdateInform
         },
@@ -122,58 +114,38 @@ const Conversation = {
                     chatType: CHAT_TYPE.GROUP
                 }
                 switch (informContent.operation) {
-                    case 'memberPresence': //入群通知
+                    case GROUP_OPERATION_TYPE.MEMBER_PRESENCE: //入群通知
                         {
-                            commit('UPDATE_GROUP_INFOS', {
-                                groupId: informContent.id,
-                                type: 'addAffiliationsCount'
-                            })
-                            dispatch(
-                                'fetchGoupsMemberFromServer',
-                                informContent.id
-                            )
                             informMsg.msg = `${informContent.from}加入了群组`
                             dispatch('createInformMessage', informMsg)
                         }
                         break
-                    case 'memberAbsence':
+                    case GROUP_OPERATION_TYPE.MEMBER_ABSENCE:
                         {
-                            //退群通知
-                            commit('UPDATE_GROUP_INFOS', {
-                                groupId: informContent.id,
-                                type: 'delAffiliationsCount'
-                            })
-                            dispatch(
-                                'fetchGoupsMemberFromServer',
-                                informContent.id
-                            )
                             informMsg.msg = `${informContent.from}退出了群组`
                             dispatch('createInformMessage', informMsg)
                         }
                         break
-                    case 'updateAnnouncement':
+                    case GROUP_OPERATION_TYPE.UPDATE_ANNOUNCEMENT:
                         {
                             //更新群公告
-                            dispatch('fetchAnnounment', informContent.id)
                             informMsg.msg = `${informContent.from}更新了群组公告，去看看更新的什么吧~`
                             dispatch('createInformMessage', informMsg)
                         }
                         break
-                    case 'setAdmin':
+                    case GROUP_OPERATION_TYPE.SET_ADMIN:
                         {
-                            dispatch('fetchGoupsAdmin', informContent.id)
                             informMsg.msg = `${informContent.from}设定${informContent.to}为管理员~`
                             dispatch('createInformMessage', informMsg)
                         }
                         break
-                    case 'removeAdmin':
+                    case GROUP_OPERATION_TYPE.REMOVE_ADMIN:
                         {
-                            dispatch('fetchGoupsAdmin', informContent.id)
                             informMsg.msg = `${informContent.from}移除了${informContent.to}的管理员身份~`
                             dispatch('createInformMessage', informMsg)
                         }
                         break
-                    case 'muteMember':
+                    case GROUP_OPERATION_TYPE.MUTE_MEMBER:
                         {
                             informMsg.msg = `${informContent.from}禁言了${
                                 informContent.to ? informContent.to : '你'
@@ -181,7 +153,7 @@ const Conversation = {
                             dispatch('createInformMessage', informMsg)
                         }
                         break
-                    case 'unmuteMember':
+                    case GROUP_OPERATION_TYPE.UNMUTE_MEMBER:
                         {
                             informMsg.msg = `${informContent.from}取消了${
                                 informContent.to ? informContent.to : '你'
@@ -189,72 +161,35 @@ const Conversation = {
                             dispatch('createInformMessage', informMsg)
                         }
                         break
-                    case 'removeMember':
+                    case GROUP_OPERATION_TYPE.REMOVE_MEMBER:
                         {
                             informMsg.msg = `${informContent.from}将你移出了群组${informContent.id}~`
                             dispatch('createInformMessage', informMsg)
-                            //执行删除会话
-                            commit('DELETE_ONE_CONVERSATION', informContent.id)
-                            //从群组列表中移除
-                            commit('UPDATE_GROUP_LIST', {
-                                type: 'deleteFromList',
-                                groupId: informContent.id
-                            })
                         }
                         break
-                    case 'destroy':
+                    case GROUP_OPERATION_TYPE.DESTROY:
                         {
                             informMsg.msg = `${informContent.from}解散了该群~`
                             dispatch('createInformMessage', informMsg)
-                            setTimeout(() => {
-                                dispatch('fetchGroupList', {
-                                    pageNum: 1,
-                                    pageSize: 500
-                                })
-                            }, 300)
                         }
                         break
-                    case 'updateInfo':
+                    case GROUP_OPERATION_TYPE.UPDATE_INFO:
                         {
                             informMsg.msg = `${informContent.from}更新了群组详情~`
                             dispatch('createInformMessage', informMsg)
-                            dispatch('getAssignGroupDetail', informContent.id)
                         }
                         break
-                    case 'acceptRequest':
-                        {
-                            setTimeout(() => {
-                                dispatch('fetchGroupList', {
-                                    pageNum: 1,
-                                    pageSize: 500
-                                })
-                            }, 300)
-                        }
-                        break
-                    case 'memberAttributesUpdate':
+
+                    case GROUP_OPERATION_TYPE.MEMBER_ATTRIBUTES_UPDATE:
                         {
                             informMsg.msg = `${informContent.from}修改群内昵称为【${informContent?.attributes?.nickName}】`
                             dispatch('createInformMessage', informMsg)
-                            commit('SET_GROUP_MEMBERS_INFO', {
-                                groupId: informContent.id,
-                                inGroupInfo: [
-                                    {
-                                        [informContent.from]: {
-                                            nickName:
-                                                informContent?.attributes
-                                                    ?.nickName
-                                        }
-                                    }
-                                ]
-                            })
                         }
                         break
                     default:
                         break
                 }
             }
-            //memberPresence 群成员加入群组需要进行群组人数+1操作。
-            // commit('UPDATE_GROUP_INFOS',{})
         },
         //从本地加载会话列表数据
         getConversationListFromLocal: async ({ dispatch, commit }, params) => {

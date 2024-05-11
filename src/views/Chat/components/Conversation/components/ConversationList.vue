@@ -36,7 +36,11 @@ const conversationList = computed(() => {
     return store.getters.conversationListFromLocal
 })
 //处理会话name
-const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()
+const {
+    getContactsNickNameById,
+    getContactsAvatarById,
+    getGroupNameByGroupId
+} = useGetUserMapInfo()
 const handleConversationName = computed(() => {
     return (conversationItem) => {
         const { conversationType, conversationId } = conversationItem
@@ -44,8 +48,7 @@ const handleConversationName = computed(() => {
             return getContactsNickNameById(conversationId)
         }
         if (conversationType === CHAT_TYPE.GROUP) {
-            const groupDetail = groupDetailMap.value.get(conversationId)
-            return groupDetail?.name || conversationId
+            return getGroupNameByGroupId(conversationId)
         }
         return conversationId
     }

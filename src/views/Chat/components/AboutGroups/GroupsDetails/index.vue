@@ -3,6 +3,7 @@ import { ref, toRaw, toRefs, computed, nextTick, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 /* IMSDK */
 import { EMClient } from '@/IM'
+import { GROUP_ROLE_TYPE } from '@/IM/constant'
 /* components */
 import GroupsManagement from '../GroupsManagement'
 /* icons */
@@ -39,8 +40,8 @@ const getGroupDetailFromGroupList = computed(() => {
 const memberRole = computed(() => {
     //判断是否在权限名单内
     if (
-        getGroupDetailFromGroupList.value.role === 'admin' ||
-        getGroupDetailFromGroupList.value.role === 'owner'
+        getGroupDetailFromGroupList.value.role === GROUP_ROLE_TYPE.ADMIN ||
+        getGroupDetailFromGroupList.value.role === GROUP_ROLE_TYPE.OWNER
     ) {
         return true
     } else {
@@ -157,7 +158,6 @@ const inTheGroupNickname = computed(() => {
 })
 //退出、解散群组
 const quitThisGroup = async () => {
-    const groupId = groupId.value
     try {
         await ElMessageBox.confirm(
             '将要从本群退出，确认要退出此群吗？',
@@ -168,7 +168,7 @@ const quitThisGroup = async () => {
                 type: 'warning'
             }
         )
-        await store.dispatch('leaveIntheGroup', { groupId })
+        await store.dispatch('leaveIntheGroup', { groupId: groupId.value })
         emits('handleDrawer')
     } catch (error) {
         if (error !== 'cancel') {
@@ -181,7 +181,6 @@ const quitThisGroup = async () => {
     }
 }
 const dissolveThisGroup = async () => {
-    const groupId = groupId.value
     try {
         await ElMessageBox.confirm(
             '将要将本群解散，确认要解散此群吗？',
@@ -192,7 +191,7 @@ const dissolveThisGroup = async () => {
                 type: 'error'
             }
         )
-        await store.dispatch('destroyInTheGroup', { groupId })
+        await store.dispatch('destroyInTheGroup', { groupId: groupId.value })
         emits('handleDrawer')
     } catch (error) {
         if (error !== 'cancel') {
