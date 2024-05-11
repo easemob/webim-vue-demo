@@ -50,7 +50,6 @@ const handleConversationName = computed(() => {
         if (conversationType === CHAT_TYPE.GROUP) {
             return getGroupNameByGroupId(conversationId)
         }
-        return conversationId
     }
 })
 //处理会话头像
@@ -78,13 +77,11 @@ const handleLastMsgNickName = computed(() => {
         const { from } = lastMessage || {}
         const userInfoFromGroupNickname =
             groupsInfos[groupId]?.groupMemberInfo?.[from]?.nickName
-        const friendUserInfoNickname = getContactsAvatarById(from)
+        const friendUserInfoNickname = getContactsNickNameById(from)
         if (!from || from === loginUserId.value) {
             return '我：'
         } else {
-            return `${
-                userInfoFromGroupNickname || friendUserInfoNickname || from
-            }：`
+            return `${userInfoFromGroupNickname || friendUserInfoNickname}：`
         }
     }
 })

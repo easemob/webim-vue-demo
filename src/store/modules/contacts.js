@@ -4,8 +4,6 @@ import { sortPinyinFriendItem, handlePresence } from '@/utils/handleSomeData'
 import _ from 'lodash'
 const Contacts = {
     state: {
-        friendList: {}, //legacy
-        groupList: {}, //legacy
         contactsWithRemarkMap: new Map(),
         contactsUserInfosMap: new Map(),
         contactsUsersPresenceMap: new Map(),
@@ -55,81 +53,6 @@ const Contacts = {
                         commonStatus
                     )
                 })
-        },
-        //legacy
-        SET_GROUP_LIST: (state, payload) => {
-            //init 为初始化获取 replenish 补充群列表（包括补充群详情）
-            const { setType, data } = payload
-            if (setType === 'init') {
-                state.groupList = _.assign({}, data)
-            }
-            if (setType === 'replenish') {
-                const { id, name, disabled } = data
-                if (state.groupList[id]) {
-                    state.groupList[id].groupDetail = data
-                } else {
-                    state.groupList[id] = {
-                        groupid: id,
-                        groupname: name,
-                        disabled: disabled,
-                        groupDetail: data
-                    }
-                }
-            }
-        },
-        //示例优化方向--减少群组详情的调用，转为更新本地群组详情数据 //legacy
-        UPDATE_GROUP_INFOS: (state, payload) => {
-            const { groupId, type, params } = payload
-            //key(群id)，type（群详情对应要修改的字段）
-            if (
-                state.groupList[groupId] &&
-                state.groupList[groupId].groupDetail
-            ) {
-                switch (type) {
-                    //修改群名
-                    case 'groupName':
-                        {
-                            state.groupList[groupId].groupDetail.name = params
-                        }
-                        break
-                    case 'groupDescription':
-                        {
-                            state.groupList[groupId].groupDetail.description =
-                                params
-                        }
-                        break
-                    case 'addAffiliationsCount':
-                        {
-                            state.groupList[
-                                groupId
-                            ].groupDetail.affiliations_count =
-                                state.groupList[groupId].groupDetail
-                                    .affiliations_count + 1
-                        }
-                        break
-                    case 'delAffiliationsCount':
-                        {
-                            state.groupList[
-                                groupId
-                            ].groupDetail.affiliations_count =
-                                state.groupList[groupId].groupDetail
-                                    .affiliations_count - 1
-                        }
-                        break
-                    default:
-                        break
-                }
-            }
-        },
-        //示例优化方向--更改本地群组列表群名(或其他状态) //legacy
-        UPDATE_GROUP_LIST: (state, payload) => {
-            const { type, groupId, groupName } = payload
-            if (type === 'updateGroupName') {
-                state.groupList[groupId].groupname = groupName
-            }
-            if (type === 'deleteFromList') {
-                state.groupList[groupId] && delete state.groupList[groupId]
-            }
         },
         DELETE_CONTACTS_PRESENCE_TO_MAP: (state, payload) => {
             state.contactsUsersPresenceMap.has(payload) &&
@@ -336,31 +259,6 @@ const Contacts = {
             } catch (error) {
                 console.error('设置联系人备注失败', error)
             }
-        },
-        //获取群组列表 //legacy
-        fetchGroupList: async ({ dispatch, commit }, params) => {
-            const res = await EMClient.getJoinedGroups({
-                // needAffiliations: true,
-                // needRole: true,
-                ...params
-            })
-            const goupListData = _.keyBy(res.data, 'groupid')
-            const groupIdList = _.map(res.data, 'groupid')
-            dispatch('fetchGroupDetailFromServer', groupIdList)
-            commit('SET_GROUP_LIST', { setType: 'init', data: goupListData })
-        },
-        //获取指定群详情 //legacy
-        getAssignGroupDetail: async ({ dispatch, commit }, goupsId) => {
-            const options = {
-                groupId: goupsId // 群组id
-            }
-            const result = await EMClient.getGroupInfo(options)
-            //
-            result.data &&
-                commit('SET_GROUP_LIST', {
-                    setType: 'replenish',
-                    data: result.data[0]
-                })
         }
     },
     getters: {

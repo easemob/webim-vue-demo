@@ -70,9 +70,8 @@ const handleClickBtn = ({ informData, index, type }) => {
                         index,
                         btnStatus: 1
                     })
-                    await store.dispatch('fetchGroupList', {
-                        pageNum: 1,
-                        pageSize: 500
+                    await store.dispatch('fetchJoinedGroupListFromServer', {
+                        startPageNum: 0
                     })
                     //同意之后跳转至对应的群组详情
                     router.push({

@@ -13,20 +13,21 @@ import informIcon from '@/assets/images/avatar/inform.png'
 /* store */
 const store = useStore()
 //好友列表
-const friendList = computed(() => store.state.Contacts.friendList)
+const getContactsWithRemarkMap = computed(
+    () => store.getters.getContactsWithRemarkMap
+)
 //联系人列表数
 const contactsSize = computed(() => store.getters.getContactsWithRemarkMap.size)
 //群组列表
 const joinedGroupList = computed(() => store.getters.getJoinedGroupList)
 //加入的群组总数
 const joinedGroupTotal = computed(() => store.getters.getJoinedGroupTotal)
-//搜索部分的总数据
-const searchData = computed(() => {
-    const totalsearchData = Object.assign(
-        _.cloneDeep(friendList.value),
-        _.cloneDeep(joinedGroupList.value)
-    )
-    return Object.values(totalsearchData)
+//搜索部分的总数据(合并好友数据以及群组列表数据为输入框搜索数据源)
+const searchInputSrourceData = computed(() => {
+    return [
+        ...getContactsWithRemarkMap.value.values(),
+        ...joinedGroupList.value
+    ]
 })
 //
 /* 路由跳转 */
@@ -95,7 +96,7 @@ const onScrollToBottom = (event) => {
         <el-aside class="contacts_box">
             <SearchInput
                 :searchType="'contacts'"
-                :searchData="searchData"
+                :searchData="searchInputSrourceData"
                 @toContacts="toContacts"
             />
             <el-scrollbar
@@ -122,8 +123,9 @@ const onScrollToBottom = (event) => {
                     </div>
                 </div>
 
-                <!-- 联系人群组列表 -->
+                <!-- 联系人列表 -->
                 <el-collapse v-model="activeName" accordion>
+                    <!-- 群组 -->
                     <el-collapse-item
                         :title="`群聊 ( ${joinedGroupTotal} )`"
                         :name="CONTACTS_TYPE.GROUP"
@@ -135,6 +137,7 @@ const onScrollToBottom = (event) => {
                             <el-empty description="暂无加入的群组..." />
                         </template>
                     </el-collapse-item>
+                    <!-- 好友 -->
                     <el-collapse-item
                         :title="`联系人 ( ${contactsSize} )`"
                         :name="CONTACTS_TYPE.FRIEND"

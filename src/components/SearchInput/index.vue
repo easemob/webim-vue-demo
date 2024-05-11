@@ -1,5 +1,13 @@
 <script setup>
-import { ref, toRaw, watch, computed, defineProps, defineEmits } from 'vue'
+import {
+    ref,
+    toRaw,
+    toRefs,
+    watch,
+    computed,
+    defineProps,
+    defineEmits
+} from 'vue'
 import { EMClient } from '@/IM'
 import { Search } from '@element-plus/icons-vue'
 import { useLocalStorage, onKeyStroke } from '@vueuse/core'
@@ -7,6 +15,7 @@ import _ from 'lodash'
 import { onClickOutside } from '@vueuse/core'
 import { messageType } from '@/constant'
 import dateFormater from '@/utils/dateFormater'
+import { useGetUserMapInfo } from '@/hooks'
 /* 单人头像 */
 import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png'
@@ -22,7 +31,7 @@ const props = defineProps({
         required: true
     }
 })
-
+const { searchType, searchData } = toRefs(props)
 const emit = defineEmits(['toChatMessage', 'toContacts'])
 //搜索框value
 const inputValue = ref('')
@@ -41,38 +50,44 @@ onClickOutside(searchBox, () => (isShowResultContent.value = false))
 const searchSuggest = ref([])
 //搜索相匹配的值
 const querySearch = () => {
-    if (inputValue.value) {
-        //搜索会话 conversation
-        if (props.searchType === 'conversation') {
-            const resultList = _.filter(props.searchData, (o) => {
-                return o.conversationId.indexOf(inputValue.value) > -1
-            })
-            searchSuggest.value = resultList
-        }
-        //搜索联系人 contacts
-        if (props.searchType === 'contacts') {
-            const resObj = {}
-            const resultList = _.filter(
-                props.searchData,
-                (o) =>
-                    (o.hxId && o.hxId.includes(inputValue.value)) ||
-                    (o.nickname && o.nickname.includes(inputValue.value)) ||
-                    (o.groupid && o.groupid.includes(inputValue.value)) ||
-                    (o.groupname && o.groupname.includes(inputValue.value))
-            )
-            resultList.length > 0 &&
-                resultList.forEach((item) => {
-                    const key = item.hxId ? CHAT_TYPE.SINGLE : CHAT_TYPE.GROUP
-                    if (resObj[key]) {
-                        resObj[key].push(item)
-                    } else {
-                        resObj[key] = []
-                        resObj[key].push(item)
-                    }
-                })
-            searchSuggest.value = resObj
-        }
+    if (!inputValue.value) return
+    //搜索会话 conversation
+    if (searchType.value === 'conversation') {
+        const resultList = _.filter(props.searchData, (o) => {
+            //文本类型消息支持按照文本内容搜索
+            if (o.lastMessage?.type === ALL_MESSAGE_TYPE.TEXT) {
+                return o.lastMessage.msg.indexOf(inputValue.value) > -1
+            }
+            if (o.conversationType === CHAT_TYPE.SINGLE) {
+                return (
+                    getContactsNickNameById(o.conversationId).indexOf(
+                        inputValue.value
+                    ) > -1 || o.conversationId.indexOf(inputValue.value) > -1
+                )
+            }
+            if (o.conversationType === CHAT_TYPE.GROUP)
+                return (
+                    getGroupNameByGroupId(o.conversationId).indexOf(
+                        inputValue.value
+                    ) > -1 || o.conversationId.indexOf(inputValue.value) > -1
+                )
+        })
+        searchSuggest.value = resultList
     }
+    //搜索联系人 contacts
+    if (searchType.value === 'contacts') {
+        const resultList = _.filter(
+            searchData.value,
+            (o) =>
+                (o.userId && o.userId.includes(inputValue.value)) ||
+                (o.remark && o.remark.includes(inputValue.value)) ||
+                (o.groupId && o.groupId.includes(inputValue.value)) ||
+                (o.groupName && o.groupName.includes(inputValue.value)) ||
+                (o.description && o.description.includes(inputValue.value))
+        )
+        searchSuggest.value = resultList
+    }
+
     //监听输入框为空字符串的时候置空搜索建议
     watch(inputValue, (newVal) => {
         if (newVal === '') searchSuggest.value = []
@@ -89,7 +104,7 @@ const handleLastMsgContent = computed(() => {
         } else if (type === ALL_MESSAGE_TYPE.CUSTOM) {
             //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
             if (msgBody.customEvent) {
-                (CUSTOM_TYPE[msgBody.customEvent] &&
+                ;(CUSTOM_TYPE[msgBody.customEvent] &&
                     (resultContent = CUSTOM_TYPE[msgBody.customEvent])) ||
                     ''
             }
@@ -101,10 +116,10 @@ const handleLastMsgContent = computed(() => {
 })
 //点击历史记录通知对应类型的不同的组件跳转 例如 通知会话部分 通知联系人部分
 const clickHistoryItem = (historyItem) => {
-    if (props.searchType === 'conversation') {
+    if (searchType.value === 'conversation') {
         emitConversation(0, historyItem)
     }
-    if (props.searchType === 'contacts') {
+    if (searchType.value === 'contacts') {
     }
 }
 //选中则通知会话组件跳转
@@ -144,17 +159,15 @@ const emitConversation = (fromType, item) => {
     searchSuggest.value = []
     isShowResultContent.value = false
 }
-
 //选中通知联系人跳转 联系人搜索暂不写入本地存储
 const emitContacts = (item) => {
-    if (item.hxId) {
-        emit('toContacts', { id: item.hxId, chatType: CHAT_TYPE.SINGLE })
+    if (item.userId) {
+        emit('toContacts', { id: item.userId, chatType: CHAT_TYPE.SINGLE })
     }
-    if (item.groupid) {
-        emit('toContacts', { id: item.groupid, chatType: CHAT_TYPE.GROUP })
+    if (item.groupId) {
+        emit('toContacts', { id: item.groupId, chatType: CHAT_TYPE.GROUP })
     }
 }
-
 //监听ESC键关闭搜索会话
 const handleEscapeKey = () => {
     inputValue.value = ''
@@ -162,6 +175,11 @@ const handleEscapeKey = () => {
     isShowResultContent.value = false
     suuggestInputComps.value.blur()
 }
+const {
+    getContactsAvatarById,
+    getGroupNameByGroupId,
+    getContactsNickNameById
+} = useGetUserMapInfo()
 </script>
 <template>
     <div class="search_box" ref="searchBox">
@@ -178,7 +196,6 @@ const handleEscapeKey = () => {
                 clearable
             />
         </div>
-
         <div
             v-if="isShowResultContent"
             ref="resultContent"
@@ -204,7 +221,9 @@ const handleEscapeKey = () => {
                             @click="clickHistoryItem(item)"
                         >
                             <span>{{
-                                item.label ? item.label : item.value
+                                item.chatType === CHAT_TYPE.SINGLE
+                                    ? getContactsNickNameById(item.value)
+                                    : getGroupNameByGroupId(item.value)
                             }}</span>
                         </li>
                     </template>
@@ -247,7 +266,9 @@ const handleEscapeKey = () => {
                                     :src="
                                         conversationItem.conversationType ===
                                         CHAT_TYPE.SINGLE
-                                            ? defaultSingleAvatar
+                                            ? getContactsAvatarById(
+                                                  conversationItem.conversationId
+                                              )
                                             : defaultGroupAvatarUrl
                                     "
                                 ></el-avatar>
@@ -255,7 +276,16 @@ const handleEscapeKey = () => {
                         </div>
                         <div class="item_body item_main">
                             <div class="name">
-                                {{ conversationItem.conversationId }}
+                                {{
+                                    conversationItem.conversationType ===
+                                    CHAT_TYPE.SINGLE
+                                        ? getContactsNickNameById(
+                                              conversationItem.conversationId
+                                          )
+                                        : getGroupNameByGroupId(
+                                              conversationItem.conversationId
+                                          )
+                                }}
                             </div>
                             <div
                                 v-if="conversationItem.lastMessage"
@@ -280,85 +310,58 @@ const handleEscapeKey = () => {
                 </div>
             </div>
             <div v-if="searchType === 'contacts'">
-                <div
-                    v-for="(serchResult, SerchKey, index) in searchSuggest"
-                    :key="index"
-                >
-                    <template v-if="SerchKey === CHAT_TYPE.SINGLE">
+                <div v-for="(contactItem, index) in searchSuggest" :key="index">
+                    <template v-if="contactItem?.userId">
                         <div class="title">联系人</div>
-                        <template
-                            v-for="(item, index) in serchResult"
-                            :key="index"
+                        <div
+                            class="search_result_item"
+                            @click="emitContacts(contactItem)"
                         >
-                            <div
-                                class="search_result_item"
-                                @click="emitContacts(item)"
-                            >
-                                <div class="item_body item_left">
-                                    <div class="session_other_avatar">
-                                        <el-avatar
-                                            :src="
-                                                item.hxId && item.avatarurl
-                                                    ? item.avatarurl
-                                                    : item.groupid
-                                                    ? defaultGroupAvatarUrl
-                                                    : defaultSingleAvatar
-                                            "
-                                        >
-                                        </el-avatar>
-                                    </div>
-                                </div>
-                                <div class="item_body item_main">
-                                    <div class="name">
-                                        {{
-                                            item.nickname
-                                                ? item.nickname
-                                                : item.groupname
-                                                ? item.groupname
-                                                : item.hxId
-                                        }}
-                                    </div>
+                            <div class="item_body item_left">
+                                <div class="session_other_avatar">
+                                    <el-avatar
+                                        :src="
+                                            getContactsAvatarById(
+                                                contactItem.userId
+                                            )
+                                        "
+                                    >
+                                    </el-avatar>
                                 </div>
                             </div>
-                        </template>
+                            <div class="item_body item_main">
+                                <div class="name">
+                                    {{
+                                        getContactsNickNameById(
+                                            contactItem.userId
+                                        )
+                                    }}
+                                </div>
+                            </div>
+                        </div>
                     </template>
-                    <template v-if="SerchKey === CHAT_TYPE.GROUP">
+                    <template v-if="contactItem?.groupId">
                         <div class="title">群组</div>
-                        <template
-                            v-for="(item, index) in serchResult"
-                            :key="index"
+                        <div
+                            class="search_result_item"
+                            @click="emitContacts(contactItem)"
                         >
-                            <div
-                                class="search_result_item"
-                                @click="emitContacts(item)"
-                            >
-                                <div class="item_body item_left">
-                                    <div class="session_other_avatar">
-                                        <el-avatar
-                                            :src="
-                                                item.hxId && item.avatarurl
-                                                    ? item.avatarurl
-                                                    : item.groupid
-                                                    ? defaultGroupAvatarUrl
-                                                    : defaultSingleAvatar
-                                            "
-                                        >
-                                        </el-avatar>
-                                    </div>
-                                </div>
-                                <div class="item_body item_main">
-                                    <div class="name">
-                                        {{
-                                            item.nickname
-                                                ? item.nickname
-                                                : item.groupname
-                                                ? item.groupname
-                                                : item.hxId
-                                        }}
-                                    </div>
+                            <div class="item_body item_left">
+                                <div class="session_other_avatar">
+                                    <el-avatar :src="defaultGroupAvatarUrl">
+                                    </el-avatar>
                                 </div>
                             </div>
-                        </template>
+                            <div class="item_body item_main">
+                                <div class="name">
+                                    {{
+                                        getGroupNameByGroupId(
+                                            contactItem.groupId
+                                        )
+                                    }}
+                                </div>
+                            </div>
+                        </div>
                     </template>
                 </div>
             </div>

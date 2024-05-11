@@ -120,9 +120,8 @@ const createNewGroups = async () => {
             data: { ...groupCreateForm }
         })
         //更新群组列表
-        await store.dispatch('fetchGroupList', {
-            pageNum: 1,
-            pageSize: 500
+        await store.dispatch('fetchJoinedGroupListFromServer', {
+            startPageNum: 0
         })
         ElNotification({
             title: '群组操作',
