@@ -55,21 +55,25 @@ const querySearch = () => {
     if (searchType.value === 'conversation') {
         const resultList = _.filter(props.searchData, (o) => {
             //文本类型消息支持按照文本内容搜索
-            if (o.lastMessage?.type === ALL_MESSAGE_TYPE.TEXT) {
-                return o.lastMessage.msg.indexOf(inputValue.value) > -1
-            }
+            // if (o.lastMessage?.type === ALL_MESSAGE_TYPE.TEXT) {
+            //     return o.lastMessage.msg.indexOf(inputValue.value) > -1
+            // }
             if (o.conversationType === CHAT_TYPE.SINGLE) {
                 return (
                     getContactsNickNameById(o.conversationId).indexOf(
                         inputValue.value
-                    ) > -1 || o.conversationId.indexOf(inputValue.value) > -1
+                    ) > -1 ||
+                    o.conversationId.indexOf(inputValue.value) > -1 ||
+                    o.lastMessage?.msg.indexOf(inputValue.value) > -1
                 )
             }
             if (o.conversationType === CHAT_TYPE.GROUP)
                 return (
                     getGroupNameByGroupId(o.conversationId).indexOf(
                         inputValue.value
-                    ) > -1 || o.conversationId.indexOf(inputValue.value) > -1
+                    ) > -1 ||
+                    o.conversationId.indexOf(inputValue.value) > -1 ||
+                    o.lastMessage?.msg.indexOf(inputValue.value) > -1
                 )
         })
         searchSuggest.value = resultList
