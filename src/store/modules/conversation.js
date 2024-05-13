@@ -79,7 +79,6 @@ const Conversation = {
         //添加新系统通知
         createNewInform: ({ dispatch, commit }, params) => {
             const { fromType, informContent } = params
-
             const result = createInform(fromType, informContent)
             commit('UPDATE_INFORM_LIST', result)
 

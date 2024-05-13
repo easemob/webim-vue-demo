@@ -1,1 +1,2 @@
-export * from './groupEvent'
+export * from './group'
+export * from './contacts'

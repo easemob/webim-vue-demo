@@ -64,6 +64,9 @@ const Contacts = {
                 userId,
                 remark
             })
+        },
+        ADD_NEW_CONTACT: (state, payload) => {
+            state.contactsWithRemarkMap.set(payload.userId, payload)
         }
     },
     actions: {
@@ -116,23 +119,18 @@ const Contacts = {
             }
         },
         //新增联系人
-        onAddedNewFriend: async ({ dispatch, commit }, params) => {
+        onAddNewContact: async ({ dispatch, commit }, params) => {
             const { from: userId } = params
-            const friendData = {}
-            friendData[userId] = { hxId: userId }
-            try {
-                const newfriendInfos = await dispatch('getOtherUserInfo', [
-                    userId
-                ])
-
-                _.merge(friendData, newfriendInfos)
-                commit('SET_ADD_NEW_FRIEND', friendData)
-            } catch (error) {}
-            //订阅新增联系人
-            dispatch('subFriendsPresence', [userId])
+            const newContactParams = {
+                userId,
+                remark: ''
+            }
+            console.log('>>>>>新增联系人', newContactParams)
+            commit('ADD_NEW_CONTACT', newContactParams)
+            dispatch('fetchContactsUserInfos', [userId])
         },
         //好友关系解除
-        onDeleteFriend: async ({ dispatch, commit }, params) => {
+        onDeleteContact: async ({ dispatch, commit }, params) => {
             //取消订阅好友状态。
             const { from: userId } = params
             dispatch('unsubFriendsPresence', userId)
@@ -147,39 +145,6 @@ const Contacts = {
             } catch (error) {
                 console.error('获取黑名单列表失败', error)
             }
-        },
-        //获取他人用户属性 //legacy
-        getOtherUserInfo: async ({ commit }, users) => {
-            /**
-             * @param {String|Array} users - 用户id
-             */
-
-            return new Promise(async (resolve, reject) => {
-                let usersInfosObj = {}
-                const requestTask = []
-                const usersArr = _.chunk([...users], 99) //分拆users 用户属性获取一次不能超过100个
-                try {
-                    usersArr.length > 0 &&
-                        usersArr.map((userItem) =>
-                            requestTask.push(
-                                EMClient.fetchUserInfoById(userItem)
-                            )
-                        )
-                    const result = await Promise.all(requestTask)
-                    const usersInfos = _.map(result, 'data')
-                    usersInfos.length > 0 &&
-                        usersInfos.map(
-                            (item) =>
-                                (usersInfosObj = Object.assign(
-                                    usersInfosObj,
-                                    item
-                                ))
-                        )
-                    resolve(usersInfosObj)
-                } catch (error) {
-                    reject(error)
-                }
-            })
         },
         //获取联系人用户属性
         fetchContactsUserInfos: async ({ commit }, users) => {

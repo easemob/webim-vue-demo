@@ -1,3 +1,4 @@
+import { CHAT_TYPE } from './messageType'
 const INFORM_NAME = {
     FRIEND_INVITE: '好友申请',
     FRIEND_BUILD: '已成为好友',
@@ -43,8 +44,8 @@ const INFORM_TYPE = {
     memberAttributesUpdate: INFORM_NAME.GROUP_UPDATE_MEMBER_ATTRIBUTES
 }
 const INFORM_FROM = {
-    FRIEND: 'friend',
-    GROUP: 'group'
+    FRIEND: CHAT_TYPE.SINGLE,
+    GROUP: CHAT_TYPE.GROUP
 }
 export default {
     INFORM_TYPE,

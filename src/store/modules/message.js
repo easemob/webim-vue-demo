@@ -236,6 +236,7 @@ const Message = {
                     msg:''
                 }
             */
+            console.log('first', params)
             const msgBody = _.cloneDeep(params)
             msgBody.type = ALL_MESSAGE_TYPE.INFORM
             const key = setMessageKey(params)

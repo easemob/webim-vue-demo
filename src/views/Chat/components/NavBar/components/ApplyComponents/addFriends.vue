@@ -22,9 +22,11 @@ const applyAddFriendsForm = reactive({
     username: '',
     applyFriendMessage: ''
 })
-const friendList = computed(() => store.state.Contacts.friendList)
+const getContactsWithRemarkMap = computed(
+    () => store.getters.getContactsWithRemarkMap
+)
 
-const applyAddFriends = () => {
+const applyAddFriends = async () => {
     if (!applyAddFriendsForm.username)
         return ElNotification({
             title: '好友操作',
@@ -32,7 +34,7 @@ const applyAddFriends = () => {
             center: true,
             type: 'warning'
         })
-    if (Object.keys(friendList.value).includes(applyAddFriendsForm.username))
+    if (getContactsWithRemarkMap.value.has(applyAddFriendsForm.username))
         return ElNotification({
             title: '好友操作',
             message: '该ID已成为您的好友！',
@@ -47,7 +49,7 @@ const applyAddFriends = () => {
             type: 'warning'
         })
     try {
-        EMClient.addContact(
+        await EMClient.addContact(
             applyAddFriendsForm.username,
             applyAddFriendsForm.applyFriendMessage
         )
@@ -57,6 +59,12 @@ const applyAddFriends = () => {
             type: 'success'
         })
     } catch (error) {
+        ElNotification({
+            title: '好友操作',
+            message: '好友申请发送失败！',
+            center: true,
+            type: 'error'
+        })
     } finally {
         resetTheModalStatus()
     }
