@@ -4,11 +4,12 @@ import { useStore } from 'vuex'
 import { useClipboard, usePermission } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { EMClient } from '@/IM'
+import { MESSAGE_TYPE } from '@/IM/constant'
 import {
-    ALL_MESSAGE_TYPE,
     CUSTOM_TYPE,
     CHAT_TYPE,
-    MESSAGE_STATUS_TYPE
+    MESSAGE_STATUS_TYPE,
+    ALL_MESSAGE_TYPE
 } from '@/constant'
 import { useGetUserMapInfo } from '@/hooks'
 import BenzAMRRecorder from 'benz-amr-recorder'
@@ -308,7 +309,7 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                             <!-- 文本类型消息 -->
                             <p
                                 style="padding: 10px; line-height: 20px"
-                                v-if="msgBody.type === ALL_MESSAGE_TYPE.TEXT"
+                                v-if="msgBody.type === MESSAGE_TYPE.TEXT"
                             >
                                 <template v-if="!isLink(msgBody.msg)">
                                     {{ msgBody.msg }}
@@ -328,16 +329,26 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                                 ></template>
                             </p>
                             <!-- 图片类型消息 -->
-                            <!-- <div> -->
                             <el-image
-                                v-if="msgBody.type === ALL_MESSAGE_TYPE.IMAGE"
+                                v-if="msgBody.type === MESSAGE_TYPE.IMAGE"
                                 style="border-radius: 5px"
                                 :src="msgBody.thumb"
                                 :preview-src-list="[msgBody.url]"
                                 :initial-index="1"
                                 fit="cover"
                             />
-                            <!-- </div> -->
+                            <!-- 视频类型消息 -->
+                            <video
+                                v-if="msgBody.type === MESSAGE_TYPE.VIDEO"
+                                :src="msgBody.url"
+                                :poster="msgBody.thumb"
+                                style="
+                                    height: 100%;
+                                    width: 100%;
+                                    border-radius: 5px;
+                                "
+                                controls
+                            ></video>
                             <!-- 语音类型消息 -->
                             <div
                                 :class="[
@@ -346,7 +357,7 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                                         ? 'message_box_content_audio_mine'
                                         : 'message_box_content_audio_other'
                                 ]"
-                                v-if="msgBody.type === ALL_MESSAGE_TYPE.AUDIO"
+                                v-if="msgBody.type === MESSAGE_TYPE.AUDIO"
                                 @click="startplayAudio(msgBody)"
                                 :style="`width:${msgBody.length * 10}px`"
                             >
@@ -364,14 +375,14 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                                     style="background-size: 100% 100%"
                                 ></div>
                             </div>
-                            <div v-if="msgBody.type === ALL_MESSAGE_TYPE.LOCAL">
+                            <div v-if="msgBody.type === MESSAGE_TYPE.LOCAL">
                                 <p style="padding: 10px">
                                     [暂不支持位置消息展示]
                                 </p>
                             </div>
                             <!-- 文件类型消息 -->
                             <div
-                                v-if="msgBody.type === ALL_MESSAGE_TYPE.FILE"
+                                v-if="msgBody.type === MESSAGE_TYPE.FILE"
                                 class="message_box_content_file"
                             >
                                 <div class="file_text_box">
@@ -394,7 +405,7 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                             </div>
                             <!-- 自定义类型消息 -->
                             <div
-                                v-if="msgBody.type === ALL_MESSAGE_TYPE.CUSTOM"
+                                v-if="msgBody.type === MESSAGE_TYPE.CUSTOM"
                                 class="message_box_content_custom"
                             >
                                 <template
@@ -442,8 +453,7 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                                     <el-dropdown-item
                                         v-if="
                                             msgBody.type ===
-                                                ALL_MESSAGE_TYPE.TEXT &&
-                                            isSupported
+                                                MESSAGE_TYPE.TEXT && isSupported
                                         "
                                         @click="copyTextMessages(msgBody.msg)"
                                     >
@@ -458,7 +468,7 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                                     <el-dropdown-item
                                         v-if="
                                             msgBody.type ===
-                                                ALL_MESSAGE_TYPE.TEXT &&
+                                                MESSAGE_TYPE.TEXT &&
                                             isMyself(msgBody)
                                         "
                                         @click="showModifyMsgModal(msgBody)"
@@ -517,7 +527,7 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                         class="reEdit"
                         v-show="
                             isMyself(msgBody) &&
-                            msgBody.type === ALL_MESSAGE_TYPE.TEXT
+                            msgBody.type === MESSAGE_TYPE.TEXT
                         "
                         @click="reEdit(msgBody.msg)"
                         >重新编辑</span

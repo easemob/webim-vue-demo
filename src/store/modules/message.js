@@ -226,6 +226,15 @@ const Message = {
                     })
             })
         },
+        //已发送展示类型消息
+        senedShowTypeMessage: async ({ dispatch, commit }, message) => {
+            commit('UPDATE_MESSAGE_LIST', message)
+            // 提示会话列表更新
+            dispatch('updateLocalConversation', {
+                conversationId: message.to,
+                chatType: message.chatType
+            })
+        },
         //添加通知类消息
         createInformMessage: ({ dispatch, commit }, params) => {
             /** 

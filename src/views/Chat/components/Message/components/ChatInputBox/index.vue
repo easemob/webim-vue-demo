@@ -13,6 +13,7 @@ import parseDownloadResponse from '@/utils/parseDownloadResponse'
 import CollectAudio from '../suit/audio.vue'
 import PreviewSendImg from '../suit/previewSendImg.vue'
 import MsgQuote from '../suit/msgQuote.vue'
+import VideoMessage from './components/VideoMessage'
 import { useGetUserMapInfo } from '@/hooks'
 //vue at
 import VueAt from 'vue-at/dist/vue-at-textarea' // for textarea
@@ -34,6 +35,19 @@ const props = defineProps({
 const { routeQueryData } = toRefs(props)
 //附件类上传加载状态
 const loadingBox = ref(null)
+let loadingInstance = null
+const onStartLoading = () => {
+    if (loadingInstance) return
+    loadingInstance = ElLoading.service({
+        target: loadingBox.value,
+        background: '#f7f7f7'
+    })
+    return loadingInstance
+}
+const onLoadending = () => {
+    loadingInstance?.close()
+    loadingInstance = null
+}
 /** /
  * 文本消息相关
  * 包含 @、emoji、引用功能
@@ -286,6 +300,12 @@ const onPasteImage = (event) => {
         previewSendImg.value.showPreviewImgModal({ ...imgInfo })
     }
 }
+/* 视频消息 */
+const videoMessageComp = ref(null)
+const chooseVideo = () => {
+    console.log('>>>>>video')
+    videoMessageComp.value?.openChooseVideo()
+}
 /* 文件消息相关 */
 //选择文件
 const uploadFiles = ref(null)
@@ -389,7 +409,7 @@ const clearScreen = () => {
 //func 对应事件 icon class样式等
 const all_func = [
     {
-        className: 'icon-emoji',
+        className: 'icon-icon_emoji',
         style: 'font-size:20px;margin-left: 20px;',
         title: '选择表情',
         methodName: showEmojisBox
@@ -399,6 +419,12 @@ const all_func = [
         style: 'font-size: 26px;',
         title: '发送图片',
         methodName: chooseImages
+    },
+    {
+        className: 'icon-shipin',
+        style: 'font-size: 20px;',
+        title: '发送视频',
+        methodName: chooseVideo
     },
     {
         className: 'icon-wenjian',
@@ -505,8 +531,8 @@ defineExpose({
                 @click="handleInviteCall('voice')"
             ></span>
             <span
-                class="iconfont icon-video"
-                style="font-size: 20px"
+                class="iconfont icon-shipintonghua-hei"
+                style="font-size: 22px"
                 title="视频通话"
                 @click="handleInviteCall('video')"
             ></span>
@@ -535,6 +561,14 @@ defineExpose({
             @change="sendImagesMessage('common')"
             single
             accept="image/*"
+        />
+        <!-- 视频附件choose -->
+        <VideoMessage
+            ref="videoMessageComp"
+            :targetId="routeQueryData.id"
+            :chatType="routeQueryData.chatType"
+            @onStartLoading="onStartLoading"
+            @onLoadending="onLoadending"
         />
         <!-- 文件附件choose -->
         <input

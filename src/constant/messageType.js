@@ -2,7 +2,8 @@ export const SESSION_MESSAGE_TYPE = {
     img: '[图片]',
     file: '[文件]',
     audio: '[语音]',
-    loc: '[位置]'
+    loc: '[位置]',
+    video: '[视频]'
 }
 
 export const CUSTOM_TYPE = {
