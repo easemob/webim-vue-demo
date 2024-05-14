@@ -3,14 +3,14 @@ import { computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { EMClient } from '@/IM'
+import { CHAT_TYPE } from '@/IM/constant'
 import dateFormater from '@/utils/dateFormater'
-import { informType, messageType } from '@/constant'
+import { INFORM_FROM } from '@/constant'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { Delete } from '@element-plus/icons-vue'
 const store = useStore()
 const router = useRouter()
-const { INFORM_FROM } = informType
-const { CHAT_TYPE } = messageType
+
 const informList = computed(() => store.state.Conversation.informDetail)
 
 //清除inform的未读

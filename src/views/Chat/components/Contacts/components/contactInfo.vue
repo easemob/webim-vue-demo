@@ -1,11 +1,11 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { EMClient } from '@/IM'
+import { CHAT_TYPE } from '@/IM/constant'
 import { useStore } from 'vuex'
 import router from '@/router'
 import { useRoute } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
-import { messageType } from '@/constant'
 import { useGetUserMapInfo } from '@/hooks'
 /* 组件 */
 // import UserStatus from '@/components/UserStatus'
@@ -17,7 +17,6 @@ import ContactsRemark from './ContactsRemark.vue'
 const store = useStore()
 /* route */
 const route = useRoute()
-const { CHAT_TYPE } = messageType
 
 //取好友列表(主要使用好友下的用户属性相关)
 const friendList = computed(() => store.state.Contacts.friendList)

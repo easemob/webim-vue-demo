@@ -2,12 +2,9 @@
 import { computed } from 'vue'
 import { useStore } from 'vuex'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png'
-import { messageType } from '@/constant'
-
+import { CHAT_TYPE } from '@/IM/constant'
 const store = useStore()
-
 //点击对应联系人跳转至用户详情页
-const { CHAT_TYPE } = messageType
 //群组列表
 const joinedGroupList = computed(() => store.getters.getJoinedGroupList)
 </script>

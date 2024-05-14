@@ -27,10 +27,9 @@
 <script setup>
 import { ref, reactive, nextTick } from 'vue'
 import { useStore } from 'vuex'
-import { messageType } from '@/constant'
+import { CHAT_TYPE } from '@/IM/constant'
 import { ElMessage } from 'element-plus'
 import { Check, Close } from '@element-plus/icons-vue'
-const { CHAT_TYPE } = messageType
 const store = useStore()
 const dialogVisible = ref(false)
 const editMessageContent = reactive({

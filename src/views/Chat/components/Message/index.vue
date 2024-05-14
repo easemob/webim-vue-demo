@@ -2,9 +2,10 @@
 import { ref, watch, nextTick, computed, onMounted } from 'vue'
 import _ from 'lodash'
 import { EMClient } from '@/IM'
+import { CHAT_TYPE } from '@/IM/constant'
 import { useStore } from 'vuex'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
-import { messageType, warningText } from '@/constant'
+import { EASEIM_HINT, SWINDLER_GO_DIE, WARM_TIP } from '@/constant'
 import { ElMessage } from 'element-plus'
 import { Close } from '@element-plus/icons-vue'
 import waterMark from '@/utils/waterMark'
@@ -17,8 +18,6 @@ import ChatContainerHeader from './components/ChatContainerHeader'
 const store = useStore()
 /* route */
 const route = useRoute()
-const { CHAT_TYPE } = messageType
-const { EASEIM_HINT, SWINDLER_GO_DIE, WARM_TIP } = warningText
 
 /* loginstatus */
 const loginState = computed(() => store.state.loginState)

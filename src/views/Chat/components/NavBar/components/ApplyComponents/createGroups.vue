@@ -14,12 +14,11 @@ import _ from 'lodash'
 import { ElNotification } from 'element-plus'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { EMClient } from '@/IM'
-import { messageType } from '@/constant'
+import { CHAT_TYPE } from '@/IM/constant'
 import { Search, CircleCheckFilled } from '@element-plus/icons-vue'
 /* 路由 */
 import router from '@/router'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
-const { CHAT_TYPE } = messageType
 const emit = defineEmits(['closeDialogVisible'])
 const props = defineProps({
     dialogVisible: {

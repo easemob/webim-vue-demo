@@ -1,9 +1,8 @@
 import { EMClient } from '../index'
-import { informType } from '@/constant'
+import { INFORM_FROM } from '@/constant'
 import store from '@/store'
 import { CONTACT_OPERATION_CUSTOM_TYPE } from '../constant'
 export const imContactListener = () => {
-    const { INFORM_FROM } = informType
     const submitInformData = (fromType, informContent) => {
         store.dispatch('createNewInform', { fromType, informContent })
     }

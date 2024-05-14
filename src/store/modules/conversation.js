@@ -5,10 +5,8 @@ import {
     checkLastMsgIsHasMention
 } from '@/utils/handleSomeData/index'
 import { EMClient } from '@/IM'
-import { informType, messageType } from '@/constant'
-import { GROUP_OPERATION_TYPE } from '@/IM/constant'
-const { INFORM_FROM } = informType
-const { CHAT_TYPE } = messageType
+import { INFORM_FROM } from '@/constant'
+import { GROUP_OPERATION_TYPE, CHAT_TYPE } from '@/IM/constant'
 const Conversation = {
     state: {
         informDetail: [],

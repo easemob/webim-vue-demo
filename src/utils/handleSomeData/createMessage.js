@@ -1,19 +1,17 @@
 /* 构建消息体 */
-import { messageType } from '@/constant'
-const { ALL_MESSAGE_TYPE } = messageType
-
+import { MESSAGE_TYPE } from '@/IM/constant'
 export default function createMessage() {
     //创建消息options
     const createOptions = ({ msgType, msgOptions }, errorCallback) => {
         const theMessageOptions = {
-            [ALL_MESSAGE_TYPE.TEXT]: {
+            [MESSAGE_TYPE.TEXT]: {
                 chatType: msgOptions.chatType, // 会话类型，设置为单聊。
                 type: msgType, // 消息类型。
                 to: msgOptions.id, // 消息接收方（用户 ID)。
                 msg: msgOptions.msg, // 消息内容。
                 ext: msgOptions.ext
             },
-            [ALL_MESSAGE_TYPE.IMAGE]: {
+            [MESSAGE_TYPE.IMAGE]: {
                 chatType: msgOptions.chatType, // 会话类型，设置为单聊。
                 type: msgType, // 消息类型，设置为图片。
                 to: msgOptions.id, // 消息接收方（用户 ID)。
@@ -37,7 +35,7 @@ export default function createMessage() {
                     // 消息上传成功。
                 }
             },
-            [ALL_MESSAGE_TYPE.FILE]: {
+            [MESSAGE_TYPE.FILE]: {
                 chatType: msgOptions.chatType, // 会话类型，设置为单聊。
                 type: msgType, // 消息类型，设置为文件。
                 to: msgOptions.id, // 消息接收方（用户 ID)。
@@ -61,7 +59,7 @@ export default function createMessage() {
                     // 消息上传成功。
                 }
             },
-            [ALL_MESSAGE_TYPE.AUDIO]: {
+            [MESSAGE_TYPE.AUDIO]: {
                 chatType: msgOptions.chatType, // 会话类型，设置为单聊。
                 type: msgType, // 消息类型，设置语音。
                 to: msgOptions.id, // 消息接收方（用户 ID)。
@@ -83,7 +81,7 @@ export default function createMessage() {
                     // 消息上传成功。
                 }
             },
-            [ALL_MESSAGE_TYPE.CUSTOM]: {
+            [MESSAGE_TYPE.CUSTOM]: {
                 chatType: msgOptions.chatType,
                 type: msgType,
                 to: msgOptions.id, // 接收消息对象（用户 ID）
@@ -98,7 +96,7 @@ export default function createMessage() {
     //构建消息发送后的body体
     const createMsgBody = (msg) => {
         const pakerMsgBody = {
-            [ALL_MESSAGE_TYPE.TEXT]: {
+            [MESSAGE_TYPE.TEXT]: {
                 chatType: msg.chatType,
                 type: msg.type,
                 ext: msg.ext || {},
@@ -108,7 +106,7 @@ export default function createMessage() {
                 time: msg.time,
                 to: msg.to
             },
-            [ALL_MESSAGE_TYPE.IMAGE]: {
+            [MESSAGE_TYPE.IMAGE]: {
                 chatType: msg.chatType,
                 type: msg.type,
                 file: msg.file,
@@ -123,7 +121,7 @@ export default function createMessage() {
                 width: msg.width,
                 time: msg.time
             },
-            [ALL_MESSAGE_TYPE.FILE]: {
+            [MESSAGE_TYPE.FILE]: {
                 chatType: msg.chatType,
                 type: msg.type,
                 ext: msg.ext || {},
@@ -135,7 +133,7 @@ export default function createMessage() {
                 filename: msg.filename,
                 file_length: msg.ext && msg.ext.file_length
             },
-            [ALL_MESSAGE_TYPE.AUDIO]: {
+            [MESSAGE_TYPE.AUDIO]: {
                 chatType: msg.chatType,
                 type: msg.type,
                 ext: msg.ext || {},
@@ -147,7 +145,7 @@ export default function createMessage() {
                 length: msg.length,
                 filename: msg.filename
             },
-            [ALL_MESSAGE_TYPE.CUSTOM]: {
+            [MESSAGE_TYPE.CUSTOM]: {
                 chatType: msg.chatType,
                 type: msg.type,
                 ext: msg.ext || {},

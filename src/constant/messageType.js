@@ -6,7 +6,7 @@ export const SESSION_MESSAGE_TYPE = {
     video: '[视频]'
 }
 
-export const CUSTOM_TYPE = {
+export const CUSTOM_MSG_EVENT_TYPE = {
     userCard: '个人名片'
 }
 export const ALL_MESSAGE_TYPE = {
@@ -18,6 +18,9 @@ export const ALL_MESSAGE_TYPE = {
     FILE: 'file',
     CUSTOM: 'custom',
     CMD: 'cmd',
+    INFORM: 'inform' //这个类型不在环信消息类型内，属于自己定义的一种系统通知类的消息。
+}
+export const CUSTOM_MESSAGE_TYPE = {
     INFORM: 'inform' //这个类型不在环信消息类型内，属于自己定义的一种系统通知类的消息。
 }
 export const CHAT_TYPE = {
@@ -50,7 +53,7 @@ export const MESSAGE_STATUS_TYPE = {
 export const MAX_MESSAGE_LIST_COUNT = 100
 export default {
     SESSION_MESSAGE_TYPE,
-    CUSTOM_TYPE,
+    CUSTOM_MSG_EVENT_TYPE,
     ALL_MESSAGE_TYPE,
     CHAT_TYPE,
     MENTION_ALL,

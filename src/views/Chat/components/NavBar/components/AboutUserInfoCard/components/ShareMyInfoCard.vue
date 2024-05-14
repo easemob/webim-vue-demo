@@ -1,8 +1,8 @@
 <script setup>
 import { ref, toRaw, computed, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant'
 import { CircleClose, Search, CircleCheckFilled } from '@element-plus/icons-vue'
-import { messageType } from '@/constant'
 /* 拼音排序好友列表 */
 import { sortPinyinFriendItem } from '@/utils/handleSomeData'
 /* store */
@@ -10,7 +10,6 @@ import store from '@/store'
 import _ from 'lodash'
 
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
-const { CHAT_TYPE, ALL_MESSAGE_TYPE } = messageType
 /* 登陆用户的用户属性 */
 const loginUserInfo = computed(() => {
     return store.state.loginUserInfo
@@ -119,7 +118,7 @@ const startSendMyUserCard = () => {
                 }
             }
             store.dispatch('sendShowTypeMessage', {
-                msgType: ALL_MESSAGE_TYPE.CUSTOM,
+                msgType: MESSAGE_TYPE.CUSTOM,
                 msgOptions
             })
         })

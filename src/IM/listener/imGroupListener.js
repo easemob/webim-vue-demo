@@ -1,9 +1,8 @@
 import { EMClient } from '../index'
-import { informType } from '@/constant'
+import { INFORM_FROM } from '@/constant'
 import store from '@/store'
 import { GROUP_OPERATION_TYPE } from '../constant'
 export const imGroupListener = () => {
-    const { INFORM_FROM } = informType
     const submitInformData = (fromType, informContent) => {
         store.dispatch('createNewInform', { fromType, informContent })
     }

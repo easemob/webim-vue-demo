@@ -1,8 +1,6 @@
-import errorCode from './errorCode'
-import onLineStatus from './onLineStatus'
-import messageType from './messageType'
-import informType from './informType'
-import emojis from './emojis'
-import warningText from './warningText'
 export * from './messageType'
-export { errorCode, onLineStatus, messageType, informType, emojis, warningText }
+export * from './informType'
+export * from './warningText'
+export * from './emojis'
+export * from './onLineStatus'
+export * from './errorCode'

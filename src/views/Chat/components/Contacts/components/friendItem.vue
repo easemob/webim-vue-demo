@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useStore } from 'vuex'
 // import router from '@/router'
-import { messageType } from '@/constant'
+import { CHAT_TYPE } from '@/IM/constant'
 /* 默认头像 */
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 import { useSordedContactsWithPinyin, useGetUserMapInfo } from '@/hooks'
@@ -10,7 +10,6 @@ import { useSordedContactsWithPinyin, useGetUserMapInfo } from '@/hooks'
 const store = useStore()
 
 //点击对应联系人跳转至用户详情页
-const { CHAT_TYPE } = messageType
 //获取处理排序后的好友列表
 const { sortedFriendListWithRemark } = useSordedContactsWithPinyin()
 const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()

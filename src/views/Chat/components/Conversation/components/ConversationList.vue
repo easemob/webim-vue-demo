@@ -2,7 +2,8 @@
 import { ref, computed, defineEmits } from 'vue'
 import { useStore } from 'vuex'
 import dateFormater from '@/utils/dateFormater'
-import { messageType } from '@/constant'
+import { CHAT_TYPE } from '@/IM/constant'
+import { CUSTOM_MSG_EVENT_TYPE, SESSION_MESSAGE_TYPE } from '@/constant'
 import _ from 'lodash'
 import { useRouter, useRoute } from 'vue-router'
 /* 头像相关 */
@@ -10,6 +11,7 @@ import informIcon from '@/assets/images/avatar/inform.png'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatar from '@/assets/images/avatar/jiaqun2x.png'
 import { useGetUserMapInfo } from '@/hooks'
+import { MESSAGE_TYPE } from '@/IM/constant'
 /* route */
 const route = useRoute()
 /* router */
@@ -17,8 +19,6 @@ const router = useRouter()
 /* store */
 const store = useStore()
 const emit = defineEmits(['toInformDetails', 'toChatMessage'])
-const { CHAT_TYPE, SESSION_MESSAGE_TYPE, ALL_MESSAGE_TYPE, CUSTOM_TYPE } =
-    messageType
 //登录用户ID
 const loginUserId = computed(() => store.state.loginUserInfo.hxId)
 //取系统通知数据
@@ -93,11 +93,12 @@ const handleLastMsgContent = computed(() => {
         //如果消息类型，在预设非展示文本类型中，就返回预设值
         if (SESSION_MESSAGE_TYPE[type]) {
             resultContent = SESSION_MESSAGE_TYPE[type]
-        } else if (type === ALL_MESSAGE_TYPE.CUSTOM) {
+        } else if (type === MESSAGE_TYPE.CUSTOM) {
             //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
             if (msgBody.customEvent) {
-                ;(CUSTOM_TYPE[msgBody.customEvent] &&
-                    (resultContent = CUSTOM_TYPE[msgBody.customEvent])) ||
+                ;(CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent] &&
+                    (resultContent =
+                        CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent])) ||
                     ''
             }
         } else if (msgBody?.isRecall) {

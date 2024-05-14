@@ -5,7 +5,8 @@ import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { ElLoading, ElMessageBox } from 'element-plus'
 import { onClickOutside } from '@vueuse/core'
 import { emojis } from '@/constant'
-import { ALL_MESSAGE_TYPE, CHAT_TYPE, MENTION_ALL } from '@/constant'
+import { MENTION_ALL } from '@/constant'
+import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant'
 import _ from 'lodash'
 import { EMClient } from '@/IM'
 import parseDownloadResponse from '@/utils/parseDownloadResponse'
@@ -176,7 +177,7 @@ const sendTextMessage = _.debounce(async () => {
     messageQuoteRef.value?.clearQuoteContent()
     try {
         await store.dispatch('sendShowTypeMessage', {
-            msgType: ALL_MESSAGE_TYPE.TEXT,
+            msgType: MESSAGE_TYPE.TEXT,
             msgOptions
         })
     } catch (error) {
@@ -227,7 +228,7 @@ const sendImagesMessage = async (type, fileObj) => {
 
             try {
                 await store.dispatch('sendShowTypeMessage', {
-                    msgType: ALL_MESSAGE_TYPE.IMAGE,
+                    msgType: MESSAGE_TYPE.IMAGE,
                     msgOptions: _.cloneDeep(msgOptions)
                 })
                 loadingInstance.close()
@@ -259,7 +260,7 @@ const sendImagesMessage = async (type, fileObj) => {
 
             try {
                 await store.dispatch('sendShowTypeMessage', {
-                    msgType: ALL_MESSAGE_TYPE.IMAGE,
+                    msgType: MESSAGE_TYPE.IMAGE,
                     msgOptions: _.cloneDeep(msgOptions)
                 })
                 loadingInstance.close()
@@ -333,7 +334,7 @@ const sendFilesMessages = async () => {
     })
     try {
         await store.dispatch('sendShowTypeMessage', {
-            msgType: ALL_MESSAGE_TYPE.FILE,
+            msgType: MESSAGE_TYPE.FILE,
             msgOptions: _.cloneDeep(msgOptions)
         })
         loadingInstance.close()
@@ -378,7 +379,7 @@ const sendAudioMessages = async (audioData) => {
     }
     try {
         await store.dispatch('sendShowTypeMessage', {
-            msgType: ALL_MESSAGE_TYPE.AUDIO,
+            msgType: MESSAGE_TYPE.AUDIO,
             msgOptions: _.cloneDeep(msgOptions)
         })
         isShowRecordBox.value = false

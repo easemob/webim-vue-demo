@@ -9,18 +9,18 @@ import {
     defineEmits
 } from 'vue'
 import { EMClient } from '@/IM'
+import { CHAT_TYPE, MESSAGE_TYPE } from '@/IM/constant'
 import { Search } from '@element-plus/icons-vue'
 import { useLocalStorage, onKeyStroke } from '@vueuse/core'
 import _ from 'lodash'
 import { onClickOutside } from '@vueuse/core'
-import { messageType } from '@/constant'
+import { SESSION_MESSAGE_TYPE, CUSTOM_MSG_EVENT_TYPE } from '@/constant'
 import dateFormater from '@/utils/dateFormater'
 import { useGetUserMapInfo } from '@/hooks'
 /* 单人头像 */
 import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png'
-const { CHAT_TYPE, SESSION_MESSAGE_TYPE, ALL_MESSAGE_TYPE, CUSTOM_TYPE } =
-    messageType
+
 const props = defineProps({
     searchType: {
         type: String,
@@ -105,11 +105,12 @@ const handleLastMsgContent = computed(() => {
         //如果消息类型，在预设非展示文本类型中，就返回预设值
         if (SESSION_MESSAGE_TYPE[type]) {
             resultContent = SESSION_MESSAGE_TYPE[type]
-        } else if (type === ALL_MESSAGE_TYPE.CUSTOM) {
+        } else if (type === MESSAGE_TYPE.CUSTOM) {
             //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
             if (msgBody.customEvent) {
-                ;(CUSTOM_TYPE[msgBody.customEvent] &&
-                    (resultContent = CUSTOM_TYPE[msgBody.customEvent])) ||
+                ;(CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent] &&
+                    (resultContent =
+                        CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent])) ||
                     ''
             }
         } else {

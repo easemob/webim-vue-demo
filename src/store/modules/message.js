@@ -3,7 +3,7 @@ import { setMessageKey, createMessage } from '@/utils/handleSomeData'
 import _ from 'lodash'
 import {
     MESSAGE_STATUS_TYPE,
-    ALL_MESSAGE_TYPE,
+    CUSTOM_MESSAGE_TYPE,
     CHANGE_MESSAGE_BODAY_TYPE,
     CHAT_TYPE,
     MAX_MESSAGE_LIST_COUNT
@@ -247,7 +247,7 @@ const Message = {
             */
             console.log('first', params)
             const msgBody = _.cloneDeep(params)
-            msgBody.type = ALL_MESSAGE_TYPE.INFORM
+            msgBody.type = CUSTOM_MESSAGE_TYPE.INFORM
             const key = setMessageKey(params)
 
             commit('UPDATE_MESSAGE_LIST', msgBody)

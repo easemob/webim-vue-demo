@@ -4,18 +4,13 @@ import { useStore } from 'vuex'
 import { useClipboard, usePermission } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { EMClient } from '@/IM'
-import { MESSAGE_TYPE } from '@/IM/constant'
-import {
-    CUSTOM_TYPE,
-    CHAT_TYPE,
-    MESSAGE_STATUS_TYPE,
-    ALL_MESSAGE_TYPE
-} from '@/constant'
+import { CHAT_TYPE, MESSAGE_TYPE } from '@/IM/constant'
+import { CUSTOM_MSG_EVENT_TYPE, MESSAGE_STATUS_TYPE } from '@/constant'
 import { useGetUserMapInfo } from '@/hooks'
 import BenzAMRRecorder from 'benz-amr-recorder'
 import fileSizeFormat from '@/utils/fileSizeFormat'
 import dateFormat from '@/utils/dateFormater'
-import { messageType } from '@/constant'
+import { CUSTOM_MESSAGE_TYPE } from '@/constant'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 /* utils */
 import paseLink from '@/utils/paseLink'
@@ -265,7 +260,7 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
             <template
                 v-if="
                     !msgBody.isRecall &&
-                    msgBody.type !== ALL_MESSAGE_TYPE.INFORM
+                    msgBody.type !== CUSTOM_MESSAGE_TYPE.INFORM
                 "
             >
                 <div
@@ -411,7 +406,9 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                                 <template
                                     v-if="
                                         msgBody.customEvent &&
-                                        CUSTOM_TYPE[msgBody.customEvent]
+                                        CUSTOM_MSG_EVENT_TYPE[
+                                            msgBody.customEvent
+                                        ]
                                     "
                                 >
                                     <div class="user_card">
@@ -535,7 +532,7 @@ const onMsgQuote = (msg) => emit('messageQuote', msg)
                 </div>
             </template>
             <!-- 灰色系统通知 -->
-            <template v-if="msgBody.type === ALL_MESSAGE_TYPE.INFORM">
+            <template v-if="msgBody.type === CUSTOM_MESSAGE_TYPE.INFORM">
                 <div class="inform_style">
                     <p>
                         {{ msgBody.msg }}
