@@ -61,35 +61,6 @@
     height: 25px;
 }
 
-.chat_content_editable {
-    font-family: 'PingFang SC';
-    width: 100%;
-    box-sizing: border-box;
-    min-height: 100px;
-    border: none;
-    background: none;
-    letter-spacing: 0.5px;
-    resize: none;
-    padding: 10px 20px;
-    font-size: 14px;
-    line-height: 10px;
-}
-
-.no_content_send_btn {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 80px;
-    opacity: 0.5;
-}
-
-.chat_send_btn {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 80px;
-}
-
 .iconfont {
     margin-right: 12px;
     transition: all 0.3s ease;

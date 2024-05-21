@@ -4,8 +4,6 @@ import { useStore } from 'vuex'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { ElLoading, ElMessageBox } from 'element-plus'
 import { onClickOutside } from '@vueuse/core'
-import { emojis } from '@/constant'
-import { MENTION_ALL } from '@/constant'
 import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant'
 import _ from 'lodash'
 import { EMClient } from '@/IM'
@@ -14,10 +12,11 @@ import parseDownloadResponse from '@/utils/parseDownloadResponse'
 import CollectAudio from '../suit/audio.vue'
 import PreviewSendImg from '../suit/previewSendImg.vue'
 import MsgQuote from '../suit/msgQuote.vue'
+import emojiContainer from '../suit/emojiContainer.vue'
+import TextMessage from './components/TextMessage'
 import VideoMessage from './components/VideoMessage'
-import { useGetUserMapInfo } from '@/hooks'
-//vue at
-import VueAt from 'vue-at/dist/vue-at-textarea' // for textarea
+import ImageMessage from './components/ImageMessage'
+import FileMessage from './components/FileMessage'
 //EaseCallKit Invite
 import { useManageChannel } from '@/components/EaseCallKit/hooks'
 //inviteMembers modal
@@ -49,306 +48,78 @@ const onLoadending = () => {
     loadingInstance?.close()
     loadingInstance = null
 }
-/** /
- * 文本消息相关
- * 包含 @、emoji、引用功能
- */
 
-const { getTheGroupNickNameById } = useGetUserMapInfo()
-//AT 逻辑
-const atMembersList = computed(() => {
-    const members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }]
-    const groupId = routeQueryData.value?.id
-    //TODO text部分应为获取群组成员的自定义属性，待后续增加可设置自定在群组当中的自定义属性。
-    if (groupId) {
-        const sourceMembers =
-            store.state.Groups.groupsInfos[groupId]?.members || []
-        sourceMembers.length &&
-            sourceMembers.forEach((item) => {
-                if (
-                    item.owner !== EMClient.user &&
-                    item.member !== EMClient.user
-                ) {
-                    members.push({
-                        text: getTheGroupNickNameById(
-                            groupId,
-                            item.owner || item.member
-                        ),
-                        value: item.owner || item.member
-                    })
-                }
-            })
-    }
-    return members
-})
-
-const isAtAll = ref(false)
-const atMembers = ref([])
-//输入框插入@事件
-const onInsert = (target) => {
-    // if (!) return false
-
-    if (_.map(atMembers.value, 'value').includes(target.value)) return false
-    if (target.value === MENTION_ALL.VALUE) {
-        return (isAtAll.value = true)
-    } else {
-        atMembers.value.push({ ...target })
-    }
+/* 文本相关操作 */
+const textMessageComp = ref(null)
+const appendEmoji = (emoji) => {
+    textMessageComp.value?.onAddOneEmoji(emoji)
 }
-//校验消息内容中是否包含要@的成员
-const checkAtMembers = (text) => {
-    if (!text) {
-        return false
-    }
-    //判断是否文本中是否有@ALL，没有则直接设置为false
-    const patternAtAll = new RegExp(`@${MENTION_ALL.TEXT}`)
-
-    if (isAtAll.value && !patternAtAll.test(text)) {
-        isAtAll.value = false
-    }
-    if (atMembers.value.length !== 0) {
-        //循环AT成员数组通过匹配文本内容判断是否存在已经移除@成员
-        _.map(atMembers.value, 'text').forEach((item, index) => {
-            const pattern = new RegExp(`@${item}`)
-            const result = pattern.test(text)
-            if (!result) {
-                //不包含则从@列表中移除该成员
-                atMembers.value.splice(index, 1)
-            }
-        })
-    }
-}
-//emojis框展开
-const isShowEmojisBox = ref(false)
-const emojisBox = ref(null)
-onClickOutside(emojisBox, () => {
-    isShowEmojisBox.value = false
+/* emojis */
+const emojiContainerComp = ref(null)
+onClickOutside(emojiContainerComp, () => {
+    emojiContainerComp.value?.handleShowEmojisBox({ isShow: false })
 })
 const showEmojisBox = () => {
-    isShowEmojisBox.value = true
+    emojiContainerComp.value?.handleShowEmojisBox({ isShow: true })
 }
-//新增一个emoji
-const addOneEmoji = (emoji) => {
-    textContent.value = textContent.value + emoji
-}
-//消息引用
+/* 消息引用 */
 const messageQuoteRef = ref(null)
+//暴露给messagelist组件用来设置引用消息内容
 const handleQuoteMessage = (msgBody) => {
     messageQuoteRef.value && messageQuoteRef.value.setQuoteContent(msgBody)
 }
-//监听键盘按下事件，如果为enter键则发送文本内容,shift+enter则换行。
-const onTextInputKeyDown = (event) => {
-    if (event.keyCode === 13 && !event.shiftKey) {
-        event.preventDefault()
-        // 执行发送操作
-        sendTextMessage()
-    } else if (event.keyCode === 13 && event.shiftKey) {
-        // 换行操作
-        insertNewLine()
-    }
+const getMessageQuoteContent = (cb) => {
+    console.log(
+        'messageQuoteRef.value?.msgQuote',
+        messageQuoteRef.value?.msgQuote
+    )
+
+    cb(messageQuoteRef.value?.msgQuote)
 }
-//换行操作
-const insertNewLine = () => (textContent.value += '\n')
-//发送文本内容
-const textContent = ref('')
-const sendTextMessage = _.debounce(async () => {
-    //如果输入框全部为空格同样拒绝发送
-    if (textContent.value.match(/^\s*$/)) return
-
-    checkAtMembers(textContent.value)
-    const msgOptions = {
-        id: routeQueryData.value.id,
-        chatType: routeQueryData.value.chatType,
-        msg: textContent.value,
-        ext: {
-            em_at_list: isAtAll.value
-                ? MENTION_ALL.VALUE
-                : _.map(atMembers.value, 'value')
-        }
-    }
-    //关闭引用框
-    if (messageQuoteRef.value?.isShowQuoteMsgBox) {
-        msgOptions.ext.msgQuote = Object.assign(
-            {},
-            messageQuoteRef.value.msgQuote
-        )
-    }
-    textContent.value = ''
+const clearQuoteContent = () => {
     messageQuoteRef.value?.clearQuoteContent()
-    try {
-        await store.dispatch('sendShowTypeMessage', {
-            msgType: MESSAGE_TYPE.TEXT,
-            msgOptions
-        })
-    } catch (error) {
-        handleSDKErrorNotifi(error.type, error.message)
-    } finally {
-        isAtAll.value = false
-        atMembers.value = []
-    }
-}, 50)
-
+}
 /* 图片消息相关 */
 //选择图片
-const uploadImgs = ref(null)
+const ImageMessageComp = ref(null)
 const chooseImages = () => {
-    uploadImgs.value.click()
-}
-//发送图片
-const sendImagesMessage = async (type, fileObj) => {
-    const file = {
-        data: null, // file 对象。
-        filename: '', //文件名称。
-        filetype: '' //文件类型。
-    }
-    const url = window.URL || window.webkitURL
-    const img = new Image() //手动创建一个Image对象
-    const msgOptions = {
-        id: routeQueryData.value.id,
-        chatType: routeQueryData.value.chatType,
-        file: file,
-        width: 0,
-        height: 0
-    }
-    if (type === 'common') {
-        //读取图片的宽高
-        const imgFile = uploadImgs.value.files[0]
-        file.data = imgFile
-        file.filename = imgFile.name
-        file.filetype = imgFile.type
-
-        img.src = url.createObjectURL(imgFile) //创建Image的对象的url
-        img.onload = async () => {
-            const loadingInstance = ElLoading.service({
-                target: loadingBox.value,
-                background: '#f7f7f7'
-            })
-            msgOptions.width = img.width
-            msgOptions.height = img.height
-
-            try {
-                await store.dispatch('sendShowTypeMessage', {
-                    msgType: MESSAGE_TYPE.IMAGE,
-                    msgOptions: _.cloneDeep(msgOptions)
-                })
-                loadingInstance.close()
-                uploadImgs.value.value = null
-            } catch (error) {
-                if (error.type && error?.data) {
-                    handleSDKErrorNotifi(error.type, error.data.error || 'none')
-                } else {
-                    handleSDKErrorNotifi(0, 'none')
-                }
-                loadingInstance.close()
-                uploadImgs.value.value = null
-            }
-        }
-    } else if (type === 'other') {
-        const imgFile = fileObj
-        file.data = imgFile
-        file.filename = imgFile.name
-        file.filetype = imgFile.type
-
-        img.src = url.createObjectURL(imgFile) //创建Image的对象的url
-        img.onload = async () => {
-            const loadingInstance = ElLoading.service({
-                target: loadingBox.value,
-                background: '#f7f7f7'
-            })
-            msgOptions.width = img.width
-            msgOptions.height = img.height
-
-            try {
-                await store.dispatch('sendShowTypeMessage', {
-                    msgType: MESSAGE_TYPE.IMAGE,
-                    msgOptions: _.cloneDeep(msgOptions)
-                })
-                loadingInstance.close()
-                uploadImgs.value.value = null
-            } catch (error) {
-                if (error.type && error?.data) {
-                    handleSDKErrorNotifi(error.type, error.data.error || 'none')
-                } else {
-                    handleSDKErrorNotifi(0, 'none')
-                }
-                loadingInstance.close()
-                uploadImgs.value.value = null
-            }
-        }
-    }
+    ImageMessageComp.value?.openChooseImages()
 }
 //贴图发送
 const previewSendImg = ref(null)
-const onPasteImage = (event) => {
-    const data = event.clipboardData || window.clipboardData
-    //获取图片内容
-    const imgContent = data.items[0].getAsFile()
-    //判断是不是图片，最好通过文件类型判断
-    const isImg = (imgContent && 1) || -1
-    const reader = new FileReader()
-    if (isImg >= 0) {
-        //将文件读取为 DataURL
-        reader.readAsDataURL(imgContent)
-    }
-    //文件读取完成时触发
-    reader.onload = (event) => {
-        //获取base64流
-        const base64_str = event.target.result
-        const imgInfo = {
-            imgFile: imgContent,
-            tempFilePath: base64_str
+//从输入框剪切板获取图片
+const getImageFileFromClipboard = (items) => {
+    console.log('items', items)
+    const item = Array.from(items).find(
+        (item) => item.kind === 'file' && item.type.startsWith('image/')
+    )
+    if (item) {
+        const file = item.getAsFile()
+        const reader = new FileReader()
+        reader.onload = (event) => {
+            const base64String = event.target.result
+            // 你可以在这里处理base64String，比如显示图片或上传到服务器
+            const imgInfo = {
+                imgFile: file,
+                tempFilePath: base64String
+            }
+            previewSendImg.value.showPreviewImgModal({ ...imgInfo })
         }
-        previewSendImg.value.showPreviewImgModal({ ...imgInfo })
+        reader.readAsDataURL(file)
+        return // 提前返回，因为读取是异步的
     }
 }
+
 /* 视频消息 */
 const videoMessageComp = ref(null)
 const chooseVideo = () => {
-    console.log('>>>>>video')
     videoMessageComp.value?.openChooseVideo()
 }
 /* 文件消息相关 */
 //选择文件
-const uploadFiles = ref(null)
+const fileMessageComp = ref(null)
 const chooseFiles = () => {
-    uploadFiles.value.click()
-}
-//发送文件
-const sendFilesMessages = async () => {
-    const commonFile = uploadFiles.value.files[0]
-    const file = {
-        data: commonFile, // file 对象。
-        filename: commonFile.name, //文件名称。
-        filetype: commonFile.type, //文件类型。
-        size: commonFile.size
-    }
-
-    const msgOptions = {
-        id: routeQueryData.value.id,
-        chatType: routeQueryData.value.chatType,
-        file: file
-    }
-    const loadingInstance = ElLoading.service({
-        target: loadingBox.value,
-        background: '#f7f7f7'
-    })
-    try {
-        await store.dispatch('sendShowTypeMessage', {
-            msgType: MESSAGE_TYPE.FILE,
-            msgOptions: _.cloneDeep(msgOptions)
-        })
-        loadingInstance.close()
-        uploadFiles.value.value = null
-    } catch (error) {
-        if (error.type && error?.data) {
-            handleSDKErrorNotifi(error.type, error.data.error || 'none')
-        } else {
-            handleSDKErrorNotifi(0, 'none')
-        }
-
-        uploadFiles.value.value = null
-        loadingInstance.close()
-    }
+    fileMessageComp.value?.openChooseFiles()
 }
 /* 语音消息相关 */
 //展示录音对话框
@@ -507,7 +278,6 @@ const sendMulitInviteMsg = (targetIMId) => {
 }
 
 defineExpose({
-    textContent,
     handleQuoteMessage
 })
 </script>
@@ -538,30 +308,15 @@ defineExpose({
                 @click="handleInviteCall('video')"
             ></span>
         </template>
-
         <!-- 表情框 -->
-        <el-scrollbar
-            ref="emojisBox"
-            v-if="isShowEmojisBox"
-            class="emojis_box"
-            tag="div"
-        >
-            <span
-                class="emoji"
-                v-for="(emoji, index) in emojis"
-                :key="index"
-                @click="addOneEmoji(emoji)"
-                >{{ emoji }}</span
-            >
-        </el-scrollbar>
+        <emojiContainer ref="emojiContainerComp" @appendEmoji="appendEmoji" />
         <!-- 图片附件choose -->
-        <input
-            ref="uploadImgs"
-            type="file"
-            style="display: none"
-            @change="sendImagesMessage('common')"
-            single
-            accept="image/*"
+        <ImageMessage
+            ref="ImageMessageComp"
+            :targetId="routeQueryData.id"
+            :chatType="routeQueryData.chatType"
+            @onStartLoading="onStartLoading"
+            @onLoadending="onLoadending"
         />
         <!-- 视频附件choose -->
         <VideoMessage
@@ -572,12 +327,12 @@ defineExpose({
             @onLoadending="onLoadending"
         />
         <!-- 文件附件choose -->
-        <input
-            ref="uploadFiles"
-            type="file"
-            style="display: none"
-            @change="sendFilesMessages"
-            single
+        <FileMessage
+            ref="fileMessageComp"
+            :targetId="routeQueryData.id"
+            :chatType="routeQueryData.chatType"
+            @onStartLoading="onStartLoading"
+            @onLoadending="onLoadending"
         />
         <!-- 录音采集框 -->
         <el-card
@@ -591,53 +346,29 @@ defineExpose({
             </p>
             <CollectAudio v-else @sendAudioMessages="sendAudioMessages" />
         </el-card>
-        <!-- 附件上传加载容器 -->
+        <!-- 附件上传loading -->
         <div ref="loadingBox" class="loading_box"></div>
     </div>
-    <template v-if="routeQueryData.chatType === CHAT_TYPE.SINGLE">
-        <textarea
-            ref="editable"
-            v-model="textContent"
-            class="chat_content_editable"
-            spellcheck="false"
-            contenteditable="true"
-            placeholder="请输入消息内容..."
-            @keydown="onTextInputKeyDown"
-            @paste="onPasteImage"
-        >
-        </textarea>
-    </template>
-    <template v-else-if="routeQueryData.chatType === CHAT_TYPE.GROUP">
-        <vue-at :members="atMembersList" name-key="text" @insert="onInsert">
-            <textarea
-                ref="editable"
-                v-model="textContent"
-                class="chat_content_editable"
-                spellcheck="false"
-                contenteditable="true"
-                placeholder="请输入消息内容..."
-                @keydown="onTextInputKeyDown"
-                @paste="onPasteImage"
-            >
-            </textarea>
-        </vue-at>
-    </template>
-
-    <el-button
-        :class="[textContent === '' ? 'no_content_send_btn' : 'chat_send_btn']"
-        type="primary"
-        @click="sendTextMessage"
-        >发送</el-button
-    >
+    <TextMessage
+        ref="textMessageComp"
+        :targetId="routeQueryData.id"
+        :chatType="routeQueryData.chatType"
+        @getMessageQuoteContent="getMessageQuoteContent"
+        @getImageFileFromClipboard="getImageFileFromClipboard"
+        @clearQuoteContent="clearQuoteContent"
+    />
+    <MsgQuote ref="messageQuoteRef" />
     <InviteCallMembers
         ref="inviteCallMembersComp"
         @sendMulitInviteMsg="sendMulitInviteMsg"
     />
     <PreviewSendImg
         ref="previewSendImg"
-        @sendImagesMessage="sendImagesMessage"
+        :targetId="routeQueryData.id"
+        :chatType="routeQueryData.chatType"
+        @onStartLoading="onStartLoading"
+        @onLoadending="onLoadending"
     />
-    <MsgQuote ref="messageQuoteRef" />
 </template>
 
 <style lang="scss" scoped>

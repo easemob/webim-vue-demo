@@ -174,6 +174,7 @@ const Message = {
                 EMClient.getHistoryMessages(options)
                     .then((res) => {
                         const { cursor, messages } = res
+
                         messages.length > 0 &&
                             messages.forEach((item) => {
                                 item.read = true
@@ -212,7 +213,7 @@ const Message = {
                 EMClient.send(msg)
                     .then((res) => {
                         const { message } = res
-
+                        console.log(message)
                         commit('UPDATE_MESSAGE_LIST', message)
                         // 提示会话列表更新
                         dispatch('updateLocalConversation', {
