@@ -17,6 +17,7 @@ import TextMessage from './components/TextMessage'
 import VideoMessage from './components/VideoMessage'
 import ImageMessage from './components/ImageMessage'
 import FileMessage from './components/FileMessage'
+import ShareUserCard from './components/CustomMessage/ShareUserCard.vue'
 //EaseCallKit Invite
 import { useManageChannel } from '@/components/EaseCallKit/hooks'
 //inviteMembers modal
@@ -163,6 +164,11 @@ const sendAudioMessages = async (audioData) => {
         isShowRecordBox.value = false
     }
 }
+/* 自定义消息-个人名片 */
+const personalCardMessageComp = ref(null)
+const onShowContactsModal = () => {
+    personalCardMessageComp.value.dialogVisible = true
+}
 /*清除屏幕*/
 const clearScreen = () => {
     ElMessageBox.confirm('确认清空当前消息内容？', '消息清屏', {
@@ -178,46 +184,6 @@ const clearScreen = () => {
             return false
         })
 }
-//func 对应事件 icon class样式等
-const all_func = [
-    {
-        className: 'icon-icon_emoji',
-        style: 'font-size:20px;margin-left: 20px;',
-        title: '选择表情',
-        methodName: showEmojisBox
-    },
-    {
-        className: 'icon-tuku',
-        style: 'font-size: 26px;',
-        title: '发送图片',
-        methodName: chooseImages
-    },
-    {
-        className: 'icon-shipin',
-        style: 'font-size: 20px;',
-        title: '发送视频',
-        methodName: chooseVideo
-    },
-    {
-        className: 'icon-wenjian',
-        style: 'font-size: 20px;',
-        title: '发送文件',
-        methodName: chooseFiles
-    },
-    {
-        className: 'icon-01',
-        style: 'font-size: 20px;',
-        title: '发送语音',
-        methodName: showRecordBox
-    },
-    {
-        className: 'icon-lajitong',
-        style: 'font-size: 23px;',
-        title: '清屏',
-        methodName: clearScreen
-    }
-]
-
 /* About EaseCallKit */
 const { CALL_TYPES, sendInviteMessage } = useManageChannel()
 //处理发起的音视频呼叫类型
@@ -276,7 +242,51 @@ const sendMulitInviteMsg = (targetIMId) => {
     }
     store.dispatch('createInformMessage', params)
 }
-
+//func 对应事件 icon class样式等
+const all_func = [
+    {
+        className: 'icon-icon_emoji',
+        style: 'font-size:20px;margin-left: 20px;',
+        title: '选择表情',
+        methodName: showEmojisBox
+    },
+    {
+        className: 'icon-tuku',
+        style: 'font-size: 26px;',
+        title: '发送图片',
+        methodName: chooseImages
+    },
+    {
+        className: 'icon-shipin',
+        style: 'font-size: 20px;',
+        title: '发送视频',
+        methodName: chooseVideo
+    },
+    {
+        className: 'icon-wenjian',
+        style: 'font-size: 20px;',
+        title: '发送文件',
+        methodName: chooseFiles
+    },
+    {
+        className: 'icon-01',
+        style: 'font-size: 20px;',
+        title: '发送语音',
+        methodName: showRecordBox
+    },
+    {
+        className: 'icon-mingpian',
+        style: 'font-size: 23px;',
+        title: '个人名片',
+        methodName: onShowContactsModal
+    },
+    {
+        className: 'icon-lajitong',
+        style: 'font-size: 23px;',
+        title: '清屏',
+        methodName: clearScreen
+    }
+]
 defineExpose({
     handleQuoteMessage,
     handleEditTextMessage
@@ -369,6 +379,11 @@ defineExpose({
         :chatType="routeQueryData.chatType"
         @onStartLoading="onStartLoading"
         @onLoadending="onLoadending"
+    />
+    <ShareUserCard
+        ref="personalCardMessageComp"
+        :targetId="routeQueryData.id"
+        :chatType="routeQueryData.chatType"
     />
 </template>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, nextTick, defineExpose, defineProps } from 'vue'
+import { ref, toRefs, defineExpose, defineProps } from 'vue'
 import CreateGroups from './createGroups.vue'
 import ApplyJoinGroups from './applyJoinGroups'
 import AddFriends from './addFriends.vue'

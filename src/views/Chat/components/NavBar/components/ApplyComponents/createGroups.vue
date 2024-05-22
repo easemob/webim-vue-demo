@@ -19,7 +19,6 @@ import { Search, CircleCheckFilled } from '@element-plus/icons-vue'
 import { useGetUserMapInfo } from '@/hooks'
 /* 路由 */
 import router from '@/router'
-import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 const emit = defineEmits(['closeDialogVisible'])
 const props = defineProps({
     dialogVisible: {
@@ -48,7 +47,6 @@ const onClickCheckedBtn = (userId) => {
 }
 /* 好友数据处理逻辑 */
 const { getContactsAvatarById, getContactsNickNameById } = useGetUserMapInfo()
-const friendList = computed(() => store.state.Contacts.friendList)
 const getContactsWithRemarkList = computed(() => [
     ...store.getters.getContactsWithRemarkMap.values()
 ])
