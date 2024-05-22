@@ -12,7 +12,6 @@ export const imConnectListener = () => {
                 if (isOpenPlayRing.value) clickRing()
                 fetchLoginUsersInitData()
                 router.replace('/chat')
-                console.timeEnd('loginWithToken')
             },
             onDisconnected: () => {
                 router.push('/login')

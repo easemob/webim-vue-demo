@@ -75,13 +75,10 @@ const Groups = {
                     (item) =>
                         (groupMemberInfo = Object.assign(groupMemberInfo, item))
                 )
-            if (!state.groupsInfos[groupId]) {
-                state.groupsInfos[groupId] = {}
+            if (!state.groupDetails.has(groupId)) {
+                state.groupDetails.set(groupId, { groupMemberInfo })
             }
-            state.groupsInfos[groupId].groupMemberInfo = _.assign(
-                state.groupsInfos[groupId].groupMemberInfo,
-                groupMemberInfo
-            )
+            state.groupDetails.get(groupId).groupMemberInfo = groupMemberInfo
         },
         //更新本地缓存群组信息
         UPDATE_CACHE_GROUP_INFO: (state, payload) => {
@@ -299,6 +296,30 @@ const Groups = {
                     inGroupInfo: groupUsersInfo
                 })
             } catch (error) {}
+        },
+        //获取登录用户在某群内的群组属性
+        fetchInTheGroupInfoFromServer: async (
+            { dispatch, commit },
+            groupId
+        ) => {
+            try {
+                let options = {
+                    groupId: groupId,
+                    userId: EMClient.user
+                }
+
+                const { data } = await EMClient.getGroupMemberAttributes(
+                    options
+                )
+                commit('SET_GROUP_MEMBERS_INFO', {
+                    groupId: groupId,
+                    inGroupInfo: [
+                        { [EMClient.user]: { nickName: data.nickName } }
+                    ]
+                })
+            } catch (error) {
+                console.error('>>>>>群组属性获取失败', error)
+            }
         },
         //设置登录用户在某群的群组属性
         setInTheGroupInfo: async ({ commit }, params) => {

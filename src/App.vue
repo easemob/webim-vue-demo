@@ -15,7 +15,6 @@ const EASEIM_loginUser = window.localStorage.getItem('EASEIM_loginUser')
 const loginUserFromStorage = JSON.parse(EASEIM_loginUser) || {}
 const handleRelogin = async () => {
     try {
-        console.time('loginWithToken')
         await EMClient.open({
             username: loginUserFromStorage.user,
             accessToken: loginUserFromStorage.accessToken

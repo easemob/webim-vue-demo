@@ -148,14 +148,25 @@ const editMyGroupNickName = async (type, oldMyGroupNickname) => {
         })
     }
 }
+// const inTheGroupNickname = computed(() => {
+//     const loginUser = EMClient.user
+//     const myNickname = store.getters.getGroupDetailMap.get(groupId.value)
+//         ?.groupMemberInfo[loginUser]?.nickName
+//     return myNickname
+// })
 const inTheGroupNickname = computed(() => {
-    const loginUser = EMClient.user
-    const myNickname =
-        store.state.Groups.groupsInfos[groupId.value]?.groupMemberInfo[
-            loginUser
-        ]?.nickName
-    return myNickname
+    const groupIdValue = groupId.value
+    const loginUserValue = EMClient.user
+    const groupDetail = store.getters.getGroupDetailMap.get(groupIdValue)
+
+    if (!groupDetail) {
+        console.warn(`Group detail for group ID ${groupIdValue} not found.`)
+        return '' // 或者返回 null 或 undefined
+    }
+    const myNickname = groupDetail.groupMemberInfo?.[loginUserValue]?.nickName
+    return myNickname || ''
 })
+
 //退出、解散群组
 const quitThisGroup = async () => {
     try {
@@ -238,6 +249,7 @@ const handleUpdateGroupData = async () => {
             console.error(error)
         }
     }
+    store.dispatch('fetchInTheGroupInfoFromServer', groupId.value)
 }
 onMounted(() => {
     handleUpdateGroupData()
