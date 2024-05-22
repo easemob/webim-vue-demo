@@ -46,7 +46,9 @@ const atMembersList = computed(() => {
     //TODO text部分应为获取群组成员的自定义属性，待后续增加可设置自定在群组当中的自定义属性。
     if (groupId) {
         const sourceMembers =
-            store.state.Groups.groupsInfos[groupId]?.members || []
+            store.getters.getGroupMembersMap.get(groupId) ||
+            store.dispatch('fetchGoupsMemberFromServer', groupId) ||
+            []
         sourceMembers.length &&
             sourceMembers.forEach((item) => {
                 if (
