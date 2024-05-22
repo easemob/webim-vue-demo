@@ -18,7 +18,7 @@ const alertDialog = (groupId) => {
 const getGroupMemberList = async (groupId) => {
     if (!groupId) return
     const memberList = []
-    const sourceMembers = store.state.Groups.groupsInfos[groupId]?.members || []
+    const sourceMembers = store.getters.getGroupMembersMap.get(groupId) || []
     if (sourceMembers.length > 0) {
         sourceMembers.length > 0 &&
             sourceMembers.forEach((item) => {
@@ -28,7 +28,7 @@ const getGroupMemberList = async (groupId) => {
     } else {
         await store.dispatch('fetchGoupsMemberFromServer', groupId)
         const sourceMembers =
-            store.state.Groups.groupsInfos[groupId]?.members || []
+            store.getters.getGroupMembersMap.get(groupId) || []
         sourceMembers.length > 0 &&
             sourceMembers.forEach((item) => {
                 memberList.push(item.member || item.owner)

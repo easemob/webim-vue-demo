@@ -3,7 +3,7 @@ import { GROUP_OPERATION_TYPE, GROUP_ROLE_TYPE } from '@/IM/constant'
 import { EMClient } from '@/IM'
 const Groups = {
     state: {
-        groupsInfos: {},
+        groupsInfos: {}, //计划废弃
         joinedGroup: {
             pagingParams: {
                 pageNum: 0,
