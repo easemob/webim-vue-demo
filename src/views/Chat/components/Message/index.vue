@@ -188,10 +188,10 @@ watch(
 )
 
 //消息重新编辑
-const inputBox = ref(null)
-const reEditMessage = (msg) => (inputBox.value.textContent = msg)
+const inputBoxComp = ref(null)
+const reEditMessage = (msg) => inputBoxComp.value?.handleEditTextMessage(msg)
 //消息引用
-const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
+const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg)
 </script>
 <template>
     <el-container v-if="loginState" class="app_container">
@@ -307,7 +307,7 @@ const messageQuote = (msg) => inputBox.value.handleQuoteMessage(msg)
         </el-main>
         <!-- 输入框区别 -->
         <el-footer class="chat_message_inputbar">
-            <ChatInputBox ref="inputBox" :routeQueryData="routeQueryData" />
+            <ChatInputBox ref="inputBoxComp" :routeQueryData="routeQueryData" />
         </el-footer>
         <!-- 聊天右侧抽屉 -->
         <el-drawer

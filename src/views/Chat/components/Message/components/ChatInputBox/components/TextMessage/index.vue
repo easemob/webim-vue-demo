@@ -182,8 +182,12 @@ const dispatchPasteEvent = (event) => {
         console.log('粘贴内容不是图片')
     }
 }
+const onEditMessage = (msg) => {
+    textContent.value = msg
+}
 defineExpose({
     onAddOneEmoji,
+    onEditMessage,
     handleQuoteMessage
 })
 </script>

@@ -62,6 +62,10 @@ onClickOutside(emojiContainerComp, () => {
 const showEmojisBox = () => {
     emojiContainerComp.value?.handleShowEmojisBox({ isShow: true })
 }
+//文本消息重新编辑
+const handleEditTextMessage = (msg) => {
+    textMessageComp.value?.onEditMessage(msg)
+}
 /* 消息引用 */
 const messageQuoteRef = ref(null)
 //暴露给messagelist组件用来设置引用消息内容
@@ -69,11 +73,6 @@ const handleQuoteMessage = (msgBody) => {
     messageQuoteRef.value && messageQuoteRef.value.setQuoteContent(msgBody)
 }
 const getMessageQuoteContent = (cb) => {
-    console.log(
-        'messageQuoteRef.value?.msgQuote',
-        messageQuoteRef.value?.msgQuote
-    )
-
     cb(messageQuoteRef.value?.msgQuote)
 }
 const clearQuoteContent = () => {
@@ -279,7 +278,8 @@ const sendMulitInviteMsg = (targetIMId) => {
 }
 
 defineExpose({
-    handleQuoteMessage
+    handleQuoteMessage,
+    handleEditTextMessage
 })
 </script>
 <template>
