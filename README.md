@@ -82,7 +82,7 @@ npm run build --report
 代码目录：src/views/chat/components/Message
 
 -   在 inutBox.vue 组件里实现发消息，messageList.vue 为显示消息上屏。
--   具体调用 SDK 发送消息的方法在 src/store/modules/message.js 中的 sendShowTypeMessage
+-   具体调用 SDK 发送消息的方法在 src/store/modules/message.js 中的 senedShowTypeMessage
 
 ## 群组
 

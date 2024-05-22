@@ -143,16 +143,17 @@ const sendAudioMessages = async (audioData) => {
     }
 
     const msgOptions = {
-        id: routeQueryData.value.id,
+        type: MESSAGE_TYPE.AUDIO,
+        to: routeQueryData.value.id,
+        from: EMClient.user,
         chatType: routeQueryData.value.chatType,
         file: file,
         length: audioData.length
     }
     try {
-        await store.dispatch('sendShowTypeMessage', {
-            msgType: MESSAGE_TYPE.AUDIO,
-            msgOptions: _.cloneDeep(msgOptions)
-        })
+        const msg = EMClient.Message.create(msgOptions)
+        const { message } = await EMClient.send(msg)
+        store.dispatch('senedShowTypeMessage', { ...message })
         isShowRecordBox.value = false
     } catch (error) {
         if (error.type && error?.data) {

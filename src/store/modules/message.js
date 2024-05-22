@@ -1,5 +1,5 @@
 import { EMClient } from '@/IM'
-import { setMessageKey, createMessage } from '@/utils/handleSomeData'
+import { setMessageKey } from '@/utils/handleSomeData'
 import _ from 'lodash'
 import {
     MESSAGE_STATUS_TYPE,
@@ -191,36 +191,6 @@ const Message = {
                                 chatType: chatType
                             })
                         }
-                    })
-                    .catch((error) => {
-                        reject(error)
-                    })
-            })
-        },
-        //发送展示类型消息
-        sendShowTypeMessage: async ({ dispatch, commit }, params) => {
-            return new Promise((resolve, reject) => {
-                //主要作用为创建消息Options中附件会有上传失败的回调函数。
-                //传入errorCallback，让附件类型消息在上传失败时调用reject抛出error
-                const errorCallback = (error) => {
-                    reject(error)
-                }
-                const options = createMessage().createOptions(
-                    params,
-                    errorCallback
-                )
-                const msg = EMClient.Message.create(options)
-                EMClient.send(msg)
-                    .then((res) => {
-                        const { message } = res
-                        console.log(message)
-                        commit('UPDATE_MESSAGE_LIST', message)
-                        // 提示会话列表更新
-                        dispatch('updateLocalConversation', {
-                            conversationId: message.to,
-                            chatType: message.chatType
-                        })
-                        resolve('OK')
                     })
                     .catch((error) => {
                         reject(error)
