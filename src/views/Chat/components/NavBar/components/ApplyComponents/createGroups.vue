@@ -16,6 +16,7 @@ import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { EMClient } from '@/IM'
 import { CHAT_TYPE } from '@/IM/constant'
 import { Search, CircleCheckFilled } from '@element-plus/icons-vue'
+import { useGetUserMapInfo } from '@/hooks'
 /* 路由 */
 import router from '@/router'
 import defaultAvatar from '@/assets/images/avatar/theme2x.png'
@@ -31,54 +32,39 @@ const store = useStore()
 
 const nextStep = ref(0) //下一步
 const renderFriendList = ref([])
-//选中人数统计
-const checkedCount = computed(() => {
-    return _.sumBy(renderFriendList.value, 'isChecked') * 1
-})
-//选中人id数组
-const checkedUserArr = computed(() => {
-    const filtered = _.filter(renderFriendList.value, 'isChecked') //过滤后为选中的user list
-    return _.map(filtered, 'hxId')
-})
-onMounted(() => {
-    handleRenderFiendList()
-})
-/* 好友数据处理逻辑 */
-//处理拉取到的好友列表数据（添加是否选中字段）
-const friendList = computed(() => store.state.Contacts.friendList)
-const handleRenderFiendList = () => {
-    const newFriendList = []
-    for (const key in friendList.value) {
-        if (Object.hasOwnProperty.call(friendList.value, key)) {
-            const v = friendList.value[key]
-            newFriendList.push({
-                name: v.nickname && v.nickname ? v.nickname : v.hxId,
-                hxId: v.hxId,
-                isChecked: false,
-                keywords: `${v.hxId && v.hxId}${v.nickname && v.nickname}`
-            })
-        }
+const checkedContactList = ref([])
+//是否选中
+const isInCheckedContactList = computed(() => {
+    return (userId) => {
+        return checkedContactList.value.includes(userId)
     }
-    return (renderFriendList.value = newFriendList)
+})
+const onClickCheckedBtn = (userId) => {
+    if (checkedContactList.value.includes(userId)) {
+        checkedContactList.value = _.pull(checkedContactList.value, userId)
+    } else {
+        checkedContactList.value.push(userId)
+    }
 }
+/* 好友数据处理逻辑 */
+const { getContactsAvatarById, getContactsNickNameById } = useGetUserMapInfo()
+const friendList = computed(() => store.state.Contacts.friendList)
+const getContactsWithRemarkList = computed(() => [
+    ...store.getters.getContactsWithRemarkMap.values()
+])
+
 /* 搜索逻辑 */
 //创建用户搜索部分
 const serachInputValue = ref('')
-const isShowSearchContent = ref(false) //控制检索内容显隐
 const searchResultList = ref([])
 const searchFriend = () => {
     if (serachInputValue.value) {
-        const resultArr = _.filter(renderFriendList.value, (v) =>
-            v.keywords.includes(serachInputValue.value)
+        const resultArr = _.filter(getContactsWithRemarkList.value, (v) =>
+            getContactsNickNameById(v.userId).includes(serachInputValue.value)
         )
         searchResultList.value = resultArr
-
-        resultArr.length > 0 && (isShowSearchContent.value = true)
-    } else {
-        return (isShowSearchContent.value = false)
     }
 }
-
 /* 创建群组form */
 //创建群组群组所用参数
 const groupCreateForm = reactive({
@@ -111,7 +97,7 @@ const sourceForm = () => {
 }
 //创建群组
 const createNewGroups = async () => {
-    groupCreateForm.members = checkedUserArr.value
+    groupCreateForm.members = checkedContactList.value
     if (groupCreateForm.groupname === '')
         return ElNotification.error('请设置群组名称！')
     try {
@@ -150,14 +136,11 @@ const createNewGroups = async () => {
 
 //重置创建群Modal
 const resetTheModalStatus = () => {
-    handleRenderFiendList()
     nextStep.value = 0
     serachInputValue.value = ''
-    isShowSearchContent.value = false //控制检索内容显隐
     searchResultList.value = []
     emit('closeDialogVisible')
 }
-defineExpose({ handleRenderFiendList })
 </script>
 <template>
     <div class="app_container">
@@ -172,62 +155,38 @@ defineExpose({ handleRenderFiendList })
                 >
                 </el-input>
                 <el-divider style="margin: top 20px; margin-bottom: 12px" />
-                <el-scrollbar
-                    v-if="isShowSearchContent"
-                    class="search_friend_box_content"
-                    tag="div"
-                >
-                    <div
-                        v-for="(item, index) in searchResultList"
-                        :key="item.name"
-                    >
-                        <div class="friend_user_list">
-                            <div class="friend_user_list_left">
-                                <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{
-                                    `${item.name}(${item.hxId})`
-                                }}</b>
-                            </div>
-                            <el-icon
-                                class="checked_btn"
-                                @click="
-                                    searchResultList[index].isChecked =
-                                        !searchResultList[index].isChecked
-                                "
-                            >
-                                <CircleCheckFilled
-                                    v-if="item.isChecked"
-                                    class="checked_icon"
-                                />
-                                <span v-else class="unChecked_icon"></span>
-                            </el-icon>
-                        </div>
-                        <el-divider style="margin: 12px 0" />
-                    </div>
-                </el-scrollbar>
             </el-col>
             <el-col class="create_modal_main">
                 <el-scrollbar>
                     <div
-                        v-for="(item, index) in renderFriendList"
-                        :key="item.name + index"
+                        v-for="(contactItem, index) in !serachInputValue
+                            ? getContactsWithRemarkList
+                            : searchResultList"
+                        :key="contactItem.userId"
                     >
                         <div class="friend_user_list">
                             <div class="friend_user_list_left">
-                                <el-avatar :src="defaultAvatar"></el-avatar>
+                                <el-avatar
+                                    :src="
+                                        getContactsAvatarById(
+                                            contactItem.userId
+                                        )
+                                    "
+                                ></el-avatar>
                                 <b class="friend_list_username">{{
-                                    `${item.name}(${item.hxId})`
+                                    getContactsNickNameById(contactItem.userId)
                                 }}</b>
                             </div>
                             <el-icon
                                 class="checked_btn"
-                                @click="
-                                    renderFriendList[index].isChecked =
-                                        !renderFriendList[index].isChecked
-                                "
+                                @click="onClickCheckedBtn(contactItem.userId)"
                             >
                                 <CircleCheckFilled
-                                    v-if="item.isChecked"
+                                    v-if="
+                                        isInCheckedContactList(
+                                            contactItem.userId
+                                        )
+                                    "
                                     class="checked_icon"
                                 />
                                 <span v-else class="unChecked_icon"></span>
@@ -239,7 +198,7 @@ defineExpose({ handleRenderFiendList })
             </el-col>
             <el-col class="create_friend_footer">
                 <span
-                    ><b class="checked_text">{{ checkedCount }}</b>
+                    ><b class="checked_text">{{ checkedContactList.length }}</b>
                     人被选中</span
                 >
                 <el-button class="next_btn" plain @click="nextStep = 1"
