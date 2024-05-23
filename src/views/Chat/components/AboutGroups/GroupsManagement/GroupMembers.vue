@@ -6,8 +6,6 @@ import { useGetUserMapInfo, useSordedContactsWithPinyin } from '@/hooks'
 /* store */
 import store from '@/store'
 import _ from 'lodash'
-
-import defaultAvatar from '@/assets/images/avatar/theme2x.png'
 import { ElMessageBox } from 'element-plus'
 /* props */
 const props = defineProps({
@@ -23,6 +21,7 @@ const props = defineProps({
     }
 })
 const { groupId, memberRole } = toRefs(props)
+console.log('memberRole', memberRole.value)
 /* 当前登陆的id */
 const loginUserId = computed(() => EMClient.user)
 /* 数据获取 */
@@ -68,26 +67,28 @@ const showGroupsMembersName = computed(() => {
 const isInGroupMemberList = (hxId) => {
     return getGroupMembersList.value.some((m) => (m.member || m.owner) === hxId)
 }
-//待渲染的群成员
-// const renderGroupMembers = ref(null)
-//选中要邀请的成员list
-// const checkedInviteMembers = computed(() => {
-//     const list = _.values(renderGroupMembers.value)
-//     const toBeInviteList = list.length > 0 && list.filter((m) => m.isChecked)
-//     return toBeInviteList
-// })
-
 const { sortedFriendListWithRemark } = useSordedContactsWithPinyin()
-//监听到选择群id变化重新进行赋值
-// watch(
-//     () => groupId.value,
-//     () => {
-//         renderGroupMembers.value = sortedFriendList.value
-//     },
-//     {
-//         immediate: true
-//     }
-// )
+/**
+ * 是否容许邀请加群成员
+ * 涉及指标为2
+ * @param {Boolean} public 是否为公开群
+ * @param {Boolean} allowinvites 是否容许普通群组成员邀请人入群
+ * @description 在公开群中，只容许群主管理员邀请人入群，而私有群则可设置是否容许普通群成员邀请人加群。
+ */
+const isAllowedToInviteMember = computed(() => {
+    console.log('groupDetail', groupDetail.value)
+    if (groupDetail.value.public && memberRole.value) {
+        return true
+    }
+    if (groupDetail.value.public !== true && groupDetail.value.allowinvites) {
+        return true
+    }
+    if (!groupDetail.value.public && memberRole.value) {
+        return true
+    }
+    return false
+})
+console.log('isAllowedToInviteMember', isAllowedToInviteMember.value)
 //邀请成员
 const inviteNewMemberInTheGroup = async (hxId) => {
     ElMessageBox.confirm('确定要邀请该成员？', '邀请成员', {
@@ -138,8 +139,6 @@ const searchUsers = (keyword) => {
     })
     searchResultList.value = _searchResultList
 }
-
-//抛出保存方法
 </script>
 <template>
     <div class="taboo_box">
@@ -194,10 +193,7 @@ const searchUsers = (keyword) => {
                                         </div>
                                         <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
                                         <template
-                                            v-if="
-                                                !groupDetail.public &&
-                                                memberRole
-                                            "
+                                            v-if="isAllowedToInviteMember"
                                         >
                                             <el-button
                                                 v-if="
