@@ -70,74 +70,132 @@ npm run build --report
 -   单人多人视频呼叫
 -   更多功能敬请期待
 
-## sdk 集成
+## 环信 SDK 集成
 
-示例代码代码目录：src/IM/initwebsdk.js
+> SDK 的初始化是 IM 功能实现的基石必须经过`引入SDK`、`实例化SDK`、`挂载SDK事件监听`、`引入实例`这几步。
 
--   引入 sdk 和配置文件，实例化。（参考：initwebsdk.js）
--   注册监听事件（参考：App.vue）
+-   [SDK 所需配置](./src/IM/config/index.js)
+-   [初始化 SDK](./src/IM/miniCore/index.js)
+-   [导出初始化 SDK 实例](./src/IM/index.js)
+-   [实现逻辑时 SDK 关联常量(单独集成非必须)](./src/IM/constant/)
+-   [SDK 事件监听回调](./src/IM/listener/)
+-   [挂载 SDK 所需事件监听](./src/App.vue)
 
-## 发送消息
+> 实际使用效果如下面示例代码：
 
-代码目录：src/views/chat/components/Message
+```javascript
+import { EMClient } from '@/IM'
+import { mountAllEMListener } from '@/IM/listener'
+/* 【重要】挂载IM相关监听回调。 */
+mountAllEMListener()
+//登录
+EMClient.open({ username: '', password: '' })
+```
 
--   在 inutBox.vue 组件里实现发消息，messageList.vue 为显示消息上屏。
--   具体调用 SDK 发送消息的方法在 src/store/modules/message.js 中的 senedShowTypeMessage
+## 登录
+
+> 该项目中的登录所用接口为远端 api 接口+SDK Token 登录接口实现的 IM 服务连接，在实际项目中需自行搭建`userToken`获取接口。
+
+-   [登录 IM](./src/views/Login/components/LoginInput/index.vue)
+-   [连接成功相关监听并跳转路由](./src/IM/listener/imConnectListener.js)
+
+## 会话列表
+
+> 通过登录页面进入聊天页面，右侧会展示一个有过最近会话关系的会话列表，该会话列表核心使用了`miniCore`中的`localCache`插件进行了 API 实现以及数据源管理获取。
+
+-   [会话列表的数据更新获取](./src/store/modules/conversation.js)
+-   [会话列表的渲染](./src/views/Chat/components/Conversation/)
+-   [会话列表的搜索](./src/components/SearchInput/index.vue)
+
+## 收发消息
+
+> 该板块为 IM 需求核心功能，通过查看以下内容可以了解相关功能的实现。
+
+### 发送消息
+
+> 利用 SDK 提供的丰富的消息类型实现不同功能的消息发送，并将发送的消息缓存至`vuex`。
+
+-   [发送文本消息](./src/views/Chat/components/Message/components/ChatInputBox/components/TextMessage/index.vue)
+-   [发送图片消息](./src/views/Chat/components//Message/components/ChatInputBox/components/ImageMessage/index.vue)
+-   [贴图发送图片消息](./src/views/Chat/components/Message/components/suit/previewSendImg.vue)
+-   [语音消息发送](./src/views/Chat/components/Message/components/ChatInputBox/index.vue)
+-   [文件消息发送](./src/views/Chat/components/Message/components/ChatInputBox/components/FileMessage/index.vue)
+-   [视频消息发送](./src/views/Chat/components/Message/components/ChatInputBox/components/VideoMessage/index.vue)
+-   [自定义消息发送(个人名片)](./src/views/Chat/components/Message/components/ChatInputBox/components/CustomMessage/ShareUserCard.vue)
+
+---
+
+-   [Emoji 表情](./src/views/Chat/components/Message/components/suit/emojiContainer.vue)
+
+-   [消息引用](./src/views/Chat/components/Message/components/suit/msgQuote.vue)
+
+-   [编辑文本消息](./src/views/Chat/components/Message/components/suit/modifyMessage.vue)
+-   [消息举报](./src/views/Chat/components/Message/components/suit/reportMessage.vue)
+
+### 接收消息缓存消息
+
+> 接收消息通过 SDK 的事件监听获取数据源，而消息数据则存储在`vuex`中进行缓存，刷新页面后进入聊天页的数据则是通过 SDK 提供的获取漫游消息实现。
+
+-   [接收消息内容](./src/IM/listener/imReciveMessageListener.js)
+-   [收发消息缓存数据](./src/store/modules/message.js)
+
+### 消息上屏展示
+
+> 消息内容的上屏展示则是从`vuex`中缓存的消息数据进行响应式更新渲染。
+
+-   [消息内容上屏展示](./src/views/Chat/components/Message/components/ChatMessageListItem/index.vue)
 
 ## 群组
 
-代码目录： src/views/chat/components/AboutGroups
+> 在群组聊天中点击右上角更多展开的“抽屉”中，可以实现对群组信息的查看或者管理。
 
--   群组发送消息和单人是一样的只是 type 不同
--   AboutGroups 下为群组设置的代码
+-   [群组基础信息展示修改](./src/views/Chat/components/AboutGroups/GroupsDetails/index.vue)
+-   [群组成员禁言或黑名单管理](./src/views/Chat/components/AboutGroups/GroupsManagement/index.vue)
+-   [群组内事件监听](./src/IM/listener/imGroupListener.js)
+-   [群组数据管理](./src/store/modules/goups.js)
 
-## 消息存储
+## 联系人
 
--   消息存储在 store > message.js
--   关于持久化：这个 demo 采用的 sdk 消息漫游的增值服务，可以拉取历史消息，当然你也可以采用 indexdb 来做本地存储，同时也可以开通实时回调服务，将消息同步到自己的服务器。
+> 在联系人中展示登录用户的好友关系列表以及加入的群组列表。
 
-## EaseCallKit 的使用说明
+-   [联系人组件](./src/views/Chat/components/Contacts/index.vue)
+-   [联系人详情](./src/views/Chat/components/Contacts/components/ContactInfo.vue)
+-   [联系人搜索](./src/components/SearchInput/index.vue)
 
-> 在使用 Vue3 框架时，除了集成环信 WebIM，通过集成声网音视频功能以 IM 作为通话信令来实现音视频通话，也是较为常见的使用场景，并且环信移动原生端已经实现了 EaseCallKit 将音视频通话功能可类似为模块导入的形式快速引入，因此本 Demo 中同样也将音视频相关逻辑单独抽离为一个组件，并且可以脱离此 Demo 单独将其引入到自己的 Vue3 项目中，快速完整音视频功能的搭建。
+## NavBar
 
-### 前置准备
+> 在 NavBar 组件中包含对登录用户的头像信息展示，在线状态变更，会话以及联系人的切换，创建群组添加联系人，个人信息的展示修改，基础设置提供了点击入口。
 
-1. 已在环信管理后台创建项目生成对应 Appkey，在项目中引入并且完成针对环信 IMSDK 的初始化工作。
+-   [用户信息](./src/views/Chat/components/NavBar/components/AboutUserInfoCard/)
+-   [创建群组、添加联系人、申请入群](./src/views/Chat/components/NavBar/components/ApplyComponents/)
+-   [个人设置](./src/views/Chat/components/NavBar/components/PersonalsettingCard/index.vue)
+-   [在线状态展示](./src/views/Chat/components/NavBar/components/UserOnlineStatusCard.vue)
+-   [退出登录](./src/views/Chat/components/NavBar/components/Logout.vue)
 
-```javascript
-//import 环信SDK
-import EaseChatSDK from 'easemob-websdk'
+## 关于 `EaseCallKit` 的使用说明
 
-//实例化环信SDK
-const EaseChatClient = new EaseChatSDK.connection({
-    appKey: 'YOUR APPKEY'
-})
-export { EaseChatSDK, EaseChatClient }
-```
+> 在使用 Vue3 框架时，除了集成环信 WebIM，通过集成声网音视频功能以 IM 作为通话信令来实现音视频通话，也是较为常见的使用场景，并且环信移动原生端已经实现了 EaseCallKit 将音视频通话功能可类似为模块导入的形式快速引入，因此本 Demo 中同样尝试也将音视频相关逻辑单独抽离为一个组件，并且可以脱离此 Demo 单独将其引入到自己的 Vue3 项目中，快速完整音视频功能的搭建。
 
-```javascript
-//实例化miniCore版本 环信SDK
-const miniCore = new MiniCore({
-    appKey: DEFAULT_EASEMOB_APPKEY
-})
-```
+### 必要前置准备
+
+1. 已在环信管理后台创建项目生成对应 Appkey，在项目中引入并且完成针对环信 IMSDK 的初始化工作。相关步骤可参考上述`环信 SDK 集成 `
 
 2. 确保已在 Agora 声网创建项目生成 appId【与 Appkey 概念相同】，并在项目中安装 Agora 声网相关 SDK。
 
-3. 在 EaseCallKit 当中有一些功能的实现有用到 vueUse 所以也需要安装 vueUse 相关依赖，此时你的项目目录中包含以下三个包名。
+3. 在 EaseCallKit 当中有一些功能的实现有用到 `vueUse`功能库，所以也需要安装 `vueUse` 相关依赖，此时你的项目目录中包含以下三个包名。
 
 ```json
  "dependencies": {
-            "agora-rtc-sdk-ng": "^4.14.0",
-            "easemob-websdk": "4.1.1",
-            "@vueuse/core": "^8.4.2",
+            "agora-rtc-sdk-ng": "latest",
+            "easemob-websdk": "latest",
+            "@vueuse/core": "latest",
  }
 ```
 
-4. 确保自己的服务端已经搭建了声网房间鉴权的 AppServer 服务，此服务作用是，请求服务端接口获取 channel 对应的 token 用以加入 channel，此 Demo 中用的是环信已经搭建的 appServer 服务，一个服务仅供一个 appId 使用，因此需要搭建自己的 appServer。
+4. 确保自己的服务端已经搭建了声网房间鉴权的 `AppServer` 服务，此服务作用是，请求服务端接口获取 `channel`（音视频房间） 对应的 `token`（房间钥匙 🔑） 用以加入 `channel`，此 Demo 中用的是环信已经搭建的 `appServer` 服务，一个服务仅供一个 `appId` 使用，因此需要搭建自己的 `appServer`。
 
-    具体相关文档说明
-    [点击查看](https://docs.agora.io/cn/video-call-4.x/token_upgrade?platform=Web)
+> 具体相关文档说明
+> [声网快速开始](https://doc.shengwang.cn/doc/rtc/javascript/get-started/quick-start)
 
 ### 如何使用
 
