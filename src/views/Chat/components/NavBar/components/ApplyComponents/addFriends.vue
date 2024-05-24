@@ -100,11 +100,11 @@ const resetTheModalStatus = () => {
                 />
             </el-form-item>
             <el-form-item>
-                <div class="apply_goups_btn_box">
+                <div class="apply_groups_btn_box">
                     <el-button
                         type="primary"
                         color="#0091FF"
-                        class="apply_goups_btn"
+                        class="apply_groups_btn"
                         @click="applyAddFriends"
                         >添加好友
                     </el-button>
@@ -123,7 +123,7 @@ const resetTheModalStatus = () => {
     border-radius: 5px;
 }
 
-.apply_goups_btn_box {
+.apply_groups_btn_box {
     width: 100%;
     height: 50px;
     display: flex;
@@ -131,7 +131,7 @@ const resetTheModalStatus = () => {
     align-items: center;
     justify-content: center;
 
-    .apply_goups_btn {
+    .apply_groups_btn {
         width: 212px;
         height: 40px;
     }

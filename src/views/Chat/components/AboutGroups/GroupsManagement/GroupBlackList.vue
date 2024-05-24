@@ -25,7 +25,7 @@ const getGroupMembersList = computed(() => {
 const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()
 onMounted(async () => {
     if (!getGroupMembersList.value) {
-        await store.dispatch('fetchGoupsMemberFromServer', groupId.value)
+        await store.dispatch('fetchGroupsMemberFromServer', groupId.value)
     }
 })
 

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, toRefs } from 'vue'
-import GroupDesc from './GoupDesc.vue'
+import GroupDesc from './GroupDesc.vue'
 import GroupAnnoun from './GroupAnnoun.vue'
 import GroupMembers from './GroupMembers.vue'
 import GroupBlackList from './GroupBlackList.vue'
@@ -103,3 +103,4 @@ const save = () => {
     padding: 0;
 }
 </style>
+./GroupDesc.vue

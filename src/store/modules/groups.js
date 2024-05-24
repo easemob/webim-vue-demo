@@ -33,7 +33,7 @@ const Groups = {
                     state.groupDetails.set(groupDetail.id, groupDetail)
                 })
         },
-        SET_GOUPS_MEMBERS: (state, payload) => {
+        SET_GROUPS_MEMBERS: (state, payload) => {
             const { groupId, members } = payload
             state.groupMembers.set(groupId, [...members])
             //同步更新群组列表里面的群人数
@@ -52,14 +52,14 @@ const Groups = {
             }
             state.groupDetails.get(groupId).blacklist = blacklist
         },
-        SET_GOUPS_MUTE_LIST: (state, payload) => {
+        SET_GROUPS_MUTE_LIST: (state, payload) => {
             const { groupId, mutelist } = payload
             if (!state.groupDetails.has(groupId)) {
                 state.groupDetails.set(groupId, { mutelist })
             }
             state.groupDetails.get(groupId).mutelist = mutelist
         },
-        SET_GOUPS_ANNOUN: (state, payload) => {
+        SET_GROUPS_ANNOUN: (state, payload) => {
             const { groupId, announcement } = payload
             if (!state.groupDetails.has(groupId)) {
                 state.groupDetails.set(groupId, { announcement: announcement })
@@ -258,7 +258,7 @@ const Groups = {
             }
         },
         //获取群组成员
-        fetchGoupsMemberFromServer: async ({ commit }, groupId) => {
+        fetchGroupsMemberFromServer: async ({ commit }, groupId) => {
             //此接口支持分页，如果群组成员大于1000人，需要分页获取。
             const options = {
                 pageNum: 1,
@@ -267,7 +267,10 @@ const Groups = {
             }
             try {
                 const { data } = await EMClient.listGroupMembers(options)
-                commit('SET_GOUPS_MEMBERS', { groupId: groupId, members: data })
+                commit('SET_GROUPS_MEMBERS', {
+                    groupId: groupId,
+                    members: data
+                })
             } catch (error) {
                 console.error('>>>>>群组成员获取失败', error)
             }
@@ -278,12 +281,12 @@ const Groups = {
             const membersList = _.chunk(members, 10)
             const requestTrack = []
             membersList.forEach((list) => {
-                const goupMemberList = _.flatten(_.map(list, _.values))
+                const groupMemberList = _.flatten(_.map(list, _.values))
 
                 requestTrack.push(
                     EMClient.getGroupMembersAttributes({
                         groupId: groupId,
-                        userIds: goupMemberList
+                        userIds: groupMemberList
                     })
                 )
             })
@@ -347,7 +350,7 @@ const Groups = {
             }
             try {
                 const { data } = await EMClient.fetchGroupAnnouncement(option)
-                commit('SET_GOUPS_ANNOUN', {
+                commit('SET_GROUPS_ANNOUN', {
                     groupId: groupId,
                     announcement: data.announcement
                 })
@@ -356,7 +359,7 @@ const Groups = {
             }
         },
         //群黑名单
-        fetchGoupsBlackListFromServer: async ({ commit }, groupId) => {
+        fetchGroupsBlackListFromServer: async ({ commit }, groupId) => {
             try {
                 const { data } = await EMClient.getGroupBlocklist({
                     groupId: groupId
@@ -370,12 +373,12 @@ const Groups = {
             }
         },
         //群禁言列表
-        fetchGoupsMuteListFromServer: async ({ dispatch, commit }, params) => {
+        fetchGroupsMuteListFromServer: async ({ dispatch, commit }, params) => {
             try {
                 const { data } = await EMClient.getGroupMuteList({
                     groupId: params
                 })
-                commit('SET_GOUPS_MUTE_LIST', {
+                commit('SET_GROUPS_MUTE_LIST', {
                     groupId: params,
                     mutelist: data
                 })
@@ -455,7 +458,7 @@ const Groups = {
                     type: 'success'
                 })
                 //更新群成员
-                dispatch('fetchGoupsMemberFromServer', groupId)
+                dispatch('fetchGroupsMemberFromServer', groupId)
             } catch (error) {
                 ElMessage({
                     message: '该群成员移出失败，请稍后重试！',
@@ -478,9 +481,9 @@ const Groups = {
                     type: 'success'
                 })
                 //重新获取黑名单列表
-                dispatch('fetchGoupsBlackListFromServer', groupId)
+                dispatch('fetchGroupsBlackListFromServer', groupId)
                 //重新获取成员列表
-                dispatch('fetchGoupsMemberFromServer', groupId)
+                dispatch('fetchGroupsMemberFromServer', groupId)
             } catch (error) {
                 ElMessage({
                     message: '黑名单添加失败，请稍后重试~',
@@ -498,7 +501,7 @@ const Groups = {
                     type: 'success'
                 })
                 //重新获取黑名单列表
-                dispatch('fetchGoupsBlackListFromServer', groupId)
+                dispatch('fetchGroupsBlackListFromServer', groupId)
             } catch (error) {
                 console.log('error', error)
                 ElMessage({
@@ -522,7 +525,7 @@ const Groups = {
                     type: 'success'
                 })
                 setTimeout(() => {
-                    dispatch('fetchGoupsMuteListFromServer', groupId)
+                    dispatch('fetchGroupsMuteListFromServer', groupId)
                 }, 800)
             } catch (error) {
                 console.log('>>>>>error', error)
@@ -552,7 +555,7 @@ const Groups = {
                     type: 'success'
                 })
                 setTimeout(() => {
-                    dispatch('fetchGoupsMuteListFromServer', groupId)
+                    dispatch('fetchGroupsMuteListFromServer', groupId)
                 }, 800)
             } catch (error) {
                 console.log('>>>>>error', error)

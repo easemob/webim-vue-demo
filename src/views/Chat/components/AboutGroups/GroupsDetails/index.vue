@@ -237,12 +237,12 @@ const handleUpdateGroupData = async () => {
         try {
             !groupBlacklist.value &&
                 (await store.dispatch(
-                    'fetchGoupsBlackListFromServer',
+                    'fetchGroupsBlackListFromServer',
                     groupId.value
                 ))
             !groupMutelist.value &&
                 (await store.dispatch(
-                    'fetchGoupsMuteListFromServer',
+                    'fetchGroupsMuteListFromServer',
                     groupId.value
                 ))
         } catch (error) {

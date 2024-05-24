@@ -26,7 +26,7 @@ const getGroupMembersList = computed(() => {
 const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()
 onMounted(async () => {
     if (!getGroupMembersList.value) {
-        await store.dispatch('fetchGoupsMemberFromServer', groupId.value)
+        await store.dispatch('fetchGroupsMemberFromServer', groupId.value)
     }
 })
 let tobeAddedMuteList = ref([])
@@ -160,7 +160,7 @@ const searchUsers = () => {
     justify-content: flex-start;
 }
 .group_member_list_container,
-.fetchGoupsBlacinside_mute_list_containerkListFromServer {
+.fetchGroupsBlacinside_mute_list_containerkListFromServer {
     // flex: 1;
     width: 50%;
     text-align: center;

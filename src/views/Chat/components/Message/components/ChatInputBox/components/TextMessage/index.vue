@@ -47,7 +47,7 @@ const atMembersList = computed(() => {
     if (groupId) {
         const sourceMembers =
             store.getters.getGroupMembersMap.get(groupId) ||
-            store.dispatch('fetchGoupsMemberFromServer', groupId) ||
+            store.dispatch('fetchGroupsMemberFromServer', groupId) ||
             []
         sourceMembers.length &&
             sourceMembers.forEach((item) => {

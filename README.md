@@ -152,7 +152,7 @@ EMClient.open({ username: '', password: '' })
 -   [群组基础信息展示修改](./src/views/Chat/components/AboutGroups/GroupsDetails/index.vue)
 -   [群组成员禁言或黑名单管理](./src/views/Chat/components/AboutGroups/GroupsManagement/index.vue)
 -   [群组内事件监听](./src/IM/listener/imGroupListener.js)
--   [群组数据管理](./src/store/modules/goups.js)
+-   [群组数据管理](./src/store/modules/groups.js)
 
 ## 联系人
 

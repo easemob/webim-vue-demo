@@ -3,7 +3,7 @@ import { EMClient } from '@/IM'
 import Conversation from './modules/conversation'
 import Contacts from './modules/contacts'
 import Message from './modules/message'
-import Groups from './modules/goups'
+import Groups from './modules/groups'
 export default createStore({
     state: {
         loginState: false,

@@ -72,13 +72,13 @@ export const imGroupListener = () => {
             //群组成员禁言
             case GROUP_OPERATION_TYPE.MUTE_MEMBER:
                 {
-                    store.dispatch('fetchGoupsMuteListFromServer', groupId)
+                    store.dispatch('fetchGroupsMuteListFromServer', groupId)
                 }
                 break
             //群组成员解除禁言
             case GROUP_OPERATION_TYPE.UNMUTE_MEMBER:
                 {
-                    store.dispatch('fetchGoupsMuteListFromServer', groupId)
+                    store.dispatch('fetchGroupsMuteListFromServer', groupId)
                 }
                 break
             //被移出群组

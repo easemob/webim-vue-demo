@@ -31,7 +31,7 @@ const getGroupMembersList = computed(() => {
 })
 onMounted(async () => {
     if (!getGroupMembersList.value) {
-        store.dispatch('fetchGoupsMemberFromServer', groupId.value)
+        store.dispatch('fetchGroupsMemberFromServer', groupId.value)
     }
 })
 //群组详情
