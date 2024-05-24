@@ -16,7 +16,6 @@ const store = useStore()
 const conversationList = computed(() => {
     return _.values(store.state.Conversation.conversationListFromLocal)
 })
-
 //路由跳转-系统通知
 const toInformDetails = () => {
     router.push('/chat/conversation/informdetails')

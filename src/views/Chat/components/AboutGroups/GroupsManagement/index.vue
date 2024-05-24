@@ -1,9 +1,10 @@
 <script setup>
 import { ref, toRefs } from 'vue'
-import GroupDesc from './GoupDesc.vue'
+import GroupDesc from './GroupDesc.vue'
 import GroupAnnoun from './GroupAnnoun.vue'
-import GroupSomeList from './GroupSomeList.vue'
 import GroupMembers from './GroupMembers.vue'
+import GroupBlackList from './GroupBlackList.vue'
+import GroupMuteList from './GroupMuteList.vue'
 const props = defineProps({
     modalType: {
         type: String,
@@ -20,10 +21,10 @@ const props = defineProps({
         required: true,
         default: false
     },
-    groupDetail: {
-        type: Object,
+    groupId: {
+        type: String,
         required: true,
-        default: () => ({})
+        default: ''
     }
 })
 const dialogVisible = ref(false)
@@ -48,9 +49,15 @@ const diffModal = {
         title: '群成员',
         components: GroupMembers
     },
-    groupsomelist: {
+    groupBlacklist: {
         width: '840px',
-        components: GroupSomeList
+        title: '群组黑名单',
+        components: GroupBlackList
+    },
+    groupMutelist: {
+        width: '840px',
+        title: '群组禁言名单',
+        components: GroupMuteList
     }
 }
 
@@ -78,7 +85,7 @@ const save = () => {
             :is="diffModal[modalType] && diffModal[modalType].components"
             :groupModalTitle="groupModalTitle"
             :memberRole="memberRole"
-            :groupDetail="groupDetail"
+            :groupId="groupId"
             @save="save"
         >
         </component>
@@ -96,3 +103,4 @@ const save = () => {
     padding: 0;
 }
 </style>
+./GroupDesc.vue

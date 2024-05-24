@@ -22,9 +22,11 @@ const applyAddFriendsForm = reactive({
     username: '',
     applyFriendMessage: ''
 })
-const friendList = computed(() => store.state.Contacts.friendList)
+const getContactsWithRemarkMap = computed(
+    () => store.getters.getContactsWithRemarkMap
+)
 
-const applyAddFriends = () => {
+const applyAddFriends = async () => {
     if (!applyAddFriendsForm.username)
         return ElNotification({
             title: '好友操作',
@@ -32,7 +34,7 @@ const applyAddFriends = () => {
             center: true,
             type: 'warning'
         })
-    if (Object.keys(friendList.value).includes(applyAddFriendsForm.username))
+    if (getContactsWithRemarkMap.value.has(applyAddFriendsForm.username))
         return ElNotification({
             title: '好友操作',
             message: '该ID已成为您的好友！',
@@ -47,7 +49,7 @@ const applyAddFriends = () => {
             type: 'warning'
         })
     try {
-        EMClient.addContact(
+        await EMClient.addContact(
             applyAddFriendsForm.username,
             applyAddFriendsForm.applyFriendMessage
         )
@@ -57,6 +59,12 @@ const applyAddFriends = () => {
             type: 'success'
         })
     } catch (error) {
+        ElNotification({
+            title: '好友操作',
+            message: '好友申请发送失败！',
+            center: true,
+            type: 'error'
+        })
     } finally {
         resetTheModalStatus()
     }
@@ -92,11 +100,11 @@ const resetTheModalStatus = () => {
                 />
             </el-form-item>
             <el-form-item>
-                <div class="apply_goups_btn_box">
+                <div class="apply_groups_btn_box">
                     <el-button
                         type="primary"
                         color="#0091FF"
-                        class="apply_goups_btn"
+                        class="apply_groups_btn"
                         @click="applyAddFriends"
                         >添加好友
                     </el-button>
@@ -115,7 +123,7 @@ const resetTheModalStatus = () => {
     border-radius: 5px;
 }
 
-.apply_goups_btn_box {
+.apply_groups_btn_box {
     width: 100%;
     height: 50px;
     display: flex;
@@ -123,7 +131,7 @@ const resetTheModalStatus = () => {
     align-items: center;
     justify-content: center;
 
-    .apply_goups_btn {
+    .apply_groups_btn {
         width: 212px;
         height: 40px;
     }

@@ -43,7 +43,7 @@ const loginIM = async () => {
     const { clickRing } = usePlayRing()
     clickRing()
     buttonLoading.value = true
-    /* SDK 登陆的方式 */
+    //!SDK 登陆的方式
     // try {
     //   let { accessToken } = await EMClient.open({
     //     user: loginValue.username.toLowerCase(),
@@ -60,7 +60,7 @@ const loginIM = async () => {
     // finally {
     //   buttonLoading.value = false;
     // }
-    /*  !环信后台接口登陆（仅供环信线上demo使用！） */
+    // !环信后台接口登陆（仅供环信线上demo使用！）
     const params = {
         phoneNumber: loginValue.phoneNumber.toString(),
         smsCode: loginValue.smsCode.toString()

@@ -100,14 +100,14 @@ const resetTheModalStatus = () => {
         <el-form label-position="top" label-width="100px">
             <el-form-item label="群组ID" style="margin-bottom: 20px">
                 <el-input
-                    class="applyJoinGoups_input"
+                    class="applyJoinGroups_input"
                     style="height: 40px"
                     v-model.number="applyJoinGroupsForm.groupId"
                 />
             </el-form-item>
             <el-form-item label="验证信息" style="margin-bottom: 28px">
                 <el-input
-                    class="applyJoinGoups_input"
+                    class="applyJoinGroups_input"
                     style="height: 40px"
                     v-model="applyJoinGroupsForm.applyJoinMessage"
                     maxlength="150"
@@ -115,11 +115,11 @@ const resetTheModalStatus = () => {
                 />
             </el-form-item>
             <el-form-item>
-                <div class="apply_goups_btn_box">
+                <div class="apply_groups_btn_box">
                     <el-button
                         type="primary"
                         color="#0091FF"
-                        class="apply_goups_btn"
+                        class="apply_groups_btn"
                         @click="joinGroups"
                         >申请加入
                     </el-button>
@@ -129,7 +129,7 @@ const resetTheModalStatus = () => {
     </div>
 </template>
 <style lang="scss" scoped>
-.apply_goups_btn_box {
+.apply_groups_btn_box {
     width: 100%;
     height: 50px;
     display: flex;
@@ -137,17 +137,17 @@ const resetTheModalStatus = () => {
     align-items: center;
     justify-content: center;
 
-    .apply_goups_btn {
+    .apply_groups_btn {
         width: 212px;
         height: 40px;
     }
 }
 
-.applyJoinGoups_input {
+.applyJoinGroups_input {
     height: 40px;
 }
 
-:deep(.applyJoinGoups_input) > .el-input__wrapper {
+:deep(.applyJoinGroups_input) > .el-input__wrapper {
     border-radius: 5px;
 }
 </style>

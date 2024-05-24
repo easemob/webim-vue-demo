@@ -226,6 +226,17 @@
 
             /* 个人名片 */
         }
+        .message_item_status {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            .message_item_readed_icon {
+                width: 15px;
+                height: 15px;
+                cursor: pointer;
+            }
+        }
         .quote_msg_avtive {
             animation: twinkle 0.4s infinite alternate;
         }

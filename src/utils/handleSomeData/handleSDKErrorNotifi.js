@@ -1,5 +1,5 @@
 /* 构建error弹出 */
-import { errorCode } from '@/constant'
+import { ERROR_MAP_DESCRIPTION } from '@/constant'
 import { ElMessage } from 'element-plus'
 
 export default function (code, errorDesc = '') {
@@ -10,7 +10,10 @@ export default function (code, errorDesc = '') {
     if (code === 507) {
         errorDesc = 'muted'
     }
-    const message = (errorCode[code] && errorCode[code][errorDesc]) || errorDesc
+    const message =
+        (ERROR_MAP_DESCRIPTION[code] &&
+            ERROR_MAP_DESCRIPTION[code][errorDesc]) ||
+        errorDesc
 
     ElMessage({
         title: 'Easemob SDK Error',

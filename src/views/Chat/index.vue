@@ -3,16 +3,14 @@ import { onBeforeUnmount } from 'vue'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 import { EMClient } from '@/IM'
+import { CHAT_TYPE } from '@/IM/constant'
 import NavBar from '@/views/Chat/components/NavBar'
-import { messageType } from '@/constant'
 
 // /* CallKit */
 // import EaseCallKit from '@/components/EaseCallKit'
 import { useCallKitEvent } from '@/components/EaseCallKit/hooks'
 /* store */
 const store = useStore()
-/* constants */
-const { CHAT_TYPE } = messageType
 /**
  * 此处为Callkit中对外暴露的其内部对外抛出的事件通知，
  * 可通过引入useChannelEvent，订阅其通知处理一些UI层面的提示。

@@ -1,4 +1,5 @@
-const INFORM_NAME = {
+import { CHAT_TYPE } from './messageType'
+export const INFORM_NAME = {
     FRIEND_INVITE: '好友申请',
     FRIEND_BUILD: '已成为好友',
     FRIEND_DELETED: '好友关系解除',
@@ -20,7 +21,7 @@ const INFORM_NAME = {
     GROUP_UPDATE_INFO: '更新群组信息',
     GROUP_UPDATE_MEMBER_ATTRIBUTES: '群组成员属性更新'
 }
-const INFORM_TYPE = {
+export const INFORM_TYPE = {
     subscribe: INFORM_NAME.FRIEND_INVITE,
     subscribed: INFORM_NAME.FRIEND_BUILD,
     unsubscribed: INFORM_NAME.FRIEND_DELETED,
@@ -42,9 +43,9 @@ const INFORM_TYPE = {
     updateInfo: INFORM_NAME.GROUP_UPDATE_INFO,
     memberAttributesUpdate: INFORM_NAME.GROUP_UPDATE_MEMBER_ATTRIBUTES
 }
-const INFORM_FROM = {
-    FRIEND: 'friend',
-    GROUP: 'group'
+export const INFORM_FROM = {
+    FRIEND: CHAT_TYPE.SINGLE,
+    GROUP: CHAT_TYPE.GROUP
 }
 export default {
     INFORM_TYPE,

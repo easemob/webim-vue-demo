@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, nextTick, defineExpose, defineProps } from 'vue'
+import { ref, toRefs, defineExpose, defineProps } from 'vue'
 import CreateGroups from './createGroups.vue'
 import ApplyJoinGroups from './applyJoinGroups'
 import AddFriends from './addFriends.vue'
@@ -26,13 +26,6 @@ const showComponent = {
 const dialogVisible = ref(false)
 //open时 初始化个别子组件所需要的数据
 const settingComps = ref(null)
-const initCompData = () => {
-    if (modalType.value === 'createNewGroups') {
-        nextTick(() => {
-            settingComps.value && settingComps.value.handleRenderFiendList()
-        })
-    }
-}
 //手动控制dialog关闭
 const closeDialogVisible = () => (dialogVisible.value = false)
 defineExpose({
@@ -45,7 +38,6 @@ defineExpose({
         v-model="dialogVisible"
         :title="modalTitle[modalType]"
         width="500px"
-        @open="initCompData"
     >
         <!-- 动态组件 -->
         <component

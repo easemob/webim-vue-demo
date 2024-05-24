@@ -1,31 +1,53 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { EMClient } from '@/IM'
+import { CHAT_TYPE } from '@/IM/constant'
 import { useStore } from 'vuex'
 import router from '@/router'
 import { useRoute } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
-import { messageType } from '@/constant'
+import { useGetUserMapInfo } from '@/hooks'
 /* 组件 */
 // import UserStatus from '@/components/UserStatus'
 /* 单人头像 */
 import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png'
 import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png'
+import ContactsRemark from './ContactsRemark.vue'
 /* store */
 const store = useStore()
 /* route */
 const route = useRoute()
-const { CHAT_TYPE } = messageType
-//当前选中id的info
-const nowContactInfo = computed(() => {
-    if (route.query.chatType === CHAT_TYPE.SINGLE) {
-        return store.state.Contacts.friendList[route.query.id] ?? {}
+
+//取好友列表(主要使用好友下的用户属性相关)
+const friendList = computed(() => store.state.Contacts.friendList)
+
+//群组列表
+const joinedGroupList = computed(() => store.getters.getJoinedGroupList)
+const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo()
+const getContactsName = computed(() => {
+    const id = route.query.id
+    const chatType = route.query.chatType
+    if (chatType === CHAT_TYPE.SINGLE) {
+        return getContactsNickNameById(id)
     }
-    if (route.query.chatType === CHAT_TYPE.GROUP) {
-        return store.state.Contacts.groupList[route.query.id] ?? {}
+    if (chatType === CHAT_TYPE.GROUP) {
+        const groupDetail = joinedGroupList.value.find((gourpItem) => {
+            return gourpItem.groupId === id
+        })
+        return groupDetail?.groupName || groupDetail?.groupId
     }
 })
-
+const getContactsAvatar = computed(() => {
+    const id = route.query.id
+    const chatType = route.query.chatType
+    if (chatType === CHAT_TYPE.SINGLE) {
+        return getContactsAvatarById(id)
+    }
+    //群组暂使用默认群头像
+    if (chatType === CHAT_TYPE.GROUP) {
+        return defaultGroupAvatarUrl
+    }
+})
 /* 单人黑名单状态的处理 */
 const blackStatus = ref(false)
 const switchStatus = ref(false)
@@ -72,11 +94,16 @@ const changeBlackStatus = async () => {
 }
 
 /* 单人删除好友 */
-const delTheFriend = () => {
+const delTheFriend = async () => {
     if (!route.query.id) return
     const targetId = route.query.id
-    EMClient.deleteContact(targetId)
-    router.push('/chat/contacts')
+    try {
+        await EMClient.deleteContact(targetId)
+        store.commit('DELETE_CONTACTS_FROM_MAP', targetId)
+        router.push('/chat/contacts')
+    } catch (error) {
+        console.error('>>>>删除失败')
+    }
 }
 
 /* 进入会话 */
@@ -105,38 +132,21 @@ const toChatMessage = () => {
             <div class="contactInfo_main_card">
                 <div class="contactInfo_box">
                     <div class="avatar">
-                        <el-avatar
-                            class="avatar_img"
-                            v-if="$route.query.chatType === CHAT_TYPE.SINGLE"
-                            :src="
-                                nowContactInfo.avatarurl
-                                    ? nowContactInfo.avatarurl
-                                    : defaultSingleAvatar
-                            "
-                        >
-                        </el-avatar>
-                        <!-- <UserStatus :userStatus="nowContactInfo.userStatus && nowContactInfo.userStatus" /> -->
-                        <el-avatar
-                            class="avatar_img"
-                            v-if="$route.query.chatType === CHAT_TYPE.GROUP"
-                            :src="defaultGroupAvatarUrl"
-                        >
+                        <el-avatar class="avatar_img" :src="getContactsAvatar">
                         </el-avatar>
                     </div>
                     <div class="name">
-                        <p v-if="$route.query.chatType === CHAT_TYPE.SINGLE">
-                            {{
-                                nowContactInfo.nickname
-                                    ? `${nowContactInfo.nickname}(${nowContactInfo.hxId})`
-                                    : nowContactInfo.hxId
-                            }}
+                        <p>
+                            {{ getContactsName }}
                         </p>
-                        <p v-if="$route.query.chatType === CHAT_TYPE.GROUP">
+                    </div>
+                    <div class="contacts_id">
+                        <p>
                             {{
-                                nowContactInfo.groupname
-                                    ? `${nowContactInfo.groupname}(${nowContactInfo.groupid})`
-                                    : nowContactInfo.groupid
-                            }}
+                                $route.query.chatType === CHAT_TYPE.GROUP
+                                    ? '群组ID：'
+                                    : '好友ID：'
+                            }}{{ $route.query.id }}
                         </p>
                     </div>
                     <div class="func_box">
@@ -144,6 +154,9 @@ const toChatMessage = () => {
                             class="single_func"
                             v-if="$route.query.chatType === CHAT_TYPE.SINGLE"
                         >
+                            <ContactsRemark :userId="$route.query.id">
+                                <el-divider />
+                            </ContactsRemark>
                             <div class="add_black_list">
                                 <p>加入黑名单</p>
                                 <el-switch
@@ -239,10 +252,15 @@ const toChatMessage = () => {
                 }
 
                 .name {
+                    text-align: center;
                     margin-top: 15px;
                     font-size: 22px;
                 }
-
+                .contacts_id {
+                    text-align: center;
+                    margin-top: 15px;
+                    font-size: 13px;
+                }
                 .func_box {
                     width: 100%;
 

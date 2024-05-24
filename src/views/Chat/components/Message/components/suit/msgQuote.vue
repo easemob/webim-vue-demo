@@ -2,7 +2,7 @@
     <div v-if="isShowQuoteMsgBox" class="message_quote_container">
         <span> {{ msgQuote.msgSender || '' }}：</span>
         <div class="quote_from_content">
-            <template v-if="msgQuote.msgType === ALL_MESSAGE_TYPE.IMAGE">
+            <template v-if="msgQuote.msgType === MESSAGE_TYPE.IMAGE">
                 <el-image
                     v-show="quoteImageUrl.imageUrl"
                     style="width: 35px; height: 35px"
@@ -40,10 +40,11 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { useStore } from 'vuex'
-import messageType from '@/constant/messageType'
 import useGetUserMapInfo from '@/hooks/useGetUserMapInfo'
+import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant'
+import { SESSION_MESSAGE_TYPE } from '@/constant'
 const { getTheGroupNickNameById, getLoginNickNameById } = useGetUserMapInfo()
-const { ALL_MESSAGE_TYPE, SESSION_MESSAGE_TYPE, CHAT_TYPE } = messageType
+
 /* stores */
 const store = useStore()
 
@@ -77,11 +78,11 @@ const extractMessageBodyValue = (sourceMsg) => {
             sourceMsg.chatType === CHAT_TYPE.GROUP ? sourceMsg.to : ''
         msgQuote.msgSender = getTheGroupNickNameById(groupId, from)
     }
-    if (type === ALL_MESSAGE_TYPE.IMAGE) {
+    if (type === MESSAGE_TYPE.IMAGE) {
         quoteImageUrl.thumb = sourceMsg.thumb
         quoteImageUrl.imageUrl = sourceMsg.url
     }
-    if (type === ALL_MESSAGE_TYPE.TEXT) {
+    if (type === MESSAGE_TYPE.TEXT) {
         msgQuote.msgPreview = msgContent
     } else {
         msgQuote.msgPreview = SESSION_MESSAGE_TYPE[type]

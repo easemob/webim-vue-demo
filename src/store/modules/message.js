@@ -1,42 +1,102 @@
 import { EMClient } from '@/IM'
-import { setMessageKey, createMessage } from '@/utils/handleSomeData'
+import { setMessageKey } from '@/utils/handleSomeData'
 import _ from 'lodash'
-// import { ref, toRaw } from 'vue';
-import { messageType } from '@/constant'
+import {
+    MESSAGE_STATUS_TYPE,
+    CUSTOM_MESSAGE_TYPE,
+    CHANGE_MESSAGE_BODAY_TYPE,
+    CHAT_TYPE,
+    MAX_MESSAGE_LIST_COUNT
+} from '@/constant'
 import { usePlayRing } from '@/hooks'
-const { ALL_MESSAGE_TYPE, CHANGE_MESSAGE_BODAY_TYPE } = messageType
 const Message = {
     state: {
-        messageList: {}
+        messageList: {},
+        messageIdsCollection: {
+            // 'pfh':new Map(),
+            // 'pfh1':new Map(),
+        }
     },
     mutations: {
         UPDATE_MESSAGE_LIST: (state, msgBody) => {
-            const toUpdateMsgList = _.assign({}, state.messageList)
+            const { id: serverMsgId } = msgBody
             const listKey = setMessageKey(msgBody)
-            if (!toUpdateMsgList[listKey]) {
-                toUpdateMsgList[listKey] = []
-                _.unionBy(toUpdateMsgList[listKey].push(msgBody), (m) => m.id)
-            } else {
-                _.unionBy(toUpdateMsgList[listKey].push(msgBody), (m) => m.id)
+            if (!state.messageList[listKey]) {
+                state.messageList[listKey] = []
             }
-            state.messageList = toUpdateMsgList
+
+            state.messageList[listKey] = _.unionBy(
+                state.messageList[listKey],
+                [msgBody],
+                (m) => m.id
+            )
+            // 限制数组的长度为 MAX_MESSAGE_LIST_COUNT
+            if (state.messageList[listKey].length > MAX_MESSAGE_LIST_COUNT) {
+                state.messageList[listKey] = state.messageList[listKey].slice(
+                    -MAX_MESSAGE_LIST_COUNT
+                )
+            }
+            /**
+             * 暂只实现以单对单已读回执
+             * 群组已读回执可通过Reaction方案实现
+             */
+            if (
+                !state.messageIdsCollection[listKey] &&
+                msgBody.chatType === CHAT_TYPE.SINGLE
+            ) {
+                state.messageIdsCollection[listKey] = new Map()
+            }
+            if (
+                msgBody.from === EMClient.user &&
+                msgBody.chatType === CHAT_TYPE.SINGLE
+            ) {
+                state.messageIdsCollection[listKey].set(serverMsgId, {
+                    [MESSAGE_STATUS_TYPE.READ_STATUS]: false
+                })
+            }
         },
         UPDATE_HISTORY_MESSAGE: (state, payload) => {
-            const { listKey, historyMessage } = payload
-            const toUpdateMsgList = _.assign({}, state.messageList)
-            if (!toUpdateMsgList[listKey]) {
-                toUpdateMsgList[listKey] = []
-                _.unionBy(
-                    toUpdateMsgList[listKey].push(...historyMessage),
-                    (m) => m.id
-                )
-            } else {
-                _.unionBy(
-                    toUpdateMsgList[listKey].unshift(...historyMessage),
-                    (m) => m.id
-                )
+            const { listKey, historyMessageList } = payload
+            if (!state.messageList[listKey]) {
+                state.messageList[listKey] = []
             }
-            state.messageList = toUpdateMsgList
+            state.messageList[listKey] = _.unionBy(
+                historyMessageList,
+                state.messageList[listKey],
+                (m) => m.id
+            )
+        },
+        UPDATE_MESSAGE_IDS_COLLECTION: (state, payload) => {
+            const { id: serverMsgId, key, type } = payload
+            switch (type) {
+                case MESSAGE_STATUS_TYPE.READ_STATUS:
+                    {
+                        if (state.messageIdsCollection[key]) {
+                            state.messageIdsCollection[key].set(serverMsgId, {
+                                [MESSAGE_STATUS_TYPE.READ_STATUS]: true
+                            })
+                        }
+                    }
+                    break
+                case MESSAGE_STATUS_TYPE.CHANLE_STATUS:
+                    {
+                        if (state.messageIdsCollection[key]) {
+                            const READ_STATUS_KEY =
+                                MESSAGE_STATUS_TYPE.READ_STATUS
+                            // 直接使用Map的forEach方法
+                            state.messageIdsCollection[key].forEach(
+                                (value, key) => {
+                                    if (value[READ_STATUS_KEY] !== true) {
+                                        value[READ_STATUS_KEY] = true
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    break
+                default:
+                    break
+            }
         },
         //清除某条会话消息
         CLEAR_SOMEONE_MESSAGE: (state, payload) => {
@@ -114,6 +174,7 @@ const Message = {
                 EMClient.getHistoryMessages(options)
                     .then((res) => {
                         const { cursor, messages } = res
+
                         messages.length > 0 &&
                             messages.forEach((item) => {
                                 item.read = true
@@ -121,7 +182,7 @@ const Message = {
                         resolve({ messages, cursor })
                         commit('UPDATE_HISTORY_MESSAGE', {
                             listKey: id,
-                            historyMessage: _.reverse(messages)
+                            historyMessageList: _.reverse(messages)
                         })
                         if (!state.messageList[id]) {
                             //提示会话列表更新
@@ -136,34 +197,13 @@ const Message = {
                     })
             })
         },
-        //发送展示类型消息
-        sendShowTypeMessage: async ({ dispatch, commit }, params) => {
-            return new Promise((resolve, reject) => {
-                //主要作用为创建消息Options中附件会有上传失败的回调函数。
-                //传入errorCallback，让附件类型消息在上传失败时调用reject抛出error
-                const errorCallback = (error) => {
-                    reject(error)
-                }
-                const options = createMessage().createOptions(
-                    params,
-                    errorCallback
-                )
-                const msg = EMClient.Message.create(options)
-                EMClient.send(msg)
-                    .then((res) => {
-                        const { message } = res
-
-                        commit('UPDATE_MESSAGE_LIST', message)
-                        // 提示会话列表更新
-                        dispatch('updateLocalConversation', {
-                            conversationId: message.to,
-                            chatType: message.chatType
-                        })
-                        resolve('OK')
-                    })
-                    .catch((error) => {
-                        reject(error)
-                    })
+        //已发送展示类型消息
+        senedShowTypeMessage: async ({ dispatch, commit }, message) => {
+            commit('UPDATE_MESSAGE_LIST', message)
+            // 提示会话列表更新
+            dispatch('updateLocalConversation', {
+                conversationId: message.to,
+                chatType: message.chatType
             })
         },
         //添加通知类消息
@@ -176,8 +216,9 @@ const Message = {
                     msg:''
                 }
             */
+            console.log('first', params)
             const msgBody = _.cloneDeep(params)
-            msgBody.type = ALL_MESSAGE_TYPE.INFORM
+            msgBody.type = CUSTOM_MESSAGE_TYPE.INFORM
             const key = setMessageKey(params)
 
             commit('UPDATE_MESSAGE_LIST', msgBody)
@@ -268,6 +309,11 @@ const Message = {
                         reject(e)
                     })
             })
+        }
+    },
+    getters: {
+        getMessageIdsCollectionMap: (state) => (messageIdsCollectionKey) => {
+            return state.messageIdsCollection[messageIdsCollectionKey]
         }
     }
 }

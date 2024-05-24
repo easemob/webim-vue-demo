@@ -1,29 +1,33 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useStore } from 'vuex'
 import router from '@/router'
 import _ from 'lodash'
 /* 相关组件 */
 import SearchInput from '@/components/SearchInput'
 import Welcome from '@/components/Welcome'
-import FriendItem from './components/friendItem.vue'
-import GroupItem from './components/joinedGroupItem.vue'
+import FriendItem from './components/ContactsItem.vue'
+import JoinedGroupItem from './components/JoinedGroupsItem.vue'
 /* 头像相关 */
 import informIcon from '@/assets/images/avatar/inform.png'
 /* store */
 const store = useStore()
 //好友列表
-const friendList = computed(() => store.state.Contacts.friendList)
+const getContactsWithRemarkMap = computed(
+    () => store.getters.getContactsWithRemarkMap
+)
+//联系人列表数
+const contactsSize = computed(() => store.getters.getContactsWithRemarkMap.size)
 //群组列表
-const joinedGroupList = computed(() => store.state.Contacts.groupList)
-
-//搜索部分的总数据
-const searchData = computed(() => {
-    const totalsearchData = Object.assign(
-        _.cloneDeep(friendList.value),
-        _.cloneDeep(joinedGroupList.value)
-    )
-    return Object.values(totalsearchData)
+const joinedGroupList = computed(() => store.getters.getJoinedGroupList)
+//加入的群组总数
+const joinedGroupTotal = computed(() => store.getters.getJoinedGroupTotal)
+//搜索部分的总数据(合并好友数据以及群组列表数据为输入框搜索数据源)
+const searchInputSrourceData = computed(() => {
+    return [
+        ...getContactsWithRemarkMap.value.values(),
+        ...joinedGroupList.value
+    ]
 })
 //
 /* 路由跳转 */
@@ -34,7 +38,7 @@ const toInformDetails = () => {
 //跳转至 contactInfo
 const toContacts = ({ id, chatType }) => {
     router.push({
-        path: '/chat/contacts/contactInfo',
+        path: '/chat/contacts/contactInfos',
         query: { id: id, chatType: chatType }
     })
 }
@@ -51,6 +55,40 @@ const informDetail = computed(() => {
     const untreated = _.sumBy(informDetailArr, 'untreated') || 0
     return { untreated, lastInformDeatail }
 })
+
+/* 联系人折叠面板相关逻辑 */
+const CONTACTS_TYPE = {
+    FRIEND: '1',
+    GROUP: '2'
+}
+const activeName = ref(CONTACTS_TYPE.FRIEND)
+//处理滚动加载更多
+const loadingStatus = ref(false)
+const loadMore = async () => {
+    if (activeName.value === CONTACTS_TYPE.GROUP) {
+        loadingStatus.value = true
+        try {
+            store.dispatch('fetchJoinedGroupListFromServer')
+        } catch (error) {
+            console.log('>>>>>>>接口获取失败', error)
+        } finally {
+            loadingStatus.value = false
+        }
+    }
+}
+const scrollbarComp = ref(null)
+const onScrollToBottom = (event) => {
+    const { scrollTop } = event
+    // 获取滚动条的容器元素
+    const scrollWrap = scrollbarComp.value?.wrap$
+    // 检查滚动位置是否接近底部
+    const isNearBottom =
+        scrollWrap.scrollHeight - scrollTop <= scrollWrap.clientHeight + 1
+    if (isNearBottom) {
+        if (loadingStatus.value) return
+        loadMore()
+    }
+}
 </script>
 
 <template>
@@ -58,10 +96,16 @@ const informDetail = computed(() => {
         <el-aside class="contacts_box">
             <SearchInput
                 :searchType="'contacts'"
-                :searchData="searchData"
+                :searchData="searchInputSrourceData"
                 @toContacts="toContacts"
             />
-            <el-scrollbar class="contacts_collapse" tag="div" :always="false">
+            <el-scrollbar
+                ref="scrollbarComp"
+                class="contacts_collapse"
+                tag="div"
+                :always="false"
+                @scroll="onScrollToBottom"
+            >
                 <div class="offline_hint" v-if="!networkStatus">
                     <span class="plaint_icon">!</span>
                     网络不给力，请检查网络设置。
@@ -79,36 +123,36 @@ const informDetail = computed(() => {
                     </div>
                 </div>
 
-                <!-- 联系人群组列表 -->
-                <el-collapse>
+                <!-- 联系人列表 -->
+                <el-collapse v-model="activeName" accordion>
+                    <!-- 群组 -->
                     <el-collapse-item
-                        :title="`联系人 ( ${Object.keys(friendList).length} )`"
+                        :title="`群聊 ( ${joinedGroupTotal} )`"
+                        :name="CONTACTS_TYPE.GROUP"
                     >
-                        <template v-if="Object.keys(friendList).length > 0">
+                        <template v-if="joinedGroupList?.length > 0">
+                            <JoinedGroupItem @toContacts="toContacts" />
+                        </template>
+                        <template v-else>
+                            <el-empty description="暂无加入的群组..." />
+                        </template>
+                    </el-collapse-item>
+                    <!-- 好友 -->
+                    <el-collapse-item
+                        :title="`联系人 ( ${contactsSize} )`"
+                        :name="CONTACTS_TYPE.FRIEND"
+                    >
+                        <template v-if="contactsSize > 0">
                             <FriendItem @toContacts="toContacts" />
                         </template>
                         <template v-else>
                             <el-empty description="暂无联系人..." />
                         </template>
                     </el-collapse-item>
-                    <el-collapse-item
-                        :title="`群聊 ( ${
-                            Object.keys(joinedGroupList).length
-                        } )`"
-                    >
-                        <template
-                            v-if="Object.keys(joinedGroupList).length > 0"
-                        >
-                            <GroupItem @toContacts="toContacts" />
-                        </template>
-                        <template v-else>
-                            <el-empty description="暂无加入的群组..." />
-                        </template>
-                    </el-collapse-item>
                 </el-collapse>
             </el-scrollbar>
         </el-aside>
-        <el-main class="contacts_infors_main_box">
+        <el-main ref class="contacts_infors_main_box">
             <router-view></router-view>
             <Welcome />
         </el-main>
@@ -216,3 +260,4 @@ const informDetail = computed(() => {
     }
 }
 </style>
+./components/JoinedGroupsItem.vue./components/ContactsItem.vue

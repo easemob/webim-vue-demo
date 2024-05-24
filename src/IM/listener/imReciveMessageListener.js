@@ -1,9 +1,9 @@
 import { EMClient } from '../index'
-import { messageType } from '@/constant'
+import { CHAT_TYPE } from '../constant'
+import { CHANGE_MESSAGE_BODAY_TYPE } from '@/constant'
 import { setMessageKey } from '@/utils/handleSomeData'
 import store from '@/store'
 export const imReviceMessageListener = () => {
-    const { CHANGE_MESSAGE_BODAY_TYPE, CHAT_TYPE } = messageType
     //接收的消息往store中push
     const pushNewMessage = (message) => {
         store.dispatch('createNewMessage', message)

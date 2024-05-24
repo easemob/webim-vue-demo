@@ -1,26 +1,18 @@
 <script setup>
-import { ref, toRefs, toRaw, computed, watch } from 'vue'
+import { ref, toRefs, toRaw, computed, watch, onMounted } from 'vue'
 import { EMClient } from '@/IM'
-import {
-    CircleClose,
-    Search,
-    CircleCheckFilled,
-    Select
-} from '@element-plus/icons-vue'
-import { useGetUserMapInfo } from '@/hooks'
-/* 拼音排序好友列表 */
-import { sortPinyinFriendItem } from '@/utils/handleSomeData'
+import { Search, Minus, Plus, Select } from '@element-plus/icons-vue'
+import { useGetUserMapInfo, useSordedContactsWithPinyin } from '@/hooks'
 /* store */
 import store from '@/store'
 import _ from 'lodash'
-
-import defaultAvatar from '@/assets/images/avatar/theme2x.png'
+import { ElMessageBox } from 'element-plus'
 /* props */
 const props = defineProps({
-    groupDetail: {
-        type: Object,
+    groupId: {
+        type: String,
         required: true,
-        default: () => ({})
+        default: ''
     },
     memberRole: {
         type: Boolean,
@@ -28,27 +20,35 @@ const props = defineProps({
         default: false
     }
 })
-const { groupDetail, memberRole } = toRefs(props)
-/*
- * 此组件主要功能为邀请好友入群，
- * 以及简单的管理群成员（移出群成员）。
- * 中间涉及到一些权限判断，大量使用了 v-if 后续建议挪到计算属性中处理。
- **/
+const { groupId, memberRole } = toRefs(props)
+console.log('memberRole', memberRole.value)
 /* 当前登陆的id */
 const loginUserId = computed(() => EMClient.user)
 /* 数据获取 */
 //群组成员
-const groupMembers = computed(() => {
-    return store.state.Groups.groupsInfos[groupDetail.value.id].members
+const getGroupMembersList = computed(() => {
+    return store.getters.getGroupMembersMap.get(groupId.value)
 })
-
+onMounted(async () => {
+    if (!getGroupMembersList.value) {
+        store.dispatch('fetchGroupsMemberFromServer', groupId.value)
+    }
+})
+//群组详情
+const groupDetail = computed(() => {
+    return store.getters.getGroupDetailMap.get(groupId.value)
+})
 /* 群成员操作相关 */
 //获取id对应的昵称（群成员属性昵称>用户属性>环信id）
-const { getTheGroupNickNameById } = useGetUserMapInfo()
+const { getTheGroupNickNameById, getContactsAvatarById } = useGetUserMapInfo()
 const getNickNameById = (hxId) => {
-    const groupId = groupDetail.value.id
-    return getTheGroupNickNameById(groupId, hxId)
+    return getTheGroupNickNameById(groupId.value, hxId)
 }
+const getAvatarUrlById = computed(() => {
+    return (hxId) => {
+        return getContactsAvatarById(hxId)
+    }
+})
 const showGroupsMembersName = computed(() => {
     return (item) => {
         if (item.member) {
@@ -63,87 +63,86 @@ const showGroupsMembersName = computed(() => {
         }
     }
 })
-
-//待渲染的群成员
-const renderGroupMembers = ref(null)
-//选中要邀请的成员list
-const checkedInviteMembers = computed(() => {
-    const list = _.values(renderGroupMembers.value)
-    const toBeInviteList = list.length > 0 && list.filter((m) => m.isChecked)
-    return toBeInviteList
+//是否已在群中
+const isInGroupMemberList = (hxId) => {
+    return getGroupMembersList.value.some((m) => (m.member || m.owner) === hxId)
+}
+const { sortedFriendListWithRemark } = useSordedContactsWithPinyin()
+/**
+ * 是否容许邀请加群成员
+ * 涉及指标为2
+ * @param {Boolean} public 是否为公开群
+ * @param {Boolean} allowinvites 是否容许普通群组成员邀请人入群
+ * @description 在公开群中，只容许群主管理员邀请人入群，而私有群则可设置是否容许普通群成员邀请人加群。
+ */
+const isAllowedToInviteMember = computed(() => {
+    console.log('groupDetail', groupDetail.value)
+    if (groupDetail.value.public && memberRole.value) {
+        return true
+    }
+    if (groupDetail.value.public !== true && groupDetail.value.allowinvites) {
+        return true
+    }
+    if (!groupDetail.value.public && memberRole.value) {
+        return true
+    }
+    return false
 })
-//将原数据重新组建
-const sortedFriendList = computed(() => {
-    const sourceData = _.cloneDeep(store.state.Contacts.friendList)
-    for (const key in sourceData) {
-        if (Object.hasOwnProperty.call(sourceData, key)) {
-            const v = sourceData[key]
-            v.name = getNickNameById(v.hxId)
-            v.isChecked = false
-            v.exitTheGroup =
-                groupMembers.value &&
-                toRaw(groupMembers.value).some((m) => m.member === v.hxId)
-            v.keywords = `${v.hxId && v.hxId}${
-                (v.nickname && v.nickname) || ''
-            }`
+console.log('isAllowedToInviteMember', isAllowedToInviteMember.value)
+//邀请成员
+const inviteNewMemberInTheGroup = async (hxId) => {
+    ElMessageBox.confirm('确定要邀请该成员？', '邀请成员', {
+        confirmButtonText: '确认',
+        type: 'warning',
+        callback: async (action) => {
+            if (action === 'confirm') {
+                await store.dispatch('inviteUserJoinTheGroup', {
+                    users: hxId,
+                    groupId: groupId.value
+                })
+            }
         }
-    }
-    return sourceData
-})
-
-//监听到选择群id变化重新进行赋值
-watch(
-    () => groupDetail.value.id,
-    () => {
-        renderGroupMembers.value = sortedFriendList.value
-    },
-    {
-        immediate: true
-    }
-)
-
-//取消邀请
-const cancelCheck = (params) => {
-    renderGroupMembers.value[params].isChecked = false
+    })
 }
 //移出群成员
 const removeTheMember = async (params) => {
     const { member } = params
-    const groupId = groupDetail.value && groupDetail.value.id
-    store.dispatch('removeTheGroupMember', { username: member, groupId })
+    ElMessageBox.confirm('确定要移出该成员？', '移出群成员', {
+        confirmButtonText: '确认移出',
+        type: 'warning',
+        callback: async (action) => {
+            if (action === 'confirm') {
+                await store.dispatch('removeTheGroupMember', {
+                    username: member,
+                    groupId: groupId.value
+                })
+            }
+        }
+    })
 }
 /* 完成操作 */
-const saveHandleMembers = async () => {
-    if (checkedInviteMembers.value && checkedInviteMembers.value.length) {
-        const users = _.map(checkedInviteMembers.value, 'hxId')
-        const groupId = groupDetail.value && groupDetail.value.id
-        await store.dispatch('inviteUserJoinTheGroup', { users, groupId })
-    }
-}
 
 /* 搜索逻辑 */
 //创建用户搜索部分
 const serachInputValue = ref('')
-const isShowSearchContent = ref(false) //控制检索内容显隐
 const searchResultList = ref([])
-const searchUsers = () => {
-    if (serachInputValue.value) {
-        isShowSearchContent.value = true
-        const resultArr = _.filter(sortedFriendList.value, (v) =>
-            v.keywords.includes(serachInputValue.value)
-        )
-        searchResultList.value = resultArr
-    } else {
-        return (isShowSearchContent.value = false)
-    }
+const searchUsers = (keyword) => {
+    let _searchResultList = []
+    const searchSourceData = _.flatMap(
+        _.values(sortedFriendListWithRemark.value)
+    )
+    searchSourceData.forEach((item) => {
+        const str = item.userId + item.remark
+        if (str.includes(keyword)) {
+            _searchResultList.push(item)
+        }
+    })
+    searchResultList.value = _searchResultList
 }
-
-//抛出保存方法
-defineExpose({ saveHandleMembers })
 </script>
 <template>
     <div class="taboo_box">
-        <div class="taboo_left">
+        <div class="taboo_left" v-if="getGroupMembersList">
             <!-- 搜索栏 -->
             <div class="search_friend_box">
                 <el-input
@@ -154,190 +153,165 @@ defineExpose({ saveHandleMembers })
                     :prefix-icon="Search"
                 >
                 </el-input>
-
-                <el-scrollbar
-                    v-if="isShowSearchContent"
-                    class="search_friend_box_content"
-                    tag="div"
-                >
-                    <div
-                        v-for="(item, index) in searchResultList"
-                        :key="item.name"
-                    >
-                        <div class="friend_user_list">
-                            <div class="friend_user_list_left">
-                                <el-avatar :src="defaultAvatar"></el-avatar>
-                                <b class="friend_list_username">{{
-                                    `${item.name}(${item.hxId})`
-                                }}</b>
-                            </div>
-                            <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
-                            <el-icon
-                                v-if="!groupDetail.public || memberRole"
-                                class="checked_btn"
-                            >
-                                <template v-if="!item.exitTheGroup">
-                                    <div
-                                        @click="
-                                            searchResultList[index].isChecked =
-                                                !searchResultList[index]
-                                                    .isChecked
-                                        "
-                                    >
-                                        <CircleCheckFilled
-                                            v-if="item.isChecked"
-                                            class="checked_icon"
-                                        />
-                                        <span
-                                            v-else
-                                            class="unChecked_icon"
-                                        ></span>
-                                    </div>
-                                </template>
-                                <template v-if="item.exitTheGroup">
-                                    <Select />
-                                </template>
-                            </el-icon>
-                        </div>
-                        <el-divider style="margin: 12px 0" />
-                    </div>
-                </el-scrollbar>
             </div>
             <el-row
                 style="height: 100%; margin-top: 5px"
-                v-if="renderGroupMembers"
+                v-if="sortedFriendListWithRemark"
             >
                 <el-col :span="24" class="friend_user_list_box">
                     <el-scrollbar>
-                        <div
-                            v-for="(
-                                sortedItem, key, index
-                            ) in sortPinyinFriendItem(renderGroupMembers)"
-                            :key="sortedItem + index"
-                        >
-                            <div class="title">
-                                {{ key === ' ' ? '#' : key.toUpperCase() }}
-                            </div>
-                            <template
-                                v-for="(item, index) in sortedItem"
-                                :key="item.name + index"
+                        <!-- 普通展示模式 -->
+                        <template v-if="!serachInputValue">
+                            <div
+                                v-for="(
+                                    sortedItem, key
+                                ) in sortedFriendListWithRemark"
+                                :key="key"
                             >
-                                <div>
+                                <div class="title">
+                                    {{ key === ' ' ? '#' : key.toUpperCase() }}
+                                </div>
+
+                                <div
+                                    v-for="item in sortedItem"
+                                    :key="item.userId"
+                                >
                                     <div class="friend_user_list">
                                         <div class="friend_user_list_left">
                                             <el-avatar
-                                                :src="defaultAvatar"
+                                                :src="
+                                                    getAvatarUrlById(
+                                                        item.userId
+                                                    )
+                                                "
                                             ></el-avatar>
                                             <b class="friend_list_username">{{
-                                                `${item.name}(${item.hxId})`
+                                                `${
+                                                    item?.remark || item?.userId
+                                                }`
                                             }}</b>
                                         </div>
                                         <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
-                                        <el-icon
-                                            v-if="
-                                                !groupDetail.public ||
-                                                memberRole
-                                            "
-                                            class="checked_btn"
+                                        <template
+                                            v-if="isAllowedToInviteMember"
                                         >
-                                            <template v-if="!item.exitTheGroup">
-                                                <div
-                                                    @click="
-                                                        sortedItem[
-                                                            index
-                                                        ].isChecked =
-                                                            !sortedItem[index]
-                                                                .isChecked
-                                                    "
-                                                >
-                                                    <CircleCheckFilled
-                                                        v-if="item.isChecked"
-                                                        class="checked_icon"
-                                                    />
-                                                    <span
-                                                        v-else
-                                                        class="unChecked_icon"
-                                                    ></span>
-                                                </div>
-                                            </template>
-                                            <template v-if="item.exitTheGroup">
+                                            <el-button
+                                                v-if="
+                                                    !isInGroupMemberList(
+                                                        item.userId
+                                                    )
+                                                "
+                                                type="primary"
+                                                :icon="Plus"
+                                                circle
+                                                size="small"
+                                                @click="
+                                                    inviteNewMemberInTheGroup(
+                                                        item.userId
+                                                    )
+                                                "
+                                            ></el-button>
+                                            <el-icon v-else class="checked_btn">
                                                 <Select />
-                                            </template>
-                                        </el-icon>
+                                            </el-icon>
+                                        </template>
                                     </div>
                                 </div>
-                            </template>
-                        </div>
+                            </div>
+                        </template>
+                        <!-- 搜索模式 -->
+                        <template v-else>
+                            <div
+                                v-for="item in searchResultList"
+                                :key="item.userId"
+                            >
+                                <div class="friend_user_list">
+                                    <div class="friend_user_list_left">
+                                        <el-avatar
+                                            :src="getAvatarUrlById(item.userId)"
+                                        ></el-avatar>
+                                        <b class="friend_list_username">{{
+                                            `${item?.remark || item?.userId}`
+                                        }}</b>
+                                    </div>
+                                    <template
+                                        v-if="!groupDetail.public && memberRole"
+                                    >
+                                        <el-button
+                                            v-if="
+                                                !isInGroupMemberList(
+                                                    item.userId
+                                                )
+                                            "
+                                            type="primary"
+                                            :icon="Plus"
+                                            circle
+                                            size="small"
+                                            @click="
+                                                inviteNewMemberInTheGroup(
+                                                    item.userId
+                                                )
+                                            "
+                                        ></el-button>
+                                        <el-icon v-else class="checked_btn">
+                                            <Select />
+                                        </el-icon>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
                     </el-scrollbar>
                 </el-col>
             </el-row>
         </div>
-        <div class="taboo_right">
+        <div
+            class="taboo_right"
+            v-if="getGroupMembersList && getGroupMembersList.length > 0"
+        >
             <el-scrollbar>
-                <div
-                    class="group_members_handle_box"
-                    v-if="groupMembers.length"
-                >
+                <div class="group_members_handle_box">
                     <p class="title">
                         群成员
                         {{
-                            `${groupMembers.length}/${
+                            `${getGroupMembersList.length}/${
                                 groupDetail.maxusers || '500'
                             }`
                         }}
                     </p>
                     <div class="now_exit_group_members">
                         <div
-                            v-for="(item, index) in groupMembers"
-                            :key="item.member"
+                            v-for="item in getGroupMembersList"
+                            :key="item.member || item.owner"
                         >
                             <div class="friend_user_list">
                                 <div class="friend_user_list_left">
-                                    <el-avatar :src="defaultAvatar"></el-avatar>
+                                    <el-avatar
+                                        :src="
+                                            getContactsAvatarById(
+                                                item.member || item.owner
+                                            )
+                                        "
+                                    ></el-avatar>
                                     <b class="friend_list_username">{{
                                         showGroupsMembersName(item)
                                     }}</b>
                                 </div>
-                                <el-icon
-                                    v-if="memberRole"
-                                    class="checked_btn"
+
+                                <el-button
+                                    v-if="
+                                        memberRole &&
+                                        (item.member || item.owner) !==
+                                            loginUserId
+                                    "
+                                    type="danger"
+                                    :icon="Minus"
+                                    circle
+                                    size="small"
                                     @click="removeTheMember(item)"
-                                >
-                                    <CircleClose
-                                        class="checked_btn circle_close"
-                                    />
-                                </el-icon>
+                                />
                             </div>
                         </div>
                     </div>
-                    <template v-if="checkedInviteMembers.length > 0">
-                        <p class="title">
-                            邀请 {{ checkedInviteMembers.length }}
-                        </p>
-                        <div class="checked_invite_members">
-                            <div
-                                v-for="(item, index) in checkedInviteMembers"
-                                :key="item.hxId"
-                            >
-                                <div class="friend_user_list">
-                                    <div class="friend_user_list_left">
-                                        <el-avatar
-                                            :src="defaultAvatar"
-                                        ></el-avatar>
-                                        <b class="friend_list_username">{{
-                                            item.hxId
-                                        }}</b>
-                                    </div>
-                                    <el-icon
-                                        class="checked_btn"
-                                        @click="cancelCheck(item.hxId)"
-                                    >
-                                        <CircleClose class="checked_btn" />
-                                    </el-icon>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
                 </div>
             </el-scrollbar>
         </div>
@@ -364,24 +338,19 @@ defineExpose({ saveHandleMembers })
 .taboo_left {
     // flex: 5;
     text-align: center;
-    width: 420px;
+    width: 50%;
     max-height: 466px;
     min-height: 266px;
     overflow: hidden;
     border-right: 1px solid #dcdfe6;
-    padding: 0 12px 0 0;
-    box-sizing: border-box;
 
     .friend_user_list_box {
         height: calc(100% - 36px);
         width: 100%;
-        overflow: auto;
-        padding: 15px 0;
+        // overflow: auto;
+        box-sizing: border-box;
+        padding: 15px 10px;
     }
-}
-
-.search_friend_input {
-    height: 36px;
 }
 
 :deep(.el-input__prefix) {
@@ -389,7 +358,7 @@ defineExpose({ saveHandleMembers })
 }
 
 .taboo_right {
-    width: 420px;
+    width: 50%;
     max-height: 466px;
     min-height: 266px;
     overflow: hidden;
@@ -406,25 +375,6 @@ defineExpose({ saveHandleMembers })
 
     .now_exit_group_members {
         width: 100%;
-    }
-
-    .checked_invite_members {
-        width: 100%;
-    }
-}
-
-.search_friend_box {
-    position: relative;
-
-    .search_friend_box_content {
-        position: absolute;
-        left: 0;
-        top: 37px;
-        width: 100%;
-        height: 430px;
-        overflow-y: auto;
-        background: #fff;
-        z-index: 99;
     }
 }
 

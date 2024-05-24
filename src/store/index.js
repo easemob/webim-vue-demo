@@ -3,7 +3,7 @@ import { EMClient } from '@/IM'
 import Conversation from './modules/conversation'
 import Contacts from './modules/contacts'
 import Message from './modules/message'
-import Groups from './modules/goups'
+import Groups from './modules/groups'
 export default createStore({
     state: {
         loginState: false,
@@ -59,7 +59,7 @@ export default createStore({
                     statusType ? statusType : 'Unset'
                 )
             } else {
-                commit('SET_FRIEND_PRESENCE', [{ ...status }])
+                commit('SET_CONTACTS_PRESENCE_TO_MAP', [{ ...status }])
             }
         }
     },

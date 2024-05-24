@@ -1,10 +1,8 @@
 /* 构建inform通知 */
-import { informType } from '@/constant'
+import { INFORM_FROM, INFORM_TYPE } from '@/constant'
 import { EMClient } from '@/IM'
-const { INFORM_FROM, INFORM_TYPE } = informType
 export default function (fromType, informContnet) {
     const { type, from, to, status } = informContnet
-
     if (fromType === INFORM_FROM.FRIEND) {
         let informBody = {}
         //除 type 为subscribe 需要增加一些特别属性值，其他好友通知均为默认格式
