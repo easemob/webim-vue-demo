@@ -19,12 +19,6 @@ const handleRelogin = async () => {
             username: loginUserFromStorage.user,
             accessToken: loginUserFromStorage.accessToken
         })
-
-        ElMessage({
-            type: 'success',
-            center: true,
-            message: '登录成功'
-        })
     } catch (error) {
         ElMessage({
             type: 'error',
