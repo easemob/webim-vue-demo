@@ -1,13 +1,13 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useStore } from 'vuex'
 import router from '@/router'
 import _ from 'lodash'
 /* 相关组件 */
 import SearchInput from '@/components/SearchInput'
 import Welcome from '@/components/Welcome'
-import FriendItem from './components/FriendItem.vue'
-import JoinedGroupItem from './components/JoinedGroupItem.vue'
+import FriendItem from './components/ContactsItem.vue'
+import JoinedGroupItem from './components/JoinedGroupsItem.vue'
 /* 头像相关 */
 import informIcon from '@/assets/images/avatar/inform.png'
 /* store */
@@ -38,7 +38,7 @@ const toInformDetails = () => {
 //跳转至 contactInfo
 const toContacts = ({ id, chatType }) => {
     router.push({
-        path: '/chat/contacts/contactInfo',
+        path: '/chat/contacts/contactInfos',
         query: { id: id, chatType: chatType }
     })
 }
@@ -260,3 +260,4 @@ const onScrollToBottom = (event) => {
     }
 }
 </style>
+./components/JoinedGroupsItem.vue./components/ContactsItem.vue

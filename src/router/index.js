@@ -77,10 +77,10 @@ const routes = [
                             import('../views/Chat/components/InformDetails')
                     },
                     {
-                        path: 'contactInfo',
+                        path: 'contactInfos',
                         component: () =>
                             import(
-                                '../views/Chat/components/Contacts/components/ContactInfo.vue'
+                                '../views/Chat/components/Contacts/components/ContactInfos.vue'
                             )
                     }
                 ]

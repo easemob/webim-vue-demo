@@ -75,7 +75,7 @@ const handleClickBtn = ({ informData, index, type }) => {
                     })
                     //同意之后跳转至对应的群组详情
                     router.push({
-                        path: '/chat/contacts/contactInfo',
+                        path: '/chat/contacts/contactInfos',
                         query: {
                             id: informData.groupId,
                             chatType: CHAT_TYPE.GROUP

@@ -159,7 +159,7 @@ EMClient.open({ username: '', password: '' })
 > 在联系人中展示登录用户的好友关系列表以及加入的群组列表。
 
 -   [联系人组件](./src/views/Chat/components/Contacts/index.vue)
--   [联系人详情](./src/views/Chat/components/Contacts/components/ContactInfo.vue)
+-   [联系人详情](./src/views/Chat/components/Contacts/components/ContactInfos.vue)
 -   [联系人搜索](./src/components/SearchInput/index.vue)
 
 ## NavBar
