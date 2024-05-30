@@ -5,7 +5,7 @@
 ## 前提条件
 
 开始前，确保你的开发环境满足如下条件：
-- 熟悉命令行
+- 已安装 [Node.js](https://nodejs.org/)
 - 即时通讯 IM 项目和 App Key。
 
 ## 操作步骤
@@ -15,7 +15,7 @@
 Vue 提供了一个方便的命令行工具来快速构建应用程序。确保你的当前工作目录正是打算创建项目的目录。在命令行中运行以下命令 
 
 ```bash
-	npm init vue@latest
+npm init vue@latest
 ```
 
 此命令将引导您完成创建新项目时的选项。下面列出了本教程使用的设置。
@@ -238,5 +238,5 @@ const switchTheme = () => {
 # 相关参考
 - [示例项目源码](https://github.com/easemob/webim-vue-demo/tree/chat-uikit-vue-demo)
 - [组件库源码](https://github.com/easemob/Easemob-UIKit-web)
-- [其他示例 demo](https://github.com/easemob/Easemob-UIKit-web/demo)
+- [其他示例 demo](https://github.com/easemob/easemob-uikit-react/tree/main/demo)
 - [`UIKitProvider` 文档](https://doc.easemob.com/uikit/chatuikit/web/chatuikit_provider.html)
