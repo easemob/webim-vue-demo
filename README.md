@@ -236,7 +236,7 @@ const switchTheme = () => {
 <img src="./WechatIMG519.jpg" alt="uikit" width="500px">
 
 # 相关参考
-- [示例项目源码]()
+- [示例项目源码](https://github.com/easemob/webim-vue-demo/tree/chat-uikit-vue-demo)
 - [组件库源码](https://github.com/easemob/Easemob-UIKit-web)
 - [其他示例 demo](https://github.com/easemob/Easemob-UIKit-web/demo)
 - [`UIKitProvider` 文档](https://doc.easemob.com/uikit/chatuikit/web/chatuikit_provider.html)
