@@ -7,7 +7,7 @@ const centerDialogVisible = ref(false)
 const webimConfig = useStorage('webimConfig', {
     appKey: '',
     isPrivate: false,
-    imWebsocketServer: '',
+    imServer: '',
     port: '',
     restServer: ''
 })
@@ -15,7 +15,7 @@ const configRef = ref(null)
 const configForm = ref({
     appKey: '',
     isPrivate: false,
-    imWebsocketServer: '',
+    imServer: '',
     port: '',
     restServer: ''
 })
@@ -79,12 +79,12 @@ defineExpose({ centerDialogVisible })
             </el-form-item>
             <el-form-item
                 v-if="configForm.isPrivate"
-                prop="imWebsocketServer"
+                prop="imServer"
                 label="IM服务器地址"
             >
                 <el-input
-                    v-model="configForm.imWebsocketServer"
-                    placeholder="//im-api-v2.easemob.com/websocket"
+                    v-model="configForm.imServer"
+                    placeholder="//im-api-v2.easemob.com/ws"
                 />
             </el-form-item>
             <el-form-item

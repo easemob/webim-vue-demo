@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 import { EMClient } from '@/IM'
-import { useStorage } from '@vueuse/core'
 import CustomImConfig from '@/views/Login/components/CustomImConfig'
 import LoginInput from './components/LoginInput'
 import RegisterInput from './components/RegisterInput'
@@ -24,48 +23,11 @@ const toEasemob = () => {
 }
 
 //服务配置
-const isShowCustomServerConfig = useStorage(
-    'IM_IS_OPEN_CUSTOM_SERVER_CONFIG',
-    false
-)
 const customImConfig = ref(null)
-const showCustomImConfigModal = () => {
-    customImConfig.value.centerDialogVisible = true
-}
+// const showCustomImConfigModal = () => {
+//   customImConfig.value.centerDialogVisible = true
+// }
 
-//触发条件
-let clickCount = 0 // 计数器，记录点击次数
-let lastClickTime = 0 // 记录最后一次点击的时间
-const triggeredMethod = () => {
-    console.log('方法被触发')
-    isShowCustomServerConfig.value = !isShowCustomServerConfig.value
-    window.localStorage.setItem(
-        'IM_IS_OPEN_CUSTOM_SERVER_CONFIG',
-        isShowCustomServerConfig.value
-    )
-}
-const onClickVersion = () => {
-    const currentTime = Date.now() // 获取当前时间戳
-    // 检查是否是第一次点击，或者两次点击之间的间隔是否超过了3秒
-    if (lastClickTime === 0 || currentTime - lastClickTime < 3000) {
-        clickCount++ // 增加点击次数
-        lastClickTime = currentTime // 更新最后一次点击时间
-        // 如果在3秒内点击了5次，则触发方法
-        if (clickCount >= 5) {
-            triggeredMethod() // 触发方法
-            resetCounter() // 重置计数器
-            //浏览器主动刷新
-            window.location.reload()
-        }
-    } else {
-        // 如果两次点击间隔超过3秒，重置计数器
-        resetCounter()
-    }
-}
-const resetCounter = () => {
-    clickCount = 0
-    lastClickTime = 0
-}
 //SDK-Version
 const IM_SDK_VERSION = EMClient.version
 </script>
@@ -92,12 +54,7 @@ const IM_SDK_VERSION = EMClient.version
                     <el-col v-show="showComponent !== 2">
                         <div class="function_button_extra">
                             <!-- <el-link class="reset_password" @click="showComponent = 2">重置密码</el-link> -->
-                            <el-link
-                                v-if="isShowCustomServerConfig"
-                                class="custom_config"
-                                @click="showCustomImConfigModal"
-                                >服务器配置</el-link
-                            >
+                            <!-- <el-link class="custom_config" @click="showCustomImConfigModal">服务器配置</el-link> -->
                             <!-- <p class="login_text">
                 <span class="login_text_isuserid" v-show="showComponent === 0">没有账号？</span>
                 <span class="login_text_isuserid" v-show="showComponent === 1">已有账号？</span>
@@ -111,11 +68,9 @@ const IM_SDK_VERSION = EMClient.version
         </el-main>
         <el-footer>
             <div class="copyright">
-                Copyright © easemob Web IM SDK版本号：<span
-                    @click="onClickVersion"
-                >
-                    {{ IM_SDK_VERSION ? IM_SDK_VERSION : '4.x' }}</span
-                >
+                Copyright © easemob Web IM SDK版本号：{{
+                    IM_SDK_VERSION ? IM_SDK_VERSION : '4.x'
+                }}
             </div>
         </el-footer>
         <CustomImConfig ref="customImConfig" />

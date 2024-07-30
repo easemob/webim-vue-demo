@@ -1,13 +1,11 @@
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useStorage } from '@vueuse/core'
 import { EMClient } from '@/IM'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { fetchUserLoginSmsCode, fetchUserLoginToken } from '@/api/login'
 import { useStore } from 'vuex'
 import { usePlayRing } from '@/hooks'
-import EmLoginWithPasswordLogin from './emloginWithPasswordLogin.vue'
 const store = useStore()
 const loginValue = reactive({
     phoneNumber: '',
@@ -133,60 +131,51 @@ const startCountDown = () => {
         }
     }, 1000)
 }
-const IM_IS_OPEN_CUSTOM_SERVER_CONFIG = useStorage(
-    'IM_IS_OPEN_CUSTOM_SERVER_CONFIG',
-    {}
-)
 </script>
 
 <template>
-    <EmLoginWithPasswordLogin v-if="IM_IS_OPEN_CUSTOM_SERVER_CONFIG" />
-    <template v-else>
-        <el-form :model="loginValue" :rules="rules">
-            <el-form-item prop="phoneNumber">
-                <el-input
-                    class="login_input_style"
-                    v-model="loginValue.phoneNumber"
-                    placeholder="手机号"
-                    clearable
-                />
-            </el-form-item>
-            <el-form-item prop="smsCode">
-                <el-input
-                    class="login_input_style"
-                    v-model="loginValue.smsCode"
-                    placeholder="请输入短信验证码"
-                >
-                    <template #append>
-                        <el-button
-                            type="primary"
-                            :disabled="
-                                loginValue.phoneNumber && isSenedAuthCode
-                            "
-                            @click="sendMessageAuthCode"
-                            v-text="
-                                isSenedAuthCode
-                                    ? `${authCodeNextCansendTime}S`
-                                    : '获取验证码'
-                            "
-                        ></el-button>
-                    </template>
-                </el-input>
-            </el-form-item>
-            <el-form-item>
-                <div class="function_button_box">
+    <el-form :model="loginValue" :rules="rules">
+        <el-form-item prop="phoneNumber">
+            <el-input
+                class="login_input_style"
+                v-model="loginValue.phoneNumber"
+                placeholder="手机号"
+                clearable
+            />
+        </el-form-item>
+        <el-form-item prop="smsCode">
+            <el-input
+                class="login_input_style"
+                v-model="loginValue.smsCode"
+                placeholder="请输入短信验证码"
+            >
+                <template #append>
                     <el-button
-                        v-if="loginValue.phoneNumber && loginValue.smsCode"
-                        class="haveValueBtn"
-                        :loading="buttonLoading"
-                        @click="loginIM"
-                        >登录</el-button
-                    >
-                    <el-button v-else class="notValueBtn">登录</el-button>
-                </div>
-            </el-form-item>
-        </el-form>
-    </template>
+                        type="primary"
+                        :disabled="loginValue.phoneNumber && isSenedAuthCode"
+                        @click="sendMessageAuthCode"
+                        v-text="
+                            isSenedAuthCode
+                                ? `${authCodeNextCansendTime}S`
+                                : '获取验证码'
+                        "
+                    ></el-button>
+                </template>
+            </el-input>
+        </el-form-item>
+        <el-form-item>
+            <div class="function_button_box">
+                <el-button
+                    v-if="loginValue.phoneNumber && loginValue.smsCode"
+                    class="haveValueBtn"
+                    :loading="buttonLoading"
+                    @click="loginIM"
+                    >登录</el-button
+                >
+                <el-button v-else class="notValueBtn">登录</el-button>
+            </div>
+        </el-form-item>
+    </el-form>
 </template>
 
 <style lang="scss" scoped>
