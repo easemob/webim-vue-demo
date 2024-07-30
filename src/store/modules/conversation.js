@@ -211,7 +211,9 @@ const Conversation = {
                     .filter({ conversationType: CHAT_TYPE.GROUP })
                     .map('conversationId')
                     .value()
-                dispatch('fetchGroupDetailFromServer', groupConversationIds)
+                if (groupConversationIds.length) {
+                    dispatch('fetchGroupDetailFromServer', groupConversationIds)
+                }
             } catch (error) {
                 console.error('获取会话列表失败', error)
             }

@@ -40,8 +40,8 @@ const getGroupDetailFromGroupList = computed(() => {
 const memberRole = computed(() => {
     //判断是否在权限名单内
     if (
-        getGroupDetailFromGroupList.value.role === GROUP_ROLE_TYPE.ADMIN ||
-        getGroupDetailFromGroupList.value.role === GROUP_ROLE_TYPE.OWNER
+        getGroupDetailFromGroupList.value?.role === GROUP_ROLE_TYPE.ADMIN ||
+        getGroupDetailFromGroupList.value?.role === GROUP_ROLE_TYPE.OWNER
     ) {
         return true
     } else {
