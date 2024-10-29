@@ -80,10 +80,10 @@ const scrollbarComp = ref(null)
 const onScrollToBottom = (event) => {
     const { scrollTop } = event
     // 获取滚动条的容器元素
-    const scrollWrap = scrollbarComp.value?.wrap$
+    const scrollWrap = scrollbarComp.value?.wrapRef
     // 检查滚动位置是否接近底部
     const isNearBottom =
-        scrollWrap.scrollHeight - scrollTop <= scrollWrap.clientHeight + 1
+        scrollWrap?.scrollHeight - scrollTop <= scrollWrap?.clientHeight + 1
     if (isNearBottom) {
         if (loadingStatus.value) return
         loadMore()
