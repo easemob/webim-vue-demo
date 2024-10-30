@@ -211,7 +211,6 @@ const Groups = {
         //从服务端获取群组详情
         fetchGroupDetailFromServer: async ({ commit }, groupIds = []) => {
             console.log('>>>>>>groupIds', groupIds)
-            if (groupIds.length === 0) throw new Error('群组id不能为空')
             let groupDetails = []
             async function fetchDetailsForGroupIds(groupIdArray) {
                 try {
