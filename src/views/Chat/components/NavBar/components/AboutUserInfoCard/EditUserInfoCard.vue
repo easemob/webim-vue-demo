@@ -86,11 +86,12 @@ defineExpose({
 </script>
 <template>
     <el-dialog
-        custom-class="edit_userinfo_diglog"
+        class="edit_userinfo_diglog"
         v-model="dialogVisible"
         width="366px"
         :show-close="false"
         :destroy-on-close="true"
+        :append-to-body="false"
         @close="initUserInfosDiglog"
         @open="setUserInfos"
     >
@@ -193,9 +194,9 @@ defineExpose({
                                     v-model="userInfos.gender"
                                     size="small"
                                 >
-                                    <el-radio label="0">保密</el-radio>
-                                    <el-radio label="1">男</el-radio>
-                                    <el-radio label="2">女</el-radio>
+                                    <el-radio :value="'0'">保密</el-radio>
+                                    <el-radio :value="'1'">男</el-radio>
+                                    <el-radio :value="'2'">女</el-radio>
                                 </el-radio-group>
                             </span>
                         </div>
@@ -270,7 +271,11 @@ defineExpose({
         </template>
     </el-dialog>
 </template>
-
+<style>
+.edit_userinfo_diglog {
+    padding: 0;
+}
+</style>
 <style lang="scss" scoped>
 .infor_header {
     width: 100%;
