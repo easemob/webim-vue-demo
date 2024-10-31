@@ -1,5 +1,5 @@
 <script setup>
-import { computed, toRefs, defineEmits } from 'vue'
+import { computed, toRefs } from 'vue'
 import { ANSWER_TYPE, CALL_INVITE_TEXT } from './constants'
 /* images */
 import avatarIcon from '@/assets/callkit/avatar-big@2x.png'

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineEmits } from 'vue'
+import { ref, computed } from 'vue'
 import { useStore } from 'vuex'
 import dateFormater from '@/utils/dateFormater'
 import { CHAT_TYPE } from '@/IM/constant'

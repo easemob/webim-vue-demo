@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, computed, onMounted, onUpdated, defineProps } from 'vue'
+import { ref, toRefs, computed, onMounted, onUpdated } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { MENTION_ALL } from '@/constant'
 import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant'

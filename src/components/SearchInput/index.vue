@@ -1,13 +1,5 @@
 <script setup>
-import {
-    ref,
-    toRaw,
-    toRefs,
-    watch,
-    computed,
-    defineProps,
-    defineEmits
-} from 'vue'
+import { ref, toRaw, toRefs, watch, computed } from 'vue'
 import { EMClient } from '@/IM'
 import { CHAT_TYPE, MESSAGE_TYPE } from '@/IM/constant'
 import { Search } from '@element-plus/icons-vue'

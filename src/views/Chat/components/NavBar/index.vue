@@ -79,14 +79,12 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false))
 
 /* 新建功能部分 */
 const settingComp = ref(null)
-const settingPopover = ref(null)
 const modalType = ref('')
 const isShowPopover = ref(false)
 //新建功能相关icon
 const createGroupIcon = require('@/assets/images/tabbar/1461654066965_.pic.jpg')
 const applyJoinGroupIcon = require('@/assets/images/tabbar/1471654067125_.pic.jpg')
 const applyAddFriendIcon = require('@/assets/images/tabbar/1481654067168_.pic.jpg')
-onClickOutside(settingPopover, () => (isShowPopover.value = false))
 const showInputModal = (type) => {
     modalType.value = type
     settingComp.value.dialogVisible = true
@@ -170,9 +168,22 @@ const toSendFeedback = () => window.open('mailto:yunying@easemob.com')
             trigger="click"
         >
             <template #reference>
-                <el-icon @click="isShowPopover = true">
-                    <Plus />
-                </el-icon>
+                <div class="more_settings_icon">
+                    <svg
+                        width="35"
+                        height="35"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            clip-rule="evenodd"
+                            d="M12.75 3.75391C12.75 3.33969 12.4142 3.00391 12 3.00391C11.5858 3.00391 11.25 3.33969 11.25 3.75391V11.252H3.75195C3.33774 11.252 3.00195 11.5877 3.00195 12.002C3.00195 12.4162 3.33774 12.752 3.75195 12.752H11.25V20.25C11.25 20.6642 11.5858 21 12 21C12.4142 21 12.75 20.6642 12.75 20.25V12.752H20.248C20.6623 12.752 20.998 12.4162 20.998 12.002C20.998 11.5877 20.6623 11.252 20.248 11.252H12.75V3.75391Z"
+                            fill="#8E8E8E"
+                        />
+                    </svg>
+                </div>
             </template>
             <template #default>
                 <div class="setting_fun_list">

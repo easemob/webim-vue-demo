@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, toRefs, watch, defineProps, defineEmits } from 'vue'
+import { reactive, toRefs, watch } from 'vue'
 import { EMClient } from '@/IM'
 import { ElNotification } from 'element-plus'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'

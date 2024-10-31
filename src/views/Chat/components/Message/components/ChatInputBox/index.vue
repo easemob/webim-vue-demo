@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, computed, defineProps } from 'vue'
+import { ref, toRefs } from 'vue'
 import { useStore } from 'vuex'
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData'
 import { ElLoading, ElMessageBox } from 'element-plus'
