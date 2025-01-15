@@ -36,7 +36,8 @@ export const imConnectListener = () => {
         fetchTheLoginUserBlickList()
         fetchGroupList()
         //初始化vuex中的会话列表相关数据
-        store.dispatch('getConversationListFromLocal')
+        // store.dispatch('getConversationListFromLocal')
+        store.dispatch('getConversationList')
     }
     //获取登陆用户属性
     const getMyUserInfos = () => {
