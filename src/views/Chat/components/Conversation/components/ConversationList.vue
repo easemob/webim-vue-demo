@@ -1,151 +1,158 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { useStore } from 'vuex'
-import dateFormater from '@/utils/dateFormater'
-import { CHAT_TYPE } from '@/IM/constant'
-import { CUSTOM_MSG_EVENT_TYPE, SESSION_MESSAGE_TYPE } from '@/constant'
-import _ from 'lodash'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, computed } from 'vue';
+import { useStore } from 'vuex';
+import dateFormater from '@/utils/dateFormater';
+import { CHAT_TYPE } from '@/IM/constant';
+import { CUSTOM_MSG_EVENT_TYPE, SESSION_MESSAGE_TYPE } from '@/constant';
+import _ from 'lodash';
+import { useRouter, useRoute } from 'vue-router';
 /* 头像相关 */
-import informIcon from '@/assets/images/avatar/inform.png'
-import defaultAvatar from '@/assets/images/avatar/theme2x.png'
-import defaultGroupAvatar from '@/assets/images/avatar/jiaqun2x.png'
-import { useGetUserMapInfo } from '@/hooks'
-import { MESSAGE_TYPE } from '@/IM/constant'
+import informIcon from '@/assets/images/avatar/inform.png';
+import defaultAvatar from '@/assets/images/avatar/theme2x.png';
+import defaultGroupAvatar from '@/assets/images/avatar/jiaqun2x.png';
+import { useGetUserMapInfo } from '@/hooks';
+import { MESSAGE_TYPE } from '@/IM/constant';
 /* route */
-const route = useRoute()
+const route = useRoute();
 /* router */
-const router = useRouter()
+const router = useRouter();
 /* store */
-const store = useStore()
-const emit = defineEmits(['toInformDetails', 'toChatMessage'])
+const store = useStore();
+const emit = defineEmits(['toInformDetails', 'toChatMessage']);
 //登录用户ID
-const loginUserId = computed(() => store.state.loginUserInfo.hxId)
+const loginUserId = computed(() => store.state.loginUserInfo.hxId);
 //取系统通知数据
 const informDetail = computed(() => {
-    const informDetailArr = store.state.Conversation.informDetail
-    const lastInformDeatail = informDetailArr[0] || {}
-    const untreated = _.sumBy(informDetailArr, 'untreated') || 0
-    return { untreated, lastInformDeatail }
-})
+    const informDetailArr = store.state.Conversation.informDetail;
+    const lastInformDeatail = informDetailArr[0] || {};
+    const untreated = _.sumBy(informDetailArr, 'untreated') || 0;
+    return { untreated, lastInformDeatail };
+});
 
 //获取群组详情（展示群组名称等信息）
-const groupDetailMap = computed(() => store.getters.getGroupDetailMap)
+const groupDetailMap = computed(() => store.getters.getGroupDetailMap);
 //取会话数据
+const conversationFromMethod = computed(() => {
+    return store.getters.conversationFromMethod;
+});
 const conversationList = computed(() => {
-    return store.getters.conversationListFromLocal
-})
+    if (conversationFromMethod.value) {
+        return store.getters.conversationListFromLocal;
+    } else {
+        return store.getters.conversationListFromServer;
+    }
+});
 //处理会话name
 const {
     getContactsNickNameById,
     getContactsAvatarById,
-    getGroupNameByGroupId
-} = useGetUserMapInfo()
+    getGroupNameByGroupId,
+} = useGetUserMapInfo();
 const handleConversationName = computed(() => {
     return (conversationItem) => {
-        const { conversationType, conversationId } = conversationItem
+        const { conversationType, conversationId } = conversationItem;
         if (conversationType === CHAT_TYPE.SINGLE) {
-            return getContactsNickNameById(conversationId)
+            return getContactsNickNameById(conversationId);
         }
         if (conversationType === CHAT_TYPE.GROUP) {
-            return getGroupNameByGroupId(conversationId)
+            return getGroupNameByGroupId(conversationId);
         }
-    }
-})
+    };
+});
 //处理会话头像
 const handleConversationAvatar = computed(() => {
     return (conversationItem) => {
-        const { conversationType, conversationId } = conversationItem
+        const { conversationType, conversationId } = conversationItem;
         if (conversationType === CHAT_TYPE.SINGLE) {
-            return getContactsAvatarById(conversationId)
+            return getContactsAvatarById(conversationId);
         }
         //群组暂使用默认群头像
         if (conversationType === CHAT_TYPE.GROUP) {
-            return defaultGroupAvatar
+            return defaultGroupAvatar;
         }
-    }
-})
+    };
+});
 //处理lastmsg的from昵称
 const handleLastMsgNickName = computed(() => {
-    const groupsInfos = store.state.Groups.groupsInfos
+    const groupsInfos = store.state.Groups.groupsInfos;
     return (conversationItem) => {
         const {
             conversationId: groupId,
             conversationType,
-            lastMessage
-        } = conversationItem
-        const { from } = lastMessage || {}
+            lastMessage,
+        } = conversationItem;
+        const { from } = lastMessage || {};
         const userInfoFromGroupNickname =
-            groupsInfos[groupId]?.groupMemberInfo?.[from]?.nickName
-        const friendUserInfoNickname = getContactsNickNameById(from)
+            groupsInfos[groupId]?.groupMemberInfo?.[from]?.nickName;
+        const friendUserInfoNickname = getContactsNickNameById(from);
         if (!from || from === loginUserId.value) {
-            return '我：'
+            return '我：';
         } else {
-            return `${userInfoFromGroupNickname || friendUserInfoNickname}：`
+            return `${userInfoFromGroupNickname || friendUserInfoNickname}：`;
         }
-    }
-})
+    };
+});
 //处理lastmsg预览内容
 const handleLastMsgContent = computed(() => {
     return (msgBody) => {
-        const { type, msg } = msgBody
-        let resultContent = ''
+        const { type, msg } = msgBody;
+        let resultContent = '';
         //如果消息类型，在预设非展示文本类型中，就返回预设值
         if (SESSION_MESSAGE_TYPE[type]) {
-            resultContent = SESSION_MESSAGE_TYPE[type]
+            resultContent = SESSION_MESSAGE_TYPE[type];
         } else if (type === MESSAGE_TYPE.CUSTOM) {
             //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
             if (msgBody.customEvent) {
-                ;(CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent] &&
+                (CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent] &&
                     (resultContent =
                         CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent])) ||
-                    ''
+                    '';
             }
         } else if (msgBody?.isRecall) {
-            return (resultContent = '撤回了一条消息')
+            return (resultContent = '撤回了一条消息');
         } else {
-            resultContent = msg
+            resultContent = msg;
         }
-        return resultContent
-    }
-})
+        return resultContent;
+    };
+});
 //取网络状态
 const networkStatus = computed(() => {
-    return store.state.networkStatus
-})
+    return store.state.networkStatus;
+});
 //普通会话
-const checkedConverItemIndex = ref(null)
+const checkedConverItemIndex = ref(null);
 const debouncedToChatMessage = _.debounce(
     (conversationId, conversationType) => {
-        emit('toChatMessage', conversationId, conversationType)
+        emit('toChatMessage', conversationId, conversationType);
     },
-    300
-) // 300毫秒内的连续触发将被防抖处理
+    300,
+); // 300毫秒内的连续触发将被防抖处理
 const toChatMessage = (conversationItem, index) => {
-    checkedConverItemIndex.value = index
+    checkedConverItemIndex.value = index;
     const { conversationId, unReadCount, customField, conversationType } =
-        conversationItem
+        conversationItem;
     if (unReadCount > 0) {
         store.dispatch('clearConversationUnreadCount', {
             conversationId: conversationId,
-            chatType: conversationType
-        })
+            chatType: conversationType,
+        });
     }
     if (customField?.mention)
-        store.dispatch('clearConversationMention', conversationItem)
+        store.dispatch('clearConversationMention', conversationItem);
     //跳转至对应的消息界面
     // 使用防抖函数来跳转至对应的消息界面
-    debouncedToChatMessage(conversationId, conversationType)
-}
+    debouncedToChatMessage(conversationId, conversationType);
+};
 //删除某条会话
 const deleteConversation = (conversationItem) => {
-    const { conversationId } = conversationItem
-    store.dispatch('removeLocalConversation', conversationItem)
+    const { conversationId } = conversationItem;
+    store.dispatch('removeLocalConversation', conversationItem);
     //如果删除的itemKey与当前的message会话页的id一致则跳转至会话默认页。
     if (route?.query?.id && route.query.id === conversationId) {
-        router.push('/chat/conversation')
+        router.push('/chat/conversation');
     }
-}
+};
 //加载到底拉取新数据
 // const load = () => {
 //
@@ -183,7 +190,7 @@ const deleteConversation = (conversationItem) => {
                 <span class="time">{{
                     dateFormater(
                         'MM/DD/HH:mm',
-                        informDetail.lastInformDeatail.time
+                        informDetail.lastInformDeatail.time,
                     )
                 }}</span>
                 <span class="unReadNum_box" v-if="informDetail.untreated >= 1">
@@ -206,7 +213,7 @@ const deleteConversation = (conversationItem) => {
                 @click="toChatMessage(item, index)"
                 :style="{
                     background:
-                        checkedConverItemIndex === index ? '#E5E5E5' : ''
+                        checkedConverItemIndex === index ? '#E5E5E5' : '',
                 }"
             >
                 <el-popover
@@ -254,7 +261,7 @@ const deleteConversation = (conversationItem) => {
                                 <span class="time">{{
                                     dateFormater(
                                         'MM/DD/HH:mm',
-                                        item?.lastMessage?.time
+                                        item?.lastMessage?.time,
                                     )
                                 }}</span>
                                 <span

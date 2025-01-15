@@ -1,25 +1,32 @@
 <script setup>
-import { computed } from 'vue'
-import { useStore } from 'vuex'
-import _ from 'lodash'
-import router from '@/router'
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+import _ from 'lodash';
+import router from '@/router';
 
 /* 搜索框组件 */
-import SearchInput from '@/components/SearchInput'
+import SearchInput from '@/components/SearchInput';
 /* 欢迎页 */
-import Welcome from '@/components/Welcome'
+import Welcome from '@/components/Welcome';
 /* 会话列表组件 */
-import ConversationList from './components/ConversationList.vue'
+import ConversationList from './components/ConversationList.vue';
 
-const store = useStore()
+const store = useStore();
 
+const conversationFromMethod = computed(() => {
+    return store.getters.conversationFromMethod;
+});
 const conversationList = computed(() => {
-    return _.values(store.state.Conversation.conversationListFromLocal)
-})
+    if (conversationFromMethod.value) {
+        return store.getters.conversationListFromLocal;
+    } else {
+        return store.getters.conversationListFromServer;
+    }
+});
 //路由跳转-系统通知
 const toInformDetails = () => {
-    router.push('/chat/conversation/informdetails')
-}
+    router.push('/chat/conversation/informdetails');
+};
 
 //路由跳转-对应好友会话
 const toChatMessage = (id, chatType) => {
@@ -27,10 +34,10 @@ const toChatMessage = (id, chatType) => {
         path: '/chat/conversation/message',
         query: {
             id,
-            chatType
-        }
-    })
-}
+            chatType,
+        },
+    });
+};
 </script>
 <template>
     <el-container style="height: 100%">
