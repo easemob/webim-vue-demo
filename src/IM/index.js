@@ -1,2 +1,2 @@
-import EMClient from './miniCore'
-export { EMClient }
+import EMClient from './miniCore';
+export { EMClient };

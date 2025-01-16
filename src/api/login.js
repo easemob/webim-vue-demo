@@ -1,4 +1,4 @@
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 //获取用户登陆token
 // export function fetchUserLoginToken(params) {
@@ -19,16 +19,16 @@ import request from '@/utils/request'
 // }
 //新获取用户登录token v2
 export function fetchUserLoginToken(params) {
-    return request({
-        url: '/inside/app/user/login/V2',
-        method: 'post',
-        data: params
-    })
+  return request({
+    url: '/inside/app/user/login/V2',
+    method: 'post',
+    data: params,
+  });
 }
 //新获取短信验证码
 export function fetchUserLoginSmsCode(phoneNumber) {
-    return request({
-        url: `/inside/app/sms/send/${phoneNumber}`,
-        method: 'post'
-    })
+  return request({
+    url: `/inside/app/sms/send/${phoneNumber}`,
+    method: 'post',
+  });
 }
