@@ -1,55 +1,69 @@
 <script setup>
-import { ref, toRefs } from 'vue'
-import { useDraggable, useWindowSize } from '@vueuse/core'
+import { ref, toRefs } from 'vue';
+import { useDraggable, useWindowSize } from '@vueuse/core';
 const props = defineProps({
-    showType: {
-        type: Number,
-        default: 0, //0 待接听 1为通话中
-        required: true,
-    },
-    callTime: {
-        type: String,
-        default: '00:00',
-        required: true,
-    },
-})
-const { showType, callTime } = toRefs(props)
+  showType: {
+    type: Number,
+    default: 0, //0 待接听 1为通话中
+    required: true,
+  },
+  callTime: {
+    type: String,
+    default: '00:00',
+    required: true,
+  },
+});
+const { showType, callTime } = toRefs(props);
 
 /* emit */
-const $emit = defineEmits(['changeMiniSize'])
-const { width, height } = useWindowSize()
-const miniStreamContainer = ref(null)
+const $emit = defineEmits(['changeMiniSize']);
+const { width, height } = useWindowSize();
+const miniStreamContainer = ref(null);
 const { style } = useDraggable(miniStreamContainer, {
-    initialValue: { x: width.value - 136, y: 0 },
-    onMove: (position) => {
-        if (position.x > width.value - 136) {
-            position.x = width.value - 136
-        }
-        if (position.x < 0) {
-            position.x = 0
-        }
-        if (position.y > height.value - 116) {
-            position.y = height.value - 116
-        }
-        if (position.y < 0) {
-            position.y = 0
-        }
-    },
-    preventDefault: true,
-    stopPropagation: true,
-})
+  initialValue: { x: width.value - 136, y: 0 },
+  onMove: (position) => {
+    if (position.x > width.value - 136) {
+      position.x = width.value - 136;
+    }
+    if (position.x < 0) {
+      position.x = 0;
+    }
+    if (position.y > height.value - 116) {
+      position.y = height.value - 116;
+    }
+    if (position.y < 0) {
+      position.y = 0;
+    }
+  },
+  preventDefault: true,
+  stopPropagation: true,
+});
 const clickChanageMiniSizeModal = () => {
-    $emit('changeMiniSize', false)
-}
+  $emit('changeMiniSize', false);
+};
 </script>
 
 <template>
-  <div class="mini_stream_container" ref="miniStreamContainer" :style="style" style="position: fixed">
-    <div class="minimodal" @click.prevent.stop="clickChanageMiniSizeModal"></div>
+  <div
+    class="mini_stream_container"
+    ref="miniStreamContainer"
+    :style="style"
+    style="position: fixed"
+  >
+    <div
+      class="minimodal"
+      @click.prevent.stop="clickChanageMiniSizeModal"
+    ></div>
     <div>
-      <span class="mini_stream_text" style="margin-left: 5px;" v-show="showType === 0">等待接听中<span
-          class="dot">...</span></span>
-      <span class="mini_stream_text" v-show="showType === 1">{{ callTime }}</span>
+      <span
+        class="mini_stream_text"
+        style="margin-left: 5px"
+        v-show="showType === 0"
+        >等待接听中<span class="dot">...</span></span
+      >
+      <span class="mini_stream_text" v-show="showType === 1">{{
+        callTime
+      }}</span>
     </div>
   </div>
 </template>
@@ -87,7 +101,7 @@ const clickChanageMiniSizeModal = () => {
   height: 100%;
   justify-content: center;
   align-items: flex-end;
-  color: #5DB47F;
+  color: #5db47f;
 }
 
 .dot {

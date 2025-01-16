@@ -1,10 +1,10 @@
-import usePlayRing from './usePlayRing'
-import useGetUserMapInfo from './useGetUserMapInfo'
-import { useSetEMLogConfig } from './useSetEMLogConfig'
-import useSordedContactsWithPinyin from './useSordedContactsWithPinyin'
+import usePlayRing from './usePlayRing';
+import useGetUserMapInfo from './useGetUserMapInfo';
+import { useSetEMLogConfig } from './useSetEMLogConfig';
+import useSordedContactsWithPinyin from './useSordedContactsWithPinyin';
 export {
-    usePlayRing,
-    useGetUserMapInfo,
-    useSetEMLogConfig,
-    useSordedContactsWithPinyin
-}
+  usePlayRing,
+  useGetUserMapInfo,
+  useSetEMLogConfig,
+  useSordedContactsWithPinyin,
+};

@@ -1,10 +1,10 @@
 @font-face {
-  font-family: "iconfont"; /* Project id  */
+  font-family: 'iconfont'; /* Project id  */
   src: url('iconfont.ttf?t=1715584073131') format('truetype');
 }
 
 .iconfont {
-  font-family: "iconfont" !important;
+  font-family: 'iconfont' !important;
   font-size: 16px;
   font-style: normal;
   -webkit-font-smoothing: antialiased;
@@ -12,42 +12,41 @@
 }
 
 .icon-31dianhua:before {
-  content: "\f0203";
+  content: '\f0203';
 }
 
 .icon-01:before {
-  content: "\e610";
+  content: '\e610';
 }
 
 .icon-mingpian:before {
-  content: "\e65d";
+  content: '\e65d';
 }
 
 .icon-shipin:before {
-  content: "\e656";
+  content: '\e656';
 }
 
 .icon-shipintonghua-hei:before {
-  content: "\e6eb";
+  content: '\e6eb';
 }
 
 .icon-lajitong:before {
-  content: "\e615";
+  content: '\e615';
 }
 
 .icon-icon_emoji:before {
-  content: "\e60a";
+  content: '\e60a';
 }
 
 .icon-wenjian:before {
-  content: "\e69f";
+  content: '\e69f';
 }
 
 .icon-tuku:before {
-  content: "\e712";
+  content: '\e712';
 }
 
 .icon-kuaijiehuifu:before {
-  content: "\e69b";
+  content: '\e69b';
 }
-
