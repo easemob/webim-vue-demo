@@ -45,23 +45,7 @@ const loginIM = async () => {
   const { clickRing } = usePlayRing();
   clickRing();
   buttonLoading.value = true;
-  //!SDK 登陆的方式
-  // try {
-  //   let { accessToken } = await EMClient.open({
-  //     user: loginValue.username.toLowerCase(),
-  //     pwd: loginValue.password.toLowerCase(),
-  //   });
-  //   window.localStorage.setItem(`EASEIM_loginUser`, JSON.stringify({ user: loginValue.username, accessToken: accessToken }))
-  // } catch (error) {
-  //
-  //   const { data: { extraInfo } } = error
-  //   handleSDKErrorNotifi(error.type, extraInfo.errDesc);
-  //   loginValue.username = '';
-  //   loginValue.username = '';
-  // }
-  // finally {
-  //   buttonLoading.value = false;
-  // }
+  // SDK登录方式请参考emloginWithPasswordLogin.vue 组件
   // !环信后台接口登陆（仅供环信线上demo使用！）
   const params = {
     phoneNumber: loginValue.phoneNumber.toString(),
