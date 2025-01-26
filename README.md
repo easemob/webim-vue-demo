@@ -205,7 +205,7 @@ EMClient.open({ username: '', password: '' });
 ```javascript
 import AgoraRTC from 'agora-rtc-sdk-ng';
 
-const AgoraAppId = 'YOUR AOGRA APPID';
+const AgoraAppId = 'YOUR AOGRA APPID';YXA6ITyaTxGoQ82Hh31A818ygg
 
 export { AgoraAppId, AgoraRTC };
 ```
