@@ -1,4 +1,18 @@
-<script setup>
+// 已发送展示类型消息
+senedShowTypeMessage: async ({ dispatch, commit }, message) => {
+  try {
+    const msg = EMClient.Message.create(message);
+    await EMClient.send(msg);
+    commit('UPDATE_MESSAGE_LIST', msg);
+    // 提示会话列表更新
+    dispatch('updateConversationList', {
+      conversationId: message.to,
+      chatType: message.chatType,
+    });
+  } catch (error) {
+    console.error('发送消息失败:', error);
+  }
+},<script setup>
 import { ref, watch, nextTick, computed, onMounted } from 'vue';
 import _ from 'lodash';
 import { EMClient } from '@/IM';
