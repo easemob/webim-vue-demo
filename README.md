@@ -56,12 +56,12 @@ npm run build --report
 
 - 在线状态订阅变更
 - 用户属性编辑设置
-- 个性名片展示分享<EaseCallKit
-- 系统消息通知操作    ref="easeCallKit"
-- 会话联系本地搜索    :EaseIMClient="EMClient"
-- 单聊群聊会话发起    :msgCreateFunc="EMClient.Message"
-- 群组好友列表展示    @onInviteMembers="showModal"
-- 添加删除拉黑好友/>
+- 个性名片展示分享
+- 系统消息通知操作
+- 会话联系本地搜索
+- 单聊群聊会话发起
+- 群组好友列表展示
+- 添加删除拉黑好友
 - 创建申请加入群聊
 - 群名公告描述编辑
 - 拉黑禁言群组管理
@@ -185,11 +185,12 @@ EMClient.open({ username: '', password: '' });
 3. 在 EaseCallKit 当中有一些功能的实现有用到 `vueUse`功能库，所以也需要安装 `vueUse` 相关依赖，此时你的项目目录中包含以下三个包名。
 
 ```json
- "dependencies": {
-            "agora-rtc-sdk-ng": "latest",
-            "easemob-websdk": "latest",
-            "@vueuse/core": "latest",
- }
+ <EaseCallKit
+    ref="easeCallKit"
+    :EaseIMClient="EMClient"
+    :msgCreateFunc="EMClient.Message"
+   @onInviteMembers="showModal"
+/>
 ```
 
 4. 确保自己的服务端已经搭建了声网房间鉴权的 `AppServer` 服务，此服务作用是，请求服务端接口获取 `channel`（音视频房间） 对应的 `token`（房间钥匙 🔑） 用以加入 `channel`，此 Demo 中用的是环信已经搭建的 `appServer` 服务，一个服务仅供一个 `appId` 使用，因此需要搭建自己的 `appServer`。
