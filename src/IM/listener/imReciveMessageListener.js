@@ -25,7 +25,21 @@ export const imReviceMessageListener = () => {
       chatType,
     });
   };
-  //收到消息修改指令
+// 已发送展示类型消息
+senedShowTypeMessage: async ({ dispatch, commit }, message) => {
+  try {
+    const msg = EMClient.Message.create(message);
+    await EMClient.send(msg);
+    commit('UPDATE_MESSAGE_LIST', msg);
+    // 提示会话列表更新
+    dispatch('updateConversationList', {
+      conversationId: message.to,
+      chatType: message.chatType,
+    });
+  } catch (error) {
+    console.error('发送消息失败:', error);
+  }
+},
   const otherModifyMessage = (message) => {
     const { from, to, id: mid, chatType } = message;
     //单对单的撤回to必然为登陆的用户id，群组发起撤回to必然为群组id 所以key可以这样来区分群组或者单人。
