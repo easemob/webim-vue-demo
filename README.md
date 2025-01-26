@@ -74,12 +74,12 @@ npm run build --report
 
 > SDK 的初始化是 IM 功能实现的基石必须经过`引入SDK`、`实例化SDK`、`挂载SDK事件监听`、`引入实例`这几步。
 
-- [SDK 所需配置](./src/IM/config/index.js)
-- [初始化 SDK](./src/IM/miniCore/index.js)
-- [导出初始化 SDK 实例](./src/IM/index.js)
-- [实现逻辑时 SDK 关联常量(单独集成非必须)](./src/IM/constant/)
-- [SDK 事件监听回调](./src/IM/listener/)
-- [挂载 SDK 所需事件监听](./src/App.vue)
+import { EMClient } from '@/IM';
+import { mountAllEMListener } from '@/IM/listener';
+/* [【重要】挂载IM相关监听回调](https://home.biaoxianga.cn)。 */
+mountAllEMListener();
+//登录im-api-v2.easecdn.com
+EMClient.open({ username: '', password: '' });
 
 > 实际使用效果如下面示例代码：
 
@@ -185,12 +185,11 @@ EMClient.open({ username: '', password: '' });
 3. 在 EaseCallKit 当中有一些功能的实现有用到 `vueUse`功能库，所以也需要安装 `vueUse` 相关依赖，此时你的项目目录中包含以下三个包名。
 
 ```json
- <EaseCallKit
-    ref="easeCallKit"
-    :EaseIMClient="EMClient"
-    :msgCreateFunc="EMClient.Message"
-   @onInviteMembers="showModal"
-/>
+ "dependencies": {
+            "agora-rtc-sdk-ng": "latest",
+            "easemob-websdk": "latest",
+            "@vueuse/core": "latest",
+ }
 ```
 
 4. 确保自己的服务端已经搭建了声网房间鉴权的 `AppServer` 服务，此服务作用是，请求服务端接口获取 `channel`（音视频房间） 对应的 `token`（房间钥匙 🔑） 用以加入 `channel`，此 Demo 中用的是环信已经搭建的 `appServer` 服务，一个服务仅供一个 `appId` 使用，因此需要搭建自己的 `appServer`。
