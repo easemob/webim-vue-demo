@@ -56,12 +56,12 @@ npm run build --report
 
 - 在线状态订阅变更
 - 用户属性编辑设置
-- 个性名片展示分享
-- 系统消息通知操作
-- 会话联系本地搜索
-- 单聊群聊会话发起
-- 群组好友列表展示
-- 添加删除拉黑好友
+- 个性名片展示分享<EaseCallKit
+- 系统消息通知操作    ref="easeCallKit"
+- 会话联系本地搜索    :EaseIMClient="EMClient"
+- 单聊群聊会话发起    :msgCreateFunc="EMClient.Message"
+- 群组好友列表展示    @onInviteMembers="showModal"
+- 添加删除拉黑好友/>
 - 创建申请加入群聊
 - 群名公告描述编辑
 - 拉黑禁言群组管理
