@@ -180,6 +180,11 @@ const quitThisGroup = async () => {
       },
     );
     await store.dispatch('leaveIntheGroup', { groupId: groupId.value });
+    ElMessage({
+      message: '退出群组成功~',
+      type: 'success',
+      center: true,
+    });
     emits('handleDrawer');
   } catch (error) {
     if (error !== 'cancel') {
@@ -203,6 +208,11 @@ const dissolveThisGroup = async () => {
       },
     );
     await store.dispatch('destroyInTheGroup', { groupId: groupId.value });
+    ElMessage({
+      message: '解散群组成功~',
+      type: 'success',
+      center: true,
+    });
     emits('handleDrawer');
   } catch (error) {
     if (error !== 'cancel') {
@@ -386,7 +396,9 @@ onMounted(() => {
     </template>
     <!-- 群组操作按钮 -->
     <div class="group_list_handle_box">
-      <template v-if="getGroupDetailFromGroupList.owner === EMClient.user">
+      <template
+        v-if="getGroupDetailFromGroupList.role === GROUP_ROLE_TYPE.OWNER"
+      >
         <el-button
           type="danger"
           class="group_list_card_btn"
