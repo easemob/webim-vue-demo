@@ -60,7 +60,7 @@
 import { ref, toRefs, computed } from 'vue';
 import store from '@/store';
 import { Search, CircleCheckFilled } from '@element-plus/icons-vue';
-import { useGetUserMapInfo } from '@/hooks';
+import { useGetUserMapInfo, useUserInfoExt } from '@/hooks';
 import { EMClient } from '@/IM';
 import { CHAT_TYPE, MESSAGE_TYPE } from '@/IM/constant';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
@@ -120,6 +120,7 @@ const getUserInfos = () => {
     store.getters.getContactsUserInfosMap.get(shareContactUserId.value) || {};
   return userInfo;
 };
+const { setUserInfoExt } = useUserInfoExt();
 const sendShareUserCardMessage = async () => {
   const msgOptions = {
     type: MESSAGE_TYPE.CUSTOM,
@@ -131,9 +132,12 @@ const sendShareUserCardMessage = async () => {
       ...getUserInfos(),
     },
   };
+  //在消息体内携带该用户的昵称头像信息
+  setUserInfoExt(msgOptions);
   try {
     const msg = EMClient.Message.create(msgOptions);
     const { message } = await EMClient.send(msg);
+    console.log('message', message);
     await store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
     console.error('发送信息卡片消息失败', error);

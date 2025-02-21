@@ -13,6 +13,7 @@ import { ref, toRefs } from 'vue';
 import { EMClient } from '@/IM';
 import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
+import { useUserInfoExt } from '@/hooks';
 import store from '@/store';
 const props = defineProps({
   chatType: {
@@ -34,6 +35,7 @@ const openChooseFiles = () => {
   uploadFiles.value.click();
 };
 //发送文件
+const { setUserInfoExt } = useUserInfoExt();
 const sendFilesMessages = async () => {
   const commonFile = uploadFiles.value.files[0];
   const file = {
@@ -64,10 +66,12 @@ const sendFilesMessages = async () => {
       emit('onLoadending');
     },
   };
-
+  //在消息体内携带该用户的昵称头像信息
+  setUserInfoExt(msgOptions);
   try {
     const msg = EMClient.Message.create(msgOptions);
     const { message } = await EMClient.send(msg);
+    console.log('message', message);
     store.dispatch('senedShowTypeMessage', { ...message });
   } catch (error) {
     if (error.type && error?.data) {

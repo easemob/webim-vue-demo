@@ -14,6 +14,7 @@ import { ref, toRefs } from 'vue';
 import { EMClient } from '@/IM';
 import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
+import { useUserInfoExt } from '@/hooks';
 import store from '@/store';
 const props = defineProps({
   chatType: {
@@ -34,6 +35,7 @@ const openChooseImages = () => {
   uploadImgs.value.click();
 };
 //发送图片
+const { setUserInfoExt } = useUserInfoExt();
 const sendImagesMessage = async (type, fileObj) => {
   const file = {
     data: null, // file 对象。
@@ -65,6 +67,8 @@ const sendImagesMessage = async (type, fileObj) => {
       emit('onLoadending');
     },
   };
+  //在消息体内携带该用户的昵称头像信息
+  setUserInfoExt(msgOptions);
   //读取图片的宽高
   const imgFile = uploadImgs.value.files[0];
   file.data = imgFile;

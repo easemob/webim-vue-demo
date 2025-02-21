@@ -4,6 +4,7 @@ import { useStore } from 'vuex';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
 import { ElLoading, ElMessageBox } from 'element-plus';
 import { onClickOutside } from '@vueuse/core';
+import { useUserInfoExt } from '@/hooks';
 import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
 import _ from 'lodash';
 import { EMClient } from '@/IM';
@@ -134,6 +135,7 @@ onClickOutside(recordBox, () => {
 const showRecordBox = () => {
   isShowRecordBox.value = true;
 };
+const { setUserInfoExt } = useUserInfoExt();
 const sendAudioMessages = async (audioData) => {
   const file = {
     url: parseDownloadResponse(audioData.src),
@@ -150,6 +152,7 @@ const sendAudioMessages = async (audioData) => {
     file: file,
     length: audioData.length,
   };
+  setUserInfoExt(msgOptions);
   try {
     const msg = EMClient.Message.create(msgOptions);
     const { message } = await EMClient.send(msg);

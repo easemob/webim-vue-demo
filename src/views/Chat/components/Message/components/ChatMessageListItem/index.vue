@@ -89,8 +89,14 @@ const loginUserInfo = computed(() => store.state.loginUserInfo);
 /* 获取他人的用户信息 */
 const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo();
 const otherUserInfo = computed(() => {
-  return (otherId) => {
-    return getContactsAvatarById(otherId);
+  return (msgBody) => {
+    const {
+      ext: { ease_chat_uikit_user_info },
+    } = msgBody;
+    if (ease_chat_uikit_user_info) {
+      getContactsAvatarById(msgBody.from, ease_chat_uikit_user_info);
+    }
+    return getContactsAvatarById(msgBody.from);
   };
 });
 //处理聊天对方昵称展示
@@ -270,11 +276,11 @@ const onMsgQuote = (msg) => emit('messageQuote', msg);
             {{ handleMsgTimeShow(msgBody.time, index) || '' }}
           </div>
           <el-avatar
-            class="message_item_avator"
+            class="message_item_avatar"
             :src="
               isMyself(msgBody)
                 ? loginUserInfo.avatarurl
-                : otherUserInfo(msgBody.from).avatarurl || defaultAvatar
+                : otherUserInfo(msgBody)
             "
           >
           </el-avatar>
