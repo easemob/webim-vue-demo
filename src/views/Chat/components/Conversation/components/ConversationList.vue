@@ -47,6 +47,7 @@ const {
   getContactsNickNameById,
   getContactsAvatarById,
   getGroupNameByGroupId,
+  getGroupAvatarByGroupId,
 } = useGetUserMapInfo();
 const handleConversationName = computed(() => {
   return (conversationItem) => {
@@ -66,9 +67,8 @@ const handleConversationAvatar = computed(() => {
     if (conversationType === CHAT_TYPE.SINGLE) {
       return getContactsAvatarById(conversationId);
     }
-    //群组暂使用默认群头像
     if (conversationType === CHAT_TYPE.GROUP) {
-      return defaultGroupAvatar;
+      return getGroupAvatarByGroupId(conversationId);
     }
   };
 });

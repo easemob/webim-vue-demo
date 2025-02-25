@@ -51,12 +51,19 @@ const useGetUserMapInfo = () => {
     // 优先获取用户设置的头像, 再次尝试获取消息体内携带的头像，否则获取默认头像
     return avatar || userInfo?.avatarURL || defaultAvatar;
   };
+  const getGroupAvatarByGroupId = (groupId) => {
+    const groupInfo = groupDetailMap.value.get(groupId);
+    console.log('groupInfo', groupInfo);
+    // 优先获取群组设置的头像, 再次尝试获取自定义字段内携带的头像，否则获取默认头像
+    return groupInfo?.avatar || groupInfo?.custom || defaultAvatar;
+  };
   return {
     getTheGroupNickNameById,
     getGroupNameByGroupId,
     getLoginNickNameById,
     getContactsNickNameById,
     getContactsAvatarById,
+    getGroupAvatarByGroupId,
   };
 };
 export default useGetUserMapInfo;
