@@ -257,10 +257,11 @@ const Groups = {
       };
       try {
         const { data } = await EMClient.listGroupMembers(options);
-        dispatch('fetchGroupMemberAttributesFromServer', {
-          groupId,
-          members: data,
-        });
+        /* 此功能暂时注释 */
+        // dispatch('fetchGroupMemberAttributesFromServer', {
+        //   groupId,
+        //   members: data,
+        // });
         commit('SET_GROUPS_MEMBERS', {
           groupId: groupId,
           members: data,

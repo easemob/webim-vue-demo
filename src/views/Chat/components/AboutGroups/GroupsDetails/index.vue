@@ -253,7 +253,8 @@ const handleUpdateGroupData = async () => {
       console.error(error);
     }
   }
-  store.dispatch('fetchInTheGroupInfoFromServer', groupId.value);
+  /* !暂注释此功能调用 */
+  // store.dispatch('fetchInTheGroupInfoFromServer', groupId.value);
 };
 onMounted(() => {
   handleUpdateGroupData();
@@ -305,7 +306,8 @@ onMounted(() => {
     </div>
     <el-divider style="margin: 0" />
     <!-- 本地群组昵称 -->
-    <div class="group_func_card group_name">
+    <!-- !其他端UIKIT暂不支持此设置，因此暂时注释。 -->
+    <!-- <div class="group_func_card group_name">
       <div class="title">
         我在本群的昵称
         <el-icon
@@ -330,7 +332,7 @@ onMounted(() => {
           @blur="editMyGroupNickName('save', inTheGroupNickname)"
         />
       </div>
-    </div>
+    </div> -->
     <el-divider style="margin: 0" />
     <!-- 群公告 -->
     <div class="group_func_card group_announcements">
