@@ -4,7 +4,6 @@ import store from '@/store';
 import { ElMessageBox } from 'element-plus';
 import { Search, Minus, Plus } from '@element-plus/icons-vue';
 import { useGetUserMapInfo } from '@/hooks';
-import defaultAvatar from '@/assets/images/avatar/theme2x.png';
 const props = defineProps({
   groupId: {
     type: String,
@@ -22,7 +21,8 @@ const groupBlacklist = computed(() => {
 const getGroupMembersList = computed(() => {
   return store.getters.getGroupMembersMap.get(groupId.value);
 });
-const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo();
+const { getUserDisplayNameById, getUserDisplayAvatarById } =
+  useGetUserMapInfo();
 onMounted(async () => {
   if (!getGroupMembersList.value) {
     await store.dispatch('fetchGroupsMemberFromServer', groupId.value);
@@ -97,9 +97,9 @@ const searchUsers = () => {
           <template v-if="member">
             <div class="friend_user_list">
               <div class="friend_user_list_left">
-                <el-avatar :src="getContactsAvatarById(member)"></el-avatar>
+                <el-avatar :src="getUserDisplayAvatarById(member)"></el-avatar>
                 <b class="friend_list_username">{{
-                  getContactsNickNameById(member)
+                  getUserDisplayNameById(member)
                 }}</b>
               </div>
               <el-button
@@ -120,9 +120,9 @@ const searchUsers = () => {
         <div v-for="member in inBlackMemberList" :key="member">
           <div class="friend_user_list">
             <div class="friend_user_list_left">
-              <el-avatar :src="getContactsAvatarById(member)"></el-avatar>
+              <el-avatar :src="getUserDisplayAvatarById(member)"></el-avatar>
               <b class="friend_list_username">{{
-                getContactsNickNameById(member)
+                getUserDisplayNameById(member)
               }}</b>
             </div>
             <el-button

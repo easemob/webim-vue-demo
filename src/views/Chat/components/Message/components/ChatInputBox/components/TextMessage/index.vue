@@ -38,7 +38,7 @@ onUpdated(() => {
  * 文本消息相关
  * 包含 @、emoji、引用功能
  */
-const { getTheGroupNickNameById } = useGetUserMapInfo();
+const { getTheGroupNickNameById, getUserDisplayNameById } = useGetUserMapInfo();
 //AT 逻辑
 const atMembersList = computed(() => {
   const members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }];
@@ -53,7 +53,7 @@ const atMembersList = computed(() => {
       sourceMembers.forEach((item) => {
         if (item.owner !== EMClient.user && item.member !== EMClient.user) {
           members.push({
-            text: getTheGroupNickNameById(groupId, item.owner || item.member),
+            text: getUserDisplayNameById(item.owner || item.member, groupId),
             value: item.owner || item.member,
           });
         }

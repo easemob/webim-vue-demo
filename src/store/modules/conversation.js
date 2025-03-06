@@ -271,7 +271,6 @@ const Conversation = {
           pageSize: state.conversationListFromServerPageSize,
           cursor: isInit ? '' : state.conversationListFromServerCursor,
         });
-        console.log('result conversationServer', result);
         if (!result?.data?.conversations?.length) return;
         commit('GET_CONVERSATION_LIST_FROM_SERVER', {
           isInit,

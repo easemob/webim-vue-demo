@@ -7,6 +7,7 @@ export const imReviceMessageListener = () => {
   //接收的消息往store中push
   const pushNewMessage = (message) => {
     store.dispatch('createNewMessage', message);
+    store.dispatch('UsersProfile/processMessageExt', message, { root: true });
   };
   //收到他人的撤回指令
   const otherRecallMessage = (message) => {

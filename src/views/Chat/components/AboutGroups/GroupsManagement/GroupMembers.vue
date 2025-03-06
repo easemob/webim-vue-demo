@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, toRaw, computed, watch, onMounted } from 'vue';
+import { ref, toRefs, computed, onMounted } from 'vue';
 import { EMClient } from '@/IM';
 import { Search, Minus, Plus, Select } from '@element-plus/icons-vue';
 import { useGetUserMapInfo, useSordedContactsWithPinyin } from '@/hooks';
@@ -40,26 +40,22 @@ const groupDetail = computed(() => {
 });
 /* 群成员操作相关 */
 //获取id对应的昵称（群成员属性昵称>用户属性>环信id）
-const { getTheGroupNickNameById, getContactsAvatarById } = useGetUserMapInfo();
-const getNickNameById = (hxId) => {
-  return getTheGroupNickNameById(groupId.value, hxId);
-};
-const getAvatarUrlById = computed(() => {
-  return (hxId) => {
-    return getContactsAvatarById(hxId);
-  };
-});
+const {
+  getContactsAvatarById,
+  getContactsNickNameById,
+  getUserDisplayNameById,
+} = useGetUserMapInfo();
 const showGroupsMembersName = computed(() => {
   return (item) => {
     if (item.member) {
       return item.member === loginUserId.value
         ? '我'
-        : getNickNameById(item.member);
+        : getUserDisplayNameById(item.member);
     }
     if (item.owner) {
       return item.owner === loginUserId.value
         ? '我【群主】'
-        : getNickNameById(item.owner) + '【群主】';
+        : getUserDisplayNameById(item.owner) + '【群主】';
     }
   };
 });
@@ -76,7 +72,6 @@ const { sortedFriendListWithRemark } = useSordedContactsWithPinyin();
  * @description 在公开群中，只容许群主管理员邀请人入群，而私有群则可设置是否容许普通群成员邀请人加群。
  */
 const isAllowedToInviteMember = computed(() => {
-  console.log('groupDetail', groupDetail.value);
   if (groupDetail.value.public && memberRole.value) {
     return true;
   }
@@ -174,10 +169,10 @@ const searchUsers = (keyword) => {
                   <div class="friend_user_list">
                     <div class="friend_user_list_left">
                       <el-avatar
-                        :src="getAvatarUrlById(item.userId)"
+                        :src="getContactsAvatarById(item?.userId)"
                       ></el-avatar>
                       <b class="friend_list_username">{{
-                        `${item?.remark || item?.userId}`
+                        getContactsNickNameById(item?.userId)
                       }}</b>
                     </div>
                     <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
@@ -203,9 +198,11 @@ const searchUsers = (keyword) => {
               <div v-for="item in searchResultList" :key="item.userId">
                 <div class="friend_user_list">
                   <div class="friend_user_list_left">
-                    <el-avatar :src="getAvatarUrlById(item.userId)"></el-avatar>
+                    <el-avatar
+                      :src="getContactsAvatarById(item?.userId)"
+                    ></el-avatar>
                     <b class="friend_list_username">{{
-                      `${item?.remark || item?.userId}`
+                      getContactsNickNameById(item?.userId)
                     }}</b>
                   </div>
                   <template v-if="!groupDetail.public && memberRole">

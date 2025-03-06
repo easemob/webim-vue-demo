@@ -13,7 +13,7 @@ const props = defineProps({
 const { userId } = toRefs(props);
 
 const getUserRemark = computed(() => {
-  return store.getters.getContactsWithRemarkMap.get(userId.value)?.remark || '';
+  return store.getters['UsersProfile/getDisplayRemark'](userId.value);
 });
 const userRemark = ref('');
 const editRemarkInputComp = ref(null);

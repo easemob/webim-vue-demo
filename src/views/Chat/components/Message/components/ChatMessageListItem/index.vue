@@ -87,32 +87,24 @@ const isLink = computed(() => {
 const loginUserInfo = computed(() => store.state.loginUserInfo);
 
 /* 获取他人的用户信息 */
-const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo();
-const otherUserInfo = computed(() => {
+const { getUserDisplayNameById, getUserDisplayAvatarById } =
+  useGetUserMapInfo();
+//处理他人头像展示
+const handleOtherAvatar = computed(() => {
   return (msgBody) => {
-    const {
-      ext: { ease_chat_uikit_user_info },
-    } = msgBody;
-    if (ease_chat_uikit_user_info) {
-      getContactsAvatarById(msgBody.from, ease_chat_uikit_user_info);
-    }
-    return getContactsAvatarById(msgBody.from);
+    return getUserDisplayAvatarById(msgBody.from);
   };
 });
 //处理聊天对方昵称展示
-
 const handleNickName = computed(() => {
-  const { chatType, id } = routeQueryData.value;
-  const groupsInfos = store.state.Groups.groupsInfos;
-  return (hxId) => {
+  const { chatType, id: groupId } = routeQueryData.value;
+  return (msgBody) => {
+    const userId = msgBody.from;
     if (chatType === CHAT_TYPE.SINGLE) {
-      return getContactsNickNameById(hxId);
+      return getUserDisplayNameById(userId);
     }
     if (chatType === CHAT_TYPE.GROUP) {
-      const userInfoFromGroupNickname =
-        groupsInfos[id]?.groupMemberInfo?.[hxId]?.nickName;
-      const friendUserInfoNickname = getContactsNickNameById(hxId);
-      return userInfoFromGroupNickname || friendUserInfoNickname;
+      return getUserDisplayNameById(userId, groupId);
     }
   };
 });
@@ -280,14 +272,14 @@ const onMsgQuote = (msg) => emit('messageQuote', msg);
             :src="
               isMyself(msgBody)
                 ? loginUserInfo.avatarurl
-                : otherUserInfo(msgBody)
+                : handleOtherAvatar(msgBody)
             "
           >
           </el-avatar>
           <!-- 普通消息内容 -->
           <div class="message_box_card">
             <span v-show="!isMyself(msgBody)" class="message_box_nickname">{{
-              handleNickName(msgBody.from)
+              handleNickName(msgBody)
             }}</span>
             <el-dropdown
               class="message_box_content"

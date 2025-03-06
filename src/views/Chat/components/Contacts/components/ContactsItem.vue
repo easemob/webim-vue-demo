@@ -1,10 +1,7 @@
 <script setup>
-import { computed } from 'vue';
 import { useStore } from 'vuex';
 // import router from '@/router'
 import { CHAT_TYPE } from '@/IM/constant';
-/* 默认头像 */
-import defaultAvatar from '@/assets/images/avatar/theme2x.png';
 import { useSordedContactsWithPinyin, useGetUserMapInfo } from '@/hooks';
 /* store */
 const store = useStore();

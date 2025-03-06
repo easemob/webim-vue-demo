@@ -247,7 +247,8 @@ const Groups = {
       }
     },
     //获取群组成员
-    fetchGroupsMemberFromServer: async ({ commit }, groupId) => {
+    fetchGroupsMemberFromServer: async ({ dispatch, commit }, groupId) => {
+      console.log('>>>>>获取群组成员');
       //此接口支持分页，如果群组成员大于1000人，需要分页获取。
       const options = {
         pageNum: 1,
@@ -256,6 +257,10 @@ const Groups = {
       };
       try {
         const { data } = await EMClient.listGroupMembers(options);
+        dispatch('fetchGroupMemberAttributesFromServer', {
+          groupId,
+          members: data,
+        });
         commit('SET_GROUPS_MEMBERS', {
           groupId: groupId,
           members: data,
@@ -263,31 +268,6 @@ const Groups = {
       } catch (error) {
         console.error('>>>>>群组成员获取失败', error);
       }
-    },
-    //获取群成员对应的群组属性
-    fetchGroupMemberAttributes: async ({ dispatch, commit }, params) => {
-      const { groupId, members } = params;
-      const membersList = _.chunk(members, 10);
-      const requestTrack = [];
-      membersList.forEach((list) => {
-        const groupMemberList = _.flatten(_.map(list, _.values));
-
-        requestTrack.push(
-          EMClient.getGroupMembersAttributes({
-            groupId: groupId,
-            userIds: groupMemberList,
-          }),
-        );
-      });
-      try {
-        const res = await Promise.all(requestTrack);
-        const groupUsersInfo = _.map(res, 'data');
-
-        commit('SET_GROUP_MEMBERS_INFO', {
-          groupId: groupId,
-          inGroupInfo: groupUsersInfo,
-        });
-      } catch (error) {}
     },
     //获取登录用户在某群内的群组属性
     fetchInTheGroupInfoFromServer: async ({ dispatch, commit }, groupId) => {
@@ -304,6 +284,48 @@ const Groups = {
         });
       } catch (error) {
         console.error('>>>>>群组属性获取失败', error);
+      }
+    },
+    //批量获取群成员群内群组属性
+    fetchGroupMemberAttributesFromServer: async (
+      { dispatch, commit },
+      params,
+    ) => {
+      const { groupId, members } = params;
+      const membersList = _.chunk(members, 10);
+
+      // 添加并发控制
+      const MAX_CONCURRENT = 5;
+      const queue = [];
+      const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms)); // 新增延迟函数
+
+      while (membersList.length) {
+        const chunk = membersList.splice(0, MAX_CONCURRENT);
+        const requests = chunk.map((list) =>
+          EMClient.getGroupMembersAttributes({
+            groupId,
+            userIds: _.flatten(_.map(list, _.values)),
+          }).catch((e) => {
+            console.error('Partial request failed:', e);
+            return null;
+          }),
+        );
+
+        const results = await Promise.all(requests);
+        queue.push(...results.filter(Boolean));
+
+        // 添加间隔延迟（最后一个批次不等待）
+        if (membersList.length > 0) {
+          await delay(1000); // 每个并发批次间隔1秒
+        }
+      }
+
+      if (queue.length > 0) {
+        const groupUsersInfo = _.compact(_.flatMap(queue, 'data'));
+        commit('SET_GROUP_MEMBERS_INFO', {
+          groupId,
+          inGroupInfo: groupUsersInfo,
+        });
       }
     },
     //设置登录用户在某群的群组属性

@@ -23,7 +23,8 @@ const getGroupMembersList = computed(() => {
   return store.getters.getGroupMembersMap.get(groupId.value);
 });
 
-const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo();
+const { getUserDisplayNameById, getUserDisplayAvatarById } =
+  useGetUserMapInfo();
 onMounted(async () => {
   if (!getGroupMembersList.value) {
     await store.dispatch('fetchGroupsMemberFromServer', groupId.value);
@@ -100,9 +101,9 @@ const searchUsers = () => {
           <template v-if="member && !isInMuteList(member)">
             <div class="friend_user_list">
               <div class="friend_user_list_left">
-                <el-avatar :src="getContactsAvatarById(member)"></el-avatar>
+                <el-avatar :src="getUserDisplayAvatarById(member)"></el-avatar>
                 <b class="friend_list_username">{{
-                  getContactsNickNameById(member)
+                  getUserDisplayNameById(member)
                 }}</b>
               </div>
               <el-button
@@ -123,9 +124,11 @@ const searchUsers = () => {
         <div v-for="member in inMuteMemberList" :key="member">
           <div class="friend_user_list">
             <div class="friend_user_list_left">
-              <el-avatar :src="getContactsAvatarById(member.user)"></el-avatar>
+              <el-avatar
+                :src="getUserDisplayAvatarById(member.user)"
+              ></el-avatar>
               <b class="friend_list_username">{{
-                getContactsNickNameById(member.user)
+                getUserDisplayNameById(member.user)
               }}</b>
               <sup v-if="member.expire" style="font: size 7px"
                 >【失效时间：{{
