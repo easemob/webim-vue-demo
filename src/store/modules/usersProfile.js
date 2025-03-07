@@ -60,7 +60,7 @@ const mutations = {
         baseInfo: {},
         contacts: {},
         groupInfos: new Map(),
-        _meta: { lastMessageHash: '' },
+        _meta: { lastMessageHash: '', lastMessageTimestamp: 0 },
       };
       // 根据来源类型合并数据
       switch (sourceType) {
@@ -120,31 +120,54 @@ const mutations = {
       contacts: {},
       groupInfos: new Map(),
       messageExt: {},
-      _meta: { lastMessageHash: '' },
+      _meta: { lastMessageHash: '', lastMessageTimestamp: msg?.time },
     };
-    console.log('userProfile', userProfile);
     const newHash = generateMsgHash(msg);
     // 哈希值相同则跳过更新
     if (newHash === userProfile._meta.lastMessageHash) return;
-
     const extInfo = msg.ext?.ease_chat_uikit_user_info || {};
     userProfile.messageExt = {
       nickname: extInfo.nickname,
       avatarURL: extInfo.avatarURL,
     };
     userProfile._meta.lastMessageHash = newHash;
-
     state.userProfiles.set(userId, userProfile);
   },
 };
 const actions = {
   processMessageExt({ commit, state }, msg) {
-    const userId = setMessageKey(msg);
+    if (Array.isArray(msg)) {
+      msg.forEach((msgItem) => {
+        const userId = msgItem?.from;
+        const currentHash =
+          state.userProfiles.get(userId)?._meta?.lastMessageHash || '';
+        const currentMsgTime =
+          state.userProfiles.get(userId)?._meta?.lastMessageTimestamp || 0;
+        const newHash = generateMsgHash(msgItem);
+        // 哈希值不同时且消息晚于更新过的消息才提交更新
+        if (
+          newHash !== currentHash &&
+          newHash !== '' &&
+          msgItem.time > currentMsgTime
+        ) {
+          commit('UPDATE_MESSAGE_EXT', { userId, msg: msgItem });
+        }
+      });
+      return;
+    }
+    const userId = msg?.from;
+    if (!userId) return;
     const currentHash =
       state.userProfiles.get(userId)?._meta?.lastMessageHash || '';
+    const currentMsgTime =
+      state.userProfiles.get(userId)?._meta?.lastMessageTimestamp || 0;
     const newHash = generateMsgHash(msg);
-    // 哈希值不同时才提交更新
-    if (newHash !== currentHash && newHash !== '') {
+    // 哈希值不同时且消息晚于更新过的消息才提交更新
+    if (
+      newHash !== currentHash &&
+      newHash !== '' &&
+      msg.time > currentMsgTime
+    ) {
       commit('UPDATE_MESSAGE_EXT', { userId, msg });
     }
   },

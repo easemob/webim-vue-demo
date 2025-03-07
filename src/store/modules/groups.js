@@ -615,6 +615,13 @@ const Groups = {
     getGroupMembersMap: (state) => state.groupMembers,
     getJoinedGroupList: (state) => state.joinedGroup.joinedGroupList,
     getJoinedGroupTotal: (state) => state.joinedGroup.joinedGroupListTotal,
+    //获取加入的群组名
+    getJoinedGroupName: (state) => (groupId) => {
+      const group = state.joinedGroup.joinedGroupList.find(
+        (item) => item.groupId === groupId,
+      );
+      return group?.groupName || groupId;
+    },
   },
 };
 

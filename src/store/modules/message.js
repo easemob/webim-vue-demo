@@ -171,6 +171,9 @@ const Message = {
                 item.read = true;
               });
             resolve({ messages, cursor });
+            dispatch('UsersProfile/processMessageExt', _.reverse(...messages), {
+              root: true,
+            });
             commit('UPDATE_HISTORY_MESSAGE', {
               listKey: id,
               historyMessageList: _.reverse(messages),

@@ -121,116 +121,78 @@ const Conversation = {
   },
   actions: {
     //添加新系统通知
-    createNewInform: ({ dispatch, commit }, params) => {
+    createNewInform: ({ dispatch, commit, getters }, params) => {
       const { fromType, informContent } = params;
-      const result = createInform(fromType, informContent);
-      commit('UPDATE_INFORM_LIST', result);
+      commit('UPDATE_INFORM_LIST', createInform(fromType, informContent));
 
-      //部分事件需要调用接口更新本地信息或者增加消息内系统通知
+      // 消息生成器函数
+      const generateMessage = (type, config) => {
+        const baseMsg = {
+          id: Date.now() + '',
+          chatType: type === 'friend' ? CHAT_TYPE.SINGLE : CHAT_TYPE.GROUP,
+          from: informContent.from,
+          to: type === 'friend' ? informContent.to : informContent.id,
+          fromName: getters['UsersProfile/getDisplayName'](informContent.from),
+          toName:
+            type === 'friend'
+              ? getters['UsersProfile/getDisplayName'](informContent.to)
+              : getters['getJoinedGroupName'](informContent.id),
+        };
+
+        // 消息模板映射
+        const templates = {
+          friend: {
+            unsubscribed: '你俩的友尽了，可重新发起好友申请',
+            subscribed: '你们已成为你的好友,开始聊天吧',
+          },
+          group: {
+            [GROUP_OPERATION_TYPE.MEMBER_PRESENCE]: `${baseMsg.fromName}加入了群组`,
+            [GROUP_OPERATION_TYPE.MEMBER_ABSENCE]: `${baseMsg.fromName}退出了群组`,
+            [GROUP_OPERATION_TYPE.UPDATE_ANNOUNCEMENT]: `${baseMsg.fromName}更新了群组公告，去看看更新的什么吧~`,
+            [GROUP_OPERATION_TYPE.SET_ADMIN]: `${baseMsg.fromName}设定${baseMsg.toName}为管理员~`,
+            [GROUP_OPERATION_TYPE.REMOVE_ADMIN]: `${baseMsg.fromName}移除了${baseMsg.toName}的管理员身份~`,
+            [GROUP_OPERATION_TYPE.MUTE_MEMBER]: `${
+              baseMsg.fromName
+            }禁言了${config.getTargetName()}~`,
+            [GROUP_OPERATION_TYPE.UNMUTE_MEMBER]: `${
+              baseMsg.fromName
+            }取消了${config.getTargetName()}的禁言~`,
+            [GROUP_OPERATION_TYPE.REMOVE_MEMBER]: `${baseMsg.fromName}将你移出了群组${baseMsg.toName}~`,
+            [GROUP_OPERATION_TYPE.DESTROY]: `${baseMsg.fromName}解散了该群~`,
+            [GROUP_OPERATION_TYPE.UPDATE_INFO]: `${baseMsg.fromName}更新了群组详情~`,
+            [GROUP_OPERATION_TYPE.MEMBER_ATTRIBUTES_UPDATE]: `${baseMsg.fromName}修改群内昵称为【${informContent?.attributes?.nickName}】`,
+          },
+        };
+
+        return { ...baseMsg, msg: templates[type][config.operation] };
+      };
+
+      // 处理好友通知
       if (fromType === INFORM_FROM.FRIEND) {
-        const informMsg = {
-          from: informContent.from,
-          to: informContent.to,
-          chatType: CHAT_TYPE.SINGLE,
-        };
-        switch (informContent.type) {
-          case 'unsubscribed':
-            {
-              informMsg.msg = '你俩的友尽了，可重新发起好友申请';
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          case 'subscribed':
-            {
-              informMsg.msg = '你们已成为你的好友,开始聊天吧';
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          default:
-            break;
+        const operation = informContent.type;
+        if (['unsubscribed', 'subscribed'].includes(operation)) {
+          const config = {
+            // 新增配置对象
+            operation,
+            getTargetName: () => informContent.to || '你', // 添加默认方法
+          };
+          dispatch(
+            'createInformMessage',
+            generateMessage('friend', config), // 传入完整配置
+          );
         }
+        return;
       }
-      if (fromType === INFORM_FROM.GROUP) {
-        const informMsg = {
-          from: informContent.from,
-          to: informContent.id,
-          chatType: CHAT_TYPE.GROUP,
-        };
-        switch (informContent.operation) {
-          case GROUP_OPERATION_TYPE.MEMBER_PRESENCE: //入群通知
-            {
-              informMsg.msg = `${informContent.from}加入了群组`;
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          case GROUP_OPERATION_TYPE.MEMBER_ABSENCE:
-            {
-              informMsg.msg = `${informContent.from}退出了群组`;
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          case GROUP_OPERATION_TYPE.UPDATE_ANNOUNCEMENT:
-            {
-              //更新群公告
-              informMsg.msg = `${informContent.from}更新了群组公告，去看看更新的什么吧~`;
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          case GROUP_OPERATION_TYPE.SET_ADMIN:
-            {
-              informMsg.msg = `${informContent.from}设定${informContent.to}为管理员~`;
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          case GROUP_OPERATION_TYPE.REMOVE_ADMIN:
-            {
-              informMsg.msg = `${informContent.from}移除了${informContent.to}的管理员身份~`;
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          case GROUP_OPERATION_TYPE.MUTE_MEMBER:
-            {
-              informMsg.msg = `${informContent.from}禁言了${
-                informContent.to ? informContent.to : '你'
-              }~`;
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          case GROUP_OPERATION_TYPE.UNMUTE_MEMBER:
-            {
-              informMsg.msg = `${informContent.from}取消了${
-                informContent.to ? informContent.to : '你'
-              }的禁言~`;
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          case GROUP_OPERATION_TYPE.REMOVE_MEMBER:
-            {
-              informMsg.msg = `${informContent.from}将你移出了群组${informContent.id}~`;
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          case GROUP_OPERATION_TYPE.DESTROY:
-            {
-              informMsg.msg = `${informContent.from}解散了该群~`;
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          case GROUP_OPERATION_TYPE.UPDATE_INFO:
-            {
-              informMsg.msg = `${informContent.from}更新了群组详情~`;
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
 
-          case GROUP_OPERATION_TYPE.MEMBER_ATTRIBUTES_UPDATE:
-            {
-              informMsg.msg = `${informContent.from}修改群内昵称为【${informContent?.attributes?.nickName}】`;
-              dispatch('createInformMessage', informMsg);
-            }
-            break;
-          default:
-            break;
+      // 处理群组通知
+      if (fromType === INFORM_FROM.GROUP) {
+        const config = {
+          operation: informContent.operation,
+          getTargetName: () => informContent.to || '你',
+        };
+        if (Object.values(GROUP_OPERATION_TYPE).includes(config.operation)) {
+          console.log('<<<<提交系统通知>>>>');
+          dispatch('createInformMessage', generateMessage('group', config));
         }
       }
     },

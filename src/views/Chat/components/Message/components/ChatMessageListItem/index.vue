@@ -475,7 +475,11 @@ const onMsgQuote = (msg) => emit('messageQuote', msg);
       <!-- 撤回消息通知 -->
       <template v-if="msgBody.isRecall">
         <div class="recall_style">
-          {{ isMyself(msgBody) ? '你' : `${msgBody.from}` }}撤回了一条消息<span
+          {{
+            isMyself(msgBody)
+              ? '你'
+              : `${getUserDisplayNameById(msgBody.from)}`
+          }}撤回了一条消息<span
             class="reEdit"
             v-show="isMyself(msgBody) && msgBody.type === MESSAGE_TYPE.TEXT"
             @click="reEdit(msgBody.msg)"
