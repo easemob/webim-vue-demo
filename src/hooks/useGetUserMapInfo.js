@@ -19,20 +19,9 @@ const useGetUserMapInfo = () => {
   const getJoinedGroupList = computed(() => store.getters.getJoinedGroupList);
   //获取群组详情（展示群组名称等信息）
   const groupDetailMap = computed(() => store.getters.getGroupDetailMap);
-  //TODO 待改动群组昵称获取方式
-  const getTheGroupNickNameById = (groupId, targetId) => {
-    const nickName =
-      groupDetailMap.value.get(groupId)?.groupMemberInfo?.[targetId]?.nickName;
-    // 优先获取群组设置的昵称, 否则获取用户设置的昵称, 再次尝试获取消息体内携带的昵称，否则获取环信ID
-    return nickName?.trim() || getContactsNickNameById(targetId);
-  };
   //获取群组名
   const getGroupNameByGroupId = (groupId) => {
-    const groupInfo = groupDetailMap.value.get(groupId);
-    const findJoinedGroup = getJoinedGroupList.value.find(
-      (groupItem) => groupItem.groupId === groupId,
-    );
-    return groupInfo?.groupName || findJoinedGroup?.groupName || groupId;
+    return store.getters['getGroupName'](groupId);
   };
   const getLoginNickNameById = () => {
     const { nickname, hxId } = store.state.loginUserInfo;
@@ -51,7 +40,7 @@ const useGetUserMapInfo = () => {
   };
   //获取群组头像
   const getGroupAvatarByGroupId = (groupId) => {
-    const groupInfo = groupDetailMap.value.get(groupId);
+    const groupInfo = groupDetailMap.value.get(groupId) ?? {};
     // 优先获取群组设置的头像, 再次尝试获取自定义字段内携带的头像，否则获取默认头像
     return groupInfo?.avatar || groupInfo?.custom || defaultGroupAvatar;
   };
@@ -65,7 +54,6 @@ const useGetUserMapInfo = () => {
     return getUsersProfileAvatarUrl(targetId);
   };
   return {
-    getTheGroupNickNameById,
     getGroupNameByGroupId,
     getLoginNickNameById,
     getContactsNickNameById,

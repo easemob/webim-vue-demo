@@ -184,7 +184,10 @@ const Groups = {
   },
   actions: {
     //从服务端获取加入的群组列表
-    fetchJoinedGroupListFromServer: async ({ state, commit }, params = {}) => {
+    fetchJoinedGroupListFromServer: async (
+      { state, dispatch, commit },
+      params = {},
+    ) => {
       const {
         pagingParams: { pageNum, pageSize },
       } = state.joinedGroup;
@@ -198,13 +201,15 @@ const Groups = {
         });
         if (entities?.length === 0) return;
         commit('SET_JOINED_GROUP', { total, entities });
+        const groupIds = _.map(entities, 'groupId');
+        if (groupIds?.length === 0) return;
+        dispatch('fetchGroupDetailFromServer', groupIds);
       } catch (error) {
         console.error('加入的群组列表获取失败', error);
       }
     },
     //从服务端获取群组详情
     fetchGroupDetailFromServer: async ({ commit }, groupIds = []) => {
-      console.log('>>>>>>groupIds', groupIds);
       let groupDetails = [];
       async function fetchDetailsForGroupIds(groupIdArray) {
         try {
@@ -616,11 +621,12 @@ const Groups = {
     getJoinedGroupList: (state) => state.joinedGroup.joinedGroupList,
     getJoinedGroupTotal: (state) => state.joinedGroup.joinedGroupListTotal,
     //获取加入的群组名
-    getJoinedGroupName: (state) => (groupId) => {
+    getGroupName: (state) => (groupId) => {
       const group = state.joinedGroup.joinedGroupList.find(
         (item) => item.groupId === groupId,
       );
-      return group?.groupName || groupId;
+      const groupInfo = state.groupDetails.get(groupId) || {};
+      return group?.groupName || groupInfo?.name || groupId;
     },
   },
 };

@@ -136,7 +136,7 @@ const Conversation = {
           toName:
             type === 'friend'
               ? getters['UsersProfile/getDisplayName'](informContent.to)
-              : getters['getJoinedGroupName'](informContent.id),
+              : getters['getGroupName'](informContent.id),
         };
 
         // 消息模板映射

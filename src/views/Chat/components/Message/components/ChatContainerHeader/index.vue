@@ -16,7 +16,7 @@ const props = defineProps({
 });
 const { routeQueryData } = toRefs(props);
 //处理获取单人用户昵称等信息。
-const { getContactsNickNameById } = useGetUserMapInfo();
+const { getContactsNickNameById, getGroupNameByGroupId } = useGetUserMapInfo();
 const getContactsNickName = computed(() => {
   return getContactsNickNameById(routeQueryData.value.id);
 });
@@ -63,7 +63,7 @@ onMounted(() => {
     <template v-if="routeQueryData.chatType === CHAT_TYPE.GROUP">
       <div class="chat_user_box">
         <span class="chat_user_name">
-          {{ groupDetail.groupName || '' }}
+          {{ getGroupNameByGroupId(routeQueryData.id) || '' }}
           {{ `(${groupDetail?.affiliationsCount || ''})` }}
         </span>
       </div>

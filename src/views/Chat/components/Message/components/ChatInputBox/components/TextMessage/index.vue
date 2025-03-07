@@ -38,7 +38,7 @@ onUpdated(() => {
  * 文本消息相关
  * 包含 @、emoji、引用功能
  */
-const { getTheGroupNickNameById, getUserDisplayNameById } = useGetUserMapInfo();
+const { getUserDisplayNameById } = useGetUserMapInfo();
 //AT 逻辑
 const atMembersList = computed(() => {
   const members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }];
