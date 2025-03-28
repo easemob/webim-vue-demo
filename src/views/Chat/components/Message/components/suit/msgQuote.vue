@@ -43,7 +43,7 @@ import { useStore } from 'vuex';
 import useGetUserMapInfo from '@/hooks/useGetUserMapInfo';
 import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
 import { SESSION_MESSAGE_TYPE } from '@/constant';
-const { getTheGroupNickNameById, getLoginNickNameById } = useGetUserMapInfo();
+const { getUserDisplayNameById, getLoginNickNameById } = useGetUserMapInfo();
 
 /* stores */
 const store = useStore();
@@ -75,7 +75,7 @@ const extractMessageBodyValue = (sourceMsg) => {
   } else {
     //判断消息引用来源是否为群组，如果是群组，则从群组中获取群组属性。
     const groupId = sourceMsg.chatType === CHAT_TYPE.GROUP ? sourceMsg.to : '';
-    msgQuote.msgSender = getTheGroupNickNameById(groupId, from);
+    msgQuote.msgSender = getUserDisplayNameById(from, groupId);
   }
   if (type === MESSAGE_TYPE.IMAGE) {
     quoteImageUrl.thumb = sourceMsg.thumb;

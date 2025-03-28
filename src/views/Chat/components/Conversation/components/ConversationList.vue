@@ -44,15 +44,16 @@ const conversationList = computed(() => {
 });
 //处理会话name
 const {
-  getContactsNickNameById,
-  getContactsAvatarById,
   getGroupNameByGroupId,
+  getGroupAvatarByGroupId,
+  getUserDisplayNameById,
+  getUserDisplayAvatarById,
 } = useGetUserMapInfo();
 const handleConversationName = computed(() => {
   return (conversationItem) => {
     const { conversationType, conversationId } = conversationItem;
     if (conversationType === CHAT_TYPE.SINGLE) {
-      return getContactsNickNameById(conversationId);
+      return getUserDisplayNameById(conversationId);
     }
     if (conversationType === CHAT_TYPE.GROUP) {
       return getGroupNameByGroupId(conversationId);
@@ -64,31 +65,22 @@ const handleConversationAvatar = computed(() => {
   return (conversationItem) => {
     const { conversationType, conversationId } = conversationItem;
     if (conversationType === CHAT_TYPE.SINGLE) {
-      return getContactsAvatarById(conversationId);
+      return getUserDisplayAvatarById(conversationId);
     }
-    //群组暂使用默认群头像
     if (conversationType === CHAT_TYPE.GROUP) {
-      return defaultGroupAvatar;
+      return getGroupAvatarByGroupId(conversationId);
     }
   };
 });
 //处理lastmsg的from昵称
 const handleLastMsgNickName = computed(() => {
-  const groupsInfos = store.state.Groups.groupsInfos;
   return (conversationItem) => {
-    const {
-      conversationId: groupId,
-      conversationType,
-      lastMessage,
-    } = conversationItem;
-    const { from } = lastMessage || {};
-    const userInfoFromGroupNickname =
-      groupsInfos[groupId]?.groupMemberInfo?.[from]?.nickName;
-    const friendUserInfoNickname = getContactsNickNameById(from);
-    if (!from || from === loginUserId.value) {
+    const { conversationId: groupId, lastMessage } = conversationItem;
+    const { from: userId } = lastMessage || {};
+    if (!userId || userId === loginUserId.value) {
       return '我：';
     } else {
-      return `${userInfoFromGroupNickname || friendUserInfoNickname}：`;
+      return `${getUserDisplayNameById(userId, groupId)} ：`;
     }
   };
 });

@@ -1,9 +1,10 @@
 <script setup>
 import { computed } from 'vue';
 import { useStore } from 'vuex';
-import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
 import { CHAT_TYPE } from '@/IM/constant';
+import { useGetUserMapInfo } from '@/hooks';
 const store = useStore();
+const { getGroupAvatarByGroupId, getGroupNameByGroupId } = useGetUserMapInfo();
 //点击对应联系人跳转至用户详情页
 //群组列表
 const joinedGroupList = computed(() => store.getters.getJoinedGroupList);
@@ -24,11 +25,15 @@ const joinedGroupList = computed(() => store.getters.getJoinedGroupList);
         <el-avatar
           style="margin-right: 11px"
           :size="33.03"
-          :src="defaultGroupAvatarUrl"
+          :src="getGroupAvatarByGroupId(groupItem.groupId)"
         >
         </el-avatar>
         <span class="group_name">
-          {{ `${groupItem.groupName}（${groupItem.affiliationsCount}）` }}
+          {{
+            `${getGroupNameByGroupId(groupItem.groupId)}（${
+              groupItem.affiliationsCount
+            }）`
+          }}
         </span>
       </el-col>
     </el-row>

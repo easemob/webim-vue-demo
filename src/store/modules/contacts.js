@@ -2,6 +2,7 @@ import { EMClient } from '@/IM';
 // import { useLocalStorage } from '@vueuse/core';
 import { sortPinyinFriendItem, handlePresence } from '@/utils/handleSomeData';
 import _ from 'lodash';
+import { userProfileUtils, SOURCE_TYPE } from './usersProfile';
 const Contacts = {
   state: {
     contactsWithRemarkMap: new Map(),
@@ -22,10 +23,9 @@ const Contacts = {
       const toMap = new Map(Object.entries(toObj));
       state.contactsWithRemarkMap = toMap;
     },
-    SET_FRIEND_LIST_USER_INFOS: (state, payload) => {
+    SET_FRIEND_LIST_USER_INFOS: function (state, payload) {
       const { userInfos } = payload;
       const userInfosToMap = new Map(Object.entries(userInfos));
-
       if (state.contactsUserInfosMap.size === 0) {
         state.contactsUserInfosMap = userInfosToMap;
       } else {
@@ -99,6 +99,10 @@ const Contacts = {
           commit('SET_FRIEND_LIST_WITH_REMARK', {
             friendList: { ...data },
           });
+          const normalizedContacts = userProfileUtils.normalizeUserData()(data);
+          commit('UsersProfile/MERGE_USER_PROFILES', normalizedContacts, {
+            root: true,
+          });
         }
         const userIds = _.map(data, 'userId');
         dispatch('fetchContactsUserInfos', userIds);
@@ -157,6 +161,12 @@ const Contacts = {
         commit('SET_FRIEND_LIST_USER_INFOS', {
           userInfos: usersInfosObj,
         });
+        const normalizedContacts = userProfileUtils.normalizeUserData(
+          SOURCE_TYPE.CONTACT,
+        )(usersInfosObj);
+        commit('UsersProfile/MERGE_USER_PROFILES', normalizedContacts, {
+          root: true,
+        });
       } catch (error) {
         console.error('>>>获取联系人用户属性失败', error);
       }
@@ -205,6 +215,17 @@ const Contacts = {
           remark, // 好友备注
         });
         commit('SET_CONTACTS_REMARK_TO_MAP', { userId, remark });
+        commit(
+          'UsersProfile/UPDATE_USER_PROFILE',
+          {
+            userId,
+            sourceType: SOURCE_TYPE.BASE,
+            profile: {
+              remark,
+            },
+          },
+          { root: true },
+        );
       } catch (error) {
         console.error('设置联系人备注失败', error);
       }

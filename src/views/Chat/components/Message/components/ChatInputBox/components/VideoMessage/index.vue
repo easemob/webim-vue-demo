@@ -13,6 +13,7 @@
 import { ref, toRefs } from 'vue';
 import { EMClient } from '@/IM';
 import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
+import { useUserInfoExt } from '@/hooks';
 import store from '@/store';
 const props = defineProps({
   chatType: {
@@ -32,9 +33,10 @@ const uploadVideo = ref(null);
 const openChooseVideo = () => {
   uploadVideo.value.click();
 };
+const { setUserInfoExt } = useUserInfoExt();
 const sendVideoMessage = async (event) => {
   console.log('>>>>>>执行上传发送视频消息');
-  const videoFile = uploadVideo.value.files[0];
+  const videoFile = uploadVideo.value?.files[0];
   if (!videoFile) return;
   const messageFileBody = {
     data: videoFile,
@@ -66,6 +68,8 @@ const sendVideoMessage = async (event) => {
       emit('onLoadending');
     },
   };
+  //携带发送方昵称头像等信息
+  setUserInfoExt(options);
   const msg = EMClient.Message.create(options);
   try {
     const { message } = await EMClient.send(msg);

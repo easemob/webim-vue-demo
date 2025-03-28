@@ -3,7 +3,7 @@ import { ref, toRefs, computed, onMounted, onUpdated } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 import { MENTION_ALL } from '@/constant';
 import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
-import { useGetUserMapInfo } from '@/hooks';
+import { useGetUserMapInfo, useUserInfoExt } from '@/hooks';
 import store from '@/store';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
 //vue at
@@ -38,7 +38,7 @@ onUpdated(() => {
  * 文本消息相关
  * 包含 @、emoji、引用功能
  */
-const { getTheGroupNickNameById } = useGetUserMapInfo();
+const { getUserDisplayNameById } = useGetUserMapInfo();
 //AT 逻辑
 const atMembersList = computed(() => {
   const members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }];
@@ -53,7 +53,7 @@ const atMembersList = computed(() => {
       sourceMembers.forEach((item) => {
         if (item.owner !== EMClient.user && item.member !== EMClient.user) {
           members.push({
-            text: getTheGroupNickNameById(groupId, item.owner || item.member),
+            text: getUserDisplayNameById(item.owner || item.member, groupId),
             value: item.owner || item.member,
           });
         }
@@ -127,6 +127,7 @@ const onTextInputKeyDown = (event) => {
 const insertNewLine = () => (textContent.value += '\n');
 //发送文本内容
 const textContent = ref('');
+const { setUserInfoExt } = useUserInfoExt();
 const sendTextMessage = _.debounce(async () => {
   //如果输入框全部为空格同样拒绝发送
   if (textContent.value.match(/^\s*$/)) return;
@@ -143,6 +144,8 @@ const sendTextMessage = _.debounce(async () => {
         : _.map(atMembers.value, 'value'),
     },
   };
+  //在消息体内携带该用户的昵称头像信息
+  setUserInfoExt(msgOptions);
   //引用消息处理
   const callback = (data) => {
     if (Object.values(data).some((item) => item !== '')) {
@@ -155,6 +158,7 @@ const sendTextMessage = _.debounce(async () => {
   try {
     const msg = EMClient.Message.create(msgOptions);
     const { message } = await EMClient.send(msg);
+    console.log('message', message);
     await store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
     console.error('发送文本消息失败', error);

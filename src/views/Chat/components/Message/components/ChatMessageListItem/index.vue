@@ -87,26 +87,24 @@ const isLink = computed(() => {
 const loginUserInfo = computed(() => store.state.loginUserInfo);
 
 /* 获取他人的用户信息 */
-const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo();
-const otherUserInfo = computed(() => {
-  return (otherId) => {
-    return getContactsAvatarById(otherId);
+const { getUserDisplayNameById, getUserDisplayAvatarById } =
+  useGetUserMapInfo();
+//处理他人头像展示
+const handleOtherAvatar = computed(() => {
+  return (msgBody) => {
+    return getUserDisplayAvatarById(msgBody.from);
   };
 });
 //处理聊天对方昵称展示
-
 const handleNickName = computed(() => {
-  const { chatType, id } = routeQueryData.value;
-  const groupsInfos = store.state.Groups.groupsInfos;
-  return (hxId) => {
+  const { chatType, id: groupId } = routeQueryData.value;
+  return (msgBody) => {
+    const userId = msgBody.from;
     if (chatType === CHAT_TYPE.SINGLE) {
-      return getContactsNickNameById(hxId);
+      return getUserDisplayNameById(userId);
     }
     if (chatType === CHAT_TYPE.GROUP) {
-      const userInfoFromGroupNickname =
-        groupsInfos[id]?.groupMemberInfo?.[hxId]?.nickName;
-      const friendUserInfoNickname = getContactsNickNameById(hxId);
-      return userInfoFromGroupNickname || friendUserInfoNickname;
+      return getUserDisplayNameById(userId, groupId);
     }
   };
 });
@@ -270,18 +268,18 @@ const onMsgQuote = (msg) => emit('messageQuote', msg);
             {{ handleMsgTimeShow(msgBody.time, index) || '' }}
           </div>
           <el-avatar
-            class="message_item_avator"
+            class="message_item_avatar"
             :src="
               isMyself(msgBody)
                 ? loginUserInfo.avatarurl
-                : otherUserInfo(msgBody.from).avatarurl || defaultAvatar
+                : handleOtherAvatar(msgBody)
             "
           >
           </el-avatar>
           <!-- 普通消息内容 -->
           <div class="message_box_card">
             <span v-show="!isMyself(msgBody)" class="message_box_nickname">{{
-              handleNickName(msgBody.from)
+              handleNickName(msgBody)
             }}</span>
             <el-dropdown
               class="message_box_content"
@@ -477,7 +475,11 @@ const onMsgQuote = (msg) => emit('messageQuote', msg);
       <!-- 撤回消息通知 -->
       <template v-if="msgBody.isRecall">
         <div class="recall_style">
-          {{ isMyself(msgBody) ? '你' : `${msgBody.from}` }}撤回了一条消息<span
+          {{
+            isMyself(msgBody)
+              ? '你'
+              : `${getUserDisplayNameById(msgBody.from)}`
+          }}撤回了一条消息<span
             class="reEdit"
             v-show="isMyself(msgBody) && msgBody.type === MESSAGE_TYPE.TEXT"
             @click="reEdit(msgBody.msg)"

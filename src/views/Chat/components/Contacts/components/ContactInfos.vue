@@ -9,32 +9,25 @@ import { ArrowLeft } from '@element-plus/icons-vue';
 import { useGetUserMapInfo } from '@/hooks';
 /* 组件 */
 // import UserStatus from '@/components/UserStatus'
-/* 单人头像 */
-import defaultSingleAvatar from '@/assets/images/avatar/theme2x.png';
-import defaultGroupAvatarUrl from '@/assets/images/avatar/jiaqun2x.png';
 import ContactsRemark from './ContactsRemark.vue';
 /* store */
 const store = useStore();
 /* route */
 const route = useRoute();
 
-//取好友列表(主要使用好友下的用户属性相关)
-const friendList = computed(() => store.state.Contacts.friendList);
-
-//群组列表
-const joinedGroupList = computed(() => store.getters.getJoinedGroupList);
-const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo();
+const {
+  getContactsAvatarById,
+  getGroupNameByGroupId,
+  getGroupAvatarByGroupId,
+} = useGetUserMapInfo();
 const getContactsName = computed(() => {
   const id = route.query.id;
   const chatType = route.query.chatType;
   if (chatType === CHAT_TYPE.SINGLE) {
-    return getContactsNickNameById(id);
+    return store.getters['UsersProfile/getDisplayContactsNickname'](id);
   }
   if (chatType === CHAT_TYPE.GROUP) {
-    const groupDetail = joinedGroupList.value.find((gourpItem) => {
-      return gourpItem.groupId === id;
-    });
-    return groupDetail?.groupName || groupDetail?.groupId;
+    return getGroupNameByGroupId(id);
   }
 });
 const getContactsAvatar = computed(() => {
@@ -45,7 +38,7 @@ const getContactsAvatar = computed(() => {
   }
   //群组暂使用默认群头像
   if (chatType === CHAT_TYPE.GROUP) {
-    return defaultGroupAvatarUrl;
+    return getGroupAvatarByGroupId(id);
   }
 });
 /* 单人黑名单状态的处理 */

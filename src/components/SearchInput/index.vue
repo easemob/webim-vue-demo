@@ -52,7 +52,7 @@ const querySearch = () => {
       // }
       if (o.conversationType === CHAT_TYPE.SINGLE) {
         return (
-          getContactsNickNameById(o.conversationId).indexOf(inputValue.value) >
+          getUserDisplayNameById(o.conversationId).indexOf(inputValue.value) >
             -1 ||
           o.conversationId.indexOf(inputValue.value) > -1 ||
           o.lastMessage?.msg.indexOf(inputValue.value) > -1
@@ -170,9 +170,12 @@ const handleEscapeKey = () => {
   suuggestInputComps.value.blur();
 };
 const {
-  getContactsAvatarById,
+  // getUserDisplayAvatarById,
   getGroupNameByGroupId,
-  getContactsNickNameById,
+  getGroupAvatarByGroupId,
+  // getUserDisplayNameById,
+  getUserDisplayAvatarById,
+  getUserDisplayNameById,
 } = useGetUserMapInfo();
 </script>
 <template>
@@ -210,7 +213,7 @@ const {
             >
               <span>{{
                 item.chatType === CHAT_TYPE.SINGLE
-                  ? getContactsNickNameById(item.value)
+                  ? getUserDisplayNameById(item.value)
                   : getGroupNameByGroupId(item.value)
               }}</span>
             </li>
@@ -244,8 +247,10 @@ const {
                   :size="34"
                   :src="
                     conversationItem.conversationType === CHAT_TYPE.SINGLE
-                      ? getContactsAvatarById(conversationItem.conversationId)
-                      : defaultGroupAvatarUrl
+                      ? getUserDisplayAvatarById(
+                          conversationItem.conversationId,
+                        )
+                      : getGroupAvatarByGroupId(conversationItem.conversationId)
                   "
                 ></el-avatar>
               </div>
@@ -254,7 +259,7 @@ const {
               <div class="name">
                 {{
                   conversationItem.conversationType === CHAT_TYPE.SINGLE
-                    ? getContactsNickNameById(conversationItem.conversationId)
+                    ? getUserDisplayNameById(conversationItem.conversationId)
                     : getGroupNameByGroupId(conversationItem.conversationId)
                 }}
               </div>
@@ -277,13 +282,15 @@ const {
             <div class="search_result_item" @click="emitContacts(contactItem)">
               <div class="item_body item_left">
                 <div class="session_other_avatar">
-                  <el-avatar :src="getContactsAvatarById(contactItem.userId)">
+                  <el-avatar
+                    :src="getUserDisplayAvatarById(contactItem.userId)"
+                  >
                   </el-avatar>
                 </div>
               </div>
               <div class="item_body item_main">
                 <div class="name">
-                  {{ getContactsNickNameById(contactItem.userId) }}
+                  {{ getUserDisplayNameById(contactItem.userId) }}
                 </div>
               </div>
             </div>

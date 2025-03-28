@@ -180,6 +180,11 @@ const quitThisGroup = async () => {
       },
     );
     await store.dispatch('leaveIntheGroup', { groupId: groupId.value });
+    ElMessage({
+      message: '退出群组成功~',
+      type: 'success',
+      center: true,
+    });
     emits('handleDrawer');
   } catch (error) {
     if (error !== 'cancel') {
@@ -203,6 +208,11 @@ const dissolveThisGroup = async () => {
       },
     );
     await store.dispatch('destroyInTheGroup', { groupId: groupId.value });
+    ElMessage({
+      message: '解散群组成功~',
+      type: 'success',
+      center: true,
+    });
     emits('handleDrawer');
   } catch (error) {
     if (error !== 'cancel') {
@@ -243,7 +253,8 @@ const handleUpdateGroupData = async () => {
       console.error(error);
     }
   }
-  store.dispatch('fetchInTheGroupInfoFromServer', groupId.value);
+  /* !暂注释此功能调用 */
+  // store.dispatch('fetchInTheGroupInfoFromServer', groupId.value);
 };
 onMounted(() => {
   handleUpdateGroupData();
@@ -295,7 +306,8 @@ onMounted(() => {
     </div>
     <el-divider style="margin: 0" />
     <!-- 本地群组昵称 -->
-    <div class="group_func_card group_name">
+    <!-- !其他端UIKIT暂不支持此设置，因此暂时注释。 -->
+    <!-- <div class="group_func_card group_name">
       <div class="title">
         我在本群的昵称
         <el-icon
@@ -320,7 +332,7 @@ onMounted(() => {
           @blur="editMyGroupNickName('save', inTheGroupNickname)"
         />
       </div>
-    </div>
+    </div> -->
     <el-divider style="margin: 0" />
     <!-- 群公告 -->
     <div class="group_func_card group_announcements">
@@ -386,7 +398,9 @@ onMounted(() => {
     </template>
     <!-- 群组操作按钮 -->
     <div class="group_list_handle_box">
-      <template v-if="getGroupDetailFromGroupList.owner === EMClient.user">
+      <template
+        v-if="getGroupDetailFromGroupList.role === GROUP_ROLE_TYPE.OWNER"
+      >
         <el-button
           type="danger"
           class="group_list_card_btn"
