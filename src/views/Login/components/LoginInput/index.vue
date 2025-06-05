@@ -167,15 +167,16 @@ const sendMessageAuthCode = async (captchaVerifyParam) => {
       handleSendCode(false);
     }
   } catch (error) {
-    if (error.response.status == "400") {
-      if (error.response.data?.errorInfo == "phone number illegal") {
+    console.log('error.response.data?.error_description', error.response.status);
+    if (error.response.status !== "200") {
+      if (error.response.data?.error_description == "phone number illegal") {
         ElMessage.error({
           message: '请输入正确的手机号码',
           center: true,
           type: 'error'
         });
       } else if (
-        error.response.data?.errorInfo ==
+        error.response.data?.error_description ==
         "Please wait a moment while trying to send."
       ) {
         ElMessage.error({
@@ -184,8 +185,9 @@ const sendMessageAuthCode = async (captchaVerifyParam) => {
           type: 'error'
         });
       } else if (
-        error.response.data?.errorInfo.includes("exceed the limit") ||
-        error.response.data?.errorInfo.includes("SMS verification code exceeds the limit")
+        error.response.data?.error_description.includes("exceed the limit") ||
+        error.response.data?.error_description.includes("SMS verification code exceeds the limit") ||
+        error.response.data?.error_description.includes("This request has reached api limit.")
       ) {
         ElMessage.error({
           message: '验证码获取已达上限，请明日再试', // 修改提示文案
@@ -194,7 +196,7 @@ const sendMessageAuthCode = async (captchaVerifyParam) => {
         });
       } else {
         ElMessage.error({
-          message: error.response.data?.errorInfo,
+          message: error.response.data?.errorInfo || error.response.data?.error_description || "验证码获取失败",
           center: true,
           type: 'error'
         });
