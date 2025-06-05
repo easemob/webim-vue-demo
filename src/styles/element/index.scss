@@ -1,0 +1,30 @@
+@forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  $input: (
+    'border-radius': 57px,
+  )
+);
+@use 'element-plus/theme-chalk/src/index.scss' as *;
+
+.el-popover.el-popper {
+  min-width: 50px;
+}
+
+.conversation_popover {
+  color: #333 !important;
+  width: 80px !important;
+  text-align: center !important;
+  padding: 5px 3px !important;
+}
+
+.user_status_popover {
+  color: #333 !important;
+  width: 135px !important;
+  box-sizing: border-box !important;
+}
+
+.setting_popover {
+  color: #333 !important;
+  width: 135px !important;
+  box-sizing: border-box !important;
+  padding: 15px !important;
+}
