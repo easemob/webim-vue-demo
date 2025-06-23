@@ -1,12 +1,8 @@
 .DS_Store
 node_modules
 /dist
-<<<<<<< HEAD
-
-=======
 /private-config/
 /private-config/*
->>>>>>> add-ver
 
 # local env files
 .env.local

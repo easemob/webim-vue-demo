@@ -158,31 +158,6 @@ const registerIM = async (formEl) => {
 <template>
   <el-form ref="registerFormEl" :model="registerValue" :rules="rules">
     <el-form-item prop="username">
-<<<<<<< HEAD
-      <el-input
-        class="login_input_style"
-        v-model="registerValue.username"
-        placeholder="请输入用户名"
-        clearable
-      />
-    </el-form-item>
-    <el-form-item prop="password">
-      <el-input
-        class="login_input_style"
-        type="password"
-        v-model="registerValue.password"
-        placeholder="请输入注册密码"
-        show-password
-      />
-    </el-form-item>
-    <el-form-item prop="phoneNumber">
-      <el-input
-        class="login_input_style"
-        v-model="registerValue.phoneNumber"
-        placeholder="请输入手机号"
-        clearable
-      >
-=======
       <el-input class="login_input_style" v-model="registerValue.username" placeholder="请输入用户名" clearable />
     </el-form-item>
     <el-form-item prop="password">
@@ -191,28 +166,13 @@ const registerIM = async (formEl) => {
     </el-form-item>
     <el-form-item prop="phoneNumber">
       <el-input class="login_input_style" v-model="registerValue.phoneNumber" placeholder="请输入手机号" clearable>
->>>>>>> add-ver
         <template #prepend>+86</template>
       </el-input>
     </el-form-item>
     <el-form-item prop="imageCode">
-<<<<<<< HEAD
-      <el-input
-        class="login_input_style"
-        v-model="registerValue.imageCode"
-        placeholder="请输入右侧图片验证码"
-      >
-        <template #append>
-          <el-image
-            @click="changeImageCode"
-            class="auth_code"
-            :src="imageCodeInfo.imgUrl"
-          >
-=======
       <el-input class="login_input_style" v-model="registerValue.imageCode" placeholder="请输入右侧图片验证码">
         <template #append>
           <el-image @click="changeImageCode" class="auth_code" :src="imageCodeInfo.imgUrl">
->>>>>>> add-ver
             <template #placeholder>
               <span>加载中...</span>
             </template>
@@ -221,31 +181,12 @@ const registerIM = async (formEl) => {
       </el-input>
     </el-form-item>
     <el-form-item prop="smsCode">
-<<<<<<< HEAD
-      <el-input
-        class="login_input_style"
-        v-model="registerValue.smsCode"
-        placeholder="请输入短信验证码"
-      >
-        <template #append>
-          <el-button
-            type="primary"
-            :disabled="isSenedAuthCode"
-            @click="sendMessageAuthCode"
-            v-text="
-              isSenedAuthCode
-                ? `${authCodeNextCansendTime}s后重新获取`
-                : '获取验证码'
-            "
-          ></el-button>
-=======
       <el-input class="login_input_style" v-model="registerValue.smsCode" placeholder="请输入短信验证码">
         <template #append>
           <el-button type="primary" :disabled="isSenedAuthCode" @click="sendMessageAuthCode" v-text="isSenedAuthCode
               ? `${authCodeNextCansendTime}s后重新获取`
               : '获取验证码'
             "></el-button>
->>>>>>> add-ver
         </template>
       </el-input>
     </el-form-item>
@@ -309,25 +250,15 @@ const registerIM = async (formEl) => {
     color: #cccccc;
   }
 }
-<<<<<<< HEAD
-:deep(.el-form-item__error) {
-  margin-left: 16px;
-}
-=======
 
 :deep(.el-form-item__error) {
   margin-left: 16px;
 }
 
->>>>>>> add-ver
 :deep(.el-input__suffix-inner) {
   font-size: 20px;
   margin-right: 15px;
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> add-ver
 .login_text {
   font-family: 'PingFang SC';
   font-style: normal;

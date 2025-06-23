@@ -26,12 +26,6 @@ export function fetchUserLoginToken(params) {
   });
 }
 //新获取短信验证码
-<<<<<<< HEAD
-export function fetchUserLoginSmsCode(phoneNumber) {
-  return request({
-    url: `/inside/app/sms/send/${phoneNumber}`,
-    method: 'post',
-=======
 export function fetchUserLoginSmsCode(params) {
   const { phoneNumber, captchaVerifyParam } = params;
   return request({
@@ -42,6 +36,5 @@ export function fetchUserLoginSmsCode(params) {
       phoneNumber,
       captchaVerifyParam,
     },
->>>>>>> add-ver
   });
 }

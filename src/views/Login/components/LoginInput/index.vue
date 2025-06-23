@@ -1,9 +1,5 @@
 <script setup>
-<<<<<<< HEAD
-import { ref, reactive, watch, computed } from 'vue';
-=======
 import { ref, reactive, watch, computed, onMounted, onUnmounted } from 'vue';
->>>>>>> add-ver
 import { ElMessage } from 'element-plus';
 import { useStorage } from '@vueuse/core';
 import { EMClient } from '@/IM';
@@ -12,9 +8,6 @@ import { fetchUserLoginSmsCode, fetchUserLoginToken } from '@/api/login';
 import { useStore } from 'vuex';
 import { usePlayRing } from '@/hooks';
 import EmLoginWithPasswordLogin from './emloginWithPasswordLogin.vue';
-<<<<<<< HEAD
-const store = useStore();
-=======
 import { secret, PREFIX, SCENE_ID } from '@/private-config'
 import { encryptAES } from '@/utils/encriptAES';
 //判断当前是否为生产环境
@@ -22,7 +15,6 @@ const isProd = process.env.NODE_ENV === 'production'
 const isDev = !isProd
 const store = useStore();
 const emits = defineEmits(['changeToLogin']);
->>>>>>> add-ver
 const loginValue = reactive({
   phoneNumber: '',
   smsCode: '',
@@ -98,23 +90,6 @@ const loginIM = async () => {
   }
 };
 /* 短信验证码相关 */
-<<<<<<< HEAD
-const isSenedAuthCode = ref(false);
-const authCodeNextCansendTime = ref(60);
-const sendMessageAuthCode = async () => {
-  const phoneNumber = loginValue.phoneNumber;
-  try {
-    await fetchUserLoginSmsCode(phoneNumber);
-    ElMessage({
-      type: 'success',
-      message: '验证码获取成功！',
-      center: true,
-    });
-    startCountDown();
-  } catch (error) {
-    ElMessage({ type: 'error', message: '验证码获取失败！', center: true });
-  }
-=======
 const isSending = ref(false);
 const handleSendCode = (sendStatus) => isSending.value = sendStatus;
 const isSenedAuthCode = ref(false);
@@ -241,7 +216,6 @@ const sendMessageAuthCode = async (captchaVerifyParam) => {
     handleSendCode(false);
   }
 
->>>>>>> add-ver
 };
 const startCountDown = () => {
   isSenedAuthCode.value = true;
@@ -267,34 +241,6 @@ const IM_IS_OPEN_CUSTOM_SERVER_CONFIG = useStorage(
 </script>
 
 <template>
-<<<<<<< HEAD
-  <EmLoginWithPasswordLogin v-if="IM_IS_OPEN_CUSTOM_SERVER_CONFIG" />
-  <template v-else>
-    <el-form :model="loginValue" :rules="rules">
-      <el-form-item prop="phoneNumber">
-        <el-input
-          class="login_input_style"
-          v-model="loginValue.phoneNumber"
-          placeholder="手机号"
-          clearable
-        />
-      </el-form-item>
-      <el-form-item prop="smsCode">
-        <el-input
-          class="login_input_style"
-          v-model="loginValue.smsCode"
-          placeholder="请输入短信验证码"
-        >
-          <template #append>
-            <el-button
-              type="primary"
-              :disabled="loginValue.phoneNumber && isSenedAuthCode"
-              @click="sendMessageAuthCode"
-              v-text="
-                isSenedAuthCode ? `${authCodeNextCansendTime}S` : '获取验证码'
-              "
-            ></el-button>
-=======
   <EmLoginWithPasswordLogin v-if="IM_IS_OPEN_CUSTOM_SERVER_CONFIG || isDev" />
   <template v-else>
     <el-form :model="loginValue" :rules="rules">
@@ -306,34 +252,20 @@ const IM_IS_OPEN_CUSTOM_SERVER_CONFIG = useStorage(
           <template #append>
             <el-button id="captcha-button" type="primary" :disabled="loginValue.phoneNumber && isSenedAuthCode" v-text="isSenedAuthCode ? `${authCodeNextCansendTime}S` : '获取验证码'
               "></el-button>
->>>>>>> add-ver
           </template>
         </el-input>
       </el-form-item>
       <el-form-item>
         <div class="function_button_box">
-<<<<<<< HEAD
-          <el-button
-            v-if="loginValue.phoneNumber && loginValue.smsCode"
-            class="haveValueBtn"
-            :loading="buttonLoading"
-            @click="loginIM"
-            >登录</el-button
-          >
-=======
           <el-button v-if="loginValue.phoneNumber && loginValue.smsCode" class="haveValueBtn" :loading="buttonLoading"
             @click="loginIM">登录</el-button>
->>>>>>> add-ver
           <el-button v-else class="notValueBtn">登录</el-button>
         </div>
       </el-form-item>
     </el-form>
   </template>
-<<<<<<< HEAD
-=======
   <!-- 验证码渲染元素框 -->
   <div id="captcha-element" :style="{ 'display': isSending ? 'none' : 'initial' }"></div>
->>>>>>> add-ver
 </template>
 
 <style lang="scss" scoped>

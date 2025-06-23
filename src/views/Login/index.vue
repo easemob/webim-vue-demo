@@ -1,24 +1,15 @@
 <script setup>
-<<<<<<< HEAD
-import { ref } from 'vue';
-=======
 import { ref, onMounted } from 'vue';
->>>>>>> add-ver
 import { EMClient } from '@/IM';
 import { useStorage } from '@vueuse/core';
 import CustomImConfig from '@/views/Login/components/CustomImConfig';
 import LoginInput from './components/LoginInput';
 import RegisterInput from './components/RegisterInput';
 import ResetPassword from './components/ResetPassword';
-<<<<<<< HEAD
-//login图
-const logo = require('@/assets/images/loginIcon.png');
-=======
 import { ElMessage } from 'element-plus';
 //login图
 import logo from '@/assets/images/loginIcon.png';
 
->>>>>>> add-ver
 // 登陆注册所用
 const showComponent = ref(0);
 const componType = {
@@ -35,18 +26,13 @@ const toEasemob = () => {
 };
 
 //服务配置
-<<<<<<< HEAD
-=======
 const isProd = process.env.NODE_ENV === 'production'
 const isShowDevWarning = ref(false)
->>>>>>> add-ver
 const isShowCustomServerConfig = useStorage(
   'IM_IS_OPEN_CUSTOM_SERVER_CONFIG',
   false,
 );
 const customImConfig = ref(null);
-<<<<<<< HEAD
-=======
 onMounted(() => {
   if (!isProd) {
     isShowDevWarning.value = true
@@ -56,7 +42,6 @@ const goToCustomImConfig = () => {
   isShowDevWarning.value = false
   customImConfig.value.centerDialogVisible = true;
 };
->>>>>>> add-ver
 const showCustomImConfigModal = () => {
   customImConfig.value.centerDialogVisible = true;
 };
@@ -90,33 +75,14 @@ const IM_SDK_VERSION = EMClient.version;
   <el-container class="app_container">
     <el-main class="login_box">
       <div>
-<<<<<<< HEAD
-        <el-row
-          class="login_box_card out-drawer animate__animated animate__slideInLeft"
-        >
-=======
         <el-row class="login_box_card out-drawer animate__animated animate__slideInLeft">
->>>>>>> add-ver
           <el-col>
             <img class="logo" :src="logo" @click="toEasemob" alt="" />
           </el-col>
           <!-- <component :is="componType[showComponent]" @changeToLogin="changeToLogin"></component> -->
-<<<<<<< HEAD
-          <component
-            :is="componType[0]"
-            @changeToLogin="changeToLogin"
-          ></component>
-          <el-link
-            v-if="isShowCustomServerConfig"
-            class="custom_config"
-            @click="showCustomImConfigModal"
-            >服务器配置</el-link
-          >
-=======
           <component :is="componType[0]" @changeToLogin="changeToLogin"></component>
           <el-link v-if="!isProd || isShowCustomServerConfig" class="custom_config"
             @click="showCustomImConfigModal">服务器配置</el-link>
->>>>>>> add-ver
           <el-col v-show="showComponent !== 2">
             <div class="function_button_extra">
               <!-- <el-link class="reset_password" @click="showComponent = 2">重置密码</el-link> -->
@@ -135,12 +101,6 @@ const IM_SDK_VERSION = EMClient.version;
     <el-footer>
       <div class="copyright">
         Copyright © easemob Web IM SDK版本号：<span @click="onClickVersion">
-<<<<<<< HEAD
-          {{ IM_SDK_VERSION ? IM_SDK_VERSION : '4.x' }}</span
-        >
-      </div>
-    </el-footer>
-=======
           {{ IM_SDK_VERSION ? IM_SDK_VERSION : '4.x' }}</span>
       </div>
     </el-footer>
@@ -155,7 +115,6 @@ const IM_SDK_VERSION = EMClient.version;
         </div>
       </template>
     </el-dialog>
->>>>>>> add-ver
     <CustomImConfig ref="customImConfig" />
   </el-container>
 </template>
