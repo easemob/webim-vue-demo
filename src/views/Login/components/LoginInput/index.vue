@@ -10,6 +10,9 @@ import { usePlayRing } from '@/hooks';
 import EmLoginWithPasswordLogin from './emloginWithPasswordLogin.vue';
 import { secret, PREFIX, SCENE_ID } from '@/private-config'
 import { encryptAES } from '@/utils/encriptAES';
+//判断当前是否为生产环境
+const isProd = process.env.NODE_ENV === 'production'
+const isDev = !isProd
 const store = useStore();
 const emits = defineEmits(['changeToLogin']);
 const loginValue = reactive({
@@ -92,7 +95,7 @@ const handleSendCode = (sendStatus) => isSending.value = sendStatus;
 const isSenedAuthCode = ref(false);
 const authCodeNextCansendTime = ref(60);
 onMounted(() => {
-  if (window.initAliyunCaptcha) {
+  if (window.initAliyunCaptcha && isProd) {
     window.initAliyunCaptcha({
       SceneId: SCENE_ID, // 场景ID。根据步骤二新建验证场景后，您可以在验证码场景列表，获取该场景的场景ID
       prefix: PREFIX, // 身份标。开通阿里云验证码2.0后，您可以在控制台概览页面的实例基本信息卡片区域，获取身份标
@@ -138,8 +141,10 @@ const captchaVerifyCallback = async (captchaVerifyParam) => {
 };
 onUnmounted(() => {
   // 必须删除相关元素，否则再次mount多次调用 initAliyunCaptcha 会导致多次回调 captchaVerifyCallback
-  document.getElementById("aliyunCaptcha-mask")?.remove();
-  document.getElementById("aliyunCaptcha-window-popup")?.remove();
+  if (window.initAliyunCaptcha && isProd) {
+    document.getElementById("aliyunCaptcha-mask")?.remove();
+    document.getElementById("aliyunCaptcha-window-popup")?.remove();
+  }
 })
 const sendMessageAuthCode = async (captchaVerifyParam) => {
   const phoneNumber = loginValue.phoneNumber;
@@ -236,7 +241,7 @@ const IM_IS_OPEN_CUSTOM_SERVER_CONFIG = useStorage(
 </script>
 
 <template>
-  <EmLoginWithPasswordLogin v-if="IM_IS_OPEN_CUSTOM_SERVER_CONFIG" />
+  <EmLoginWithPasswordLogin v-if="isDev" />
   <template v-else>
     <el-form :model="loginValue" :rules="rules">
       <el-form-item prop="phoneNumber">
