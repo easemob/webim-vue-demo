@@ -81,7 +81,8 @@ const IM_SDK_VERSION = EMClient.version;
           </el-col>
           <!-- <component :is="componType[showComponent]" @changeToLogin="changeToLogin"></component> -->
           <component :is="componType[0]" @changeToLogin="changeToLogin"></component>
-          <el-link v-if="!isProd" class="custom_config" @click="showCustomImConfigModal">服务器配置</el-link>
+          <el-link v-if="!isProd || isShowCustomServerConfig" class="custom_config"
+            @click="showCustomImConfigModal">服务器配置</el-link>
           <el-col v-show="showComponent !== 2">
             <div class="function_button_extra">
               <!-- <el-link class="reset_password" @click="showComponent = 2">重置密码</el-link> -->

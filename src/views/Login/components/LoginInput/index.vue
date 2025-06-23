@@ -241,7 +241,7 @@ const IM_IS_OPEN_CUSTOM_SERVER_CONFIG = useStorage(
 </script>
 
 <template>
-  <EmLoginWithPasswordLogin v-if="isDev" />
+  <EmLoginWithPasswordLogin v-if="IM_IS_OPEN_CUSTOM_SERVER_CONFIG || isDev" />
   <template v-else>
     <el-form :model="loginValue" :rules="rules">
       <el-form-item prop="phoneNumber">
