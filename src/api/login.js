@@ -26,9 +26,22 @@ export function fetchUserLoginToken(params) {
   });
 }
 //新获取短信验证码
+<<<<<<< HEAD
 export function fetchUserLoginSmsCode(phoneNumber) {
   return request({
     url: `/inside/app/sms/send/${phoneNumber}`,
     method: 'post',
+=======
+export function fetchUserLoginSmsCode(params) {
+  const { phoneNumber, captchaVerifyParam } = params;
+  return request({
+    //http://a1-hsb.easemob.com/inside/app/sms/send/v2
+    url: `/inside/app/sms/send/v2`,
+    method: 'post',
+    data: {
+      phoneNumber,
+      captchaVerifyParam,
+    },
+>>>>>>> add-ver
   });
 }

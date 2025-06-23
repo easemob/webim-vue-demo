@@ -66,6 +66,7 @@ const loginIM = async () => {
 <template>
   <el-form :model="loginValue" :rules="rules">
     <el-form-item prop="phoneNumber">
+<<<<<<< HEAD
       <el-input
         class="login_input_style"
         v-model="loginValue.username"
@@ -92,6 +93,18 @@ const loginIM = async () => {
           @click="loginIM"
           >登录</el-button
         >
+=======
+      <el-input class="login_input_style" v-model="loginValue.username" placeholder="环信ID" clearable />
+    </el-form-item>
+    <el-form-item prop="smsCode">
+      <el-input type="password" class="login_input_style" v-model="loginValue.password" placeholder="密码" clearable
+        show-password />
+    </el-form-item>
+    <el-form-item>
+      <div class="function_button_box">
+        <el-button v-if="loginValue.username && loginValue.password" class="haveValueBtn" :loading="buttonLoading"
+          @click="loginIM">登录</el-button>
+>>>>>>> add-ver
         <el-button v-else class="notValueBtn">登录</el-button>
       </div>
     </el-form-item>

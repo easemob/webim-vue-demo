@@ -1,5 +1,10 @@
 import axios from 'axios';
 const defaultBaseUrl = '//a1.easemob.com';
+<<<<<<< HEAD
+=======
+//沙箱环境
+// const defaultHsbBaseUrl = '//a1-hsb.easemob.com';
+>>>>>>> add-ver
 // create an axios instance
 const service = axios.create({
   withCredentials: false,
