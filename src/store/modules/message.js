@@ -165,18 +165,17 @@ const Message = {
         EMClient.getHistoryMessages(options)
           .then((res) => {
             const { cursor, messages } = res;
-
             messages.length > 0 &&
               messages.forEach((item) => {
                 item.read = true;
               });
             resolve({ messages, cursor });
-            dispatch('UsersProfile/processMessageExt', _.reverse(...messages), {
-              root: true,
-            });
             commit('UPDATE_HISTORY_MESSAGE', {
               listKey: id,
               historyMessageList: _.reverse(messages),
+            });
+            dispatch('UsersProfile/processMessageExt', _.reverse(...messages), {
+              root: true,
             });
             if (!state.messageList[id]) {
               //提示会话列表更新
