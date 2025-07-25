@@ -33,8 +33,11 @@ const isShowCustomServerConfig = useStorage(
   false,
 );
 const customImConfig = ref(null);
+const CUSTOM_CONFIG = JSON.parse(localStorage.getItem('webimConfig')) || {}
 onMounted(() => {
-  if (!isProd) {
+  if (!isProd && !CUSTOM_CONFIG?.appKey) {
+    //非生产环境下，默认开启自定义服务器配置
+    isShowCustomServerConfig.value = true
     isShowDevWarning.value = true
   }
 })
