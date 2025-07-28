@@ -284,7 +284,7 @@ onMounted(() => {
     <el-divider style="margin: 0" />
     <!-- 本地群组昵称 -->
     <!-- !其他端UIKIT暂不支持此设置，因此暂时注释。 -->
-    <div class="group_func_card group_name">
+    <!-- <div class="group_func_card group_name">
       <div class="title">
         我在本群的昵称
         <el-icon class="icon" @click="editMyGroupNickName('edit', inTheGroupNickname)">
@@ -299,7 +299,7 @@ onMounted(() => {
           maxlength="15" show-word-limit @blur="editMyGroupNickName('save', inTheGroupNickname)" />
       </div>
     </div>
-    <el-divider style="margin: 0" />
+    <el-divider style="margin: 0" /> -->
     <!-- 群公告 -->
     <div class="group_func_card group_announcements">
       <div class="title">

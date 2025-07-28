@@ -254,19 +254,20 @@ const Groups = {
     //获取群组成员
     fetchGroupsMemberFromServer: async ({ dispatch, commit }, groupId) => {
       console.log('>>>>>获取群组成员');
-      //此接口支持分页，如果群组成员大于1000人，需要分页获取。
+      //此接口支持分页，如果群组成员大于100人，需要分页获取,Demo仅展示获取100位群组成员。
+      // 自 SDK 4.15.0 开始，所有群成员均可调用 getGroupMembers 方法获取群成员信息，包括用户 ID 和用户角色。原方法 listGroupMembers 废弃。
       const options = {
         pageNum: 1,
-        pageSize: 1000,
+        pageSize: 100,
         groupId: groupId,
       };
       try {
         const { data } = await EMClient.listGroupMembers(options);
-        /* 基于群组属性功能的调用，此功能暂时注释 */
-        dispatch('fetchGroupMemberAttributesFromServer', {
-          groupId,
-          members: data,
-        });
+        /* 基于群组属性功能的调用，由于Demo演示其他端暂不展示群组内属性，此功能暂时注释 */
+        // dispatch('fetchGroupMemberAttributesFromServer', {
+        //   groupId,
+        //   members: data,
+        // });
         commit('SET_GROUPS_MEMBERS', {
           groupId: groupId,
           members: data,
