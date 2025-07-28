@@ -148,22 +148,11 @@ const editMyGroupNickName = async (type, oldMyGroupNickname) => {
     });
   }
 };
-// const inTheGroupNickname = computed(() => {
-//     const loginUser = EMClient.user
-//     const myNickname = store.getters.getGroupDetailMap.get(groupId.value)
-//         ?.groupMemberInfo[loginUser]?.nickName
-//     return myNickname
-// })
 const inTheGroupNickname = computed(() => {
   const groupIdValue = groupId.value;
   const loginUserValue = EMClient.user;
-  const groupDetail = store.getters.getGroupDetailMap.get(groupIdValue);
-
-  if (!groupDetail) {
-    console.warn(`Group detail for group ID ${groupIdValue} not found.`);
-    return ''; // 或者返回 null 或 undefined
-  }
-  const myNickname = groupDetail.groupMemberInfo?.[loginUserValue]?.nickName;
+  const groupProfile = store.getters['UsersProfile/getInTheGroupInfo'](loginUserValue, groupIdValue);
+  const myNickname = groupProfile?.nickName;
   return myNickname || '';
 });
 
@@ -266,11 +255,7 @@ onMounted(() => {
     <div class="group_func_card group_name">
       <div class="title">
         群名称
-        <el-icon
-          class="icon"
-          v-if="memberRole"
-          @click="editGroupName('edit', getGroupDetailFromGroupList.groupName)"
-        >
+        <el-icon class="icon" v-if="memberRole" @click="editGroupName('edit', getGroupDetailFromGroupList.groupName)">
           <Edit />
         </el-icon>
       </div>
@@ -278,16 +263,8 @@ onMounted(() => {
         <div v-if="!isEdit">
           {{ getGroupDetailFromGroupList.groupName || '' }}
         </div>
-        <el-input
-          v-else
-          class="group_name_input"
-          ref="editGroupNameInput"
-          v-model="groupName"
-          size="small"
-          maxlength="15"
-          show-word-limit
-          @blur="editGroupName('save', getGroupDetailFromGroupList.groupName)"
-        >
+        <el-input v-else class="group_name_input" ref="editGroupNameInput" v-model="groupName" size="small" maxlength="15"
+          show-word-limit @blur="editGroupName('save', getGroupDetailFromGroupList.groupName)">
         </el-input>
       </div>
     </div>
@@ -307,13 +284,10 @@ onMounted(() => {
     <el-divider style="margin: 0" />
     <!-- 本地群组昵称 -->
     <!-- !其他端UIKIT暂不支持此设置，因此暂时注释。 -->
-    <!-- <div class="group_func_card group_name">
+    <div class="group_func_card group_name">
       <div class="title">
         我在本群的昵称
-        <el-icon
-          class="icon"
-          @click="editMyGroupNickName('edit', inTheGroupNickname)"
-        >
+        <el-icon class="icon" @click="editMyGroupNickName('edit', inTheGroupNickname)">
           <Edit />
         </el-icon>
       </div>
@@ -321,18 +295,10 @@ onMounted(() => {
         <div v-if="!isEditMyGroupNickname">
           {{ inTheGroupNickname || '暂未设置该群昵称' }}
         </div>
-        <el-input
-          v-else
-          class="group_name_input"
-          ref="editMyGroupNickNameInput"
-          v-model="myGroupNickname"
-          size="small"
-          maxlength="15"
-          show-word-limit
-          @blur="editMyGroupNickName('save', inTheGroupNickname)"
-        />
+        <el-input v-else class="group_name_input" ref="editMyGroupNickNameInput" v-model="myGroupNickname" size="small"
+          maxlength="15" show-word-limit @blur="editMyGroupNickName('save', inTheGroupNickname)" />
       </div>
-    </div> -->
+    </div>
     <el-divider style="margin: 0" />
     <!-- 群公告 -->
     <div class="group_func_card group_announcements">
@@ -354,9 +320,8 @@ onMounted(() => {
       <div class="main">
         <div class="member_count">
           {{
-            `${getGroupDetailFromGroupList.affiliationsCount || '0'}/${
-              getGroupDetailFromGroupList.maxUsers || '500'
-            }`
+            `${getGroupDetailFromGroupList.affiliationsCount || '0'}/${getGroupDetailFromGroupList.maxUsers || '500'
+              }`
           }}
         </div>
         <div class="more_list" @click="alertManagementModal('groupmembers')">
@@ -373,10 +338,7 @@ onMounted(() => {
           <div class="member_count">
             {{ groupBlacklist?.length || '暂无' }}
           </div>
-          <div
-            class="more_list"
-            @click="alertManagementModal('groupBlacklist')"
-          >
+          <div class="more_list" @click="alertManagementModal('groupBlacklist')">
             <ArrowRight />
           </div>
         </div>
@@ -398,35 +360,16 @@ onMounted(() => {
     </template>
     <!-- 群组操作按钮 -->
     <div class="group_list_handle_box">
-      <template
-        v-if="getGroupDetailFromGroupList.role === GROUP_ROLE_TYPE.OWNER"
-      >
-        <el-button
-          type="danger"
-          class="group_list_card_btn"
-          plain
-          @click="dissolveThisGroup"
-          >解散群组</el-button
-        >
+      <template v-if="getGroupDetailFromGroupList.role === GROUP_ROLE_TYPE.OWNER">
+        <el-button type="danger" class="group_list_card_btn" plain @click="dissolveThisGroup">解散群组</el-button>
       </template>
       <template v-else>
-        <el-button
-          type="danger"
-          class="group_list_card_btn"
-          plain
-          @click="quitThisGroup"
-          >退出群组</el-button
-        >
+        <el-button type="danger" class="group_list_card_btn" plain @click="quitThisGroup">退出群组</el-button>
       </template>
     </div>
 
-    <GroupsManagement
-      ref="groupmanagement"
-      :modalType="modalType"
-      :groupModalTitle="groupModalTitle"
-      :memberRole="memberRole"
-      :groupId="groupId"
-    />
+    <GroupsManagement ref="groupmanagement" :modalType="modalType" :groupModalTitle="groupModalTitle"
+      :memberRole="memberRole" :groupId="groupId" />
   </div>
 </template>
 <style lang="scss" scoped>
