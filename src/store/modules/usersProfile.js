@@ -228,6 +228,10 @@ const getters = {
       userId
     );
   },
+  getInTheGroupInfo: (state) => (userId, groupId) => {
+    const user = state.userProfiles.get(userId);
+    return user?.groupInfos.get(groupId) || {};
+  },
 };
 
 export default {

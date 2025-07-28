@@ -263,10 +263,10 @@ const Groups = {
       try {
         const { data } = await EMClient.listGroupMembers(options);
         /* 此功能暂时注释 */
-        // dispatch('fetchGroupMemberAttributesFromServer', {
-        //   groupId,
-        //   members: data,
-        // });
+        dispatch('fetchGroupMemberAttributesFromServer', {
+          groupId,
+          members: data,
+        });
         commit('SET_GROUPS_MEMBERS', {
           groupId: groupId,
           members: data,
@@ -328,9 +328,18 @@ const Groups = {
 
       if (queue.length > 0) {
         const groupUsersInfo = _.compact(_.flatMap(queue, 'data'));
-        commit('SET_GROUP_MEMBERS_INFO', {
-          groupId,
-          inGroupInfo: groupUsersInfo,
+        // 处理嵌套数据结构并提交到用户信息模块
+        _.forEach(groupUsersInfo, (userObj) => {
+          _.forEach(userObj, (info, userId) => {
+            if (info?.nickName) {
+              commit('UsersProfile/UPDATE_USER_PROFILE', {
+                userId,
+                sourceType: 'group',
+                groupId: params.groupId,
+                profile: { nickName: info.nickName },
+              });
+            }
+          });
         });
       }
     },
@@ -345,9 +354,12 @@ const Groups = {
             nickName,
           },
         });
-        commit('SET_GROUP_MEMBERS_INFO', {
-          groupId: groupId,
-          inGroupInfo: [{ [EMClient.user]: { nickName } }],
+        //通知用户信息管理模块更新群内用户属性。
+        commit('UsersProfile/UPDATE_USER_PROFILE', {
+          userId: EMClient.user,
+          sourceType: 'group',
+          groupId: params.groupId,
+          profile: { nickName: nickName },
         });
       } catch (error) {
         console.error(error);
