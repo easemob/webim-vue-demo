@@ -131,15 +131,12 @@ export const imGroupListener = () => {
       //群成员更新了群组内成员属性
       case GROUP_OPERATION_TYPE.MEMBER_ATTRIBUTES_UPDATE:
         {
-          commit('SET_GROUP_MEMBERS_INFO', {
-            groupId: informContent.id,
-            inGroupInfo: [
-              {
-                [informContent.from]: {
-                  nickName: informContent?.attributes?.nickName,
-                },
-              },
-            ],
+          console.log('groupevent', groupevent);
+          store.commit('UsersProfile/UPDATE_USER_PROFILE', {
+            userId: from,
+            sourceType: 'group',
+            groupId: groupId,
+            profile: { nickName: groupevent?.attributes?.nickName },
           });
         }
         break;

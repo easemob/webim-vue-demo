@@ -262,7 +262,7 @@ const Groups = {
       };
       try {
         const { data } = await EMClient.listGroupMembers(options);
-        /* 此功能暂时注释 */
+        /* 基于群组属性功能的调用，此功能暂时注释 */
         dispatch('fetchGroupMemberAttributesFromServer', {
           groupId,
           members: data,
@@ -282,7 +282,6 @@ const Groups = {
           groupId: groupId,
           userId: EMClient.user,
         };
-
         const { data } = await EMClient.getGroupMemberAttributes(options);
         commit('SET_GROUP_MEMBERS_INFO', {
           groupId: groupId,
