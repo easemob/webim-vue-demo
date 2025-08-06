@@ -170,11 +170,12 @@ const Message = {
                 item.read = true;
               });
             resolve({ messages, cursor });
+            const reversedMessages = _.reverse(_.cloneDeep(messages));
             commit('UPDATE_HISTORY_MESSAGE', {
               listKey: id,
-              historyMessageList: _.reverse(messages),
+              historyMessageList: reversedMessages,
             });
-            dispatch('UsersProfile/processMessageExt', _.reverse(...messages), {
+            dispatch('UsersProfile/processMessageExt', reversedMessages, {
               root: true,
             });
             if (!state.messageList[id]) {
