@@ -175,9 +175,6 @@ const Message = {
               listKey: id,
               historyMessageList: reversedMessages,
             });
-            dispatch('UsersProfile/processMessageExt', reversedMessages, {
-              root: true,
-            });
             if (!state.messageList[id]) {
               //提示会话列表更新
               dispatch('updateConversationList', {
@@ -185,6 +182,11 @@ const Message = {
                 chatType: chatType,
               });
             }
+            // console.log('>>>>>获取历史消息', reversedMessages);
+            // debugger;
+            dispatch('UsersProfile/processMessageExt', reversedMessages, {
+              root: true,
+            });
           })
           .catch((error) => {
             reject(error);

@@ -30,11 +30,10 @@ const normalizeUserData = (sourceType) => (data) => {
 };
 // 新增哈希生成工具
 const generateMsgHash = (msg) => {
-  const info = msg.ext?.ease_chat_uikit_user_info || {};
-  // 为每个字段设置默认空值，使用固定顺序
-  const parts = [info.nickname || '', info.avatarURL || ''];
-  return parts.join('|');
+  const info = msg?.ext?.ease_chat_uikit_user_info || {};
+  return [info.nickname || '', info.avatarURL || ''].join('|');
 };
+
 // 在模块导出中暴露该方法
 export const userProfileUtils = {
   normalizeUserData,
@@ -136,21 +135,24 @@ const mutations = {
 };
 const actions = {
   processMessageExt({ commit, state }, msg) {
+    console.log('>>>>>处理消息扩展', msg);
     if (Array.isArray(msg)) {
-      msg.forEach((msgItem) => {
-        const userId = msgItem?.from;
-        const currentHash =
-          state.userProfiles.get(userId)?._meta?.lastMessageHash || '';
-        const currentMsgTime =
-          state.userProfiles.get(userId)?._meta?.lastMessageTimestamp || 0;
-        const newHash = generateMsgHash(msgItem);
-        // 哈希值不同时且消息晚于更新过的消息才提交更新
-        if (
-          newHash !== currentHash &&
-          newHash !== '' &&
-          msgItem.time > currentMsgTime
-        ) {
-          commit('UPDATE_MESSAGE_EXT', { userId, msg: msgItem });
+      msg.map((msgItem, idx) => {
+        try {
+          const userId = msgItem?.from;
+          const userMeta = state.userProfiles.get(userId)?._meta ?? {};
+          const currentHash = userMeta.lastMessageHash ?? '';
+          const currentMsgTime = userMeta.lastMessageTimestamp ?? 0;
+          const newHash = generateMsgHash(msgItem);
+          if (
+            newHash !== '' &&
+            newHash !== currentHash &&
+            msgItem.time > currentMsgTime
+          ) {
+            commit('UPDATE_MESSAGE_EXT', { userId, msg: msgItem });
+          }
+        } catch (e) {
+          console.log(`第 ${idx} 条消息处理异常`, e, msgItem);
         }
       });
       return;
