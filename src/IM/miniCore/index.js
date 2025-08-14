@@ -23,7 +23,6 @@ const initEMClient = () => {
     IM_IS_OPEN_CUSTOM_SERVER_CONFIG,
   );
   if (IM_IS_OPEN_CUSTOM_SERVER_CONFIG) {
-    console.log('>>>>>configOptions', CUSTOM_CONFIG, configOptions);
     Object.assign(configOptions, {
       appKey: CUSTOM_CONFIG.appKey
         ? CUSTOM_CONFIG.appKey
