@@ -61,15 +61,8 @@ const resetForm = (configRef) => {
 defineExpose({ centerDialogVisible });
 </script>
 <template>
-  <el-dialog
-    v-model="centerDialogVisible"
-    title="服务器配置"
-    width="30%"
-    center
-    modal
-    :show-close="false"
-    @open="initConfigForm"
-  >
+  <el-dialog v-model="centerDialogVisible" title="服务器配置" width="30%" center modal :show-close="false"
+    @open="initConfigForm">
     <el-form ref="configRef" :model="configForm" label-width="120px">
       <el-form-item prop="appKey" label="AppKey" :rules="appKeyRules">
         <el-input v-model="configForm.appKey" />
@@ -77,36 +70,21 @@ defineExpose({ centerDialogVisible });
       <el-form-item prop="isPrivate" label="私有化配置">
         <el-switch v-model="configForm.isPrivate" />
       </el-form-item>
-      <el-form-item
-        v-if="configForm.isPrivate"
-        prop="imServer"
-        label="IM服务器地址"
-      >
-        <el-input
-          v-model="configForm.imServer"
-          placeholder="//im-api-v2.easemob.com/ws"
-        />
+      <el-form-item v-if="configForm.isPrivate" prop="restServer" label="apiUrl地址" required>
+        <el-input v-model="configForm.restServer" />
       </el-form-item>
-      <el-form-item v-if="configForm.isPrivate" prop="port" label="端口号">
+      <el-form-item v-if="configForm.isPrivate" prop="imServer" label="socketUrl地址" required>
+        <el-input v-model="configForm.imServer" />
+      </el-form-item>
+      <!-- <el-form-item v-if="configForm.isPrivate" prop="port" label="端口号">
         <el-input v-model="configForm.port" placeholder="8080" />
-      </el-form-item>
-      <el-form-item
-        v-if="configForm.isPrivate"
-        prop="restServer"
-        label="Rest服务器地址"
-      >
-        <el-input
-          v-model="configForm.restServer"
-          placeholder="//a1.easemob.com"
-        />
-      </el-form-item>
+      </el-form-item> -->
+
     </el-form>
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="resetForm(configRef)">取消配置</el-button>
-        <el-button type="primary" @click="saveImConfig(configRef)"
-          >保存配置</el-button
-        >
+        <el-button type="primary" @click="saveImConfig(configRef)">保存配置</el-button>
       </span>
     </template>
   </el-dialog>
