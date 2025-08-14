@@ -23,16 +23,17 @@ const initEMClient = () => {
     IM_IS_OPEN_CUSTOM_SERVER_CONFIG,
   );
   if (IM_IS_OPEN_CUSTOM_SERVER_CONFIG) {
+    console.log('>>>>>configOptions', CUSTOM_CONFIG, configOptions);
     Object.assign(configOptions, {
       appKey: CUSTOM_CONFIG.appKey
         ? CUSTOM_CONFIG.appKey
         : DEFAULT_EASEMOB_APPKEY,
       isHttpDNS: !CUSTOM_CONFIG.isPrivate, //取反isPrivate
-      url: CUSTOM_CONFIG.imWebsocketServer
-        ? CUSTOM_CONFIG.imWebsocketServer
+      url: CUSTOM_CONFIG.imServer
+        ? CUSTOM_CONFIG.imServer
         : DEFAULT_EASEMOB_SOCKET_URL,
       apiUrl: CUSTOM_CONFIG.restServer
-        ? `${CUSTOM_CONFIG.restServer}:${CUSTOM_CONFIG.port}`
+        ? CUSTOM_CONFIG.restServer
         : DEFAULT_EASEMOB_REST_URL,
     });
   } else {
