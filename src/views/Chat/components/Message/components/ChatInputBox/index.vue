@@ -20,9 +20,9 @@ import ImageMessage from './components/ImageMessage';
 import FileMessage from './components/FileMessage';
 import ShareUserCard from './components/CustomMessage/ShareUserCard.vue';
 //EaseCallKit Invite
-import { useManageChannel } from '@/components/EaseCallKit/hooks';
+// import { useManageChannel } from '@/components/EaseCallKit/hooks';
 //inviteMembers modal
-import InviteCallMembers from '@/components/InviteCallMembers';
+// import InviteCallMembers from '@/components/InviteCallMembers';
 const store = useStore();
 const props = defineProps({
   routeQueryData: {
@@ -188,63 +188,63 @@ const clearScreen = () => {
     });
 };
 /* About EaseCallKit */
-const { CALL_TYPES, sendInviteMessage } = useManageChannel();
-//处理发起的音视频呼叫类型
-const handleInviteCall = (handleType) => {
-  const toId = routeQueryData.value.id;
-  //语音类型
-  if (handleType === 'voice') {
-    const callType = CALL_TYPES.SINGLE_VOICE;
-    sendInviteMessage(toId, callType);
-    //发送邀请信息后创建一条本地系统通知类消息上屏展示
-    const params = {
-      from: EMClient.user,
-      to: toId,
-      chatType: CHAT_TYPE.SINGLE,
-      msg: `邀请【${toId}】进行语音通话`,
-    };
-    store.dispatch('createInformMessage', params);
-  }
-  if (handleType === 'video') {
-    if (routeQueryData.value?.chatType === CHAT_TYPE.SINGLE) {
-      const callType = CALL_TYPES.SINGLE_VIDEO;
-      sendInviteMessage(toId, callType);
-      //发送邀请信息后创建一条本地系统通知类消息上屏展示
-      const params = {
-        from: EMClient.user,
-        to: toId,
-        chatType: CHAT_TYPE.SINGLE,
-        msg: `邀请【${toId}】进行视频通话`,
-      };
-      store.dispatch('createInformMessage', params);
-    } else if (routeQueryData.value?.chatType === CHAT_TYPE.GROUP) {
-      //群组则弹出多人模态框
-      showInviteCallMembersModal();
-    }
-  }
-};
-const inviteCallMembersComp = ref(null);
-//调起多人邀请组件
-const showInviteCallMembersModal = () => {
-  const groupId = routeQueryData.value.id;
-  if (groupId) {
-    inviteCallMembersComp.value.alertDialog(groupId);
-  } else {
-  }
-};
-//发送多人场景邀请信息的方法
-const sendMulitInviteMsg = (targetIMId) => {
-  const callType = CALL_TYPES.MULTI_VIDEO;
-  const groupId = routeQueryData.value.id;
-  sendInviteMessage(targetIMId, callType, groupId);
-  const params = {
-    from: EMClient.user,
-    to: groupId,
-    chatType: CHAT_TYPE.GROUP,
-    msg: '已发起多人音视频通话',
-  };
-  store.dispatch('createInformMessage', params);
-};
+// const { CALL_TYPES, sendInviteMessage } = useManageChannel();
+// //处理发起的音视频呼叫类型
+// const handleInviteCall = (handleType) => {
+//   const toId = routeQueryData.value.id;
+//   //语音类型
+//   if (handleType === 'voice') {
+//     const callType = CALL_TYPES.SINGLE_VOICE;
+//     sendInviteMessage(toId, callType);
+//     //发送邀请信息后创建一条本地系统通知类消息上屏展示
+//     const params = {
+//       from: EMClient.user,
+//       to: toId,
+//       chatType: CHAT_TYPE.SINGLE,
+//       msg: `邀请【${toId}】进行语音通话`,
+//     };
+//     store.dispatch('createInformMessage', params);
+//   }
+//   if (handleType === 'video') {
+//     if (routeQueryData.value?.chatType === CHAT_TYPE.SINGLE) {
+//       const callType = CALL_TYPES.SINGLE_VIDEO;
+//       sendInviteMessage(toId, callType);
+//       //发送邀请信息后创建一条本地系统通知类消息上屏展示
+//       const params = {
+//         from: EMClient.user,
+//         to: toId,
+//         chatType: CHAT_TYPE.SINGLE,
+//         msg: `邀请【${toId}】进行视频通话`,
+//       };
+//       store.dispatch('createInformMessage', params);
+//     } else if (routeQueryData.value?.chatType === CHAT_TYPE.GROUP) {
+//       //群组则弹出多人模态框
+//       showInviteCallMembersModal();
+//     }
+//   }
+// };
+// const inviteCallMembersComp = ref(null);
+// //调起多人邀请组件
+// const showInviteCallMembersModal = () => {
+//   const groupId = routeQueryData.value.id;
+//   if (groupId) {
+//     inviteCallMembersComp.value.alertDialog(groupId);
+//   } else {
+//   }
+// };
+// //发送多人场景邀请信息的方法
+// const sendMulitInviteMsg = (targetIMId) => {
+//   const callType = CALL_TYPES.MULTI_VIDEO;
+//   const groupId = routeQueryData.value.id;
+//   sendInviteMessage(targetIMId, callType, groupId);
+//   const params = {
+//     from: EMClient.user,
+//     to: groupId,
+//     chatType: CHAT_TYPE.GROUP,
+//     msg: '已发起多人音视频通话',
+//   };
+//   store.dispatch('createInformMessage', params);
+// };
 //func 对应事件 icon class样式等
 const all_func = [
   {
@@ -297,17 +297,11 @@ defineExpose({
 </script>
 <template>
   <div class="chat_func_box">
-    <span
-      v-for="iconItem in all_func"
-      :class="['iconfont', iconItem.className]"
-      :key="iconItem.className"
-      :style="iconItem.style"
-      :title="iconItem.title"
-      @click.stop="iconItem.methodName"
-    ></span>
+    <span v-for="iconItem in all_func" :class="['iconfont', iconItem.className]" :key="iconItem.className"
+      :style="iconItem.style" :title="iconItem.title" @click.stop="iconItem.methodName"></span>
     <!-- EaseCallKit 音视频邀请icon【不需要可移除】 -->
     <!-- 群组没有语音发起 -->
-    <template v-if="isHttps">
+    <!-- <template v-if="isHttps">
       <span
         class="iconfont icon-31dianhua"
         style="font-size: 20px"
@@ -321,40 +315,20 @@ defineExpose({
         title="视频通话"
         @click="handleInviteCall('video')"
       ></span>
-    </template>
+    </template> -->
     <!-- 表情框 -->
     <emojiContainer ref="emojiContainerComp" @appendEmoji="appendEmoji" />
     <!-- 图片附件choose -->
-    <ImageMessage
-      ref="ImageMessageComp"
-      :targetId="routeQueryData.id"
-      :chatType="routeQueryData.chatType"
-      @onStartLoading="onStartLoading"
-      @onLoadending="onLoadending"
-    />
+    <ImageMessage ref="ImageMessageComp" :targetId="routeQueryData.id" :chatType="routeQueryData.chatType"
+      @onStartLoading="onStartLoading" @onLoadending="onLoadending" />
     <!-- 视频附件choose -->
-    <VideoMessage
-      ref="videoMessageComp"
-      :targetId="routeQueryData.id"
-      :chatType="routeQueryData.chatType"
-      @onStartLoading="onStartLoading"
-      @onLoadending="onLoadending"
-    />
+    <VideoMessage ref="videoMessageComp" :targetId="routeQueryData.id" :chatType="routeQueryData.chatType"
+      @onStartLoading="onStartLoading" @onLoadending="onLoadending" />
     <!-- 文件附件choose -->
-    <FileMessage
-      ref="fileMessageComp"
-      :targetId="routeQueryData.id"
-      :chatType="routeQueryData.chatType"
-      @onStartLoading="onStartLoading"
-      @onLoadending="onLoadending"
-    />
+    <FileMessage ref="fileMessageComp" :targetId="routeQueryData.id" :chatType="routeQueryData.chatType"
+      @onStartLoading="onStartLoading" @onLoadending="onLoadending" />
     <!-- 录音采集框 -->
-    <el-card
-      ref="recordBox"
-      v-if="isShowRecordBox"
-      class="record_box"
-      shadow="always"
-    >
+    <el-card ref="recordBox" v-if="isShowRecordBox" class="record_box" shadow="always">
       <p v-if="!isHttps">
         由于浏览器限制,录音功能必须为https环境或者为localhost环境下使用！
       </p>
@@ -363,31 +337,14 @@ defineExpose({
     <!-- 附件上传loading -->
     <div ref="loadingBox" class="loading_box"></div>
   </div>
-  <TextMessage
-    ref="textMessageComp"
-    :targetId="routeQueryData.id"
-    :chatType="routeQueryData.chatType"
-    @getMessageQuoteContent="getMessageQuoteContent"
-    @getImageFileFromClipboard="getImageFileFromClipboard"
-    @clearQuoteContent="clearQuoteContent"
-  />
+  <TextMessage ref="textMessageComp" :targetId="routeQueryData.id" :chatType="routeQueryData.chatType"
+    @getMessageQuoteContent="getMessageQuoteContent" @getImageFileFromClipboard="getImageFileFromClipboard"
+    @clearQuoteContent="clearQuoteContent" />
   <MsgQuote ref="messageQuoteRef" />
-  <InviteCallMembers
-    ref="inviteCallMembersComp"
-    @sendMulitInviteMsg="sendMulitInviteMsg"
-  />
-  <PreviewSendImg
-    ref="previewSendImg"
-    :targetId="routeQueryData.id"
-    :chatType="routeQueryData.chatType"
-    @onStartLoading="onStartLoading"
-    @onLoadending="onLoadending"
-  />
-  <ShareUserCard
-    ref="personalCardMessageComp"
-    :targetId="routeQueryData.id"
-    :chatType="routeQueryData.chatType"
-  />
+  <!-- <InviteCallMembers ref="inviteCallMembersComp" @sendMulitInviteMsg="sendMulitInviteMsg" /> -->
+  <PreviewSendImg ref="previewSendImg" :targetId="routeQueryData.id" :chatType="routeQueryData.chatType"
+    @onStartLoading="onStartLoading" @onLoadending="onLoadending" />
+  <ShareUserCard ref="personalCardMessageComp" :targetId="routeQueryData.id" :chatType="routeQueryData.chatType" />
 </template>
 
 <style lang="scss" scoped>

@@ -4,8 +4,8 @@ import { mountAllEMListener } from '@/IM/listener';
 import { EMClient } from '@/IM';
 import ring from '@/assets/ring.mp3';
 /* callkit */
-import EaseCallKit from '@/components/EaseCallKit';
-import InviteCallMembers from '@/components/InviteCallMembers';
+// import EaseCallKit from '@/components/EaseCallKit';
+// import InviteCallMembers from '@/components/InviteCallMembers';
 import { ElMessage } from 'element-plus';
 /* 【重要】挂载IM相关监听回调。 */
 mountAllEMListener();
@@ -45,18 +45,14 @@ const sendMulitInviteMsg = (targetIMId) => {
 </script>
 <template>
   <router-view v-slot="{ Component }">
-    <transition
-      name="slide-fade"
-      mode="out-in"
-      :duration="{ enter: 500, leave: 300 }"
-    >
+    <transition name="slide-fade" mode="out-in" :duration="{ enter: 500, leave: 300 }">
       <component :is="Component" />
     </transition>
   </router-view>
   <!-- 铃声标签 -->
   <audio id="ring" :src="ring" controls hidden></audio>
   <!-- About EaseCallKit -->
-  <EaseCallKit
+  <!-- <EaseCallKit
     ref="easeCallKit"
     :EaseIMClient="EMClient"
     :msgCreateFunc="EMClient.Message"
@@ -65,7 +61,7 @@ const sendMulitInviteMsg = (targetIMId) => {
   <InviteCallMembers
     ref="inviteCallComp"
     @sendMulitInviteMsg="sendMulitInviteMsg"
-  />
+  /> -->
 </template>
 
 <style type="scss">
