@@ -113,9 +113,9 @@ const Conversation = {
       const conversationList = isInit
         ? conversationListData
         : _.uniqBy(
-            [...conversationListData, ...state.conversationListFromServer],
-            'conversationId',
-          );
+          [...conversationListData, ...state.conversationListFromServer],
+          'conversationId',
+        );
       state.conversationListFromServer = conversationList;
     },
   },
@@ -151,12 +151,10 @@ const Conversation = {
             [GROUP_OPERATION_TYPE.UPDATE_ANNOUNCEMENT]: `${baseMsg.fromName}更新了群组公告，去看看更新的什么吧~`,
             [GROUP_OPERATION_TYPE.SET_ADMIN]: `${baseMsg.fromName}设定${baseMsg.toName}为管理员~`,
             [GROUP_OPERATION_TYPE.REMOVE_ADMIN]: `${baseMsg.fromName}移除了${baseMsg.toName}的管理员身份~`,
-            [GROUP_OPERATION_TYPE.MUTE_MEMBER]: `${
-              baseMsg.fromName
-            }禁言了${config.getTargetName()}~`,
-            [GROUP_OPERATION_TYPE.UNMUTE_MEMBER]: `${
-              baseMsg.fromName
-            }取消了${config.getTargetName()}的禁言~`,
+            [GROUP_OPERATION_TYPE.MUTE_MEMBER]: `${baseMsg.fromName
+              }禁言了${config.getTargetName()}~`,
+            [GROUP_OPERATION_TYPE.UNMUTE_MEMBER]: `${baseMsg.fromName
+              }取消了${config.getTargetName()}的禁言~`,
             [GROUP_OPERATION_TYPE.REMOVE_MEMBER]: `${baseMsg.fromName}将你移出了群组${baseMsg.toName}~`,
             [GROUP_OPERATION_TYPE.DESTROY]: `${baseMsg.fromName}解散了该群~`,
             [GROUP_OPERATION_TYPE.UPDATE_INFO]: `${baseMsg.fromName}更新了群组详情~`,
@@ -242,6 +240,11 @@ const Conversation = {
           'SET_CONVERSATION_LIST_FROM_SERVER_PAGE_CURSOR',
           result?.data?.cursor,
         );
+        const userIds = _.chain(result?.data?.conversations)
+          .filter({ conversationType: CHAT_TYPE.SINGLE })
+          .map('conversationId')
+          .value();
+        dispatch('fetchContactsUserInfos', userIds);
         dispatch(
           'callGroupDetailWithConversationId',
           result?.data?.conversations,
@@ -433,7 +436,7 @@ const Conversation = {
           conversationType,
           customField: { ...customField },
         });
-      } catch (error) {}
+      } catch (error) { }
     },
     //通过会话Id调用群组详情用于会话列表数据展示
     callGroupDetailWithConversationId: async (
