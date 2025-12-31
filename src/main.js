@@ -1,11 +1,19 @@
-import './assets/main.css'
+import "./assets/main.css";
 // import 'easemob-chat-uikit/style.css'
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
+import { createApp } from "vue";
+import App from "./App.vue";
+import router from "./router";
+import { createRoot } from "react-dom/client";
+import { setVeauryOptions } from "veaury";
 
-const app = createApp(App)
+setVeauryOptions({
+  react: {
+    createRoot
+  }
+});
 
-app.use(router)
+const app = createApp(App);
 
-app.mount('#app')
+app.use(router);
+
+app.mount("#app");
