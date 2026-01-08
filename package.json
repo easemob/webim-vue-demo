@@ -14,7 +14,7 @@
     "benz-amr-recorder": "^1.1.3",
     "core-js": "^3.8.3",
     "easemob-websdk": "4.12.1",
-    "element-plus": "^2.7.8",
+    "element-plus": "^2.13.0",
     "nprogress": "^0.2.0",
     "pinyin-pro": "^3.10.2",
     "vue": "^3.2.13",
