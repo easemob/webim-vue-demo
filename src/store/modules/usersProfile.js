@@ -125,6 +125,10 @@ const mutations = {
       };
       state.userProfiles.set(userId, userProfile);
     }
+    // 确保 _meta 存在
+    if (!userProfile._meta) {
+      userProfile._meta = { lastMessageHash: '', lastMessageTimestamp: 0 };
+    }
     const newHash = generateMsgHash(msg);
     // 哈希值相同则跳过更新
     if (newHash === userProfile._meta.lastMessageHash) return;
