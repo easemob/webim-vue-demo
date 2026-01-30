@@ -1,12 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { EMClient } from '@/IM';
-import { useStorage } from '@vueuse/core';
 import CustomImConfig from '@/views/Login/components/CustomImConfig';
 import LoginInput from './components/LoginInput';
 import RegisterInput from './components/RegisterInput';
 import ResetPassword from './components/ResetPassword';
-import { ElMessage } from 'element-plus';
 //login图
 import logo from '@/assets/images/loginIcon.png';
 
@@ -25,54 +23,22 @@ const toEasemob = () => {
   window.open(linkUrl, 'Easemob');
 };
 
-//服务配置
+//判断当前环境
 const isProd = process.env.NODE_ENV === 'production'
-const isShowDevWarning = ref(false)
-const isShowCustomServerConfig = useStorage(
-  'IM_IS_OPEN_CUSTOM_SERVER_CONFIG',
-  false,
-);
-const customImConfig = ref(null);
-const CUSTOM_CONFIG = JSON.parse(localStorage.getItem('webimConfig')) || {}
-onMounted(() => {
-  if (!isProd && !CUSTOM_CONFIG?.appKey) {
-    //非生产环境下，默认开启自定义服务器配置
-    isShowCustomServerConfig.value = true
-    isShowDevWarning.value = true
-  }
-})
-const goToCustomImConfig = () => {
-  isShowDevWarning.value = false
-  customImConfig.value.centerDialogVisible = true;
-};
-const showCustomImConfigModal = () => {
-  customImConfig.value.centerDialogVisible = true;
-};
-let clickCount = 0; // 计数器，记录点击次数
-
-const triggeredMethod = () => {
-  isShowCustomServerConfig.value = !isShowCustomServerConfig.value;
-  window.localStorage.setItem(
-    'IM_IS_OPEN_CUSTOM_SERVER_CONFIG',
-    isShowCustomServerConfig.value,
-  );
-};
-
-const onClickVersion = () => {
-  clickCount++; // 增加点击次数
-  // 如果累计点击了5次，则触发方法
-  if (clickCount >= 5) {
-    triggeredMethod(); // 触发方法
-    resetCounter(); // 重置计数器
-    // 浏览器主动刷新
-    window.location.reload();
-  }
-};
-
-const resetCounter = () => (clickCount = 0);
 
 //SDK-Version
 const IM_SDK_VERSION = EMClient.version;
+
+// 【隐藏功能】线上测试后门:点击版本号5次弹出自定义配置
+let clickCount = 0;
+const customImConfig = ref(null);
+const onClickVersion = () => {
+  clickCount++;
+  if (clickCount >= 5) {
+    customImConfig.value.centerDialogVisible = true;
+    clickCount = 0; // 重置计数器
+  }
+};
 </script>
 <template>
   <el-container class="app_container">
@@ -84,12 +50,8 @@ const IM_SDK_VERSION = EMClient.version;
           </el-col>
           <!-- <component :is="componType[showComponent]" @changeToLogin="changeToLogin"></component> -->
           <component :is="componType[0]" @changeToLogin="changeToLogin"></component>
-          <el-link v-if="!isProd || isShowCustomServerConfig" class="custom_config"
-            @click="showCustomImConfigModal">服务器配置</el-link>
           <el-col v-show="showComponent !== 2">
             <div class="function_button_extra">
-              <!-- <el-link class="reset_password" @click="showComponent = 2">重置密码</el-link> -->
-              <!-- <el-link class="custom_config" @click="showCustomImConfigModal">服务器配置</el-link> -->
               <!-- <p class="login_text">
                 <span class="login_text_isuserid" v-show="showComponent === 0">没有账号？</span>
                 <span class="login_text_isuserid" v-show="showComponent === 1">已有账号？</span>
@@ -103,21 +65,13 @@ const IM_SDK_VERSION = EMClient.version;
     </el-main>
     <el-footer>
       <div class="copyright">
-        Copyright © easemob Web IM SDK版本号：<span @click="onClickVersion">
-          {{ IM_SDK_VERSION ? IM_SDK_VERSION : '4.x' }}</span>
+        Copyright © easemob Web IM SDK版本号:<span @click="onClickVersion" style="cursor: pointer;">{{ IM_SDK_VERSION ? IM_SDK_VERSION : '4.x' }}</span>
+      </div>
+      <div v-if="!isProd" class="dev-tip">
+        开发环境:请在 src/IM/config/index.js 中配置 AppKey
       </div>
     </el-footer>
-    <el-dialog v-model="isShowDevWarning" title="配置提示" width="500" align-center>
-      <span>当前为开发环境，如需登录点击服务器配置，配置对应appKey！</span>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="isShowDevWarning = false">已配置</el-button>
-          <el-button type="primary" @click="goToCustomImConfig">
-            去配置
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
+    <!-- 隐藏功能:线上测试配置弹窗 -->
     <CustomImConfig ref="customImConfig" />
   </el-container>
 </template>
@@ -245,6 +199,16 @@ const IM_SDK_VERSION = EMClient.version;
     font-size: 12px;
     line-height: 17px;
     color: #ffffff;
+  }
+
+  .dev-tip {
+    width: 100%;
+    text-align: center;
+    padding: 8px 0;
+    font-size: 13px;
+    color: #04aef0;
+    background: rgba(4, 174, 240, 0.1);
+    border-radius: 4px;
   }
 }
 </style>

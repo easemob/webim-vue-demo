@@ -1,2 +1,2 @@
-import EMClient from './miniCore';
+import EMClient from './sdk';
 export { EMClient };

@@ -1,7 +1,6 @@
 <script setup>
 import { ref, reactive, watch, computed, onMounted, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { useStorage } from '@vueuse/core';
 import { EMClient } from '@/IM';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
 import { fetchUserLoginSmsCode, fetchUserLoginToken } from '@/api/login';
@@ -234,14 +233,11 @@ const startCountDown = () => {
     }
   }, 1000);
 };
-const IM_IS_OPEN_CUSTOM_SERVER_CONFIG = useStorage(
-  'IM_IS_OPEN_CUSTOM_SERVER_CONFIG',
-  {},
-);
 </script>
 
 <template>
-  <EmLoginWithPasswordLogin v-if="IM_IS_OPEN_CUSTOM_SERVER_CONFIG || isDev" />
+  <!-- 开发环境下显示用户名密码登录方式 -->
+  <EmLoginWithPasswordLogin v-if="isDev" />
   <template v-else>
     <el-form :model="loginValue" :rules="rules">
       <el-form-item prop="phoneNumber">
