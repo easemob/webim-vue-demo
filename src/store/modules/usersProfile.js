@@ -114,13 +114,17 @@ const mutations = {
     state.userProfiles.set(userId, userProfile);
   },
   UPDATE_MESSAGE_EXT(state, { userId, msg }) {
-    const userProfile = state.userProfiles.get(userId) || {
-      baseInfo: {},
-      contacts: {},
-      groupInfos: new Map(),
-      messageExt: {},
-      _meta: { lastMessageHash: '', lastMessageTimestamp: msg?.time },
-    };
+    let userProfile = state.userProfiles.get(userId);
+    if (!userProfile) {
+      userProfile = {
+        baseInfo: {},
+        contacts: {},
+        groupInfos: new Map(),
+        messageExt: {},
+        _meta: { lastMessageHash: '', lastMessageTimestamp: 0 },
+      };
+      state.userProfiles.set(userId, userProfile);
+    }
     const newHash = generateMsgHash(msg);
     // 哈希值相同则跳过更新
     if (newHash === userProfile._meta.lastMessageHash) return;
@@ -130,8 +134,8 @@ const mutations = {
       avatarURL: extInfo.avatarURL,
     };
     userProfile._meta.lastMessageHash = newHash;
-    state.userProfiles.set(userId, userProfile);
-  },
+    userProfile._meta.lastMessageTimestamp = msg?.time || 0;
+  }
 };
 const actions = {
   processMessageExt({ commit, state }, msg) {
