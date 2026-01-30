@@ -200,7 +200,18 @@ EMClient.open({ username: '', password: '' });
 - [在线状态展示](./src/views/Chat/components/NavBar/components/UserOnlineStatusCard.vue)
 - [退出登录](./src/views/Chat/components/NavBar/components/Logout.vue)
 
-## 关于 `EaseCallKit` 的使用说明
+## ~~关于 `EaseCallKit` 的使用说明~~（已废弃）
+
+> ⚠️ **重要提示**：EaseCallKit 已停止维护，不再具备参考价值。
+> 
+> 我们正在开发全新的 Vue CallKit 组件，敬请期待。
+> 
+> 以下内容仅供历史参考，不建议在新项目中使用。
+
+---
+
+<details>
+<summary>点击展开查看历史文档（已过时）</summary>
 
 > 在使用 Vue3 框架时，除了集成环信 WebIM，通过集成声网音视频功能以 IM 作为通话信令来实现音视频通话，也是较为常见的使用场景，并且环信移动原生端已经实现了 EaseCallKit 将音视频通话功能可类似为模块导入的形式快速引入，因此本 Demo 中同样尝试也将音视频相关逻辑单独抽离为一个组件，并且可以脱离此 Demo 单独将其引入到自己的 Vue3 项目中，快速完整音视频功能的搭建。
 
@@ -326,3 +337,17 @@ onBeforeUnmount(() => {
 ### 结语
 
 至此就完成了组件所有的使用引入，一些疑点可结合实际代码综合起来看，有任何 IM 以及 EaseCallKit 相关的问题疑问，可以再 issues 上进行提出并描述，我们会尽力协助解决遇到的问题。
+
+</details>
+
+---
+
+### 关于新版 Vue CallKit
+
+新版 Vue CallKit 正在开发中，将提供：
+- ✨ 更现代化的架构设计
+- 🎯 更简洁的集成方式
+- 🛡️ 更完善的错误处理
+- 📚 更详细的文档说明
+
+敬请期待后续更新。
