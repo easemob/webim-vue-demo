@@ -3,26 +3,30 @@ import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import _ from 'lodash';
 import { useStorage } from '@vueuse/core';
+
 const centerDialogVisible = ref(false);
-const webimConfig = useStorage('webimConfig', {
+
+// 使用 localStorage 存储自定义配置(线上测试专用)
+const webimConfig = useStorage('EASEIM_CUSTOM_CONFIG', {
   appKey: '',
   isPrivate: false,
   imServer: '',
-  port: '',
   restServer: '',
 });
+
 const configRef = ref(null);
 const configForm = ref({
   appKey: '',
   isPrivate: false,
   imServer: '',
-  port: '',
   restServer: '',
 });
+
 const initConfigForm = () => {
   _.merge(configForm.value, webimConfig.value);
 };
-// appley rules
+
+// appKey 验证规则
 const appKeyRules = ref([
   { type: 'string', message: 'appkey为string类型' },
   {
@@ -31,7 +35,7 @@ const appKeyRules = ref([
   },
 ]);
 
-//save config
+// 保存配置
 const saveImConfig = (configRef) => {
   if (!configRef) return;
   configRef.validate((valid, fields) => {
@@ -41,45 +45,52 @@ const saveImConfig = (configRef) => {
 
       ElMessage({
         type: 'success',
-        message: '配置保存成功~',
+        message: '配置保存成功,即将重载页面~',
       });
-      //配置保存成功浏览器重载
-      window.location.reload();
+      
+      // 延迟重载,让用户看到提示
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } else {
       ElMessage({
         type: 'error',
-        message: '保存失败，请检查后重试~',
+        message: '保存失败,请检查后重试~',
       });
     }
   });
 };
+
 const resetForm = (configRef) => {
   if (!configRef) return;
   configRef.resetFields();
   centerDialogVisible.value = false;
 };
+
 defineExpose({ centerDialogVisible });
 </script>
 <template>
   <el-dialog v-model="centerDialogVisible" title="服务器配置" width="30%" center modal :show-close="false"
     @open="initConfigForm">
+    <el-alert
+      title="注意:该配置仅用于线上测试,不影响代码源文件"
+      type="info"
+      :closable="false"
+      style="margin-bottom: 15px;"
+    />
     <el-form ref="configRef" :model="configForm" label-width="120px">
       <el-form-item prop="appKey" label="AppKey" :rules="appKeyRules">
-        <el-input v-model="configForm.appKey" />
+        <el-input v-model="configForm.appKey" placeholder="例: your-appkey#your-appname" />
       </el-form-item>
       <el-form-item prop="isPrivate" label="私有化配置">
         <el-switch v-model="configForm.isPrivate" />
       </el-form-item>
       <el-form-item v-if="configForm.isPrivate" prop="restServer" label="apiUrl地址" required>
-        <el-input v-model="configForm.restServer" />
+        <el-input v-model="configForm.restServer" placeholder="例: https://your-server.com" />
       </el-form-item>
       <el-form-item v-if="configForm.isPrivate" prop="imServer" label="socketUrl地址" required>
-        <el-input v-model="configForm.imServer" />
+        <el-input v-model="configForm.imServer" placeholder="例: wss://your-server.com/ws" />
       </el-form-item>
-      <!-- <el-form-item v-if="configForm.isPrivate" prop="port" label="端口号">
-        <el-input v-model="configForm.port" placeholder="8080" />
-      </el-form-item> -->
-
     </el-form>
     <template #footer>
       <span class="dialog-footer">

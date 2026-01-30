@@ -6,8 +6,36 @@ webim-vue3-demo 是基于环信 sdk 开发的一款具有单聊、群聊等功�
 
 # 运行起来
 
-- 说明：发送语音功能需要使用 https。
-- 环境：Node 版本建议使用 `Node 16、17`不推荐 Node 18 及以上。（Node 版本要求主要参考 Vue 官方文档，以及 ElementPlus 官方文档）。
+## 快速配置
+
+**仅需 1 步即可快速使用:**
+
+1. **修改 AppKey** - 打开 `src/IM/config/index.js`,修改 `EASEMOB_APPKEY` 为你的环信 AppKey
+
+```javascript
+// src/IM/config/index.js
+export const EASEMOB_APPKEY = 'your-appkey#your-appname'; // 修改为你的 AppKey
+```
+
+2. 运行项目,开发环境下将自动使用用户名密码登录方式
+
+## 私有化部署配置(可选)
+
+如果你使用私有化部署,在 `src/IM/config/index.js` 中:
+
+```javascript
+// 1. 开启私有化部署
+export const IS_PRIVATE_DEPLOYMENT = true;
+
+// 2. 配置你的服务器地址
+export const EASEMOB_SOCKET_URL = 'wss://your-server.com/ws';
+export const EASEMOB_REST_URL = 'https://your-server.com';
+```
+
+## 环境要求
+
+- 说明:发送语音功能需要使用 https。
+- 环境:Node 版本建议使用 `Node 16、17`不推荐 Node 18 及以上。(Node 版本要求主要参考 Vue 官方文档,以及 ElementPlus 官方文档)。
 
 ```bash
 # install dependencies
