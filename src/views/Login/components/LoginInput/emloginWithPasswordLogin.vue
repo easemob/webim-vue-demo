@@ -42,7 +42,7 @@ const loginIM = async () => {
   try {
     let { accessToken } = await EMClient.open({
       username: loginValue.username.toLowerCase(),
-      password: loginValue.password.toLowerCase(),
+      password: loginValue.password,
     });
     window.localStorage.setItem(
       `EASEIM_loginUser`,
