@@ -25,6 +25,7 @@ export default createStore({
   },
   mutations: {
     CLOSE_WARNING_TIPS: (state) => (state.isShowWarningTips = false),
+    RESET_WARNING_TIPS: (state) => (state.isShowWarningTips = true),
     CHANGE_LOGIN_STATUS: (state, status) => {
       state.loginState = status;
     },
@@ -40,6 +41,42 @@ export default createStore({
     },
   },
   actions: {
+    //重置所有store状态(退出登录时调用)
+    resetAllStoreState({ commit, state }) {
+      // 重置主store状态
+      commit('SET_LOGIN_USER_INFO', {
+        hxId: '',
+        nickname: '',
+        avatarurl:
+          'https://download-sdk.oss-cn-beijing.aliyuncs.com/downloads/IMDemo/avatar/Image5.png',
+      });
+      commit('SET_LOGIN_USER_ONLINE_STATUS', '');
+      commit('RESET_WARNING_TIPS');
+      commit('CHANGE_LOGIN_STATUS', false);
+      commit('CHANGE_NETWORK_STATUS', true);
+      
+      // 重置Conversation模块(直接调用非命名空间的mutation)
+      commit('CLEAR_INFORM_LIST');
+      commit('GET_CONVERSATION_LIST_FROM_LOCAL', []);
+      commit('GET_CONVERSATION_LIST_FROM_SERVER', { isInit: true, conversationListData: [] });
+      commit('SET_CONVERSATION_LIST_FROM_SERVER_PAGE_CURSOR', '');
+      
+      // 重置Contacts模块(使用空数组触发mutation来清空Map)
+      commit('SET_FRIEND_LIST_WITH_REMARK', { friendList: [] });
+      commit('SET_FRIEND_LIST_USER_INFOS', { userInfos: {} });
+      commit('SET_BLACK_LIST', []);
+      // 直接清空Map
+      state.Contacts.contactsUsersPresenceMap.clear();
+      
+      // 重置Message模块
+      commit('RESET_MESSAGE_STATE');
+      
+      // 重置Groups模块
+      commit('RESET_GROUPS_STATE');
+      
+      // 重置UsersProfile模块
+      commit('UsersProfile/RESET_USER_PROFILES', null, { root: true });
+    },
     //获取登陆用户的用户属性
     getMyUserInfo: async ({ commit }, userId) => {
       const { data } = await EMClient.fetchUserInfoById(userId);
@@ -62,7 +99,7 @@ export default createStore({
       const { data } = await EMClient.updateUserInfo({ ...params });
       commit('SET_LOGIN_USER_INFO', data);
     },
-    //处理在线状态订阅变更（包含他人的用户状态）
+    //处理在线状态订阅变更(包含他人的用户状态)
     handlePresenceChanges: ({ commit }, status) => {
       const { userId, ext: statusType } = status || {};
       if (userId === EMClient.user) {

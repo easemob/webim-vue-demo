@@ -1,18 +1,20 @@
 <script setup>
 import { ref } from 'vue';
 import { EMClient } from '@/IM';
+import { useStore } from 'vuex';
+
+const store = useStore();
 const dialogVisible = ref(false);
 const isClearStorage = ref(true);
 
 const logoutTheUser = () => {
   if (isClearStorage.value) {
     clearLocalStorage();
-    dialogVisible.value = false;
-    EMClient.close();
-  } else {
-    dialogVisible.value = false;
-    EMClient.close();
   }
+  // 重置Vuex store中的所有状态
+  store.dispatch('resetAllStoreState');
+  dialogVisible.value = false;
+  EMClient.close();
 };
 
 const clearLocalStorage = () => {
