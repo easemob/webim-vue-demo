@@ -53,6 +53,10 @@ const state = () => ({
   // }
 });
 const mutations = {
+  //重置用户资料状态
+  RESET_USER_PROFILES(state) {
+    state.userProfiles = new Map();
+  },
   MERGE_USER_PROFILES(state, users) {
     users.forEach(({ userId, sourceType, groupId, ...profile }) => {
       const userProfile = state.userProfiles.get(userId) || {

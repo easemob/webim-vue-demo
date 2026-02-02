@@ -18,6 +18,17 @@ const Message = {
     },
   },
   mutations: {
+    //重置消息状态
+    RESET_MESSAGE_STATE: (state) => {
+      // 删除messageList中的所有key,保持响应式
+      Object.keys(state.messageList).forEach(key => {
+        delete state.messageList[key];
+      });
+      // 删除messageIdsCollection中的所有key
+      Object.keys(state.messageIdsCollection).forEach(key => {
+        delete state.messageIdsCollection[key];
+      });
+    },
     UPDATE_MESSAGE_LIST: (state, msgBody) => {
       const { id: serverMsgId } = msgBody;
       const listKey = setMessageKey(msgBody);

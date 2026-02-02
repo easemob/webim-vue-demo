@@ -16,6 +16,21 @@ const Groups = {
     groupMembers: new Map(), //key:groupId value:groupMemberList
   },
   mutations: {
+    //重置群组状态
+    RESET_GROUPS_STATE: (state) => {
+      // 清空groupsInfos对象
+      Object.keys(state.groupsInfos).forEach(key => {
+        delete state.groupsInfos[key];
+      });
+      // 重置joinedGroup的属性
+      state.joinedGroup.pagingParams.pageNum = 0;
+      state.joinedGroup.pagingParams.pageSize = 20;
+      state.joinedGroup.joinedGroupList.length = 0; // 清空数组
+      state.joinedGroup.joinedGroupListTotal = 0;
+      // 清空Map类型的状态
+      state.groupDetails.clear();
+      state.groupMembers.clear();
+    },
     SET_JOINED_GROUP: (state, payload) => {
       const { total, entities: joinedGroupList } = payload;
       state.joinedGroup.pagingParams.pageNum++;
