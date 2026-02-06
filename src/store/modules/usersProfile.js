@@ -28,16 +28,39 @@ const normalizeUserData = (sourceType) => (data) => {
 
   return [];
 };
+
+// 兼容性字段读取工具：支持多种字段名格式
+const getCompatibleField = (obj, fieldVariants) => {
+  if (!obj) return null;
+  for (const field of fieldVariants) {
+    if (obj[field] !== undefined && obj[field] !== null && obj[field] !== '') {
+      return obj[field];
+    }
+  }
+  return null;
+};
+
+// 从消息扩展中提取用户信息（兼容多种字段格式）
+const extractUserInfoFromMsg = (msg) => {
+  const info = msg?.ext?.ease_chat_uikit_user_info || {};
+  return {
+    nickname: getCompatibleField(info, ['nickname', 'nickName', 'nick']),
+    avatarURL: getCompatibleField(info, ['avatarURL', 'avatarUrl', 'avatar_url', 'avatar']), // 注意：保持标准字段名 avatarURL
+  };
+};
+
 // 新增哈希生成工具
 const generateMsgHash = (msg) => {
-  const info = msg?.ext?.ease_chat_uikit_user_info || {};
-  return [info.nickname || '', info.avatarURL || ''].join('|');
+  const { nickname, avatarURL } = extractUserInfoFromMsg(msg);
+  return [nickname || '', avatarURL || ''].join('|');
 };
 
 // 在模块导出中暴露该方法
 export const userProfileUtils = {
   normalizeUserData,
   generateMsgHash,
+  extractUserInfoFromMsg,
+  getCompatibleField,
 };
 const state = () => ({
   userProfiles: new Map(), // 结构：{
@@ -136,10 +159,10 @@ const mutations = {
     const newHash = generateMsgHash(msg);
     // 哈希值相同则跳过更新
     if (newHash === userProfile._meta.lastMessageHash) return;
-    const extInfo = msg.ext?.ease_chat_uikit_user_info || {};
+    const { nickname, avatarURL } = extractUserInfoFromMsg(msg);
     userProfile.messageExt = {
-      nickname: extInfo.nickname,
-      avatarURL: extInfo.avatarURL,
+      nickname,
+      avatarURL, // 保持标准字段名
     };
     userProfile._meta.lastMessageHash = newHash;
     userProfile._meta.lastMessageTimestamp = msg?.time || 0;
@@ -227,7 +250,7 @@ const getters = {
     // 优先级判定链
     return (
       user.contacts?.avatarurl || // 联系人头像
-      user.messageExt?.avatarURL || // 消息扩展头像
+      user.messageExt?.avatarURL || // 消息扩展头像（标准字段名）
       defaultContactAvatar // 默认空值
     );
   },
