@@ -215,6 +215,13 @@ const Conversation = {
         commit('GET_CONVERSATION_LIST_FROM_LOCAL', conversationList);
 
         dispatch('callGroupDetailWithConversationId', conversationList);
+        // 提取会话列表中的 lastMessage 并处理用户扩展信息
+        const lastMessages = conversationList
+          .filter(conv => conv.lastMessage)
+          .map(conv => conv.lastMessage);
+        if (lastMessages.length > 0) {
+          dispatch('UsersProfile/processMessageExt', lastMessages, { root: true });
+        }
         //获取群组详情
       } catch (error) {
         console.error('获取会话列表失败', error);
@@ -249,6 +256,13 @@ const Conversation = {
           'callGroupDetailWithConversationId',
           result?.data?.conversations,
         );
+        // 提取会话列表中的 lastMessage 并处理用户扩展信息
+        const lastMessages = result?.data?.conversations
+          .filter(conv => conv.lastMessage)
+          .map(conv => conv.lastMessage);
+        if (lastMessages.length > 0) {
+          dispatch('UsersProfile/processMessageExt', lastMessages, { root: true });
+        }
       } catch (error) {
         console.error('获取会话列表失败', error);
       }
