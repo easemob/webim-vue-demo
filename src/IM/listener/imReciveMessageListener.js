@@ -47,6 +47,10 @@ export const imReviceMessageListener = () => {
     /* message 相关监听 */
     EMClient.addEventHandler('messageListen', {
       onTextMessage: function (message) {
+        // 过滤 CallKit 通话邀请信令消息，避免与普通文本消息重复展示
+        if (message.ext?.msgType === 'rtcCallWithAgora') {
+          return;
+        }
         pushNewMessage(message);
       }, // 收到文本消息。
       onEmojiMessage: function (message) {

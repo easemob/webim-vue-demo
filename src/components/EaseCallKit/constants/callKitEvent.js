@@ -1,3 +1,4 @@
+/** @deprecated EaseCallKit 已废弃，请使用 easemob-chat-callkit-vue3 替代。该组件不再维护，仅保留作参考。 */
 /* CALLER 主叫 CALLEE 被叫 */
 const CALLKIT_EVENT_CODE = {
   CALLER_ACCPET: 0,
