@@ -1,3 +1,4 @@
+<!-- @deprecated EaseCallKit 已废弃，请使用 easemob-chat-callkit-vue3 替代。该组件不再维护，仅保留作参考。 -->
 <script setup>
 import { ref, toRaw, onUnmounted } from 'vue';
 import {
@@ -9,8 +10,10 @@ import {
 import CallKitMessages from './utils/callMessages';
 import { _setImClient } from './constants/imClient';
 import { useManageChannel, useCallKitEvent } from './hooks';
-import getRtcToken from './utils/getRtcToken';
-import getChannelDetails from './utils/getChannelDetails';
+import {
+  requestRtcChannelToken,
+  requestInChannelMapHxId,
+} from './utils/getRtcToken';
 /* 组件 */
 //待确认弹出框
 import AlertModal from './alertModal.vue';
@@ -399,31 +402,33 @@ const handleVideoToVioce = () => {
 };
 /* 获取agoraToken */
 const getAgoraRtcToken = async (callback) => {
-  const username = EaseIMClient.user;
   const channelName = callKitStatus.channelInfos.channelName;
-
-  if (!username && !channelName) return;
-  const { accessToken, agoraUserId } = await getRtcToken(EaseIMClient, {
-    username,
-    channelName,
-  });
-
-  callKitStatus.channelInfos.agoraChannelToken = accessToken;
-  callKitStatus.channelInfos.agoraUserId = agoraUserId;
-  callback();
+  if (!channelName) return;
+  try {
+    const { appId, RTCUId, RTCToken } = await requestRtcChannelToken(
+      EaseIMClient,
+      channelName,
+    );
+    callKitStatus.channelInfos.appId = appId;
+    callKitStatus.channelInfos.agoraChannelToken = RTCToken;
+    callKitStatus.channelInfos.agoraUserId = RTCUId;
+    callback();
+  } catch (error) {
+    console.error('获取RTC Token失败', error);
+  }
 };
 /* 获取channel信息 */
 const getAgoraChannelDetails = async (callback) => {
-  const username = EaseIMClient.user;
-  const channelName = callKitStatus.channelInfos.channelName;
-  if (!username && !channelName) return;
-  const { result } = await getChannelDetails(EaseIMClient, {
-    username,
-    channelName,
-  });
-
-  callKitStatus.channelInfos.channelUsers = { ...result };
-  callback();
+  try {
+    const res = await requestInChannelMapHxId(
+      EaseIMClient,
+      callKitStatus.channelInfos.inChannelUids,
+    );
+    callKitStatus.channelInfos.channelUsers = { ...res.data };
+    callback();
+  } catch (error) {
+    console.error('获取频道用户映射失败', error);
+  }
 };
 
 /* 对外通知触发邀请事件 */

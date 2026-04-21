@@ -1,3 +1,4 @@
+/** @deprecated EaseCallKit 已废弃，请使用 easemob-chat-callkit-vue3 替代。该组件不再维护，仅保留作参考。 */
 const MSG_TYPE = 'rtcCallWithAgora';
 const CALL_INVITE_TEXT = {
   0: '邀请您进行语音通话',

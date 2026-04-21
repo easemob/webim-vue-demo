@@ -1,3 +1,4 @@
+/** @deprecated EaseCallKit 已废弃，请使用 easemob-chat-callkit-vue3 替代。该组件不再维护，仅保留作参考。 */
 /**
  * 该常量实为暂存外层传入的实力化后的SDK客户端，以及msg 构建方法，供callkit内部进行调用。
  *  */

@@ -1,3 +1,4 @@
+<!-- @deprecated EaseCallKit 已废弃，请使用 easemob-chat-callkit-vue3 替代。该组件不再维护，仅保留作参考。 -->
 <script setup>
 import {
   ref,
@@ -10,7 +11,7 @@ import {
   onMounted,
   onBeforeUnmount,
 } from 'vue';
-import { AgoraAppId, AgoraRTC } from '../config/initAgoraRtc';
+import { AgoraRTC } from '../config/initAgoraRtc';
 import { CALLSTATUS, CALL_TYPES } from '../constants';
 /* hooks */
 import { useCallKitEvent } from '../hooks';
@@ -268,10 +269,11 @@ const joinChannel = async () => {
   const channelName = channelInfos.channelName;
   const agoraChannelToken = channelInfos.agoraChannelToken;
   const agoraUserId = channelInfos.agoraUserId;
+  const appId = channelInfos.appId;
   checkMediaDevice();
   try {
-    await CallKitClient.join(
-      AgoraAppId,
+    const agoraUid = await CallKitClient.join(
+      appId,
       channelName,
       agoraChannelToken,
       agoraUserId,
