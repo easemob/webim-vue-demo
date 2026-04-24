@@ -1,8 +1,18 @@
 <script setup>
+import { computed } from 'vue';
 import { useStore } from 'vuex';
+import { useLocalStorage } from '@vueuse/core';
 import { mountAllEMListener } from '@/IM/listener';
 import { EMClient } from '@/IM';
 import ring from '@/assets/ring.mp3';
+import {
+  LogLevel,
+  EasemobChatCallKitProvider,
+  InvitationNotification,
+  EasemobChatSingleCall,
+  EasemobChatMultiCall,
+} from 'easemob-chat-callkit-vue3';
+import { ElMessage } from 'element-plus';
 
 const store = useStore();
 
@@ -14,14 +24,7 @@ const getUserInfo = async (userIds) => {
     avatarUrl: store.getters['UsersProfile/getAvatarUrl'](userId),
   }));
 };
-import {
-  LogLevel,
-  EasemobChatCallKitProvider,
-  InvitationNotification,
-  EasemobChatSingleCall,
-  EasemobChatMultiCall,
-} from 'easemob-chat-callkit-vue3';
-import { ElMessage } from 'element-plus';
+
 /* 【重要】挂载IM相关监听回调。 */
 mountAllEMListener();
 /* 重新登陆 */
@@ -45,11 +48,23 @@ const handleRelogin = async () => {
 if (loginUserFromStorage?.user && loginUserFromStorage?.accessToken) {
   handleRelogin();
 }
+
+// CallKit 日志配置（从系统设置读取本地存储）
+const isOpenedCallKitLog = useLocalStorage('isOpenedCallKitLog', true);
+const callKitLogLevel = useLocalStorage('callKitLogLevel', LogLevel.INFO);
+const isOpenedCallKitIDBLog = useLocalStorage('isOpenedCallKitIDBLog', true);
+
+const callKitInitConfig = computed(() => ({
+  logLevel: isOpenedCallKitLog.value
+    ? Number(callKitLogLevel.value)
+    : LogLevel.ERROR,
+  enableIDBLog: !!isOpenedCallKitIDBLog.value,
+}));
 </script>
 <template>
   <EasemobChatCallKitProvider
     :chat-client="EMClient"
-    :init-config="{ logLevel: LogLevel.INFO }"
+    :init-config="callKitInitConfig"
     :getUserInfo="getUserInfo"
   >
     <router-view v-slot="{ Component }">
