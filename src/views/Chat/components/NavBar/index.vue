@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 /* vuex */
 import { useStore } from 'vuex';
 /* router */
@@ -81,6 +81,33 @@ onClickOutside(changeUserInfoCard, () => (isShowUserInfoCard.value = false));
 const settingComp = ref(null);
 const modalType = ref('');
 const isShowPopover = ref(false);
+const isShowMorePopover = ref(false);
+const newAddRef = ref(null);
+const moreSettingRef = ref(null);
+// 互斥逻辑：两个 popover 同时只能打开一个
+watch(isShowPopover, (val) => {
+  if (val) isShowMorePopover.value = false;
+});
+watch(isShowMorePopover, (val) => {
+  if (val) isShowPopover.value = false;
+});
+// 点击页面空白处关闭所有 popover
+const closeAllPopoversOnBlank = (e) => {
+  const target = e.target;
+  const isInsidePopover = target.closest('.el-popover.setting_popover') !== null;
+  const isInsideNewAdd = newAddRef.value?.contains(target);
+  const isInsideMoreSetting = moreSettingRef.value?.contains(target);
+  if (!isInsidePopover && !isInsideNewAdd && !isInsideMoreSetting) {
+    isShowPopover.value = false;
+    isShowMorePopover.value = false;
+  }
+};
+onMounted(() => {
+  document.addEventListener('click', closeAllPopoversOnBlank);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeAllPopoversOnBlank);
+});
 //新建功能相关icon
 const createGroupIcon = require('@/assets/images/tabbar/1461654066965_.pic.jpg');
 const applyJoinGroupIcon = require('@/assets/images/tabbar/1471654067125_.pic.jpg');
@@ -154,13 +181,14 @@ const toSendFeedback = () => window.open('mailto:yunying@easemob.com');
     />
   </div>
   <!-- 新建添加部分 -->
-  <div class="chat_settings">
+  <div ref="newAddRef" class="chat_settings">
     <el-popover
       popper-class="setting_popover"
       ref="settingPopover"
       v-model:visible="isShowPopover"
       placement="right-end"
       trigger="click"
+      :persistent="false"
     >
       <template #reference>
         <div class="more_settings_icon">
@@ -205,12 +233,14 @@ const toSendFeedback = () => window.open('mailto:yunying@easemob.com');
     </el-popover>
   </div>
   <!-- 更多设置 -->
-  <div class="more_settings">
+  <div ref="moreSettingRef" class="more_settings">
     <el-popover
       popper-class="setting_popover"
+      v-model:visible="isShowMorePopover"
       placement="right-end"
       :width="150"
       trigger="click"
+      :persistent="false"
     >
       <template #reference>
         <div class="more_settings_icon">

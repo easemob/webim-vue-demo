@@ -15,8 +15,8 @@
  */
 
 // ============ 基础配置 ============
-// 修改这里的 AppKey 即可快速使用
-export const EASEMOB_APPKEY = 'easemob-demo#support';
+// 优先从环境变量读取，降级到默认配置
+export const EASEMOB_APPKEY = process.env.VUE_APP_IMAPPKEY || 'easemob-demo#support';
 
 // ============ 私有化部署配置 (可选) ============
 // 是否使用私有化部署

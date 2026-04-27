@@ -278,7 +278,7 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
               <el-link
                 v-show="!loadingHistoryMsg"
                 :disabled="!isMoreHistoryMsg"
-                :underline="false"
+                :underline="'never'"
                 @click="fechHistoryMessage()()"
               >
                 加载更多
