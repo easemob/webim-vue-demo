@@ -6,6 +6,7 @@ import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
 import { fetchUserLoginSmsCode, fetchUserLoginToken } from '@/api/login';
 import { useStore } from 'vuex';
 import { usePlayRing } from '@/hooks';
+import { useStorage } from '@vueuse/core';
 import EmLoginWithPasswordLogin from './emloginWithPasswordLogin.vue';
 import { secret, PREFIX, SCENE_ID } from '@/private-config'
 import { encryptAES } from '@/utils/encriptAES';
@@ -13,6 +14,15 @@ import { encryptAES } from '@/utils/encriptAES';
 const isProd = process.env.NODE_ENV === 'production'
 const isDev = !isProd
 const store = useStore();
+// 读取自定义配置中的登录模式（线上测试后门配置）
+const customConfig = useStorage('EASEIM_CUSTOM_CONFIG', {});
+const isPasswordMode = computed(() => {
+  // 如果用户通过配置弹窗显式配置了 loginMode，优先使用配置值
+  if (customConfig.value?.loginMode === 'password') return true;
+  if (customConfig.value?.loginMode === 'sms') return false;
+  // 未配置过的情况下，开发环境默认密码登录，生产环境默认短信登录（向后兼容）
+  return isDev;
+});
 const emits = defineEmits(['changeToLogin']);
 const loginValue = reactive({
   phoneNumber: '',
@@ -236,8 +246,8 @@ const startCountDown = () => {
 </script>
 
 <template>
-  <!-- 开发环境下显示用户名密码登录方式 -->
-  <EmLoginWithPasswordLogin v-if="isDev" />
+  <!-- 根据自定义配置或环境变量决定登录方式 -->
+  <EmLoginWithPasswordLogin v-if="isPasswordMode" />
   <template v-else>
     <el-form :model="loginValue" :rules="rules">
       <el-form-item prop="phoneNumber">

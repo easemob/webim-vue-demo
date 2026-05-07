@@ -12,6 +12,7 @@ const webimConfig = useStorage('EASEIM_CUSTOM_CONFIG', {
   isPrivate: false,
   imServer: '',
   restServer: '',
+  loginMode: 'sms', // 'sms' = 手机号+验证码, 'password' = 用户名密码
 });
 
 const configRef = ref(null);
@@ -20,6 +21,7 @@ const configForm = ref({
   isPrivate: false,
   imServer: '',
   restServer: '',
+  loginMode: 'sms',
 });
 
 const initConfigForm = () => {
@@ -90,6 +92,12 @@ defineExpose({ centerDialogVisible });
       </el-form-item>
       <el-form-item v-if="configForm.isPrivate" prop="imServer" label="socketUrl地址" required>
         <el-input v-model="configForm.imServer" placeholder="例: wss://your-server.com/ws" />
+      </el-form-item>
+      <el-form-item prop="loginMode" label="登录模式">
+        <el-radio-group v-model="configForm.loginMode">
+          <el-radio label="sms">手机号+验证码</el-radio>
+          <el-radio label="password">用户名+密码</el-radio>
+        </el-radio-group>
       </el-form-item>
     </el-form>
     <template #footer>
