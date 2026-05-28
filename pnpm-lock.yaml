@@ -24,8 +24,8 @@ importers:
         specifier: ^3.8.3
         version: 3.49.0
       easemob-chat-callkit-vue3:
-        specifier: file:easemob-chat-callkit-vue3-1.0.4.tgz
-        version: file:easemob-chat-callkit-vue3-1.0.4.tgz(agora-rtc-sdk-ng@4.24.3)(easemob-websdk@4.19.1)(vue@3.5.33)
+        specifier: ^1.0.6
+        version: 1.0.6(agora-rtc-sdk-ng@4.24.3)(easemob-websdk@4.19.1)(vue@3.5.33)
       easemob-websdk:
         specifier: 4.19.1
         version: 4.19.1
@@ -1928,9 +1928,8 @@ packages:
   duplexer@0.1.2:
     resolution: {integrity: sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==}
 
-  easemob-chat-callkit-vue3@file:easemob-chat-callkit-vue3-1.0.4.tgz:
-    resolution: {integrity: sha512-uXJkkiuBWvR3mkg2eoIV6Pnx5jHWal5XHab0kEuEdXueVz3DxmJSl0a6CHXnnTLjOjPaZVpGNkTVhzbrAuVAOQ==, tarball: file:easemob-chat-callkit-vue3-1.0.4.tgz}
-    version: 1.0.4
+  easemob-chat-callkit-vue3@1.0.6:
+    resolution: {integrity: sha512-2c3AE84E5/4I9EkZycs09mHhNbNZG/kwyFS3GL0Z99CkvMtK/84tkrMJ7bx/uhE6WRXVyuB2b/HvSil3NNOR5w==}
     peerDependencies:
       agora-rtc-sdk-ng: ^4.14.0
       easemob-websdk: ^4.12.0
@@ -6160,7 +6159,7 @@ snapshots:
 
   duplexer@0.1.2: {}
 
-  easemob-chat-callkit-vue3@file:easemob-chat-callkit-vue3-1.0.4.tgz(agora-rtc-sdk-ng@4.24.3)(easemob-websdk@4.19.1)(vue@3.5.33):
+  easemob-chat-callkit-vue3@1.0.6(agora-rtc-sdk-ng@4.24.3)(easemob-websdk@4.19.1)(vue@3.5.33):
     dependencies:
       agora-rtc-sdk-ng: 4.24.3
       dexie: 4.4.2
