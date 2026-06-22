@@ -1,6 +1,6 @@
 import { watchEffect } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
-import { Logger, LogLevel } from 'easemob-chat-callkit-vue3';
+import { Logger, LogLevel } from '@easemob-community/callkit-vue3';
 
 const LEVEL_OPTIONS = [
   { label: 'ERROR', value: LogLevel.ERROR },

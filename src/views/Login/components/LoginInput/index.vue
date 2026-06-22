@@ -10,10 +10,12 @@ import { useStorage } from '@vueuse/core';
 import EmLoginWithPasswordLogin from './emloginWithPasswordLogin.vue';
 import { secret, PREFIX, SCENE_ID } from '@/private-config'
 import { encryptAES } from '@/utils/encriptAES';
+import { useCallKitCore } from '@easemob-community/callkit-vue3';
 //判断当前是否为生产环境
 const isProd = process.env.NODE_ENV === 'production'
 const isDev = !isProd
 const store = useStore();
+const { updateImClient } = useCallKitCore();
 // 读取自定义配置中的登录模式（线上测试后门配置）
 const customConfig = useStorage('EASEIM_CUSTOM_CONFIG', {});
 const isPasswordMode = computed(() => {
@@ -69,10 +71,12 @@ const loginIM = async () => {
   try {
     const res = await fetchUserLoginToken(params);
     if (res?.code === 200) {
-      EMClient.open({
+      await EMClient.open({
         username: res.chatUserName.toLowerCase(),
         accessToken: res.token,
       });
+      // 登录成功后主动同步 IM Client 到 CallKit
+      await updateImClient(EMClient);
       window.localStorage.setItem(
         'EASEIM_loginUser',
         JSON.stringify({
