@@ -69,7 +69,7 @@ const callKitInitConfig = computed(() => ({
   <EasemobChatCallKitProvider
     :chat-client="EMClient"
     :init-config="callKitInitConfig"
-    :getUserInfo="getUserInfo"
+    :get-user-info="getUserInfo"
   >
     <router-view v-slot="{ Component }">
       <transition name="slide-fade" mode="out-in" :duration="{ enter: 500, leave: 300 }">

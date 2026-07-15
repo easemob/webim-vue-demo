@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@easemob-community/callkit-vue3':
-        specifier: ^2.0.7
-        version: 2.0.7(agora-rtc-sdk-ng@4.24.3)(easemob-websdk@4.19.1)(vue@3.5.33)
+        specifier: ^2.1.0
+        version: 2.1.0(agora-rtc-sdk-ng@4.24.3)(easemob-websdk@4.19.1)(vue@3.5.33)
       '@element-plus/icons-vue':
         specifier: ^2.3.1
         version: 2.3.2(vue@3.5.33)
@@ -639,13 +639,13 @@ packages:
     resolution: {integrity: sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==}
     engines: {node: '>=10.0.0'}
 
-  '@easemob-community/callkit-core@2.0.7':
-    resolution: {integrity: sha512-7F07isxlBUzgmtRzXVxt2NKKlr9gK0dqf00/tftMDg1twk8FlUgTVzKZ7rlTGEc0XO4fP7ahSRAqyIy5pmV7SA==}
+  '@easemob-community/callkit-core@2.1.0':
+    resolution: {integrity: sha512-hy6dfi2RgN5LbII4ynUMHxyUIZli+XWFqN/0SzGR9ptyVn9C63MnJjmsLvYIDMNGju7Bb5JOT0+CAjX+TLdRgg==}
     peerDependencies:
       easemob-websdk: ^4.12.0
 
-  '@easemob-community/callkit-vue3@2.0.7':
-    resolution: {integrity: sha512-3HUfidOh+mkDZnMXiNLNS2Uqz/laVfYJbPbGyhP75lQiDO6lDc8ijtOo2IRrwh+rARRU+JJL4YyIkxMScROcQg==}
+  '@easemob-community/callkit-vue3@2.1.0':
+    resolution: {integrity: sha512-p3r6M/a+J4+Q/cHLnstWS1YaLACqaVyhrRaOieESLKafYFH3DKwJ+T7uKLkxkaZTGW2o+8GEXnL6Qg/VgUEndg==}
     peerDependencies:
       agora-rtc-sdk-ng: ^4.14.0
       easemob-websdk: ^4.12.0
@@ -4642,13 +4642,13 @@ snapshots:
 
   '@discoveryjs/json-ext@0.5.7': {}
 
-  '@easemob-community/callkit-core@2.0.7(easemob-websdk@4.19.1)':
+  '@easemob-community/callkit-core@2.1.0(easemob-websdk@4.19.1)':
     dependencies:
       easemob-websdk: 4.19.1
 
-  '@easemob-community/callkit-vue3@2.0.7(agora-rtc-sdk-ng@4.24.3)(easemob-websdk@4.19.1)(vue@3.5.33)':
+  '@easemob-community/callkit-vue3@2.1.0(agora-rtc-sdk-ng@4.24.3)(easemob-websdk@4.19.1)(vue@3.5.33)':
     dependencies:
-      '@easemob-community/callkit-core': 2.0.7(easemob-websdk@4.19.1)
+      '@easemob-community/callkit-core': 2.1.0(easemob-websdk@4.19.1)
       agora-rtc-sdk-ng: 4.24.3
       dexie: 4.4.2
       easemob-websdk: 4.19.1
