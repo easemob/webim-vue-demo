@@ -2,7 +2,7 @@
 import { ref, toRefs, computed, nextTick, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 /* IMSDK */
-import { EMClient } from '@/IM';
+import { getCurrentUserId } from '@/IM';
 import { GROUP_ROLE_TYPE } from '@/IM/constant';
 /* components */
 import GroupsManagement from '../GroupsManagement';
@@ -145,7 +145,7 @@ const editGroupField = async (type, oldValue, fieldConfig) => {
   } catch (error) {
     console.error(`${fieldConfig.label}修改失败`, error);
     ElMessage({
-      message: `${fieldConfig.label}修改失败~`,
+      message: error?.message || `${fieldConfig.label}修改失败`,
       type: 'error',
       center: true,
     });
@@ -210,7 +210,7 @@ const editMyGroupNickName = async (type, oldMyGroupNickname) => {
 };
 const inTheGroupNickname = computed(() => {
   const groupIdValue = groupId.value;
-  const loginUserValue = EMClient.user;
+  const loginUserValue = getCurrentUserId();
   const groupProfile = store.getters['UsersProfile/getInTheGroupInfo'](
     loginUserValue,
     groupIdValue,
@@ -290,9 +290,9 @@ const currentGroupDetail = computed(() => {
 });
 const maxUsersDisplay = computed(() => {
   return (
-    getGroupDetailFromGroupList.value.maxUsers ||
-    currentGroupDetail.value.maxusers ||
-    '500'
+    getGroupDetailFromGroupList.value.maxMembers ??
+    currentGroupDetail.value.maxMembers ??
+    '-'
   );
 });
 const handleUpdateGroupData = async () => {
@@ -336,14 +336,14 @@ onMounted(() => {
         <el-icon
           class="icon"
           v-if="memberRole"
-          @click="editGroupName('edit', getGroupDetailFromGroupList.groupName)"
+          @click="editGroupName('edit', getGroupDetailFromGroupList.name)"
         >
           <Edit />
         </el-icon>
       </div>
       <div class="content">
         <div v-if="!isEdit">
-          {{ getGroupDetailFromGroupList.groupName || '' }}
+          {{ getGroupDetailFromGroupList.name || '' }}
         </div>
         <el-input
           v-else
@@ -353,7 +353,7 @@ onMounted(() => {
           size="small"
           maxlength="128"
           show-word-limit
-          @blur="editGroupName('save', getGroupDetailFromGroupList.groupName)"
+          @blur="editGroupName('save', getGroupDetailFromGroupList.name)"
         >
         </el-input>
       </div>
@@ -369,7 +369,8 @@ onMounted(() => {
           @click="
             editGroupAvatar(
               'edit',
-              currentGroupDetail.avatar || getGroupDetailFromGroupList.avatar,
+              currentGroupDetail.avatarUrl ||
+                getGroupDetailFromGroupList.avatarUrl,
             )
           "
         >
@@ -379,8 +380,8 @@ onMounted(() => {
       <div class="content">
         <div v-if="!isEditGroupAvatar">
           {{
-            currentGroupDetail.avatar ||
-            getGroupDetailFromGroupList.avatar ||
+            currentGroupDetail.avatarUrl ||
+            getGroupDetailFromGroupList.avatarUrl ||
             '暂无群头像~'
           }}
         </div>
@@ -394,7 +395,8 @@ onMounted(() => {
           @blur="
             editGroupAvatar(
               'save',
-              currentGroupDetail.avatar || getGroupDetailFromGroupList.avatar,
+              currentGroupDetail.avatarUrl ||
+                getGroupDetailFromGroupList.avatarUrl,
             )
           "
         />
@@ -484,7 +486,7 @@ onMounted(() => {
         <div class="member_count">
           {{
             `${
-              getGroupDetailFromGroupList.affiliationsCount || '0'
+              getGroupDetailFromGroupList.memberCount ?? '-'
             }/${maxUsersDisplay}`
           }}
         </div>

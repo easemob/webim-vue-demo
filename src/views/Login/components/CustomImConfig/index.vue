@@ -116,9 +116,12 @@ defineExpose({ centerDialogVisible, openWithEnvironment });
         <el-input v-model="configForm.appKey" />
       </el-form-item>
       <el-form-item prop="isPrivate" label="私有化配置">
-        <el-switch
-          v-model="configForm.isPrivate"
-          :disabled="configForm.environment === IM_ENVIRONMENTS.NGI"
+          <el-switch
+            v-model="configForm.isPrivate"
+            :disabled="
+              configForm.environment === IM_ENVIRONMENTS.NGI ||
+              configForm.environment === IM_ENVIRONMENTS.VIP6
+            "
         />
       </el-form-item>
       <el-form-item

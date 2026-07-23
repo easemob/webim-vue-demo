@@ -39,9 +39,9 @@
 
 <script setup>
 import { ref, toRefs, computed, nextTick } from 'vue';
-import { EMClient } from '@/IM';
+import { createMessage, sendMessage } from '@/IM/sdk5/chat';
 import { notifySdkSendError } from '@/utils/handleSomeData';
-import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
+import { CHAT_TYPE } from '@/IM/constant';
 import { useUserInfoExt } from '@/hooks';
 import store from '@/store';
 import { ElMessage } from 'element-plus';
@@ -108,6 +108,37 @@ function getFilenameFromUrl(url) {
   }
 }
 
+function getVideoMetadata(videoFile) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(videoFile);
+    const video = document.createElement('video');
+    const cleanup = () => {
+      URL.revokeObjectURL(objectUrl);
+      video.removeAttribute('src');
+      video.load();
+    };
+
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      const duration = video.duration;
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+      cleanup();
+      if (!Number.isFinite(duration) || duration <= 0) {
+        reject(new Error('视频元数据未提供有效时长'));
+        return;
+      }
+      resolve({ duration, width, height });
+    };
+    video.onerror = () => {
+      cleanup();
+      reject(new Error('无法读取视频元数据'));
+    };
+    video.src = objectUrl;
+    video.load();
+  });
+}
+
 async function sendVideoByUrl() {
   const url = videoUrlTrimmed.value;
   if (!url) return;
@@ -142,19 +173,20 @@ async function sendVideoByUrl() {
 }
 
 async function doSendVideoFile(videoFile) {
+  const metadata = await getVideoMetadata(videoFile);
   const messageFileBody = {
     data: videoFile,
     filetype: videoFile.type,
     filename: videoFile.name,
   };
   const options = {
-    type: MESSAGE_TYPE.VIDEO,
     file: messageFileBody,
     to: targetId.value,
-    from: EMClient.user,
     chatType: chatType.value,
+    duration: metadata.duration,
+    width: metadata.width,
+    height: metadata.height,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    ...deliverOnlineOnlyOptions.value,
     onFileUploadError: (error) => {
       console.error('视频上传失败:', error);
       if (error?.type === 413 || error?.data?.error === 'Request Entity Too Large') {
@@ -172,8 +204,13 @@ async function doSendVideoFile(videoFile) {
     },
   };
   setUserInfoExt(options);
-  const msg = EMClient.Message.create(options);
-  const { message } = await EMClient.send(msg);
+  const msg = createMessage('video', options);
+  const message = await sendMessage(msg, {
+    ...deliverOnlineOnlyOptions.value,
+    onFileUploadError: options.onFileUploadError,
+    onFileUploadProgress: options.onFileUploadProgress,
+    onFileUploadComplete: options.onFileUploadComplete,
+  });
   store.dispatch('senedShowTypeMessage', { ...message });
 }
 

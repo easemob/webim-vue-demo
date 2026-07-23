@@ -1,13 +1,13 @@
-import { EMClient } from '../index';
+import { requireManager } from '../index';
 import store from '@/store';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
 export const imReactionListener = () => {
   const mountReactionEventListener = () => {
-    EMClient.addEventHandler(
+    requireManager('chatManager').addEventHandler(
       'REACTION',
       wrapImEventHandler({
-        onReactionChange: async (reactionMsg) => {
+        onReactionChanged: async (reactionMsg) => {
           console.log('[Reaction] onReactionChange received', {
             messageId: reactionMsg?.messageId,
             chatType: reactionMsg?.chatType,

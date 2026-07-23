@@ -31,7 +31,7 @@ const joinedGroupList = computed(() => store.getters.getJoinedGroupList);
         <span class="group_name">
           {{
             `${getGroupNameByGroupId(groupItem.groupId)}（${
-              groupItem.affiliationsCount
+              groupItem.memberCount ?? '-'
             }）`
           }}
         </span>

@@ -1,4 +1,4 @@
-import { EMClient } from '@/IM';
+import { getCurrentUserId } from '@/IM';
 import { MESSAGE_TYPE } from '@/IM/constant';
 export default function (toDoUpdateMsg, toDoUpdateConversation) {
   if (!toDoUpdateMsg) return;
@@ -10,8 +10,8 @@ export default function (toDoUpdateMsg, toDoUpdateConversation) {
   if (type === MESSAGE_TYPE.TEXT) {
     if (!ext || !ext[EM_AT_LIST]) return false;
     if (
-      ext[EM_AT_LIST].includes(EMClient.user) ||
-      (from !== EMClient.user && ext[EM_AT_LIST] === 'ALL')
+      ext[EM_AT_LIST].includes(getCurrentUserId()) ||
+      (from !== getCurrentUserId() && ext[EM_AT_LIST] === 'ALL')
     ) {
       return true;
     } else {

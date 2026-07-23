@@ -5,7 +5,7 @@ import {
   setMessageKey,
 } from '@/utils/handleSomeData/index';
 import messageStore from '@/store/modules/message';
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
 import { INFORM_FROM } from '@/constant';
 import { GROUP_OPERATION_TYPE, CHAT_TYPE } from '@/IM/constant';
 import {
@@ -27,14 +27,39 @@ const getLatestMessageBodyFromMessageStore = (conversationId, chatType) => {
 };
 
 const getConversationTime = (conversation) =>
-  Number(conversation?.lastMessage?.time || 0);
+  Number(
+    conversation?.lastMessage?.time ||
+      conversation?.lastMessage?.timestamp ||
+      conversation?.lastMessageAt ||
+      0,
+  );
+
+const chatManager = () => requireManager('chatManager');
+const pushManager = () => requireManager('pushManager');
+
+const toDisplayConversation = (conversation) => {
+  const lastMessage = conversation?.lastMessage
+    ? {
+        ...conversation.lastMessage,
+        time:
+          conversation.lastMessage.time ?? conversation.lastMessage.timestamp ?? 0,
+      }
+    : null;
+  return {
+    ...conversation,
+    lastMessage,
+    unReadCount: Number(conversation?.unreadCount ?? conversation?.unReadCount ?? 0),
+    pinnedTime: conversation?.pinnedTimestamp ?? conversation?.pinnedTime ?? 0,
+  };
+};
 
 const sortConversationList = (conversationList) => {
   conversationList.sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
     if (a.isPinned && b.isPinned) {
-      return Number(b.pinnedTime || 0) - Number(a.pinnedTime || 0);
+      return Number(b.pinnedTime || b.pinnedTimestamp || 0) -
+        Number(a.pinnedTime || a.pinnedTimestamp || 0);
     }
     return getConversationTime(b) - getConversationTime(a);
   });
@@ -331,112 +356,36 @@ const Conversation = {
       }
     },
     //从本地加载会话列表数据
-    getConversationListFromLocal: async ({ dispatch, commit }, params) => {
-      let conversationList = [];
+    getConversationListFromLocal: async ({ dispatch, commit }) => {
       try {
-        const result = await EMClient.localCache.getLocalConversations();
-        if (result.data.length) {
-          conversationList = [...result.data];
-        } else {
-          //默认只取50条远端数据数据，实际可自行加载更多。
-          const result = await EMClient.getServerConversations({
-            pageSize: 50,
-            cursor: '',
-          });
-          if (result.data?.conversations?.length) {
-            conversationList = [...result.data.conversations];
-          }
-        }
-        
-        // 获取置顶会话列表
-        try {
-          const pinnedResult = await dispatch('getServerPinnedConversations');
-          if (pinnedResult?.conversations?.length) {
-            // 给会话添加置顶标记
-            conversationList.forEach(conversation => {
-              conversation.isPinned = pinnedResult.conversations.some(
-                pinned => pinned.conversationId === conversation.conversationId
-              );
-            });
-          }
-        } catch (pinnedError) {
-          console.error('获取置顶会话列表失败', pinnedError);
-        }
-        
-        // 按照置顶状态和最后消息时间排序，置顶会话优先，然后按时间倒序
+        const conversationList = chatManager()
+          .getConversationList()
+          .map(toDisplayConversation);
         sortConversationList(conversationList);
-        
         commit('GET_CONVERSATION_LIST_FROM_LOCAL', conversationList);
-
         dispatch('callGroupDetailWithConversationId', conversationList);
-        console.log('[Conversation] getConversationListFromLocal success', {
+        console.log('[Conversation] getConversationListFromLocal SDK 5.0 snapshot', {
           count: conversationList.length,
-          currentUser: EMClient.user,
+          currentUser: getCurrentUserId(),
         });
-        //获取群组详情
       } catch (error) {
         console.error('获取会话列表失败', error);
+        throw error;
       }
     },
     //从服务端获取会话列表
     getConversationListFromServer: async ({ state, commit, dispatch }, params) => {
       const { isInit } = params || {};
       try {
-        // 从服务器获取会话列表（不包含聊天室）
-        const result = await EMClient.getServerConversations({
-          pageSize: state.conversationListFromServerPageSize,
-          cursor: isInit ? '' : state.conversationListFromServerCursor,
-          includeEmptyConversations: true,
-        });
-        
-        let allConversations = result?.data?.conversations || [];
-        
-        // 初始化时补充聊天室入口；服务端会话列表接口本身不返回聊天室。
-        if (isInit) {
-          const chatroomsResult = await EMClient.getJoinedChatRooms({
-            pageNum: 1,
-            pageSize: 100,
-          });
-
-          // 处理聊天室列表
-          if (chatroomsResult?.data?.length) {
-            // 将聊天室转换为会话格式
-            const chatroomConversations = chatroomsResult.data.map(
-              (chatroom) => ({
-                conversationId: chatroom.id,
-                conversationType: CHAT_TYPE.CHATROOM,
-                unReadCount: 0,
-                lastMessage: null,
-                customField: {},
-                isPinned: false,
-              }),
-            );
-            // 合并会话列表和聊天室列表
-            allConversations = [...allConversations, ...chatroomConversations];
-          }
-        }
+        const allConversations = chatManager()
+          .getConversationList()
+          .map(toDisplayConversation);
 
         commit('GET_CONVERSATION_LIST_FROM_SERVER', {
-          isInit,
+          isInit: isInit !== false,
           conversationListData: allConversations,
         });
-
-        commit(
-          'SET_CONVERSATION_LIST_FROM_SERVER_PAGE_CURSOR',
-          result?.data?.cursor || '',
-        );
-
-        if (isInit) {
-          try {
-            await dispatch('getServerPinnedConversations', {
-              pageSize: 50,
-              cursor: '',
-              includeEmptyConversations: true,
-            });
-          } catch (pinnedError) {
-            console.error('获取服务端置顶会话列表失败', pinnedError);
-          }
-        }
+        commit('SET_CONVERSATION_LIST_FROM_SERVER_PAGE_CURSOR', '');
         
         const userIds = _.chain(allConversations)
           .filter({ conversationType: CHAT_TYPE.SINGLE })
@@ -451,18 +400,12 @@ const Conversation = {
     },
     //获取服务端置顶会话列表
     getServerPinnedConversations: async ({ commit }, params) => {
-      const { pageSize = 50, cursor = '', includeEmptyConversations = true } = params || {};
       try {
-        const result = await EMClient.getServerPinnedConversations({
-          pageSize,
-          cursor,
-          includeEmptyConversations
-        });
-        if (result?.data?.conversations?.length) {
-          commit('UPDATE_CONVERSATION_PIN_STATUS', result.data.conversations);
-          return result.data;
-        }
-        return { conversations: [] };
+        const conversations = chatManager()
+          .getConversationList({ isPinned: true })
+          .map(toDisplayConversation);
+        commit('UPDATE_CONVERSATION_PIN_STATUS', conversations);
+        return { conversations };
       } catch (error) {
         console.error('获取服务端置顶会话列表失败', error);
         throw error;
@@ -471,29 +414,18 @@ const Conversation = {
     //根据标记从服务端筛选会话列表
     getServerConversationsByFilter: async ({ commit }, params) => {
       const {
-        pageSize = 10,
-        cursor = '',
         filter,
-        includeEmptyConversations = true,
       } = params || {};
       try {
-        const result = await EMClient.getServerConversationsByFilter({
-          pageSize,
-          cursor,
-          filter,
-          includeEmptyConversations,
-        });
-        const conversations = result?.data?.conversations || [];
-        // 更新会话列表
+        const conversations = chatManager()
+          .getConversationList(filter)
+          .map(toDisplayConversation);
         commit('GET_CONVERSATION_LIST_FROM_SERVER', {
           isInit: true,
           conversationListData: conversations,
         });
-        commit(
-          'SET_CONVERSATION_LIST_FROM_SERVER_PAGE_CURSOR',
-          result?.data?.cursor || '',
-        );
-        return result?.data || { conversations: [] };
+        commit('SET_CONVERSATION_LIST_FROM_SERVER_PAGE_CURSOR', '');
+        return { conversations, cursor: '' };
       } catch (error) {
         console.error('根据标记获取服务端会话列表失败', error);
         throw error;
@@ -505,35 +437,23 @@ const Conversation = {
       return dispatch('getConversationListFromServer', { isInit: true });
     },
     //更新Store中的会话列表（数据来源为本地会话插件）
-    updateConversationWithLocal: async ({ dispatch, commit }, params) => {
+    updateConversationWithLocal: async ({ commit }, params) => {
       const { conversationId, chatType } = params;
       try {
-        // localCache 插件不支持聊天室（chatRoom），只支持单聊（singleChat）和群聊（groupChat）
-        if (chatType === CHAT_TYPE.CHATROOM) {
-          return;
-        }
-        const result = await EMClient.localCache.getLocalConversation({
-          conversationId,
-          conversationType: chatType,
-        });
-        if (!result?.data) return;
-        const toBeUpdateConversationItem = { ...result?.data };
-        //检查更新的lastmsg中是否包含提及
-        const isMention = toBeUpdateConversationItem?.customField?.mention
-          ? true
-          : checkLastMsgIsHasMention(toBeUpdateConversationItem.lastMessage);
-        const customField = (toBeUpdateConversationItem.customField && {
-          ...toBeUpdateConversationItem.customField,
-          mention: isMention,
-        }) || { mention: isMention };
-        //设置会话级别提及状态clear
-        await dispatch('setLocalConversationCustomAttributes', {
-          conversationId,
-          conversationType: chatType,
-          customField: customField,
-        });
-        toBeUpdateConversationItem.customField = { ...customField };
-        commit('UPDATE_CONVERSATION_LIST', toBeUpdateConversationItem);
+        const conversation = chatManager()
+          .getConversationList()
+          .find(
+            (item) =>
+              item.conversationId === conversationId &&
+              item.conversationType === chatType,
+          );
+        if (!conversation) return;
+        const displayConversation = toDisplayConversation(conversation);
+        displayConversation.customField = {
+          ...(displayConversation.customField || {}),
+          mention: checkLastMsgIsHasMention(displayConversation.lastMessage),
+        };
+        commit('UPDATE_CONVERSATION_LIST', displayConversation);
       } catch (error) {
         console.error('[Conversation] getLocalConversation failed', {
           conversationId,
@@ -557,7 +477,7 @@ const Conversation = {
       const conversationItem = state.conversationListFromServer.find(
         (c) => c.conversationId === conversationId,
       );
-      const isUnreadMessage = latestMessage.from !== EMClient.user;
+      const isUnreadMessage = latestMessage.from !== getCurrentUserId();
 
       //如果缓存中存在会话则直接更新
       if (conversationItem) {
@@ -596,16 +516,12 @@ const Conversation = {
     removeLocalConversation: async ({ state, commit }, params) => {
       const { conversationId, conversationType } = params;
       const options = {
-        // 会话 ID：单聊为对方的用户 ID，群聊为群组 ID。
-        channel: conversationId,
-        // 会话类型：（默认） `singleChat`：单聊；`groupChat`：群聊。
-        chatType: conversationType,
-        // 删除会话时是否同时删除服务端漫游消息。
-        deleteRoam: true,
+        conversationId,
+        conversationType,
+        deleteRoamingMessages: true,
       };
       try {
-        //会话列表删除时，需要先删除远端会话列表，再删除本地数据库，这样跨端获取会话列表才能同步。
-        await EMClient.deleteConversation(options);
+        await chatManager().deleteConversation(options);
         commit('DELETE_CONVERSATION_ITEM', conversationId);
         return true;
       } catch (error) {
@@ -616,19 +532,19 @@ const Conversation = {
     getConversationPushSetting: async (context, conversation) => {
       const options = buildConversationPushQueryParams(conversation);
       try {
-        const result = await EMClient.getSilentModeForConversation(options);
+        const result = await pushManager().getConversationSilentMode(options);
         console.log('获取单个会话推送通知设置成功', {
           conversationId: options.conversationId,
-          chatType: options.type,
-          currentUser: EMClient.user,
+          chatType: options.conversationType,
+          currentUser: getCurrentUserId(),
           result,
         });
         return result;
       } catch (error) {
         console.error('获取单个会话推送通知设置失败', {
           conversationId: options.conversationId,
-          chatType: options.type,
-          currentUser: EMClient.user,
+          chatType: options.conversationType,
+          currentUser: getCurrentUserId(),
           error,
         });
         throw error;
@@ -638,21 +554,21 @@ const Conversation = {
       const { conversation, remindType } = params;
       const options = buildConversationPushSettingParams(conversation, remindType);
       try {
-        const result = await EMClient.setSilentModeForConversation(options);
+        const result = await pushManager().setConversationSilentMode(options);
         console.log('设置单个会话推送通知方式成功', {
           conversationId: options.conversationId,
-          chatType: options.type,
+          chatType: options.conversationType,
           remindType,
-          currentUser: EMClient.user,
+          currentUser: getCurrentUserId(),
           result,
         });
         return result;
       } catch (error) {
         console.error('设置单个会话推送通知方式失败', {
           conversationId: options.conversationId,
-          chatType: options.type,
+          chatType: options.conversationType,
           remindType,
-          currentUser: EMClient.user,
+          currentUser: getCurrentUserId(),
           error,
         });
         throw error;
@@ -665,23 +581,23 @@ const Conversation = {
         durationMinutes,
       );
       try {
-        const result = await EMClient.setSilentModeForConversation(options);
+        const result = await pushManager().setConversationSilentMode(options);
         console.log('设置单个会话免打扰时长成功', {
           conversationId: options.conversationId,
-          chatType: options.type,
+          chatType: options.conversationType,
           durationMinutes,
-          duration: options.options.duration,
-          currentUser: EMClient.user,
+          duration: options.rule.duration,
+          currentUser: getCurrentUserId(),
           result,
         });
         return result;
       } catch (error) {
         console.error('设置单个会话免打扰时长失败', {
           conversationId: options.conversationId,
-          chatType: options.type,
+          chatType: options.conversationType,
           durationMinutes,
-          duration: options.options.duration,
-          currentUser: EMClient.user,
+          duration: options.rule.duration,
+          currentUser: getCurrentUserId(),
           error,
         });
         throw error;
@@ -690,19 +606,19 @@ const Conversation = {
     clearConversationPushSetting: async (context, conversation) => {
       const options = buildConversationPushQueryParams(conversation);
       try {
-        const result = await EMClient.clearRemindTypeForConversation(options);
+        const result = await pushManager().clearConversationRemindType(options);
         console.log('清除单个会话推送通知方式成功', {
           conversationId: options.conversationId,
-          chatType: options.type,
-          currentUser: EMClient.user,
+          chatType: options.conversationType,
+          currentUser: getCurrentUserId(),
           result,
         });
         return result;
       } catch (error) {
         console.error('清除单个会话推送通知方式失败', {
           conversationId: options.conversationId,
-          chatType: options.type,
-          currentUser: EMClient.user,
+          chatType: options.conversationType,
+          currentUser: getCurrentUserId(),
           error,
         });
         throw error;
@@ -716,19 +632,15 @@ const Conversation = {
       }
 
       const { conversationId, chatType } = params;
-      if (chatType === CHAT_TYPE.CHATROOM) {
+      if (![CHAT_TYPE.SINGLE, CHAT_TYPE.GROUP].includes(chatType)) {
         return;
       }
 
       try {
-        //只有发送了会话已读回执远端服务器的会话未读数才会清空。
-        const msg = EMClient.Message.create({
-          chatType,
-          type: 'channel',
-          to: conversationId,
+        await chatManager().clearConversationUnreadMessageCount({
+          conversationId,
+          conversationType: chatType,
         });
-        await EMClient.send(msg);
-        //通知更新缓存中的会话未读数。
         commit('CLEAR_CONVERSATION_ITEM_UNREAD_COUNT', conversationId);
       } catch (error) {
         console.error('[Conversation] clearConversationUnreadCount failed', {
@@ -743,23 +655,6 @@ const Conversation = {
       const { conversationId, conversationType, customField } = params;
       customField.mention = false;
       commit('CLEAR_CONVERSATION_ITEM_MENTION_STATUS', conversationId);
-    },
-    //设置本地会话自定义属性
-    setLocalConversationCustomAttributes: async (
-      { dispatch, commit },
-      params,
-    ) => {
-      const { conversationId, conversationType, customField } = params;
-      try {
-        await EMClient.localCache.setLocalConversationCustomField({
-          conversationId,
-          conversationType,
-          customField: { ...customField },
-        });
-      } catch (error) {
-        console.error('设置本地会话自定义属性失败', error);
-        throw error;
-      }
     },
     //通过会话Id调用群组或聊天室详情用于会话列表数据展示
     callGroupDetailWithConversationId: async (

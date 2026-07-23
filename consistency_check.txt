@@ -1,18 +1,2 @@
-参数一致性检查：
-
-1. removeLocalConversation 方法：
-   - SDK文档：{ conversationId, conversationType, isRemoveLocalMessage }
-   - 现有代码：{ channel, chatType, deleteRoam }
-
-2. clearConversationUnreadCount 方法：
-   - SDK文档：{ conversationId, conversationType }
-   - 现有代码：{ chatType, type, to }
-
-3. getServerConversations 方法：
-   - SDK文档：EMClient.contact.getServerConversations
-   - 现有代码：EMClient.getServerConversations
-
-4. 其他方法与SDK文档一致：
-   - getLocalConversations
-   - getLocalConversation
-   - setLocalConversationCustomField
+SDK 5.0 参数一致性记录已迁移至源码契约测试和
+`docs/sdk5-capability-matrix.md`。本文件不再保留 Web SDK v4 接口对照。

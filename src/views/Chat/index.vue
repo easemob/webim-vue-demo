@@ -2,7 +2,7 @@
 import { onBeforeUnmount } from 'vue';
 import { useStore } from 'vuex';
 import { ElMessage } from 'element-plus';
-import { EMClient } from '@/IM';
+import { getCurrentUserId } from '@/IM';
 import { CHAT_TYPE } from '@/IM/constant';
 import NavBar from '@/views/Chat/components/NavBar';
 
@@ -37,7 +37,7 @@ SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
       center: true,
     });
     const params = {
-      from: EMClient.user,
+      from: getCurrentUserId(),
       to: eventHxId,
       chatType: callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
       msg: ext.message,
@@ -54,7 +54,7 @@ SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
     });
   } else if (eventHxId) {
     const params = {
-      from: EMClient.user,
+      from: getCurrentUserId(),
       to: eventHxId,
       chatType: callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
       msg: ext.message,
@@ -76,7 +76,6 @@ onBeforeUnmount(() => {
       <el-main class="chat_main_box">
         <router-view> </router-view>
       </el-main>
-      <!-- <EaseCallKit :EaseIM="EaseIM" :connectionName="'conn'" /> -->
     </el-container>
   </div>
 </template>

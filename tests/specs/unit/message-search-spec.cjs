@@ -19,6 +19,13 @@ test('message search entry exists in the current demo surface', () => {
   assert.match(messageView, /!routeQueryData\.value\.isChatThread/);
 });
 
+test('conversation search does not assume every SDK 5 message has a text msg field', () => {
+  const content = read('src/components/SearchInput/index.vue');
+
+  assert.match(content, /String\(o\.lastMessage\?\.msg \?\? ''\)\.includes\(inputValue\.value\)/);
+  assert.doesNotMatch(content, /o\.lastMessage\?\.msg\.indexOf\(inputValue\.value\)/);
+});
+
 test('message search uses a date range picker for optional time filtering', () => {
   const content = read('src/views/Chat/components/Message/components/MessageSearchDrawer.vue');
 
@@ -33,8 +40,7 @@ test('message search uses a date range picker for optional time filtering', () =
 test('message search builds official searchMessages parameters', () => {
   const content = read('src/views/Chat/components/Message/components/MessageSearchDrawer.vue');
 
-  assert.match(content, /EMClient\.searchMessages/);
-  assert.match(content, /searchApi\.call\(EMClient, params\)/);
+  assert.match(content, /requireManager\('chatManager'\)\.searchMessages\(params\)/);
   assert.match(content, /keywordList/);
   assert.match(content, /keywordListMatchType/);
   assert.match(content, /conversationId/);
@@ -45,13 +51,13 @@ test('message search builds official searchMessages parameters', () => {
   assert.match(content, /pageSize/);
 });
 
-test('message search uses miniCore top-level plugin method first', () => {
+test('message search uses the SDK 5.0 chat manager without a v4 fallback', () => {
   const content = read('src/views/Chat/components/Message/components/MessageSearchDrawer.vue');
 
-  assert.match(content, /EMClient\.searchMessages/);
-  assert.match(content, /EMClient\.contact\?\.searchMessages/);
-  assert.match(content, /EMClient\.searchMessages \|\| EMClient\.contact\?\.searchMessages/);
-  assert.doesNotMatch(content, /当前 Web SDK 未提供 contact\.searchMessages/);
+  assert.match(content, /import \{ getCurrentUserId, requireManager \} from '@\/IM';/);
+  assert.match(content, /requireManager\('chatManager'\)\.searchMessages\(params\)/);
+  assert.doesNotMatch(content, /\bEMClient\b/);
+  assert.doesNotMatch(content, /fallback/i);
 });
 
 test('message search exposes only supported message type filters', () => {

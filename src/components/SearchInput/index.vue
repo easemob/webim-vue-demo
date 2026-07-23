@@ -1,6 +1,6 @@
 <script setup>
 import { ref, toRaw, toRefs, watch, computed } from 'vue';
-import { EMClient } from '@/IM';
+import { getCurrentUserId } from '@/IM';
 import { CHAT_TYPE, MESSAGE_TYPE } from '@/IM/constant';
 import { Search } from '@element-plus/icons-vue';
 import { useLocalStorage, onKeyStroke } from '@vueuse/core';
@@ -35,7 +35,7 @@ const inputValue = ref(modelValue.value || '');
 const isShowResultContent = ref(false);
 //搜索本地记录
 const searchHistory = useLocalStorage(
-  `EASEIM_${EMClient.user}_search_hisory`,
+  `EASEIM_${getCurrentUserId()}_search_hisory`,
   [],
 );
 //点击非搜索部分关闭页面
@@ -80,7 +80,7 @@ const querySearch = () => {
           getUserDisplayNameById(o.conversationId).indexOf(inputValue.value) >
             -1 ||
           o.conversationId.indexOf(inputValue.value) > -1 ||
-          o.lastMessage?.msg.indexOf(inputValue.value) > -1
+          String(o.lastMessage?.msg ?? '').includes(inputValue.value)
         );
       }
       if (o.conversationType === CHAT_TYPE.GROUP)
@@ -88,7 +88,7 @@ const querySearch = () => {
           getGroupNameByGroupId(o.conversationId).indexOf(inputValue.value) >
             -1 ||
           o.conversationId.indexOf(inputValue.value) > -1 ||
-          o.lastMessage?.msg.indexOf(inputValue.value) > -1
+          String(o.lastMessage?.msg ?? '').includes(inputValue.value)
         );
     });
     searchSuggest.value = resultList;
@@ -101,7 +101,7 @@ const querySearch = () => {
         (o.userId && o.userId.includes(inputValue.value)) ||
         (o.remark && o.remark.includes(inputValue.value)) ||
         (o.groupId && o.groupId.includes(inputValue.value)) ||
-        (o.groupName && o.groupName.includes(inputValue.value)) ||
+        (o.name && o.name.includes(inputValue.value)) ||
         (o.description && o.description.includes(inputValue.value)),
     );
     searchSuggest.value = resultList;

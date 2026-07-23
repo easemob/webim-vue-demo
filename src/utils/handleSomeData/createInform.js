@@ -1,6 +1,6 @@
 /* 构建inform通知 */
 import { INFORM_FROM, INFORM_TYPE } from '@/constant';
-import { EMClient } from '@/IM';
+import { getCurrentUserId } from '@/IM';
 export default function (fromType, informContnet) {
   const { type, from, to, status } = informContnet;
   if (fromType === INFORM_FROM.FRIEND) {
@@ -29,7 +29,7 @@ export default function (fromType, informContnet) {
         desc: status || INFORM_TYPE[type],
       };
     }
-    informBody.from === EMClient.user
+    informBody.from === getCurrentUserId()
       ? (informBody.untreated = 0)
       : (informBody.untreated = 1);
     return informBody;
@@ -78,7 +78,7 @@ export default function (fromType, informContnet) {
       };
     }
 
-    informBody.from === EMClient.user
+    informBody.from === getCurrentUserId()
       ? (informBody.untreated = 0)
       : (informBody.untreated = 1);
     return informBody;

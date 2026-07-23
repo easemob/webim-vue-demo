@@ -1,4 +1,4 @@
-import { imConnectListener } from './imConnectListener';
+import { imConnectListener, fetchLoginUsersInitData } from './imConnectListener';
 import { imReviceMessageListener } from './imReciveMessageListener';
 import { imPresenceListener } from './imPresenceListener';
 import { imReactionListener } from './imReactionListener';
@@ -35,6 +35,7 @@ export const mountAllEMListener = () => {
   mountSafe('imThreadListener', mountThreadEventListener);
 };
 export {
+  fetchLoginUsersInitData,
   imConnectListener,
   imPresenceListener,
   imReactionListener,

@@ -41,8 +41,7 @@ import { ref, toRefs } from 'vue';
 import store from '@/store';
 import { ElMessage } from 'element-plus';
 import { useUserInfoExt } from '@/hooks';
-import { EMClient } from '@/IM';
-import { MESSAGE_TYPE } from '@/IM/constant';
+import { createMessage, sendMessage } from '@/IM/sdk5/chat';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 
 const props = defineProps({
@@ -121,10 +120,8 @@ const sendCustomMessage = async () => {
   }
 
   const msgOptions = {
-    type: MESSAGE_TYPE.CUSTOM,
     chatType: chatType.value,
     to: targetId.value,
-    from: EMClient.user,
     ...(isChatThread.value ? { isChatThread: true } : {}),
     ...deliverOnlineOnlyOptions.value,
     customEvent,
@@ -135,8 +132,8 @@ const sendCustomMessage = async () => {
 
   sending.value = true;
   try {
-    const msg = EMClient.Message.create(msgOptions);
-    const { message } = await EMClient.send(msg);
+    const msg = createMessage('custom', msgOptions);
+    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
     await store.dispatch('senedShowTypeMessage', message);
     ElMessage.success('自定义消息发送成功');
     closeDialog();

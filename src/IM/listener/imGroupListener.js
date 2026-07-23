@@ -1,4 +1,4 @@
-import { EMClient } from '../index';
+import { requireManager } from '../index';
 import { INFORM_FROM, INFORM_TYPE } from '@/constant';
 import store from '@/store';
 import { GROUP_OPERATION_TYPE } from '../constant';
@@ -14,15 +14,88 @@ export const imGroupListener = () => {
     if (!groupId) return;
     store.dispatch('fetchGroupDetailFromServer', [groupId]).catch(() => {});
   };
+  const getSdk5UserId = (user) => {
+    if (typeof user === 'string') return user;
+    return typeof user?.userId === 'string' ? user.userId : '';
+  };
+  const normalizeSdk5UserIds = (users) => {
+    if (!Array.isArray(users)) return [];
+    return [...new Set(users.map(getSdk5UserId).filter(Boolean))];
+  };
   const normalizeGroupEventMembers = (groupevent) => {
     const members = [
       groupevent?.member,
       groupevent?.user,
       groupevent?.username,
-      ...(Array.isArray(groupevent?.members) ? groupevent.members : []),
-      ...(Array.isArray(groupevent?.users) ? groupevent.users : []),
-    ].filter(Boolean);
+      ...normalizeSdk5UserIds(groupevent?.members),
+      ...normalizeSdk5UserIds(groupevent?.users),
+    ].map(getSdk5UserId).filter(Boolean);
     return [...new Set(members)];
+  };
+  // SDK 5.0 emits typed, named group callbacks. Normalize only their public
+  // fields so the existing system-notification model can render them.
+  const normalizeSdk5GroupEvent = (eventName, payload) => {
+    const base = {
+      id: payload.groupId,
+      groupId: payload.groupId,
+      from: '',
+      to: '',
+      members: [],
+      reason: payload.reason || '',
+    };
+    switch (eventName) {
+      case 'onInvitationReceived':
+        return { ...base, operation: GROUP_OPERATION_TYPE.INVITE_TO_JOIN, from: payload.inviter?.userId };
+      case 'onRequestToJoinReceived':
+        return { ...base, operation: GROUP_OPERATION_TYPE.REQUEST_TO_JOIN, from: payload.applicant?.userId };
+      case 'onRequestToJoinAccepted':
+        return { ...base, operation: GROUP_OPERATION_TYPE.ACCEPT_REQUEST, from: payload.accepter?.userId };
+      case 'onRequestToJoinDeclined':
+        return { ...base, operation: GROUP_OPERATION_TYPE.JOIN_PUBLIC_GROUP_DECLINED, from: payload.decliner?.userId, to: payload.applicant?.userId };
+      case 'onInvitationAccepted':
+        return { ...base, operation: GROUP_OPERATION_TYPE.ACCEPT_INVITE, from: payload.invitee?.userId };
+      case 'onInvitationDeclined':
+        return { ...base, operation: GROUP_OPERATION_TYPE.REJECT_INVITE, from: payload.invitee?.userId };
+      case 'onUserRemoved':
+        return { ...base, operation: GROUP_OPERATION_TYPE.REMOVE_MEMBER };
+      case 'onGroupDestroyed':
+        return { ...base, operation: GROUP_OPERATION_TYPE.DESTROY };
+      case 'onAutoAcceptInvitationFromGroup':
+        return { ...base, operation: GROUP_OPERATION_TYPE.DIRECT_JOINED, from: payload.inviter?.userId, reason: payload.inviteMessage || '' };
+      case 'onMuteListAdded':
+        return { ...base, operation: GROUP_OPERATION_TYPE.MUTE_MEMBER, members: normalizeSdk5UserIds(payload.mutes) };
+      case 'onMuteListRemoved':
+        return { ...base, operation: GROUP_OPERATION_TYPE.UNMUTE_MEMBER, members: normalizeSdk5UserIds(payload.mutes) };
+      case 'onAllowListAdded':
+        return { ...base, operation: GROUP_OPERATION_TYPE.ADD_USER_TO_ALLOWLIST, members: normalizeSdk5UserIds(payload.allowlist) };
+      case 'onAllowListRemoved':
+        return { ...base, operation: GROUP_OPERATION_TYPE.REMOVE_ALLOWLIST_MEMBER, members: normalizeSdk5UserIds(payload.allowlist) };
+      case 'onAllMemberMuteStateChanged':
+        return { ...base, operation: payload.isMuted ? GROUP_OPERATION_TYPE.MUTE_ALL_MEMBERS : GROUP_OPERATION_TYPE.UNMUTE_ALL_MEMBERS };
+      case 'onAdminAdded':
+        return { ...base, operation: GROUP_OPERATION_TYPE.SET_ADMIN, to: payload.administrator?.userId };
+      case 'onAdminRemoved':
+        return { ...base, operation: GROUP_OPERATION_TYPE.REMOVE_ADMIN, to: payload.administrator?.userId };
+      case 'onOwnerChanged':
+        return { ...base, operation: GROUP_OPERATION_TYPE.CHANGE_OWNER, from: payload.oldOwner?.userId, to: payload.newOwner?.userId };
+      case 'onMembersJoined':
+        return { ...base, operation: GROUP_OPERATION_TYPE.MEMBERS_PRESENCE, members: normalizeSdk5UserIds(payload.members) };
+      case 'onMembersExited':
+        return { ...base, operation: GROUP_OPERATION_TYPE.MEMBERS_ABSENCE, from: normalizeSdk5UserIds(payload.members)[0] || '', members: normalizeSdk5UserIds(payload.members) };
+      case 'onAnnouncementChanged':
+        return { ...base, operation: payload.announcement ? GROUP_OPERATION_TYPE.UPDATE_ANNOUNCEMENT : GROUP_OPERATION_TYPE.DELETE_ANNOUNCEMENT };
+      case 'onSharedFileAdded':
+        return { ...base, operation: GROUP_OPERATION_TYPE.UPLOAD_FILE };
+      case 'onSharedFileDeleted':
+        return { ...base, operation: GROUP_OPERATION_TYPE.DELETE_FILE };
+      case 'onGroupInfoChanged':
+      case 'onGroupDisabledChanged':
+        return { ...base, operation: GROUP_OPERATION_TYPE.UPDATE_INFO };
+      case 'onGroupMemberAttributeChanged':
+        return { ...base, operation: GROUP_OPERATION_TYPE.MEMBER_ATTRIBUTES_UPDATE, from: payload.user?.userId || payload.from || '', attributes: payload.attribute || {} };
+      default:
+        return null;
+    }
   };
   const describeGroupEvent = (groupevent) => {
     const operation = groupevent?.operation || '';
@@ -64,12 +137,13 @@ export const imGroupListener = () => {
       //入群通知
       case GROUP_OPERATION_TYPE.MEMBER_PRESENCE:
         {
-          const params = {
-            groupId,
-            type: 'groupMemberCount',
-            params: groupevent.memberCount,
-          };
-          store.commit('UPDATE_CACHE_GROUP_INFO', params);
+          if (typeof groupevent.memberCount === 'number') {
+            store.commit('UPDATE_CACHE_GROUP_INFO', {
+              groupId,
+              type: 'groupMemberCount',
+              params: groupevent.memberCount,
+            });
+          }
           store.commit('UPDATE_GROUP_MEMBERS', {
             groupId,
             type: GROUP_OPERATION_TYPE.MEMBER_PRESENCE,
@@ -82,13 +156,13 @@ export const imGroupListener = () => {
       case GROUP_OPERATION_TYPE.MEMBER_ABSENCE:
       case GROUP_OPERATION_TYPE.MEMBERS_ABSENCE:
         {
-          //退群通知
-          const params = {
-            groupId,
-            type: 'groupMemberCount',
-            params: groupevent.memberCount,
-          };
-          store.commit('UPDATE_CACHE_GROUP_INFO', params);
+          if (typeof groupevent.memberCount === 'number') {
+            store.commit('UPDATE_CACHE_GROUP_INFO', {
+              groupId,
+              type: 'groupMemberCount',
+              params: groupevent.memberCount,
+            });
+          }
           store.commit('UPDATE_GROUP_MEMBERS', {
             groupId,
             type: GROUP_OPERATION_TYPE.MEMBER_ABSENCE,
@@ -188,14 +262,45 @@ export const imGroupListener = () => {
     }
   };
   const mountGroupEventListener = () => {
-    EMClient.addEventHandler(
+    const onSdk5GroupEvent = (eventName, payload) => {
+      const groupevent = normalizeSdk5GroupEvent(eventName, payload);
+      console.log('[SDK 5.0 Group Event] received', {
+        eventName,
+        rawEvent: payload,
+        normalizedEvent: groupevent,
+      });
+      if (!groupevent) return;
+      submitInformData(INFORM_FROM.GROUP, groupevent);
+      onDispatchGroupEvent(groupevent);
+    };
+    requireManager('groupManager').addEventHandler(
       'groupEvent',
       wrapImEventHandler({
-        onGroupEvent: (groupevent) => {
-          console.log('[IM Group Event] received', describeGroupEvent(groupevent));
-          submitInformData(INFORM_FROM.GROUP, groupevent);
-          onDispatchGroupEvent(groupevent);
-        },
+        onInvitationReceived: (payload) => onSdk5GroupEvent('onInvitationReceived', payload),
+        onRequestToJoinReceived: (payload) => onSdk5GroupEvent('onRequestToJoinReceived', payload),
+        onRequestToJoinAccepted: (payload) => onSdk5GroupEvent('onRequestToJoinAccepted', payload),
+        onRequestToJoinDeclined: (payload) => onSdk5GroupEvent('onRequestToJoinDeclined', payload),
+        onInvitationAccepted: (payload) => onSdk5GroupEvent('onInvitationAccepted', payload),
+        onInvitationDeclined: (payload) => onSdk5GroupEvent('onInvitationDeclined', payload),
+        onUserRemoved: (payload) => onSdk5GroupEvent('onUserRemoved', payload),
+        onGroupDestroyed: (payload) => onSdk5GroupEvent('onGroupDestroyed', payload),
+        onAutoAcceptInvitationFromGroup: (payload) => onSdk5GroupEvent('onAutoAcceptInvitationFromGroup', payload),
+        onMuteListAdded: (payload) => onSdk5GroupEvent('onMuteListAdded', payload),
+        onMuteListRemoved: (payload) => onSdk5GroupEvent('onMuteListRemoved', payload),
+        onAllowListAdded: (payload) => onSdk5GroupEvent('onAllowListAdded', payload),
+        onAllowListRemoved: (payload) => onSdk5GroupEvent('onAllowListRemoved', payload),
+        onAllMemberMuteStateChanged: (payload) => onSdk5GroupEvent('onAllMemberMuteStateChanged', payload),
+        onAdminAdded: (payload) => onSdk5GroupEvent('onAdminAdded', payload),
+        onAdminRemoved: (payload) => onSdk5GroupEvent('onAdminRemoved', payload),
+        onOwnerChanged: (payload) => onSdk5GroupEvent('onOwnerChanged', payload),
+        onMembersJoined: (payload) => onSdk5GroupEvent('onMembersJoined', payload),
+        onMembersExited: (payload) => onSdk5GroupEvent('onMembersExited', payload),
+        onAnnouncementChanged: (payload) => onSdk5GroupEvent('onAnnouncementChanged', payload),
+        onSharedFileAdded: (payload) => onSdk5GroupEvent('onSharedFileAdded', payload),
+        onSharedFileDeleted: (payload) => onSdk5GroupEvent('onSharedFileDeleted', payload),
+        onGroupInfoChanged: (payload) => onSdk5GroupEvent('onGroupInfoChanged', payload),
+        onGroupDisabledChanged: (payload) => onSdk5GroupEvent('onGroupDisabledChanged', payload),
+        onGroupMemberAttributeChanged: (payload) => onSdk5GroupEvent('onGroupMemberAttributeChanged', payload),
       }),
     );
   };

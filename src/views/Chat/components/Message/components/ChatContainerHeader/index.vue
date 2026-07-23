@@ -103,7 +103,7 @@ onMounted(() => {
         </span>
         <span v-else class="chat_user_name">
           {{ getGroupNameByGroupId(routeQueryData.id) || '' }}
-          {{ `(${groupDetail?.affiliationsCount || ''})` }}
+          {{ `(${groupDetail?.memberCount ?? '-'})` }}
         </span>
       </div>
     </template>

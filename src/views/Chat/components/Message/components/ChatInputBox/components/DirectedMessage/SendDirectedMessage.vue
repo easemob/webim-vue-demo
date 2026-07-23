@@ -47,8 +47,9 @@
 import { computed, ref, toRefs, watch } from 'vue';
 import { useStore } from 'vuex';
 import { ElMessage } from 'element-plus';
-import { EMClient } from '@/IM';
-import { CHAT_TYPE, MESSAGE_TYPE } from '@/IM/constant';
+import { createMessage, sendMessage } from '@/IM/sdk5/chat';
+import { getCurrentUserId, requireManager } from '@/IM';
+import { CHAT_TYPE } from '@/IM/constant';
 import { useUserInfoExt } from '@/hooks';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 import {
@@ -113,15 +114,14 @@ const fetchChatroomMembers = async () => {
   let cursor = '';
 
   do {
-    const res = await EMClient.getChatRoomMembers({
+    const res = await requireManager('chatRoomManager').getMemberList({
       chatRoomId: targetId.value,
       cursor,
-      limit: 50,
+      pageSize: 50,
     });
-    const pageData = res?.data || {};
-    const pageMembers = Array.isArray(pageData.members) ? pageData.members : [];
+    const pageMembers = Array.isArray(res?.items) ? res.items : [];
     allMembers.push(...normalizeChatroomMembers(pageMembers));
-    cursor = pageData.cursor || '';
+    cursor = res?.cursor || '';
   } while (cursor);
 
   store.commit('SET_CHATROOM_MEMBERS', {
@@ -174,7 +174,7 @@ const populateDefaultReceivers = async () => {
 
   const members = await ensureMembersLoaded();
   const defaults = getDefaultDirectedReceivers({
-    currentUserId: EMClient.user,
+    currentUserId: getCurrentUserId(),
     existingReceivers: receiverList.value,
     members,
   });
@@ -235,15 +235,13 @@ const sendDirectedMessage = async () => {
   }
 
   const msgOptions = {
-    type: MESSAGE_TYPE.TEXT,
-    from: EMClient.user,
     to: targetId.value,
     chatType: chatType.value,
     ...deliverOnlineOnlyOptions.value,
     msg,
+    receiverList: receiverList.value,
     ext: {},
   };
-  appendDirectedMessageOptions(msgOptions, receiverList.value);
   setUserInfoExt(msgOptions);
   console.log('[Directed Message] 准备发送定向消息', {
     targetId: targetId.value,
@@ -255,8 +253,10 @@ const sendDirectedMessage = async () => {
 
   sending.value = true;
   try {
-    const message = EMClient.Message.create(msgOptions);
-    const { message: sentMessage } = await EMClient.send(message);
+    const message = createMessage('txt', msgOptions);
+    const sentMessage = await sendMessage(message, {
+      ...deliverOnlineOnlyOptions.value,
+    });
     await store.dispatch('senedShowTypeMessage', sentMessage);
     ElMessage.success('定向消息发送成功');
     closeDialog();

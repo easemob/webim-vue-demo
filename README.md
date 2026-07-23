@@ -2,10 +2,10 @@
 
 # webim-vue3-demo
 
-`webim-vue3-demo` 是基于 Vue 3、Vuex、Element Plus 和 `easemob-websdk` 的环信 Web IM Demo。本项目当前定位是 Web 端真实能力验证工具：页面和控制台应直接暴露 SDK / 服务端的真实成功、失败、事件字段和错误信息，不通过客户端模拟成功、自动重试、静默降级或本地兜底来掩盖服务端行为。
+`webim-vue3-demo` 是基于 Vue 3、Vuex、Element Plus 和本地构建 `easemob-websdk 5.0.0` 的环信 Web IM Demo。本项目当前定位是 Web 端真实能力验证工具：页面和控制台应直接暴露 SDK 5.0 / 服务端的真实成功、失败、事件字段和错误信息，不通过客户端模拟成功、自动重试、静默降级或本地兜底来掩盖服务端行为。
 
 当前 Demo 覆盖单聊、群聊、聊天室、消息话题/群组子区、会话、联系人、群组管理、聊天室管理、消息收发、消息交互、Reaction、在线状态和音视频通话示例等能力。
-消息页还提供服务端消息搜索入口，用于验证 `EMClient.searchMessages` 的真实服务端搜索能力。
+消息页还提供服务端消息搜索入口，用于验证 `chatManager.searchMessages` 的真实服务端搜索能力。
 
 ## 运行
 
@@ -203,9 +203,9 @@ npm run format
 
 消息页头部提供“服务端消息搜索”入口，当前支持单聊、群聊、聊天室会话内搜索，也可以切换为搜索当前用户全部可见会话。
 
-当前入口优先调用 `EMClient.searchMessages`，支持关键词、关键词关系、消息类型、搜索内容范围、可选日期时间范围、页码和每页条数。时间范围通过页面日期时间选择器选择；未选择时不传 `startTime` / `endTime`，选择后同时传入毫秒级开始和结束时间。
+当前入口调用 SDK 5.0 `chatManager.searchMessages`，支持关键词、关键词关系、消息类型、搜索内容范围、可选日期时间范围、页码和每页条数。时间范围通过页面日期时间选择器选择；未选择时不传 `startTime` / `endTime`，选择后同时传入毫秒级开始和结束时间。
 
-服务端文档要求 Web SDK v4.24.1 或以上版本，且应用需开通消息搜索服务。Demo 按真实服务端结果展示：未开通时给出“服务端消息搜索功能未开通，请联系环信商务开通后再试”提示，同时在控制台保留完整错误、入参、当前用户和会话上下文；不做模拟结果、自动重试或本地成功兜底。
+消息搜索是否可用以当前 SDK 5.0 / 服务端真实响应为准。Demo 按真实服务端结果展示：未开通时给出“服务端消息搜索功能未开通，请联系环信商务开通后再试”提示，同时在控制台保留完整错误、入参、当前用户和会话上下文；不做模拟结果、自动重试或本地成功兜底。
 
 消息类型筛选只开放服务端支持的 `txt`、`img`、`video`、`loc`、`file`、`combine`。Demo 不在端上拦截关键词个数或关键词长度，超出服务端限制时按服务端返回的真实错误提示展示并保留 console 日志。
 
@@ -257,13 +257,13 @@ npm run format
 
 本 Demo 用于验证真实 SDK / 服务端行为。撤回消息必须以 SDK 调用结果和 SDK 事件真实字段为准，不做客户端模拟成功或静默兜底。
 
-- 发起撤回时通过 `EMClient.recallMessage` 传入真实 `mid`、`to`、`chatType`。
+- 发起撤回时通过 SDK 5.0 `chatManager.recallMessage` 传入真实消息 ID、目标 ID、会话类型。
 - SDK 返回失败时保持失败提示和控制台错误，不把消息本地标记为已撤回。
 - 接收撤回事件时优先使用 SDK 事件中的真实字段。
 - 当前 Web SDK 的 `onRecallMessage` 回调体可能只有 `id`、`from`、`to`、`mid`、`ext` 等字段，未必包含 `chatType`。
 - 跨端编辑/非聊天室撤回事件缺少 `chatType` 时，仅可使用本地已存在原消息的真实 `chatType` 更新。
 - 聊天室撤回事件缺少 `chatType` 时，Demo 只输出包含 `messageId`、`from`、`to`、`localMessage`、`rawMessage` 的错误日志，不使用本地原消息补全为 `chatRoom` 后更新本地撤回状态，避免服务端未真实撤回时页面显示“已撤回”。
-- 排查聊天室撤回问题时，建议同时保留 `EMClient.recallMessage` 入参、SDK Promise 成功或失败结果、`onRecallMessage` 原始回调、SDK 版本以及服务端对原消息 `mid` 的撤回状态确认。
+- 排查聊天室撤回问题时，建议同时保留 SDK 5.0 `chatManager.recallMessage` 入参、SDK Promise 成功或失败结果、`onRecallMessage` 原始回调、SDK 版本以及服务端对原消息 ID 的撤回状态确认。
 
 ## 群组能力
 
@@ -380,22 +380,18 @@ SDK 初始化和事件监听是 IM 能力实现的基础：
 典型接入流程：
 
 ```javascript
-import { EMClient } from '@/IM';
-import { mountAllEMListener } from '@/IM/listener';
+import { initSDK, login, requireManager } from '@/IM';
 
-mountAllEMListener();
-
-EMClient.open({
-  username: '',
-  password: '',
-});
+initSDK();
+await login({ userId: '', token: '' });
+const chatManager = requireManager('chatManager');
 ```
 
 ## 日志与错误处理
 
 本项目保留完整 console 错误输出，便于排查真实 SDK / 服务端能力：
 
-- `EMClient` SDK 调用、响应、事件、失败与重连日志会输出关键上下文。
+- SDK 5.0 `ChatClient` 与 Manager 调用、响应、事件、失败与重连日志会输出关键上下文。
 - 服务端能力失败时尽量包含消息 ID、目标 ID、会话类型、当前用户等信息。
 - SDK 消息解析空引用异常会保留原始错误日志，并阻止开发态全屏错误覆盖层遮挡页面。
 - IM 连接断开、发送超时等真实失败只打印到控制台，不用开发态全屏错误覆盖层替代业务错误反馈。

@@ -1,28 +1,71 @@
-import router from '@/router';
 import store from '@/store';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
-import { EMClient } from '../index';
+import { getClient, getCurrentUserId } from '../index';
 import { usePlayRing } from '@/hooks';
 import { safeSync } from '@/utils/safeCall';
+
+// SDK 5.0 在 onConnected 事件后才完成 login() Promise 的会话提交。
+// REST Manager 初始化必须由 await login() 成功后的调用方触发，不能在这里抢跑。
+export const fetchLoginUsersInitData = () => {
+  getMyUserInfos();
+  fetchLoginUserPresenceStatus();
+  fetchFriendList();
+  fetchTheLoginUserBlickList();
+  fetchGroupList();
+  Promise.resolve(store.dispatch('getConversationList')).catch((err) =>
+    console.error('[fetchLoginUsersInitData.getConversationList]', err),
+  );
+};
+
+const getMyUserInfos = () => {
+  const userId = getCurrentUserId();
+  Promise.resolve(store.dispatch('getMyUserInfo', userId)).catch((err) =>
+    console.error('[getMyUserInfos]', err),
+  );
+};
+
+const fetchLoginUserPresenceStatus = () => {
+  const userId = getCurrentUserId();
+  Promise.resolve(store.dispatch('fetchLoginUserPresenceStatus', userId)).catch(
+    (err) => console.error('[fetchLoginUserPresenceStatus]', err),
+  );
+};
+
+const fetchFriendList = () => {
+  Promise.resolve(store.dispatch('fetchAllContactsListWithRemarkFromServer')).catch(
+    (err) => console.error('[fetchFriendList]', err),
+  );
+};
+
+const fetchTheLoginUserBlickList = () =>
+  Promise.resolve(store.dispatch('fetchBlackList')).catch((err) =>
+    console.error('[fetchTheLoginUserBlickList]', err),
+  );
+
+const fetchGroupList = () =>
+  Promise.allSettled([
+    Promise.resolve(
+      store.dispatch('fetchJoinedGroupListFromServer', {
+        startPageNum: 0,
+        reset: true,
+      }),
+    ),
+    Promise.resolve(store.dispatch('fetchJoinedGroupCountFromServer')),
+  ]).catch((err) => console.error('[fetchGroupList]', err));
 
 export const imConnectListener = () => {
   const mountConnectEventListener = () => {
     const { isOpenPlayRing, clickRing } = usePlayRing();
-    EMClient.addEventHandler('connection', {
+    getClient().addEventHandler('connection', {
       onConnected: () => {
         safeSync('connection.onConnected', () => {
           store.commit('CHANGE_LOGIN_STATUS', true);
+          // onConnecting marks the UI offline; only the SDK's real connected event restores it.
+          store.commit('CHANGE_NETWORK_STATUS', true);
           if (isOpenPlayRing.value) clickRing();
-          fetchLoginUsersInitData();
-          const currentPath = window.location.pathname || '';
-          if (currentPath === '/' || currentPath === '/login') {
-            console.log('[connection.onConnected] 从登录入口进入主聊天页');
-            router.replace('/chat');
-          } else {
-            console.log('[connection.onConnected] 保留当前路由，不自动跳转', {
-              currentPath,
-            });
-          }
+          console.log(
+            '[connection.onConnected] SDK 连接已建立；登录调用方将在 login() 成功后初始化数据并路由。',
+          );
         });
       },
       onDisconnected: () => {
@@ -33,17 +76,12 @@ export const imConnectListener = () => {
           );
         });
       },
-      onOnline: () => {
-        safeSync('connection.onOnline', () => {
-          store.commit('CHANGE_NETWORK_STATUS', true);
-        });
-      },
-      onOffline: () => {
-        safeSync('connection.onOffline', () => {
+      onConnecting: () => {
+        safeSync('connection.onConnecting', () => {
           store.commit('CHANGE_NETWORK_STATUS', false);
         });
       },
-      onError: (error) => {
+      onConnectError: (error) => {
         safeSync('connection.onError', () => {
           handleSDKErrorNotifi(error?.type, error?.message, error);
         });
@@ -51,53 +89,6 @@ export const imConnectListener = () => {
     });
   };
 
-  //fetch 登陆用户的初始数据
-  const fetchLoginUsersInitData = () => {
-    getMyUserInfos();
-    fetchLoginUserPresenceStatus();
-    fetchFriendList();
-    fetchTheLoginUserBlickList();
-    fetchGroupList();
-    Promise.resolve(store.dispatch('getConversationList')).catch((err) =>
-      console.error('[fetchLoginUsersInitData.getConversationList]', err),
-    );
-  };
-  //获取登陆用户属性
-  const getMyUserInfos = () => {
-    const userId = EMClient.user;
-    Promise.resolve(store.dispatch('getMyUserInfo', userId)).catch((err) =>
-      console.error('[getMyUserInfos]', err),
-    );
-  };
-  //获取登录用户自己的在线状态
-  const fetchLoginUserPresenceStatus = () => {
-    const userId = EMClient.user;
-    Promise.resolve(store.dispatch('fetchLoginUserPresenceStatus', userId)).catch(
-      (err) => console.error('[fetchLoginUserPresenceStatus]', err),
-    );
-  };
-  //获取好友列表
-  const fetchFriendList = () => {
-    Promise.resolve(
-      store.dispatch('fetchAllContactsListWithRemarkFromServer'),
-    ).catch((err) => console.error('[fetchFriendList]', err));
-  };
-  //获取黑名单列表
-  const fetchTheLoginUserBlickList = () =>
-    Promise.resolve(store.dispatch('fetchBlackList')).catch((err) =>
-      console.error('[fetchTheLoginUserBlickList]', err),
-    );
-  //获取加入的群组列表
-  const fetchGroupList = () =>
-    Promise.allSettled([
-      Promise.resolve(
-        store.dispatch('fetchJoinedGroupListFromServer', {
-          startPageNum: 0,
-          reset: true,
-        }),
-      ),
-      Promise.resolve(store.dispatch('fetchJoinedGroupCountFromServer')),
-    ]).catch((err) => console.error('[fetchGroupList]', err));
   return {
     mountConnectEventListener,
     fetchLoginUsersInitData,

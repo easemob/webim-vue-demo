@@ -1,8 +1,8 @@
 /* 用作根据消息类型处理对象中的key */
-import { EMClient } from '@/IM';
+import { getCurrentUserId } from '@/IM';
 import { CHAT_TYPE } from '@/IM/constant';
 export default function (msgBody) {
-  const loginUserId = EMClient.user;
+  const loginUserId = getCurrentUserId();
 
   // 添加空值检查和默认值处理
   if (!msgBody) {

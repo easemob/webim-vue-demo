@@ -39,8 +39,7 @@
 import { ref, toRefs } from 'vue';
 import { ElMessage } from 'element-plus';
 import store from '@/store';
-import { EMClient } from '@/IM';
-import { MESSAGE_TYPE } from '@/IM/constant';
+import { createMessage, sendMessage } from '@/IM/sdk5/chat';
 import { useUserInfoExt } from '@/hooks';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 
@@ -119,12 +118,9 @@ const sendExtMessage = async () => {
   }
 
   const msgOptions = {
-    type: MESSAGE_TYPE.TEXT,
-    from: EMClient.user,
     to: targetId.value,
     chatType: chatType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    ...deliverOnlineOnlyOptions.value,
     msg,
     ext,
   };
@@ -132,8 +128,8 @@ const sendExtMessage = async () => {
 
   sending.value = true;
   try {
-    const message = EMClient.Message.create(msgOptions);
-    const { message: sentMessage } = await EMClient.send(message);
+    const message = createMessage('txt', msgOptions);
+    const sentMessage = await sendMessage(message, deliverOnlineOnlyOptions.value);
     await store.dispatch('senedShowTypeMessage', sentMessage);
     ElMessage.success('扩展消息发送成功');
     closeDialog();

@@ -11,8 +11,8 @@
 
 <script setup>
 import { ref, toRefs } from 'vue';
-import { EMClient } from '@/IM';
-import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
+import { createMessage, sendMessage } from '@/IM/sdk5/chat';
+import { CHAT_TYPE } from '@/IM/constant';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 import { useUserInfoExt } from '@/hooks';
 import store from '@/store';
@@ -63,15 +63,12 @@ const sendImageFile = async (imgFile) => {
   const url = window.URL || window.webkitURL;
   const img = new Image(); //手动创建一个Image对象
   const msgOptions = {
-    type: MESSAGE_TYPE.IMAGE,
     to: targetId.value,
     chatType: chatType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    ...deliverOnlineOnlyOptions.value,
     file: file,
     width: 0,
     height: 0,
-    from: EMClient.user,
     onFileUploadError: (error) => {
       // 被拉黑等错误常在上传阶段返回，不会进入 send 的 catch，需走统一 SDK 错误解析
       console.error('图片上传失败:', error);
@@ -124,8 +121,13 @@ const sendImageFile = async (imgFile) => {
     msgOptions.width = img.width;
     msgOptions.height = img.height;
     try {
-      const msg = EMClient.Message.create(msgOptions);
-      const { message } = await EMClient.send(msg);
+      const msg = createMessage('img', msgOptions);
+      const message = await sendMessage(msg, {
+        ...deliverOnlineOnlyOptions.value,
+        onFileUploadError: msgOptions.onFileUploadError,
+        onFileUploadProgress: msgOptions.onFileUploadProgress,
+        onFileUploadComplete: msgOptions.onFileUploadComplete,
+      });
       store.dispatch('senedShowTypeMessage', { ...message });
     } catch (error) {
       notifySdkSendError(error);

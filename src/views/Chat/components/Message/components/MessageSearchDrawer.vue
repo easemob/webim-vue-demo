@@ -2,7 +2,7 @@
 import { computed, ref, toRefs, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
 import { CHAT_TYPE } from '@/IM/constant';
 
 const props = defineProps({
@@ -288,39 +288,19 @@ const searchMessages = async () => {
     return;
   }
 
-  const searchApi = EMClient.searchMessages || EMClient.contact?.searchMessages;
-  if (typeof searchApi !== 'function') {
-    const error = new Error(
-      '当前 Web SDK 未提供 searchMessages，请确认已加载 contact 插件并使用 Web SDK v4.24.1 或以上版本',
-    );
-    searchError.value = error.message;
-    searchErrorType.value = 'error';
-    console.error('[Message Search] searchMessages unavailable', {
-      user: EMClient.user,
-      routeQueryData: routeQueryData.value,
-      params,
-      hasTopLevelSearchMessages: typeof EMClient.searchMessages === 'function',
-      hasContactSearchMessages:
-        typeof EMClient.contact?.searchMessages === 'function',
-      error,
-    });
-    ElMessage.error(error.message);
-    return;
-  }
-
   loading.value = true;
   searchError.value = '';
   searchErrorType.value = 'error';
   try {
     console.log('[Message Search] searchMessages request', {
-      user: EMClient.user,
+      user: getCurrentUserId(),
       routeQueryData: routeQueryData.value,
       params,
     });
-    const response = await searchApi.call(EMClient, params);
+    const response = await requireManager('chatManager').searchMessages(params);
     searchResult.value = normalizeSearchResult(response);
     console.log('[Message Search] searchMessages success', {
-      user: EMClient.user,
+      user: getCurrentUserId(),
       params,
       result: searchResult.value,
     });
@@ -332,7 +312,7 @@ const searchMessages = async () => {
     searchErrorType.value = isSearchServiceNotEnabled ? 'warning' : 'error';
     searchResult.value = null;
     console.error('[Message Search] searchMessages failed', {
-      user: EMClient.user,
+      user: getCurrentUserId(),
       routeQueryData: routeQueryData.value,
       params,
       error,
@@ -389,10 +369,10 @@ watch(
 
         <el-form-item label="会话范围">
           <el-radio-group v-model="form.inConversation">
-            <el-radio-button :label="true">
+            <el-radio-button :value="true">
               当前会话
             </el-radio-button>
-            <el-radio-button :label="false">
+            <el-radio-button :value="false">
               全部可见会话
             </el-radio-button>
           </el-radio-group>

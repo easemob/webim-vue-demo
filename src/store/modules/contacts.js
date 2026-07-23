@@ -1,21 +1,12 @@
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
 // import { useLocalStorage } from '@vueuse/core';
 import { sortPinyinFriendItem, handlePresence } from '@/utils/handleSomeData';
 import _ from 'lodash';
 import { userProfileUtils, SOURCE_TYPE } from './usersProfile';
 
-const getSubscribedPresenceSublist = (res) => {
-  const candidates = [
-    res?.data?.result?.sublist,
-    res?.result?.sublist,
-    res?.data?.sublist,
-    res?.sublist,
-    res?.data?.result,
-    res?.result,
-    res?.data,
-  ];
-  return candidates.find((item) => Array.isArray(item)) || [];
-};
+const contactManager = () => requireManager('contactManager');
+const presenceManager = () => requireManager('presenceManager');
+const userInfoManager = () => requireManager('userInfoManager');
 
 const Contacts = {
   state: {
@@ -91,30 +82,23 @@ const Contacts = {
     //获取好友列表
     fetchAllFriendListFromServer: async ({ dispatch, commit }) => {
       try {
-        //获取好友列表
-        const result = await EMClient.getContacts();
-        
-        // 安全检查
-        if (!result || !result.data) {
-          throw new Error('获取好友列表返回数据为空');
-        }
-        
-        const { data } = result;
-        
+        const contacts = contactManager().getContacts();
+        const userIds = contacts.map((item) => item.userId);
         const friendListData = {};
-        data.length > 0 &&
-          data.map((item) => (friendListData[item] = { hxId: item }));
+        contacts.forEach(({ userId, userInfo, remark }) => {
+          friendListData[userId] = { hxId: userId, ...userInfo, remark };
+        });
         //获取好友列表对应的用户属性
-        const friendListWithInfos = await dispatch('getOtherUserInfo', data);
+        const friendListWithInfos = await dispatch('getOtherUserInfo', userIds);
         //合并两对象
         const mergedFriendList = _.merge(friendListData, friendListWithInfos);
         commit('SET_FRIEND_LIST', mergedFriendList);
         //提交之后订阅好友状态
-        data.length > 0 && dispatch('subFriendsPresence', data);
+        userIds.length > 0 && dispatch('subFriendsPresence', userIds);
         console.log('[Contacts] getContacts success', {
-          count: data.length,
-          currentUser: EMClient.user,
-          response: result,
+          count: contacts.length,
+          currentUser: getCurrentUserId(),
+          contacts,
         });
       } catch (error) {
         console.error('获取好友列表失败', error);
@@ -124,26 +108,22 @@ const Contacts = {
     //获取全部好友列表（包含好友备注）
     fetchAllContactsListWithRemarkFromServer: async ({ dispatch, commit }) => {
       try {
-        //获取好友列表
-        const result = await EMClient.getAllContacts();
-        
-        // 安全检查
-        if (!result || !result.data) {
-          throw new Error('获取全部好友列表返回数据为空');
-        }
-        
-        const { data } = result;
-        
-        if (data?.length > 0) {
-          commit('SET_FRIEND_LIST_WITH_REMARK', {
-            friendList: { ...data },
-          });
-          const normalizedContacts = userProfileUtils.normalizeUserData()(data);
+        const contacts = contactManager().getContacts();
+        commit('SET_FRIEND_LIST_WITH_REMARK', {
+          friendList: contacts,
+        });
+        if (contacts.length > 0) {
+          const normalizedContacts = contacts.map(({ userId, remark, userInfo }) => ({
+            userId,
+            remark,
+            ...userInfo,
+            sourceType: SOURCE_TYPE.CONTACT,
+          }));
           commit('UsersProfile/MERGE_USER_PROFILES', normalizedContacts, {
             root: true,
           });
           
-          const userIds = _.map(data, 'userId');
+          const userIds = contacts.map((item) => item.userId);
           if (userIds?.length > 0) {
             dispatch('fetchContactsUserInfos', userIds);
             // 登录后批量订阅好友在线状态，之后对方 publishPresence / 上下线会触发 onPresenceStatusChange
@@ -151,14 +131,18 @@ const Contacts = {
           }
         }
         console.log('[Contacts] getAllContacts success', {
-          count: Array.isArray(data) ? data.length : 0,
-          currentUser: EMClient.user,
-          response: result,
+          count: contacts.length,
+          currentUser: getCurrentUserId(),
+          contacts,
         });
       } catch (error) {
         console.error('好友列表获取失败', error);
         throw error;
       }
+    },
+    // SDK roster events have already patched the ContactManager snapshot.
+    syncContactsFromSdkSnapshot: async ({ dispatch }) => {
+      await dispatch('fetchAllContactsListWithRemarkFromServer');
     },
     //新增联系人
     onAddNewContact: async ({ dispatch, commit }, params) => {
@@ -180,10 +164,10 @@ const Contacts = {
       commit('DELETE_CONTACTS_FROM_MAP', userId);
     },
     //获取黑名单列表
-    fetchBlackList: async ({ dispatch, commit }, params) => {
+    fetchBlackList: async ({ commit }) => {
       try {
-        const { data } = await EMClient.getBlocklist();
-        commit('SET_BLACK_LIST', data);
+        const users = await contactManager().getBlocklist();
+        commit('SET_BLACK_LIST', users.map((item) => item.userId));
       } catch (error) {
         console.error('获取黑名单列表失败', error);
       }
@@ -199,14 +183,15 @@ const Contacts = {
       try {
         usersArr.length > 0 &&
           usersArr.map((userItem) =>
-            requestTask.push(EMClient.fetchUserInfoById(userItem)),
+            requestTask.push(
+              userInfoManager().getUserInfoByUserId({ userIds: userItem }),
+            ),
           );
         const result = await Promise.all(requestTask);
-        const usersInfos = _.map(result, 'data');
-        usersInfos.length > 0 &&
-          usersInfos.map(
-            (item) => (usersInfosObj = Object.assign(usersInfosObj, item)),
-          );
+        const usersInfos = _.flatten(result);
+        usersInfos.forEach((item) => {
+          usersInfosObj[item.userId] = item;
+        });
 
         commit('SET_FRIEND_LIST_USER_INFOS', {
           userInfos: usersInfosObj,
@@ -229,23 +214,23 @@ const Contacts = {
         usersArr.length > 0 &&
           usersArr.map((userItem) =>
             requestTask.push(
-              EMClient.subscribePresence({
-                usernames: userItem,
+              presenceManager().subscribePresence({
+                userIds: userItem,
                 expiry: 30 * 24 * 3600,
               }),
             ),
           );
         const resultData = await Promise.all(requestTask);
-        const usersPresenceList = _.flattenDeep(_.map(resultData, 'result')); //返回值是个二维数组，flattenDeep处理为一维数组
+        const usersPresenceList = _.flatten(resultData);
         const list =
           usersPresenceList.length > 0
-            ? usersPresenceList.filter((p) => p.uid !== '')
+            ? usersPresenceList.filter((p) => p.publisher !== '')
             : [];
         if (list.length > 0) {
           commit('SET_CONTACTS_PRESENCE_TO_MAP', list);
         }
         console.log('[环信 Presence] subscribePresence 已请求', {
-          usernames: users,
+          userIds: users,
           snapshotCount: list.length,
           snapshot: list,
         });
@@ -256,10 +241,7 @@ const Contacts = {
     //取消订阅
     unsubFriendsPresence: async ({ commit }, user) => {
       try {
-        const option = {
-          usernames: [user],
-        };
-        await EMClient.unsubscribePresence(option);
+        await presenceManager().unsubscribePresence({ userIds: [user] });
         commit('DELETE_CONTACTS_PRESENCE_TO_MAP', user);
       } catch (error) {
         console.error('取消订阅好友状态失败', error);
@@ -271,23 +253,20 @@ const Contacts = {
       option = { pageNum: 0, pageSize: 50 },
     ) => {
       try {
-        const res = await EMClient.getSubscribedPresencelist(option);
-        const list = getSubscribedPresenceSublist(res);
+        const list = await presenceManager().getSubscribedPresenceList(option);
         commit('SET_SUBSCRIBED_PRESENCE_LIST', list);
         return list;
       } catch (error) {
-        console.error('[环信 Presence] getSubscribedPresencelist 失败', error);
+        console.error('[环信 Presence] getSubscribedPresenceList 失败', error);
         throw error;
       }
     },
     //主动查询指定用户当前在线状态
     fetchPresenceStatusByUsers: async ({ commit }, users = []) => {
       try {
-        const usernames = Array.isArray(users) ? users : [users];
-        if (usernames.length === 0) return [];
-        const res = await EMClient.getPresenceStatus({ usernames });
-        const rawList = res?.result || res?.data || [];
-        const list = Array.isArray(rawList) ? rawList : [];
+        const userIds = Array.isArray(users) ? users : [users];
+        if (userIds.length === 0) return [];
+        const list = await presenceManager().getPresenceStatus({ userIds });
         if (list.length > 0) {
           commit('SET_CONTACTS_PRESENCE_TO_MAP', list);
         }
@@ -304,7 +283,7 @@ const Contacts = {
         throw new Error('userId and remark are required');
       }
       try {
-        const result = await EMClient.setContactRemark({
+        const result = await contactManager().setContactRemark({
           userId, // 添加备注的目标好友的用户 ID
           remark, // 好友备注
         });

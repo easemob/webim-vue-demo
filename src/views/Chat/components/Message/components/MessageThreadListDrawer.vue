@@ -40,56 +40,35 @@ const latestMessageError = ref('');
 const joinedOnly = ref(false);
 const pageSize = 20;
 
-const getThreadId = (thread) =>
-  thread?.chatThreadId || thread?.id || thread?.threadId || '';
+const getThreadId = (thread) => thread?.chatThreadId || '';
 
 const getThreadName = (thread) =>
-  thread?.name || thread?.chatThreadName || thread?.threadName || getThreadId(thread);
+  thread?.name || getThreadId(thread);
 
 const getThreadMemberName = (member) =>
-  member?.userId || member?.member || member?.owner || member?.username || member || '';
+  member?.memberId || '';
 
 const normalizeThreadDetailResponse = (response) =>
-  response?.data || response?.detail || response || null;
+  response || null;
 
 const normalizeThreadMembersResponse = (response) => {
-  const entities =
-    response?.entities ||
-    response?.data?.affiliations ||
-    response?.data?.entities ||
-    response?.data?.list ||
-    response?.list ||
-    [];
+  const entities = response?.items || [];
   return {
     list: Array.isArray(entities) ? entities : [],
-    cursor:
-      response?.cursor ||
-      response?.data?.cursor ||
-      response?.data?.properties?.cursor ||
-      '',
+    cursor: response?.cursor || '',
   };
 };
 
 const normalizeThreadListResponse = (response) => {
-  const entities =
-    response?.entities ||
-    response?.data?.entities ||
-    response?.data?.list ||
-    response?.list ||
-    [];
+  const entities = response?.items || [];
   return {
     list: Array.isArray(entities) ? entities : [],
-    cursor: response?.cursor || response?.data?.cursor || '',
+    cursor: response?.cursor || '',
   };
 };
 
 const normalizeThreadLatestMessageResponse = (response) => {
-  const entities =
-    response?.entities ||
-    response?.data?.entities ||
-    response?.data?.list ||
-    response?.list ||
-    [];
+  const entities = response?.items || [];
   return Array.isArray(entities) ? entities : [];
 };
 
@@ -433,8 +412,8 @@ defineExpose({
           <div class="thread_summary">
             <div class="thread_title_row">
               <div class="thread_name">{{ getThreadName(thread) }}</div>
-              <span v-if="thread.messageCount || thread.msgCount" class="thread_count">
-                {{ thread.messageCount || thread.msgCount }} 条
+              <span v-if="thread.messageCount" class="thread_count">
+                {{ thread.messageCount }} 条
               </span>
             </div>
             <div class="thread_meta">{{ getThreadId(thread) }}</div>

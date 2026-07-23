@@ -1,7 +1,6 @@
 <script setup>
 import { ref, reactive, onBeforeUnmount } from 'vue';
 import { ElMessage } from 'element-plus';
-import { EMClient } from '@/IM';
 
 const ReportTypeOptions = [
   {
@@ -65,17 +64,9 @@ const confimReportMessage = (formEl) => {
           messageId: reportMessageForm.mid.toString(), // 消息 ID
         };
 
-        // 调用SDK的reportMessage方法
-        const result = await EMClient.reportMessage({ ...params });
-        
-        // 举报成功处理
-        console.log('消息举报成功', result);
-        cannelReport(formEl);
-        ElMessage({
-          type: 'success',
-          message: '举报提交成功，平台会尽快处理',
-          center: true,
-        });
+        throw new Error(
+          'SDK 5.0 current package does not expose reportMessage; no fallback is configured.',
+        );
       } catch (error) {
         // 举报失败处理
         console.error('消息举报失败', error);

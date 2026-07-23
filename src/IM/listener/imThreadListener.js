@@ -1,4 +1,4 @@
-import { EMClient } from '../index';
+import { requireManager } from '../index';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
 export const imThreadListener = () => {
@@ -16,10 +16,10 @@ export const imThreadListener = () => {
   });
 
   const mountThreadEventListener = () => {
-    EMClient.addEventHandler(
+    requireManager('chatThreadManager').addEventHandler(
       'THREAD',
       wrapImEventHandler({
-        onChatThreadChange: (threadEvent) => {
+        onChatThreadUpdated: (threadEvent) => {
           console.log(
             '[Thread Event] onChatThreadChange received',
             describeThreadEvent(threadEvent),

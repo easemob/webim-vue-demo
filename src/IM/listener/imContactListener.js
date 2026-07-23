@@ -1,4 +1,4 @@
-import { EMClient } from '../index';
+import { requireManager } from '../index';
 import { INFORM_FROM } from '@/constant';
 import store from '@/store';
 import { CONTACT_OPERATION_CUSTOM_TYPE } from '../constant';
@@ -24,28 +24,25 @@ export const imContactListener = () => {
       case CONTACT_OPERATION_CUSTOM_TYPE.CONTACT_ADDED:
         {
           submitInformData(INFORM_FROM.FRIEND, data);
-          store.dispatch('onAddNewContact', data);
+          store.dispatch('syncContactsFromSdkSnapshot');
         }
         break;
       case CONTACT_OPERATION_CUSTOM_TYPE.CONTACT_AGREED:
         {
-          //改掉data中的type
-          data.type = 'other_person_agree';
           submitInformData(INFORM_FROM.FRIEND, data);
-          Promise.resolve(store.dispatch('onAddNewContact', data)).catch(
+          Promise.resolve(store.dispatch('syncContactsFromSdkSnapshot')).catch(
             (err) => console.error('[CONTACT_AGREED]', err),
           );
         }
         break;
       case CONTACT_OPERATION_CUSTOM_TYPE.CONTACT_REFUSE:
         {
-          data.type = 'other_person_refuse';
           submitInformData(INFORM_FROM.FRIEND, data);
         }
         break;
       case CONTACT_OPERATION_CUSTOM_TYPE.CONTACT_DELETED: {
         submitInformData(INFORM_FROM.FRIEND, data);
-        Promise.resolve(store.dispatch('onDeleteContact', data)).catch((err) =>
+        Promise.resolve(store.dispatch('syncContactsFromSdkSnapshot')).catch((err) =>
           console.error('[CONTACT_DELETED]', err),
         );
       }
@@ -54,7 +51,7 @@ export const imContactListener = () => {
     }
   };
   const mountContactEventListener = () => {
-    EMClient.addEventHandler(
+    requireManager('contactManager').addEventHandler(
       'friendListen',
       wrapImEventHandler({
       // 收到好友邀请触发此方法。

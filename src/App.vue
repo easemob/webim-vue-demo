@@ -1,8 +1,10 @@
 <script setup>
 import '@/utils/globalErrorHandler';
 import { ref, onMounted, onUnmounted } from 'vue';
-import { mountAllEMListener } from '@/IM/listener';
-import { EMClient } from '@/IM';
+import router from '@/router';
+import { fetchLoginUsersInitData, mountAllEMListener } from '@/IM/listener';
+import { getClient, getCurrentUserId, login } from '@/IM';
+import { sdk5Config } from '@/IM/initwebsdk';
 import { sdkErrorToError } from '@/IM/sdkError';
 import {
   isImAuthFailedReason,
@@ -10,16 +12,12 @@ import {
 } from '@/utils/imAuthRedirect';
 import ring from '@/assets/ring.mp3';
 import { ElMessage } from 'element-plus';
-// 导入调试工具
-import { enableEMClientDebug } from '@/utils/debugSDK';
 // 导入播放铃声钩子
 import { usePlayRing } from '@/hooks';
 // 导入事件发射器
 import eventEmitter from '@/utils/eventEmitter';
 import { safeSync } from '@/utils/safeCall';
 
-// 启用EMClient调试
-enableEMClientDebug();
 
 /* 【重要】挂载IM相关监听回调。 */
 safeSync('mountAllEMListener', () => mountAllEMListener());
@@ -35,10 +33,12 @@ try {
 
 const handleRelogin = async () => {
   try {
-    await EMClient.open({
-      username: loginUserFromStorage.user,
-      accessToken: loginUserFromStorage.accessToken,
+    await login({
+      userId: loginUserFromStorage.user,
+      token: loginUserFromStorage.accessToken,
     });
+    fetchLoginUsersInitData();
+    await router.replace('/chat');
   } catch (raw) {
     const error = sdkErrorToError(raw);
     if (isImAuthFailedReason(raw) || isImAuthFailedReason(error)) {
@@ -51,7 +51,21 @@ const handleRelogin = async () => {
       center: true,
       message: error.message || '重新登录失败',
     });
-    console.error('[IM 重新登录失败]', raw);
+    console.error('[IM SDK 5.0 登录诊断]', {
+      appKey: sdk5Config.appKey,
+      serviceConnectionMode: sdk5Config.serviceConfig ? 'fixed' : 'dns',
+      serverUrls: sdk5Config.serviceConfig?.serverUrls,
+      clientServerUrls: getClient().getServerUrlsConfig?.(),
+      userId: loginUserFromStorage.user,
+      tokenLength: loginUserFromStorage.accessToken.length,
+      error: {
+        name: raw?.name,
+        message: raw?.message,
+        code: raw?.code,
+        details: raw?.details,
+      },
+      raw,
+    });
   }
 };
 
@@ -68,7 +82,7 @@ const { isOpenPlayRing, playRing } = usePlayRing();
 const handleNewMessage = (message) => {
   safeSync('handleNewMessage', () => {
     if (!message || typeof message !== 'object') return;
-    if (message.from !== EMClient.user && isOpenPlayRing.value) {
+    if (message.from !== getCurrentUserId() && isOpenPlayRing.value) {
       playRing();
     }
   });

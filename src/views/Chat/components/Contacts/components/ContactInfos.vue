@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
 import { CHAT_TYPE } from '@/IM/constant';
 import { useStore } from 'vuex';
 import router from '@/router';
@@ -48,6 +48,7 @@ const switchStatus = ref(false);
 const isLoadingPresence = ref(false);
 const isSubscribingPresence = ref(false);
 const isUnsubscribingPresence = ref(false);
+const contactManager = () => requireManager('contactManager');
 //判断单聊联系人是否在黑名单
 const isInBlackList = computed(() => {
   const result = Array.from(store.state.Contacts.friendBlackList).includes(
@@ -77,24 +78,45 @@ watch(
 );
 //执行加入或移出黑名单
 const changeBlackStatus = async () => {
+  const targetId = route.query.id;
+  if (!targetId) {
+    ElMessage.error('加入黑名单失败：缺少目标用户 ID');
+    return false;
+  }
+
   switchStatus.value = true;
-  if (blackStatus.value && route.query.id) {
-    // 当前 removeUserFromBlackList 以及 addUsersToBlacklist 暂不支持promise 返回所以暂时获取不到其请求状态。
-    EMClient.removeUserFromBlocklist({
-      name: [route.query.id],
+  try {
+    if (blackStatus.value) {
+      await contactManager().removeUserFromBlocklist({
+        userIds: [targetId],
+      });
+    } else {
+      const result = await contactManager().addUsersToBlocklist({
+        userIds: [targetId],
+      });
+      if (!result.succeeded.some((user) => user.userId === targetId)) {
+        console.error('[Blocklist] addUsersToBlocklist did not confirm target', {
+          currentUser: getCurrentUserId(),
+          targetId,
+          result,
+        });
+        ElMessage.error('加入黑名单失败：SDK 未确认目标用户已加入黑名单');
+        return false;
+      }
+    }
+    await store.dispatch('fetchBlackList');
+    return true;
+  } catch (error) {
+    console.error('[Blocklist] addUsersToBlocklist failed', {
+      currentUser: getCurrentUserId(),
+      targetId,
+      error,
     });
-    blackStatus.value = false;
-    switchStatus.value = false;
-  } else {
-    EMClient.addUsersToBlocklist({
-      name: [route.query.id],
-    });
-    blackStatus.value = true;
+    ElMessage.error(error?.message || '加入黑名单失败');
+    return false;
+  } finally {
     switchStatus.value = false;
   }
-  setTimeout(() => {
-    store.dispatch('fetchBlackList');
-  }, 500);
 };
 
 /* 单人删除好友 */
@@ -102,7 +124,7 @@ const delTheFriend = async () => {
   if (!route.query.id) return;
   const targetId = route.query.id;
   try {
-    await EMClient.deleteContact(targetId);
+    await contactManager().deleteContact({ userId: targetId });
     store.commit('DELETE_CONTACTS_FROM_MAP', targetId);
     router.push('/chat/contacts');
   } catch (error) {

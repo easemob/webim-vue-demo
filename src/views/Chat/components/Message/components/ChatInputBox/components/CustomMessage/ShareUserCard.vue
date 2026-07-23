@@ -61,8 +61,8 @@ import { ref, toRefs, computed } from 'vue';
 import store from '@/store';
 import { Search, CircleCheckFilled } from '@element-plus/icons-vue';
 import { useGetUserMapInfo, useUserInfoExt } from '@/hooks';
-import { EMClient } from '@/IM';
-import { CHAT_TYPE, MESSAGE_TYPE } from '@/IM/constant';
+import { createMessage, sendMessage } from '@/IM/sdk5/chat';
+import { CHAT_TYPE } from '@/IM/constant';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 const props = defineProps({
   chatType: {
@@ -132,7 +132,6 @@ const getUserInfos = () => {
 const { setUserInfoExt } = useUserInfoExt();
 const sendShareUserCardMessage = async () => {
   const msgOptions = {
-    type: MESSAGE_TYPE.CUSTOM,
     to: targetId.value,
     chatType: chatType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
@@ -146,8 +145,8 @@ const sendShareUserCardMessage = async () => {
   //在消息体内携带该用户的昵称头像信息
   setUserInfoExt(msgOptions);
   try {
-    const msg = EMClient.Message.create(msgOptions);
-    const { message } = await EMClient.send(msg);
+    const msg = createMessage('custom', msgOptions);
+    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
     await store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
     console.error('发送信息卡片消息失败', error);

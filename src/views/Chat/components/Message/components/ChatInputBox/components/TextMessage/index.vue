@@ -2,13 +2,14 @@
 import { ref, toRefs, computed, onMounted, onUpdated } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 import { MENTION_ALL } from '@/constant';
-import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
+import { CHAT_TYPE } from '@/IM/constant';
+import { createMessage, sendMessage } from '@/IM/sdk5/chat';
+import { getCurrentUserId } from '@/IM';
 import { useGetUserMapInfo, useUserInfoExt } from '@/hooks';
 import store from '@/store';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 //vue at
 import VueAt from 'vue-at/dist/vue-at-textarea'; // for textarea
-import { EMClient } from '@/IM';
 import { ElMessage } from 'element-plus';
 const props = defineProps({
   chatType: {
@@ -70,7 +71,7 @@ const atMembersList = computed(() => {
       [];
     sourceMembers.length &&
       sourceMembers.forEach((item) => {
-        if (item.owner !== EMClient.user && item.member !== EMClient.user) {
+        if (item.owner !== getCurrentUserId() && item.member !== getCurrentUserId()) {
           members.push({
             text: getUserDisplayNameById(item.owner || item.member, atGroupId.value),
             value: item.owner || item.member,
@@ -158,12 +159,9 @@ const sendTextMessage = _.debounce(async () => {
   }
   checkAtMembers(textContent.value);
   const msgOptions = {
-    type: MESSAGE_TYPE.TEXT,
-    from: EMClient.user,
     to: targetId.value,
     chatType: chatType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    ...deliverOnlineOnlyOptions.value,
     ...(chatType.value === CHAT_TYPE.GROUP
       ? { msgConfig: { allowGroupAck: true } }
       : {}),
@@ -186,8 +184,11 @@ const sendTextMessage = _.debounce(async () => {
   emit('getMessageQuoteContent', callback);
   textContent.value = '';
   try {
-    const msg = EMClient.Message.create(msgOptions);
-    const { message } = await EMClient.send(msg);
+    const msg = createMessage('txt', msgOptions);
+    const message = await sendMessage(msg, {
+      ...deliverOnlineOnlyOptions.value,
+      needReadReceipt: chatType.value === CHAT_TYPE.GROUP,
+    });
     await store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
     console.error('发送文本消息失败', error);

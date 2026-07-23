@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { EMClient } from '@/IM';
 import { useStorage } from '@vueuse/core';
 import CustomImConfig from '@/views/Login/components/CustomImConfig';
 import {
@@ -82,7 +81,7 @@ const onClickVersion = () => {
 const resetCounter = () => (clickCount = 0);
 
 //SDK-Version
-const IM_SDK_VERSION = EMClient.version;
+const IM_SDK_VERSION = '5.0.0';
 </script>
 <template>
   <el-container class="app_container">

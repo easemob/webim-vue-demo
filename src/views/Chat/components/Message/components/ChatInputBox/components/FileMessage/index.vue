@@ -10,8 +10,8 @@
 
 <script setup>
 import { ref, toRefs } from 'vue';
-import { EMClient } from '@/IM';
-import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
+import { createMessage, sendMessage } from '@/IM/sdk5/chat';
+import { CHAT_TYPE } from '@/IM/constant';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 import { useUserInfoExt } from '@/hooks';
 import store from '@/store';
@@ -77,12 +77,9 @@ const sendFileMessage = async (commonFile) => {
   };
 
   const msgOptions = {
-    type: MESSAGE_TYPE.FILE,
-    from: EMClient.user,
     to: targetId.value,
     chatType: chatType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    ...deliverOnlineOnlyOptions.value,
     file: file,
     onFileUploadError: (error) => {
       console.error('文件上传失败:', error);
@@ -115,8 +112,13 @@ const sendFileMessage = async (commonFile) => {
   //在消息体内携带该用户的昵称头像信息
   setUserInfoExt(msgOptions);
   try {
-    const msg = EMClient.Message.create(msgOptions);
-    const { message } = await EMClient.send(msg);
+    const msg = createMessage('file', msgOptions);
+    const message = await sendMessage(msg, {
+      ...deliverOnlineOnlyOptions.value,
+      onFileUploadError: msgOptions.onFileUploadError,
+      onFileUploadProgress: msgOptions.onFileUploadProgress,
+      onFileUploadComplete: msgOptions.onFileUploadComplete,
+    });
     store.dispatch('senedShowTypeMessage', { ...message });
   } catch (error) {
     console.error('发送文件消息失败:', {

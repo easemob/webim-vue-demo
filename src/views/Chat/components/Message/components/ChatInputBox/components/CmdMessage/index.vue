@@ -41,8 +41,7 @@ import { ref, toRefs } from 'vue';
 import store from '@/store';
 import { ElMessage } from 'element-plus';
 import { useUserInfoExt } from '@/hooks';
-import { EMClient } from '@/IM';
-import { MESSAGE_TYPE } from '@/IM/constant';
+import { createMessage, sendMessage } from '@/IM/sdk5/chat';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 
 const props = defineProps({
@@ -110,10 +109,8 @@ const sendCmdMessage = async () => {
   }
 
   const msgOptions = {
-    type: MESSAGE_TYPE.COMMAND,
     chatType: chatType.value,
     to: targetId.value,
-    from: EMClient.user,
     ...(isChatThread.value ? { isChatThread: true } : {}),
     ...deliverOnlineOnlyOptions.value,
     action,
@@ -123,20 +120,12 @@ const sendCmdMessage = async () => {
 
   sending.value = true;
   try {
-    const msg = EMClient.Message.create(msgOptions);
-    const sendResult = await EMClient.send(msg);
-    const message = {
-      ...msg,
-      id: sendResult?.serverMsgId || sendResult?.message?.id || msg.id,
-      mid: sendResult?.serverMsgId || sendResult?.message?.mid || msg.mid,
-      localMsgId: sendResult?.localMsgId,
-      serverMsgId: sendResult?.serverMsgId,
-    };
+    const msg = createMessage('cmd', msgOptions);
+    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
     console.log('[Message Send] cmd success', {
       targetId: targetId.value,
       chatType: chatType.value,
       action,
-      sendResult,
       displayMessage: message,
     });
     await store.dispatch('senedShowTypeMessage', message);

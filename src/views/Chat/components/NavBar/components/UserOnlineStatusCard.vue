@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
 import { onLineStatus } from '@/constant';
 import { ElNotification } from 'element-plus';
-import { EMClient } from '@/IM';
+import { requireManager } from '@/IM';
 
 const store = useStore();
 const loginUserOnlineStatus = computed(() => store.state.loginUserOnlineStatus);
@@ -11,10 +11,10 @@ const customStatus = ref('');
 
 const publishPresenceStatus = async (statusType, successMessage) => {
   const option = {
-    description: statusType,
+    customStatus: statusType,
   };
   try {
-    await EMClient.publishPresence(option);
+    await requireManager('presenceManager').publishPresence(option);
     store.commit('SET_LOGIN_USER_ONLINE_STATUS', statusType);
     if (successMessage) {
       ElNotification({

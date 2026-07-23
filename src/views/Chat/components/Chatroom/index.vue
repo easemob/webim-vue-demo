@@ -1,9 +1,8 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useStore } from 'vuex';
-import { useRoute } from 'vue-router';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { EMClient } from '@/IM';
+import { ElMessage } from 'element-plus';
+import { getCurrentUserId, requireManager } from '@/IM';
 import { CHAT_TYPE } from '@/IM/constant';
 import router from '@/router';
 import SearchInput from '@/components/SearchInput';
@@ -18,32 +17,25 @@ import {
   redirectToLoginClearImSession,
 } from '@/utils/imAuthRedirect';
 
-/** 列表与已加入列表的 id 可能为 string / number，严格 === 会导致「加入/进入」状态不更新 */
+/** SDK IDs may be numbers or strings; normalize them for pending-operation state. */
 function normalizeChatroomId(id) {
   if (id == null || id === '') return '';
   return String(id);
 }
 
 const store = useStore();
-const route = useRoute();
 
 const chatroomList = ref([]);
-const joinedChatroomList = ref([]);
-const joinedChatroomDetailsMap = ref(new Map());
 const loading = ref(false);
 const joiningRoomIds = ref(new Set());
 const searchKeyword = ref('');
+const chatRoomManager = () => requireManager('chatRoomManager');
 
-const CHATROOM_TYPE = {
-  ALL: '1',
-  JOINED: '2',
-};
-
-const activeName = ref(CHATROOM_TYPE.ALL);
+const activeName = ref('1');
 const joinRoomExt = ref('webim_vue_demo');
 
 const checkLoginStatus = () => {
-  if (!EMClient.user) {
+  if (!getCurrentUserId()) {
     ElMessage.error('用户未登录，请先登录');
     router.push('/login');
     return false;
@@ -54,10 +46,10 @@ const checkLoginStatus = () => {
 // 设置聊天室事件监听器，只记录真实 SDK 事件
 const setupChatroomEventHandler = () => {
   if (chatroomEventHandler) {
-    EMClient.removeEventHandler('CHATROOM');
+    chatRoomManager().removeEventHandler('CHATROOM');
   }
 
-  chatroomEventHandler = EMClient.addEventHandler(
+  chatroomEventHandler = chatRoomManager().addEventHandler(
     'CHATROOM',
     createChatroomEventHandler('ChatroomIndex', (e) => {
       switch (e.operation) {
@@ -122,14 +114,6 @@ const setupChatroomEventHandler = () => {
   );
 };
 
-const isRoomJoined = (roomId) => {
-  const key = normalizeChatroomId(roomId);
-  if (!key) return false;
-  return joinedChatroomList.value.some(
-    (j) => normalizeChatroomId(j.id) === key,
-  );
-};
-
 const isJoiningRoom = (roomId) => {
   const key = normalizeChatroomId(roomId);
   if (!key) return false;
@@ -148,40 +132,31 @@ const setJoiningRoom = (roomId, joining) => {
   joiningRoomIds.value = nextJoiningRoomIds;
 };
 
-const getJoinedChatroomMemberCount = (roomId) => {
+const isJoinedRoom = (roomId) => {
   const key = normalizeChatroomId(roomId);
-  if (!key) return null;
-  const detail = joinedChatroomDetailsMap.value.get(key);
-  const rawCount = detail?.affiliations_count ?? detail?.memberCount;
-  if (rawCount == null || rawCount === '') return null;
-  const memberCount = Number(rawCount);
-  return Number.isFinite(memberCount) ? memberCount : null;
+  if (!key) return false;
+  return store.state.joinedChatroomIds.has(key);
+};
+
+const setJoinedRoom = (roomId, joined) => {
+  store.commit('SET_JOINED_CHATROOM_STATUS', { roomId, joined });
 };
 
 const getAllChatroomMemberCount = (item) => {
-  const rawCount = item?.affiliations_count ?? item?.memberCount;
+  const rawCount = item?.memberCount;
   if (rawCount == null || rawCount === '') return null;
   const count = Number(rawCount);
   return Number.isFinite(count) ? count : null;
 };
 
-const getChatroomDescription = (item, roomId) => {
-  const key = normalizeChatroomId(roomId || item?.id);
-  if (!key) return item?.description || item?.desc || '';
-  const detail = joinedChatroomDetailsMap.value.get(key);
-  return detail?.description || item?.description || item?.desc || '';
-};
-
 const getChatrooms = async () => {
   if (!checkLoginStatus()) return;
   const GET_CHAT_ROOMS_METHOD = 'getChatRooms';
-  const chatRoomListParams = {
-    pagenum: 1,
-    pagesize: 1000,
-  };
+  const chatRoomListParams = { pageNum: 1, pageSize: 1000 };
   loading.value = true;
   try {
-    const res = await EMClient.getChatRooms(chatRoomListParams);
+    const res = await chatRoomManager().getChatRoomList(chatRoomListParams);
+    const rooms = Array.isArray(res.items) ? res.items : [];
     console.log(
       `获取聊天室列表成功:`,
       `\n调用方法: ${GET_CHAT_ROOMS_METHOD}`,
@@ -190,19 +165,19 @@ const getChatrooms = async () => {
       `\n原始返回数据:`,
       res,
       `\n返回的聊天室数据:`,
-      res.data,
+      rooms,
       `\n聊天室总数:`,
-      (res.data || []).length,
+      rooms.length,
       `\n当前用户:`,
-      EMClient.user,
+      getCurrentUserId(),
       `\n第一个聊天室的数据结构:`,
-      res.data && res.data.length > 0 ? JSON.stringify(res.data[0], null, 2) : '无数据',
+      rooms.length > 0 ? JSON.stringify(rooms[0], null, 2) : '无数据',
     );
-    if (res.data && res.data.length > 0) {
-      console.log(`第一个所有聊天室的原始数据:`, JSON.stringify(res.data[0], null, 2));
+    if (rooms.length > 0) {
+      console.log(`第一个所有聊天室的原始数据:`, JSON.stringify(rooms[0], null, 2));
     }
 
-    chatroomList.value = Array.isArray(res.data) ? res.data : [];
+    chatroomList.value = rooms;
     console.log(`所有聊天室列表处理完成:`, JSON.stringify(chatroomList.value, null, 2));
   } catch (error) {
     console.error(
@@ -211,7 +186,7 @@ const getChatrooms = async () => {
       `\n方法入参:`,
       chatRoomListParams,
       `\n当前用户:`,
-      EMClient.user,
+      getCurrentUserId(),
       `\n错误类型:`,
       error.type,
       `\n错误消息:`,
@@ -225,106 +200,8 @@ const getChatrooms = async () => {
   }
 };
 
-const getJoinedChatrooms = async () => {
-  if (!checkLoginStatus()) return;
-  const chatRoomParams = {
-    pageNum: 1,
-    pageSize: 100,
-  };
-  const GET_JOINED_CHAT_ROOMS_METHOD = 'getJoinedChatRooms';
-  loading.value = true;
-  try {
-    console.log(`获取当前用户${EMClient.user}加入的聊天室列表`);
-    const res = await EMClient.getJoinedChatRooms(chatRoomParams);
-    console.log(
-      `获取已加入聊天室列表成功:`,
-      res,
-      `\n调用方法: ${GET_JOINED_CHAT_ROOMS_METHOD}`,
-      `\n方法入参:`,
-      chatRoomParams,
-    );
-    if (res.data && res.data.length > 0) {
-      console.log(`第一个已加入聊天室的原始数据:`, JSON.stringify(res.data[0], null, 2));
-    }
-
-    joinedChatroomList.value = Array.isArray(res.data) ? res.data : [];
-    joinedChatroomDetailsMap.value = new Map();
-
-    await Promise.all(
-      joinedChatroomList.value.map(async (room) => {
-        const roomId = normalizeChatroomId(room.id);
-        if (!roomId) return;
-        try {
-          const detailRes = await EMClient.getChatRoomDetails({
-            chatRoomId: roomId,
-          });
-          const detail = Array.isArray(detailRes?.data)
-            ? detailRes.data[0] || {}
-            : detailRes?.data || {};
-          joinedChatroomDetailsMap.value.set(roomId, detail);
-          console.log(
-            `已加入聊天室详情成员数刷新成功:`,
-            `\n来源接口: getChatRoomDetails`,
-            `\n聊天室ID:`,
-            roomId,
-            `\n当前成员数:`,
-            detail?.affiliations_count ?? 0,
-            `\n详情返回值:`,
-            detailRes,
-          );
-        } catch (error) {
-          console.error(
-            `已加入聊天室详情成员数刷新失败:`,
-            `\n来源接口: getChatRoomDetails`,
-            `\n聊天室ID:`,
-            roomId,
-            `\n完整错误信息:`,
-            error,
-          );
-        }
-      }),
-    );
-
-    console.log(`已加入聊天室列表处理完成:`, JSON.stringify(joinedChatroomList.value, null, 2));
-  } catch (error) {
-    console.error(
-      `获取已加入聊天室列表失败:`,
-      `\n调用方法: ${GET_JOINED_CHAT_ROOMS_METHOD}`,
-      `\n方法入参:`,
-      chatRoomParams,
-      `\n当前用户:`,
-      EMClient.user,
-      `\n完整错误信息:`,
-      error,
-    );
-    ElMessage.error(error?.message || '获取已加入聊天室列表失败');
-  } finally {
-    loading.value = false;
-  }
-};
-
 const refreshChatroomListsFromServer = async () => {
-  await Promise.all([getChatrooms(), getJoinedChatrooms()]);
-};
-
-const refreshOpenChatroomDetailsIfNeeded = (roomId) => {
-  const currentRoomId = normalizeChatroomId(route.query.roomId);
-  const joinedRoomId = normalizeChatroomId(roomId);
-  if (
-    route.path !== '/chat/chatroom/details' ||
-    !currentRoomId ||
-    currentRoomId !== joinedRoomId
-  ) {
-    return;
-  }
-  router.replace({
-    path: '/chat/chatroom/details',
-    query: {
-      ...route.query,
-      roomId,
-      refreshAt: Date.now(),
-    },
-  });
+  await getChatrooms();
 };
 
 const joinChatroom = async (roomId) => {
@@ -336,7 +213,7 @@ const joinChatroom = async (roomId) => {
       `\n目标聊天室ID:`,
       roomId,
       `\n当前用户:`,
-      EMClient.user,
+      getCurrentUserId(),
     );
     return;
   }
@@ -354,11 +231,11 @@ const joinChatroom = async (roomId) => {
       `\n方法入参:`,
       joinChatRoomParams,
       `\n当前用户:`,
-      EMClient.user,
+      getCurrentUserId(),
       `\n目标聊天室ID:`,
       roomId,
     );
-    const res = await EMClient.joinChatRoom(joinChatRoomParams);
+    const res = await chatRoomManager().joinChatRoom({ chatRoomId: roomId, ext: joinRoomExt.value, leaveOtherRooms: false });
 
     logChatroomActionResult(
       'ChatroomIndex',
@@ -366,24 +243,18 @@ const joinChatroom = async (roomId) => {
       joinChatRoomParams,
       res,
       {
-        from: EMClient.user,
+        from: getCurrentUserId(),
       },
     );
+    setJoinedRoom(roomId, true);
     ElMessage.success('加入聊天室成功');
-    console.log(
-      `加入聊天室成功:`,
-      `\n调用方法: ${JOIN_CHAT_ROOM_METHOD}`,
-      `\n方法入参:`,
-      joinChatRoomParams,
-      `\n返回结果:`,
-      res,
-      `\n成功加入的聊天室ID:`,
-      roomId,
-      `\n当前连接状态:`,
-      EMClient.connectionState || '未知',
-    );
-    await refreshChatroomListsFromServer();
-    refreshOpenChatroomDetailsIfNeeded(roomId);
+    console.log(`加入聊天室成功:`, {
+      method: JOIN_CHAT_ROOM_METHOD,
+      params: joinChatRoomParams,
+      response: res,
+      currentUser: getCurrentUserId(),
+    });
+    toChatroomMessage(roomId);
   } catch (error) {
     console.error(
       `加入聊天室失败:`,
@@ -393,7 +264,7 @@ const joinChatroom = async (roomId) => {
       `\n目标聊天室ID:`,
       roomId,
       `\n当前用户:`,
-      EMClient.user,
+      getCurrentUserId(),
       `\n完整错误信息:`,
       error,
       `\n错误类型:`,
@@ -413,133 +284,6 @@ const joinChatroom = async (roomId) => {
     ElMessage.error(joinChatroomErrorMessage);
   } finally {
     setJoiningRoom(roomId, false);
-  }
-};
-
-const leaveChatroom = async (roomId) => {
-  if (!checkLoginStatus()) return;
-  const LEAVE_CHAT_ROOM_METHOD = 'leaveChatRoom';
-  const leaveChatRoomParams = { roomId };
-  try {
-    await ElMessageBox.confirm('确定要退出该聊天室吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    });
-    const res = await EMClient.leaveChatRoom(leaveChatRoomParams);
-    logChatroomActionResult(
-      'ChatroomIndex',
-      LEAVE_CHAT_ROOM_METHOD,
-      leaveChatRoomParams,
-      res,
-      {
-        from: EMClient.user,
-      },
-    );
-    ElMessage.success('退出聊天室成功');
-    console.log(
-      `退出聊天室成功:`,
-      `\n调用方法: ${LEAVE_CHAT_ROOM_METHOD}`,
-      `\n方法入参:`,
-      leaveChatRoomParams,
-      `\n接口返回结果:`,
-      res,
-      `\n已退出聊天室ID:`,
-      roomId,
-    );
-    await refreshChatroomListsFromServer();
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error(
-        `退出聊天室失败:`,
-        `\n调用方法: ${LEAVE_CHAT_ROOM_METHOD}`,
-        `\n方法入参:`,
-        leaveChatRoomParams,
-        `\n目标聊天室ID:`,
-        roomId,
-        `\n当前用户:`,
-        EMClient.user,
-        `\n错误类型:`,
-        error.type,
-        `\n错误数据:`,
-        error.data,
-        `\n错误消息:`,
-        error.message,
-        `\n完整错误信息:`,
-        error,
-      );
-      ElMessage.error(error?.message || '退出聊天室失败');
-    }
-  }
-};
-
-const destroyChatroom = async (roomId) => {
-  if (!checkLoginStatus()) return;
-  const DESTROY_CHAT_ROOM_METHOD = 'destroyChatRoom';
-  const destroyChatRoomParams = { chatRoomId: roomId };
-  try {
-    await ElMessageBox.confirm(
-      '确定要解散该聊天室吗？此操作不可恢复！',
-      '警告',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      },
-    );
-
-    console.log(
-      `用户确认解散聊天室，开始调用接口:`,
-      `\n调用方法: ${DESTROY_CHAT_ROOM_METHOD}`,
-      `\n方法入参:`,
-      destroyChatRoomParams,
-      `\n待解散聊天室ID:`,
-      roomId,
-    );
-
-    const res = await EMClient.destroyChatRoom(destroyChatRoomParams);
-    logChatroomActionResult(
-      'ChatroomIndex',
-      DESTROY_CHAT_ROOM_METHOD,
-      destroyChatRoomParams,
-      res,
-      {
-        from: EMClient.user,
-      },
-    );
-    console.log(
-      `解散聊天室成功:`,
-      `\n调用方法: ${DESTROY_CHAT_ROOM_METHOD}`,
-      `\n方法入参:`,
-      destroyChatRoomParams,
-      `\n接口返回结果:`,
-      res,
-      `\n已解散聊天室ID:`,
-      roomId,
-    );
-    ElMessage.success('解散聊天室成功');
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error(
-        `解散聊天室失败:`,
-        `\n调用方法: ${DESTROY_CHAT_ROOM_METHOD}`,
-        `\n方法入参:`,
-        destroyChatRoomParams,
-        `\n目标聊天室ID:`,
-        roomId,
-        `\n当前用户:`,
-        EMClient.user,
-        `\n错误类型:`,
-        error.type,
-        `\n错误数据:`,
-        error.data,
-        `\n错误消息:`,
-        error.message,
-        `\n完整错误信息:`,
-        error,
-      );
-      ElMessage.error(error?.message || '解散聊天室失败');
-    }
   }
 };
 
@@ -569,16 +313,7 @@ const filteredChatroomList = computed(() => {
   return chatroomList.value.filter(
     (item) =>
       item.name?.includes(searchKeyword.value) ||
-      item.affiliations?.includes(searchKeyword.value),
-  );
-});
-
-const filteredJoinedChatroomList = computed(() => {
-  if (!searchKeyword.value) return joinedChatroomList.value;
-  return joinedChatroomList.value.filter(
-    (item) =>
-      item.name?.includes(searchKeyword.value) ||
-      item.affiliations?.includes(searchKeyword.value),
+      item.chatRoomId?.includes(searchKeyword.value),
   );
 });
 
@@ -588,27 +323,14 @@ const networkStatus = computed(() => {
 
 let chatroomEventHandler = null;
 
-watch(
-  () => route.fullPath,
-  (path, prevPath) => {
-    const base = path.split('?')[0];
-    const listRoot = /\/chat\/chatroom\/?$/.test(base);
-    if (prevPath?.includes('/chatroom/details') && listRoot) {
-      void getChatrooms();
-      void getJoinedChatrooms();
-    }
-  },
-);
-
 onMounted(() => {
   getChatrooms();
-  getJoinedChatrooms();
   setupChatroomEventHandler();
 });
 
 onUnmounted(() => {
   if (chatroomEventHandler) {
-    EMClient.removeEventHandler('CHATROOM');
+    chatRoomManager().removeEventHandler('CHATROOM');
   }
 });
 </script>
@@ -636,12 +358,12 @@ onUnmounted(() => {
         <el-collapse v-model="activeName" accordion>
           <el-collapse-item
             :title="`所有聊天室 ( ${chatroomList.length} )`"
-            :name="CHATROOM_TYPE.ALL"
+            name="1"
           >
             <template v-if="filteredChatroomList.length > 0">
               <div
                 v-for="item in filteredChatroomList"
-                :key="item.id"
+                :key="item.chatRoomId"
                 class="chatroom_item"
               >
                 <div class="item_left">
@@ -651,31 +373,31 @@ onUnmounted(() => {
                 </div>
                 <div class="item_main">
                   <div class="name">{{ item.name }}</div>
-                  <div class="desc">{{ getChatroomDescription(item) || '暂无描述' }}</div>
+                  <div class="desc">SDK 5.0 列表未返回聊天室描述</div>
                   <div class="info">
                     <span>成员: {{ getAllChatroomMemberCount(item) ?? '--' }}</span>
                   </div>
                 </div>
                 <div class="item_right">
                   <el-button
-                    v-if="!isRoomJoined(item.id)"
-                    type="primary"
+                    v-if="isJoinedRoom(item.chatRoomId)"
+                    type="success"
                     size="small"
-                    :loading="isJoiningRoom(item.id)"
-                    :disabled="isJoiningRoom(item.id)"
-                    @click="joinChatroom(item.id)"
+                    @click="toChatroomMessage(item.chatRoomId)"
                   >
-                    加入
+                    进入聊天室
                   </el-button>
                   <el-button
                     v-else
-                    type="success"
+                    type="primary"
                     size="small"
-                    @click="toChatroomMessage(item.id)"
+                    :loading="isJoiningRoom(item.chatRoomId)"
+                    :disabled="isJoiningRoom(item.chatRoomId)"
+                    @click="joinChatroom(item.chatRoomId)"
                   >
-                    进入
+                    加入
                   </el-button>
-                  <el-button size="small" @click="toChatroomDetails(item.id)">
+                  <el-button size="small" @click="toChatroomDetails(item.chatRoomId)">
                     详情
                   </el-button>
                 </div>
@@ -686,61 +408,6 @@ onUnmounted(() => {
             </template>
           </el-collapse-item>
 
-          <el-collapse-item
-            :title="`已加入 ( ${joinedChatroomList.length} )`"
-            :name="CHATROOM_TYPE.JOINED"
-          >
-            <template v-if="filteredJoinedChatroomList.length > 0">
-              <div
-                v-for="item in filteredJoinedChatroomList"
-                :key="item.id"
-                class="chatroom_item"
-              >
-                <div class="item_left">
-                  <el-avatar :size="40" :src="item.avatar || ''">
-                    {{ item.name?.charAt(0) }}
-                  </el-avatar>
-                </div>
-                <div class="item_main">
-                  <div class="name">{{ item.name }}</div>
-                  <div class="desc">{{ getChatroomDescription(item) || '暂无描述' }}</div>
-                  <div class="info">
-                    <span>成员: {{ getJoinedChatroomMemberCount(item.id) ?? '--' }}</span>
-                  </div>
-                </div>
-                <div class="item_right">
-                  <el-button
-                    type="primary"
-                    size="small"
-                    @click="toChatroomMessage(item.id)"
-                  >
-                    进入
-                  </el-button>
-                  <el-button
-                    type="danger"
-                    size="small"
-                    @click="leaveChatroom(item.id)"
-                  >
-                    退出
-                  </el-button>
-                  <el-button
-                    v-if="item.owner === EMClient.user"
-                    type="warning"
-                    size="small"
-                    @click="destroyChatroom(item.id)"
-                  >
-                    解散
-                  </el-button>
-                  <el-button size="small" @click="toChatroomDetails(item.id)">
-                    详情
-                  </el-button>
-                </div>
-              </div>
-            </template>
-            <template v-else>
-              <el-empty description="暂未加入任何聊天室..." />
-            </template>
-          </el-collapse-item>
         </el-collapse>
       </el-scrollbar>
     </el-aside>

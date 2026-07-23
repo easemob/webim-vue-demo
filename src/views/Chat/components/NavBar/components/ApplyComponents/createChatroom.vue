@@ -2,7 +2,6 @@
 import { reactive, toRefs, watch } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
-import { EMClient } from '@/IM';
 import { CHAT_TYPE } from '@/IM/constant';
 import router from '@/router';
 import eventEmitter from '@/utils/eventEmitter';
@@ -62,14 +61,9 @@ const createChatroom = async () => {
     .filter(Boolean);
 
   try {
-    const { data } = await EMClient.createChatRoom({
-      name: chatroomCreateForm.name.trim(),
-      description: chatroomCreateForm.description.trim(),
-      maxusers: Number(chatroomCreateForm.maxusers) || 200,
-      members,
-    });
-
-    const roomId = resolveChatroomId(data);
+    throw new Error(
+      'SDK 5.0 current package does not expose createChatRoom; no fallback is configured.',
+    );
 
     ElNotification({
       title: '聊天室操作',

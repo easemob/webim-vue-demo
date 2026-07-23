@@ -3,39 +3,41 @@ export const DEFAULT_GROUP_MEMBERS_PAGE_SIZE = 50;
 export function normalizeFetchedGroupMembers(members = []) {
   return members.map((item) => {
     const normalized = {
-      userId: item.userId,
+      userId: item.user?.userId,
       role: item.role,
-      joinedTime: item.joinedTime,
+      joinedTime: item.joinedAt,
     };
 
     if (item.role === 'owner') {
-      normalized.owner = item.userId;
+      normalized.owner = item.user?.userId;
     } else {
-      normalized.member = item.userId;
+      normalized.member = item.user?.userId;
     }
 
     return normalized;
   });
 }
 
-export function buildCreateGroupVNextPayload(form = {}) {
-  const maxMemberCount = Number(form.maxusers);
+export function buildCreateGroupPayload(form = {}) {
+  const maxMembers = Number(form.maxusers);
   const payload = {
-    groupName: form.groupname?.trim(),
+    name: form.groupname?.trim(),
     description: form.desc?.trim() || '',
-    members: Array.isArray(form.members) ? form.members : [],
-    isPublic: Boolean(form.public),
-    needApprovalToJoin: Boolean(form.approval),
-    allowMemberToInvite: Boolean(form.allowinvites),
+    public: Boolean(form.public),
+    joinApprovalRequired: Boolean(form.approval),
+    allowInvites: Boolean(form.allowinvites),
     inviteNeedConfirm: Boolean(form.inviteNeedConfirm),
-    maxMemberCount:
-      Number.isFinite(maxMemberCount) && maxMemberCount > 0
-        ? maxMemberCount
+    maxMembers:
+      Number.isFinite(maxMembers) && maxMembers > 0
+        ? maxMembers
         : 200,
   };
 
+  if (Array.isArray(form.members) && form.members.length > 0) {
+    payload.memberIds = form.members;
+  }
   if (form.avatar !== undefined) payload.avatar = String(form.avatar).trim();
-  if (form.ext !== undefined) payload.extension = String(form.ext);
+  if (form.ext !== undefined) payload.ext = String(form.ext);
 
   return payload;
 }
@@ -50,7 +52,7 @@ export function buildModifyGroupPayload(params = {}) {
     groupId: params.groupId,
   };
   const fieldMap = {
-    groupName: 'groupName',
+    name: 'name',
     description: 'description',
     avatar: 'avatar',
     ext: 'ext',

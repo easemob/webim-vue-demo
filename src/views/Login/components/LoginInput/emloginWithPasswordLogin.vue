@@ -1,14 +1,17 @@
 <script setup>
 import { ref, reactive, watch, computed } from 'vue';
 import { ElMessage } from 'element-plus';
-import { EMClient } from '@/IM';
+import { login } from '@/IM';
+import { fetchLoginUsersInitData } from '@/IM/listener';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 import { usePlayRing } from '@/hooks';
 import { redirectToLoginClearImSession } from '@/utils/imAuthRedirect';
 const store = useStore();
+const router = useRouter();
 const loginValue = reactive({
   username: '',
-  password: '',
+  token: '',
 });
 const buttonLoading = ref(false);
 //根据登陆初始化一部分状态
@@ -17,15 +20,15 @@ watch(loginState, (newVal) => {
   if (newVal) {
     buttonLoading.value = false;
     loginValue.username = '';
-    loginValue.password = '';
+    loginValue.token = '';
   }
 });
 const rules = reactive({
   username: [{ required: true, message: '请输入环信ID', trigger: 'blur' }],
-  password: [
+  token: [
     {
       required: true,
-      message: '请输入密码',
+      message: '请输入 Token',
       trigger: ['blur', 'change'],
     },
   ],
@@ -37,21 +40,20 @@ const loginIM = async () => {
   buttonLoading.value = true;
   
   try {
-    let { accessToken } = await EMClient.open({
-      username: loginValue.username.toLowerCase(),
-      password: loginValue.password.toLowerCase(),
-    });
+    const user = loginValue.username.toLowerCase();
+    const accessToken = loginValue.token.trim();
+    await login({ userId: user, token: accessToken });
     window.localStorage.setItem(
       `EASEIM_loginUser`,
       JSON.stringify({
-        user: loginValue.username,
+        user,
         accessToken: accessToken,
       }),
     );
-    // 登录成功后跳转到聊天页面
-    window.location.href = '/chat';
+    fetchLoginUsersInitData();
+    await router.replace('/chat');
   } catch (error) {
-    console.error('[Login] password login failed', error);
+    console.error('[Login] token login failed', error);
 
     if (error.type === 28 || error.message === 'INVALID_TOKEN' || error.message?.includes('Invalid token')) {
       ElMessage({
@@ -63,7 +65,7 @@ const loginIM = async () => {
       redirectToLoginClearImSession();
     } else if (error.type === 2 || error.message?.includes('Auth failed')) {
       ElMessage({
-        message: '认证失败，请检查用户名和密码',
+        message: '认证失败，请检查环信 ID 和 Token',
         type: 'error',
         center: true,
       });
@@ -91,12 +93,12 @@ const loginIM = async () => {
         clearable
       />
     </el-form-item>
-    <el-form-item prop="smsCode">
+    <el-form-item prop="token">
       <el-input
         type="password"
         class="login_input_style"
-        v-model="loginValue.password"
-        placeholder="密码"
+        v-model="loginValue.token"
+        placeholder="Token"
         clearable
         show-password
       />
@@ -104,7 +106,7 @@ const loginIM = async () => {
     <el-form-item>
       <div class="function_button_box">
         <el-button
-          v-if="loginValue.username && loginValue.password"
+          v-if="loginValue.username && loginValue.token"
           class="haveValueBtn"
           :loading="buttonLoading"
           @click="loginIM"

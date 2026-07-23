@@ -1,4 +1,4 @@
-import { EMClient } from '../index';
+import { getCurrentUserId, requireManager } from '../index';
 import store from '@/store';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
@@ -7,7 +7,7 @@ import { wrapImEventHandler } from '@/utils/safeCall';
  * @see https://doc.easemob.com/document/web/presence.html
  */
 const logOnPresenceStatusChange = (payload, index) => {
-  const loginUser = EMClient.user;
+  const loginUser = getCurrentUserId();
   const list = Array.isArray(payload) ? payload : [payload];
   const item = list[index] ?? payload;
   const targetId = item?.userId ?? item?.uid;
@@ -37,7 +37,7 @@ export const imPresenceListener = () => {
     );
   };
   const mountPresenceEventListener = () => {
-    EMClient.addEventHandler(
+    requireManager('presenceManager').addEventHandler(
       'presenceStatusChange',
       wrapImEventHandler({
         onPresenceStatusChange: (status) => {

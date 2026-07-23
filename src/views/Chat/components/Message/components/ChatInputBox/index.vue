@@ -9,9 +9,11 @@ import {
 import { ElLoading, ElMessageBox, ElMessage } from 'element-plus';
 import { onClickOutside } from '@vueuse/core';
 import { useUserInfoExt } from '@/hooks';
-import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
+import { CHAT_TYPE } from '@/IM/constant';
+import { createMessage, sendMessage } from '@/IM/sdk5/chat';
+import { toSdk5CombineMessage } from '@/IM/sdk5/messageAdapter';
 import _ from 'lodash';
-import { EMClient } from '@/IM';
+import { getCurrentUserId } from '@/IM';
 import parseDownloadResponse from '@/utils/parseDownloadResponse';
 import { supportsDirectedMessage } from '@/utils/directedMessage';
 import {
@@ -68,7 +70,7 @@ const onDeliverOnlineOnlySwitchChange = (enabled) => {
   const context = {
     targetId: routeQueryData.value.id,
     chatType: routeQueryData.value.chatType,
-    currentUser: EMClient.user,
+    currentUser: getCurrentUserId(),
   };
   if (enabled) {
     console.log('[Deliver Online Only] switch enabled', context);
@@ -199,6 +201,34 @@ onMounted(() => {
   }
 });
 const { setUserInfoExt } = useUserInfoExt();
+const getAudioDuration = (file) =>
+  new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const audio = document.createElement('audio');
+    const cleanup = () => {
+      URL.revokeObjectURL(objectUrl);
+      audio.removeAttribute('src');
+      audio.load();
+    };
+
+    audio.preload = 'metadata';
+    audio.onloadedmetadata = () => {
+      const duration = audio.duration;
+      cleanup();
+      if (!Number.isFinite(duration) || duration <= 0) {
+        reject(new Error('语音元数据未提供有效时长'));
+        return;
+      }
+      resolve(duration);
+    };
+    audio.onerror = () => {
+      cleanup();
+      reject(new Error('无法读取语音元数据'));
+    };
+    audio.src = objectUrl;
+    audio.load();
+  });
+
 const sendPresetAudio = async () => {
   //验证targetId是否有效
   if (!routeQueryData.value.id || routeQueryData.value.id === '') {
@@ -217,20 +247,18 @@ const sendPresetAudio = async () => {
     const file = new File([blob], 'audio_10s.mp3', {
       type: blob.type || 'audio/mpeg',
     });
+    const duration = await getAudioDuration(file);
 
     const msgOptions = {
-      type: MESSAGE_TYPE.AUDIO,
       to: routeQueryData.value.id,
-      from: EMClient.user,
       chatType: routeQueryData.value.chatType,
       ...threadMessageOptions.value,
-      ...deliverOnlineOnlyOptions.value,
       file: {
         data: file,
         filename: file.name,
         filetype: file.type,
       },
-      length: 10,
+      duration,
       onFileUploadError: (error) => {
         notifySdkSendError(error);
         onLoadending();
@@ -243,8 +271,13 @@ const sendPresetAudio = async () => {
       },
     };
     setUserInfoExt(msgOptions);
-    const msg = EMClient.Message.create(msgOptions);
-    const { message } = await EMClient.send(msg);
+    const msg = createMessage('audio', msgOptions);
+    const message = await sendMessage(msg, {
+      ...deliverOnlineOnlyOptions.value,
+      onFileUploadError: msgOptions.onFileUploadError,
+      onFileUploadProgress: msgOptions.onFileUploadProgress,
+      onFileUploadComplete: msgOptions.onFileUploadComplete,
+    });
     store.dispatch('senedShowTypeMessage', { ...message });
   } catch (error) {
     console.error('发送预置语音失败:', error);
@@ -270,19 +303,16 @@ const sendAudioMessages = async (audioData) => {
   };
 
   const msgOptions = {
-    type: MESSAGE_TYPE.AUDIO,
     to: routeQueryData.value.id,
-    from: EMClient.user,
     chatType: routeQueryData.value.chatType,
     ...threadMessageOptions.value,
-    ...deliverOnlineOnlyOptions.value,
     file: file,
     length: audioData.length,
   };
   setUserInfoExt(msgOptions);
   try {
-    const msg = EMClient.Message.create(msgOptions);
-    const { message } = await EMClient.send(msg);
+    const msg = createMessage('audio', msgOptions);
+    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
     store.dispatch('senedShowTypeMessage', { ...message });
     isShowRecordBox.value = false;
   } catch (error) {
@@ -348,12 +378,9 @@ const sendLocationMessage = async () => {
   }
 
   const msgOptions = {
-    type: MESSAGE_TYPE.LOCAL,
     to: routeQueryData.value.id,
-    from: EMClient.user,
     chatType: routeQueryData.value.chatType,
     ...threadMessageOptions.value,
-    ...deliverOnlineOnlyOptions.value,
     addr: '四通桥东',
     buildingName: '数码大厦',
     lat: 39,
@@ -361,8 +388,8 @@ const sendLocationMessage = async () => {
   };
   setUserInfoExt(msgOptions);
   try {
-    const msg = EMClient.Message.create(msgOptions);
-    const { message } = await EMClient.send(msg);
+    const msg = createMessage('loc', msgOptions);
+    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
     console.log('[Message Send] location success', {
       messageId: message?.id || message?.mid,
       targetId: routeQueryData.value.id,
@@ -404,7 +431,6 @@ const clearScreen = () => {
 //     sendInviteMessage(toId, callType);
 //     //发送邀请信息后创建一条本地系统通知类消息上屏展示
 //     const params = {
-//       from: EMClient.user,
 //       to: toId,
 //       chatType: CHAT_TYPE.SINGLE,
 //       msg: `邀请【${toId}】进行语音通话`,
@@ -417,7 +443,6 @@ const clearScreen = () => {
 //       sendInviteMessage(toId, callType);
 //       //发送邀请信息后创建一条本地系统通知类消息上屏展示
 //       const params = {
-//         from: EMClient.user,
 //         to: toId,
 //         chatType: CHAT_TYPE.SINGLE,
 //         msg: `邀请【${toId}】进行视频通话`,
@@ -444,7 +469,6 @@ const clearScreen = () => {
 //   const groupId = routeQueryData.value.id;
 //   sendInviteMessage(targetIMId, callType, groupId);
 //   const params = {
-//     from: EMClient.user,
 //     to: groupId,
 //     chatType: CHAT_TYPE.GROUP,
 //     msg: '已发起多人音视频通话',
@@ -468,15 +492,9 @@ const sendCombineMessage = async () => {
       chatType: routeQueryData.value.chatType,
     });
     const currentChatMessages = store.state.Message.messageList[listKey] || [];
-    const recentMessages = currentChatMessages.slice(-5).map((msg) => ({
-      type: msg.type,
-      chatType: msg.chatType,
-      from: msg.from,
-      to: msg.to,
-      msg: msg.msg,
-      time: msg.time,
-      id: msg.id,
-    }));
+    const recentMessages = currentChatMessages
+      .slice(-5)
+      .map(toSdk5CombineMessage);
 
     if (recentMessages.length === 0) {
       ElMessage.warning('暂无消息可合并');
@@ -486,22 +504,17 @@ const sendCombineMessage = async () => {
     // 准备合并消息参数
     const combineMsgOptions = {
       chatType: routeQueryData.value.chatType,
-      type: MESSAGE_TYPE.COMBINE,
       to: routeQueryData.value.id,
       ...threadMessageOptions.value,
-      ...deliverOnlineOnlyOptions.value,
       compatibleText: 'SDK 版本低，请升级',
       title: '聊天记录',
       summary: `共${recentMessages.length}条消息`,
       messageList: recentMessages,
-      onFileUploadComplete: (data) => {
-        combineMsgOptions.url = data.url;
-      },
     };
 
     // 发送合并消息
-    const msg = EMClient.Message.create(combineMsgOptions);
-    const { message } = await EMClient.send(msg);
+    const msg = createMessage('combine', combineMsgOptions);
+    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
     console.log('[Message Send] combine success', {
       messageId: message?.id || message?.mid,
       targetId: routeQueryData.value.id,
@@ -509,14 +522,6 @@ const sendCombineMessage = async () => {
       sourceMessageCount: recentMessages.length,
       summary: combineMsgOptions.summary,
     });
-    // 确保返回的消息包含 messageList
-    if (!message.messageList) {
-      message.messageList = recentMessages;
-    }
-    // 确保返回的消息包含 summary
-    if (!message.summary) {
-      message.summary = `共${recentMessages.length}条消息`;
-    }
     ElMessage.success('合并消息发送成功');
     await store.dispatch('senedShowTypeMessage', message);
   } catch (error) {

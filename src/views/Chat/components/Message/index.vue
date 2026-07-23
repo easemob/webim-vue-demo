@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, nextTick, computed, onMounted } from 'vue';
 import _ from 'lodash';
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
 import { CHAT_TYPE } from '@/IM/constant';
 import { useStore } from 'vuex';
 import { useRoute, onBeforeRouteLeave } from 'vue-router';
@@ -19,6 +19,7 @@ import MessageThreadListDrawer from './components/MessageThreadListDrawer.vue';
 import MessageSearchDrawer from './components/MessageSearchDrawer.vue';
 /* store */
 const store = useStore();
+const contactManager = () => requireManager('contactManager');
 /* route */
 const route = useRoute();
 
@@ -67,7 +68,7 @@ const delTheFriend = async () => {
   if (routeQueryData.value?.id) {
     const targetId = routeQueryData.value.id;
     try {
-      await EMClient.deleteContact(targetId);
+      await contactManager().deleteContact({ userId: targetId });
       store.commit('DELETE_CONTACTS_FROM_MAP', targetId);
       ElMessage({ type: 'success', center: true, message: '好友已删除~' });
     } catch (error) {
@@ -127,17 +128,35 @@ const addFriendToBlackList = async () => {
   if (routeQueryData.value?.id) {
     const targetId = routeQueryData.value.id;
     try {
-      await EMClient.addUsersToBlocklist({
-        name: [targetId]
+      const result = await contactManager().addUsersToBlocklist({
+        userIds: [targetId],
       });
+      if (!result.succeeded.some((user) => user.userId === targetId)) {
+        console.error('[Blocklist] addUsersToBlocklist did not confirm target', {
+          currentUser: getCurrentUserId(),
+          targetId,
+          result,
+        });
+        ElMessage({
+          type: 'error',
+          center: true,
+          message: '添加到黑名单失败：SDK 未确认目标用户已加入黑名单',
+        });
+        return;
+      }
+      await refreshFriendBlackList();
       ElMessage({ type: 'success', center: true, message: '已成功将该用户添加到黑名单' });
-      // 刷新黑名单列表
-      setTimeout(() => {
-        store.dispatch('fetchBlackList');
-      }, 500);
     } catch (error) {
-      ElMessage({ type: 'error', center: true, message: '添加到黑名单失败，请稍后重试' });
-      console.error('添加到黑名单失败:', error);
+      console.error('[Blocklist] addUsersToBlocklist failed', {
+        currentUser: getCurrentUserId(),
+        targetId,
+        error,
+      });
+      ElMessage({
+        type: 'error',
+        center: true,
+        message: error?.message || '添加到黑名单失败',
+      });
     }
   }
 };
@@ -147,14 +166,11 @@ const removeFriendFromBlackList = async () => {
   if (routeQueryData.value?.id) {
     const targetId = routeQueryData.value.id;
     try {
-      await EMClient.removeUserFromBlocklist({
-        name: [targetId]
+      await contactManager().removeUserFromBlocklist({
+        userIds: [targetId]
       });
       ElMessage({ type: 'success', center: true, message: '已成功将该用户从黑名单中移除' });
-      // 刷新黑名单列表
-      setTimeout(() => {
-        store.dispatch('fetchBlackList');
-      }, 500);
+      await refreshFriendBlackList();
     } catch (error) {
       ElMessage({ type: 'error', center: true, message: '从黑名单中移除失败，请稍后重试' });
       console.error('从黑名单中移除失败:', error);
@@ -165,8 +181,8 @@ const removeUserFromFriendBlackList = async (userId) => {
   if (!userId || removingBlackListUserId.value) return;
   removingBlackListUserId.value = userId;
   try {
-    await EMClient.removeUserFromBlocklist({
-      name: [userId],
+    await contactManager().removeUserFromBlocklist({
+      userIds: [userId],
     });
     ElMessage({ type: 'success', center: true, message: `${userId} 已移出黑名单` });
     await refreshFriendBlackList();
@@ -233,7 +249,7 @@ const markConversationReadIfNeeded = (options = {}) => {
 
 const isMessageInCurrentConversation = (message) => {
   if (!message || !routeQueryData.value.id) return false;
-  if (message.from === EMClient.user) return false;
+  if (message.from === getCurrentUserId()) return false;
   const { id, chatType } = routeQueryData.value;
   if (chatType === CHAT_TYPE.SINGLE) {
     return message.chatType === CHAT_TYPE.SINGLE && message.from === id;
@@ -305,7 +321,7 @@ const handleChannelMessage = (event) => {
     const listKey = `${CHAT_TYPE.SINGLE}${conversationId}`;
     const currentList = store.state.Message.messageList[listKey] || [];
     currentList
-      .filter((item) => item.from === EMClient.user && !item.read)
+      .filter((item) => item.from === getCurrentUserId() && !item.read)
       .forEach((item) => {
         store.commit('UPDATE_MESSAGE_READ', {
           messageId: item.id,

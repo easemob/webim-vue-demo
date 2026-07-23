@@ -1,11 +1,11 @@
 function normalizeChatroomMember(item) {
   if (!item || typeof item !== 'object') return null;
-  const userId = String(item.userId || item.member || item.owner || '').trim();
+  const userId = String(item.user?.userId || '').trim();
   if (!userId) return null;
   return {
     ...item,
     userId,
-    role: item.role || 'member',
+    role: item.role,
   };
 }
 

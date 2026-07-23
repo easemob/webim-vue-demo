@@ -15,7 +15,7 @@ const props = defineProps({
 const { groupId } = toRefs(props);
 //群组禁言名单
 const groupMutelist = computed(() => {
-  return store.getters.getGroupDetailMap.get(groupId.value)?.mutelist;
+  return store.getters.getGroupDetailMap.get(groupId.value)?.mutelist || [];
 });
 
 //群组成员
@@ -35,13 +35,15 @@ const isInMuteList = computed(() => {
   return (memberId) => {
     return (
       (groupMutelist.value &&
-        _.map(groupMutelist.value, 'user').includes(memberId)) ||
+        _.map(groupMutelist.value, 'userId').includes(memberId)) ||
       tobeAddedMuteList.value.includes(memberId)
     );
   };
 });
 const inMuteMemberList = computed(() => {
-  return groupMutelist.value.concat(tobeAddedMuteList.value);
+  return groupMutelist.value.concat(
+    tobeAddedMuteList.value.map((userId) => ({ userId })),
+  );
 });
 const handleAddMuteList = (memberId) => {
   ElMessageBox.alert('确定要操作该成员？', '禁言状态', {
@@ -103,7 +105,7 @@ const searchUsers = () => {
               <div class="friend_user_list_left">
                 <el-avatar :src="getUserDisplayAvatarById(member)"></el-avatar>
                 <b class="friend_list_username">{{
-                  getUserDisplayNameById(member)
+                  getUserDisplayNameById(member) || member
                 }}</b>
               </div>
               <el-button
@@ -121,18 +123,18 @@ const searchUsers = () => {
     </div>
     <div class="inside_mute_list_container" v-if="groupMutelist.length">
       <el-scrollbar>
-        <div v-for="member in inMuteMemberList" :key="member">
+        <div v-for="member in inMuteMemberList" :key="member.userId">
           <div class="friend_user_list">
             <div class="friend_user_list_left">
               <el-avatar
-                :src="getUserDisplayAvatarById(member.user)"
+                :src="getUserDisplayAvatarById(member.userId)"
               ></el-avatar>
               <b class="friend_list_username">{{
-                getUserDisplayNameById(member.user)
+                getUserDisplayNameById(member.userId) || member.userId
               }}</b>
-              <sup v-if="member.expire" style="font: size 7px"
+              <sup v-if="member.muteExpire" style="font: size 7px"
                 >【失效时间：{{
-                  dateFormater('MM-DD-HH:mm', member.expire)
+                  dateFormater('MM-DD-HH:mm', member.muteExpire)
                 }}】</sup
               >
             </div>
@@ -141,7 +143,7 @@ const searchUsers = () => {
               :icon="Minus"
               circle
               size="small"
-              @click="handleAddMuteList(member.user)"
+              @click="handleAddMuteList(member.userId)"
             />
           </div>
           <el-divider style="margin: 12px 0" />

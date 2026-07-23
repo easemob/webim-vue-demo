@@ -6,7 +6,7 @@ const handleStatusDetails = (params) => {
   if (_.isArray(params)) {
     resultArr = _.cloneDeep(params);
   }
-  if (params.constructor == Object) {
+  if (params && params.constructor == Object) {
     for (const key in params) {
       if (Object.hasOwnProperty.call(params, key)) {
         const status = params[key];
@@ -18,11 +18,11 @@ const handleStatusDetails = (params) => {
 };
 export default function (statusBody) {
   return {
-    uid: statusBody.uid || statusBody.userId,
-    expiry: statusBody.expiry || statusBody.expire,
-    lastTime: statusBody.lastTime || statusBody.last_time,
+    uid: statusBody.uid || statusBody.userId || statusBody.publisher,
+    expiry: statusBody.expiry || statusBody.expire || statusBody.expiryTime,
+    lastTime: statusBody.lastTime || statusBody.last_time || statusBody.latestTime,
     statusDetails: handleStatusDetails(
-      statusBody.status || statusBody.statusDetails,
+      statusBody.status || statusBody.statusDetails || statusBody.statusList,
     ),
     ext: statusBody.ext ?? statusBody.description ?? '',
   };

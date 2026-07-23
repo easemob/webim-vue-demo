@@ -1,17 +1,17 @@
-import { EMClient } from '../index';
+import { getCurrentUserId, requireManager } from '../index';
 import store from '@/store';
 import { MESSAGE_STATUS_TYPE } from '@/constant';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
 export const imReadAckListener = () => {
   const mountReadAckEventListener = () => {
-    EMClient.addEventHandler(
+    requireManager('chatManager').addEventHandler(
       'aboutReadAckMessage',
       wrapImEventHandler({
-        onReadMessage: (message) => {
+        onMessageReceipts: (message) => {
           updateMessageReadStatus(message);
         },
-        onChannelMessage: (message) => {
+        onConversationUnreadMessageCountCleared: (message) => {
           updateConversationReadStatus(message);
         },
       }),
@@ -24,7 +24,7 @@ export const imReadAckListener = () => {
       return;
     }
     const { mid, to, from } = message;
-    const key = to === EMClient.user ? from : to;
+    const key = to === getCurrentUserId() ? from : to;
     const payload = {
       id: mid,
       key,
@@ -39,7 +39,7 @@ export const imReadAckListener = () => {
       return;
     }
     const { to, from } = message;
-    const key = to === EMClient.user ? from : to;
+    const key = to === getCurrentUserId() ? from : to;
     const payload = {
       key,
       type: MESSAGE_STATUS_TYPE.CHANLE_STATUS,

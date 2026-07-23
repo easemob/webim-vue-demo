@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, toRefs, watch, computed } from 'vue';
 import store from '@/store';
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
 import { ElNotification } from 'element-plus';
 const props = defineProps({
   dialogVisible: {
@@ -34,7 +34,7 @@ const applyAddFriends = async () => {
       center: true,
       type: 'warning',
     });
-  if (applyAddFriendsForm.username === EMClient.user)
+  if (applyAddFriendsForm.username === getCurrentUserId())
     return ElNotification({
       title: '好友操作',
       message: '不可添加自己为好友！',
@@ -42,10 +42,10 @@ const applyAddFriends = async () => {
       type: 'warning',
     });
   try {
-    await EMClient.addContact(
-      applyAddFriendsForm.username,
-      applyAddFriendsForm.applyFriendMessage,
-    );
+    await requireManager('contactManager').addContact({
+      userId: applyAddFriendsForm.username,
+      message: applyAddFriendsForm.applyFriendMessage,
+    });
     ElNotification({
       title: '好友操作',
       message: '好友申请已发送！',

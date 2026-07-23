@@ -4,7 +4,7 @@ import {
   GROUP_OPERATION_TYPE,
   GROUP_ROLE_TYPE,
 } from '@/IM/constant';
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
 import {
   DEFAULT_GROUP_MEMBERS_PAGE_SIZE,
   buildModifyGroupPayload,
@@ -12,6 +12,7 @@ import {
   getNextJoinedGroupsPage,
   normalizeGroupSharedFileList,
 } from '@/utils/groupDocAdapters';
+const groupManager = () => requireManager('groupManager');
 const Groups = {
   state: {
     groupsInfos: {}, //计划废弃
@@ -82,7 +83,7 @@ const Groups = {
       const { groupDetailsList } = payload;
       groupDetailsList.length > 0 &&
         groupDetailsList.forEach((groupDetail) => {
-          state.groupDetails.set(groupDetail.id, groupDetail);
+          state.groupDetails.set(groupDetail.groupId, groupDetail);
         });
     },
     SET_GROUPS_MEMBERS: (state, payload) => {
@@ -92,24 +93,30 @@ const Groups = {
       if (state.joinedGroup.joinedGroupList.length) {
         state.joinedGroup.joinedGroupList.forEach((groupItem) => {
           if (groupItem.groupId === groupId) {
-            groupItem.affiliationsCount = members.length;
+            groupItem.memberCount = members.length;
           }
         });
       }
     },
     SET_GROUPS_BLIACK_LIST: (state, payload) => {
       const { groupId, blacklist } = payload;
+      const normalizedBlacklist = (blacklist || []).map((entry) => entry?.user?.userId).filter(Boolean);
       if (!state.groupDetails.has(groupId)) {
-        state.groupDetails.set(groupId, { blacklist });
+        state.groupDetails.set(groupId, { blacklist: normalizedBlacklist });
       }
-      state.groupDetails.get(groupId).blacklist = blacklist;
+      state.groupDetails.get(groupId).blacklist = normalizedBlacklist;
     },
     SET_GROUPS_MUTE_LIST: (state, payload) => {
       const { groupId, mutelist } = payload;
+      const normalizedMutelist = (mutelist || []).map((item) => ({
+        userId: item.user.userId,
+        muteExpire: item.muteExpire,
+        muteDuration: item.muteDuration,
+      }));
       if (!state.groupDetails.has(groupId)) {
-        state.groupDetails.set(groupId, { mutelist });
+        state.groupDetails.set(groupId, { mutelist: normalizedMutelist });
       }
-      state.groupDetails.get(groupId).mutelist = mutelist;
+      state.groupDetails.get(groupId).mutelist = normalizedMutelist;
     },
     SET_GROUPS_ANNOUN: (state, payload) => {
       const { groupId, announcement } = payload;
@@ -139,11 +146,11 @@ const Groups = {
     UPDATE_CACHE_GROUP_INFO: (state, payload) => {
       const { groupId, type, params } = payload;
       //更新群组列表内数据
-      if (type === 'groupName') {
+      if (type === 'name') {
         state.joinedGroup.joinedGroupList.length > 0 &&
           state.joinedGroup.joinedGroupList.forEach((groupItem) => {
             if (groupItem.groupId === groupId) {
-              groupItem.groupName = params;
+              groupItem.name = params;
             }
           });
         state.groupDetails.has(groupId) &&
@@ -164,11 +171,11 @@ const Groups = {
         state.joinedGroup.joinedGroupList.length > 0 &&
           state.joinedGroup.joinedGroupList.forEach((groupItem) => {
             if (groupItem.groupId === groupId) {
-              groupItem.avatar = params;
+              groupItem.avatarUrl = params;
             }
           });
         state.groupDetails.has(groupId) &&
-          (state.groupDetails.get(groupId).avatar = params);
+          (state.groupDetails.get(groupId).avatarUrl = params);
       }
       if (type === 'groupExt') {
         state.joinedGroup.joinedGroupList.length > 0 &&
@@ -187,11 +194,11 @@ const Groups = {
         state.joinedGroup.joinedGroupList.length > 0 &&
           state.joinedGroup.joinedGroupList.forEach((groupItem) => {
             if (groupItem.groupId === groupId) {
-              groupItem.affiliationsCount = params;
+              groupItem.memberCount = params;
             }
           });
         state.groupDetails.has(groupId) &&
-          (state.groupDetails.get(groupId).affiliations_count = params);
+          (state.groupDetails.get(groupId).memberCount = params);
       }
     },
     //更新本地缓存群组成员
@@ -231,7 +238,7 @@ const Groups = {
       const { type, groupId, userId } = payload;
       state.joinedGroup.joinedGroupList.length > 0 &&
         state.joinedGroup.joinedGroupList.forEach((groupItem) => {
-          if (groupItem.groupId === groupId && userId === EMClient.user) {
+          if (groupItem.groupId === groupId && userId === getCurrentUserId()) {
             if (type === GROUP_OPERATION_TYPE.SET_ADMIN) {
               groupItem.role = GROUP_ROLE_TYPE.ADMIN;
             } else if (type === GROUP_OPERATION_TYPE.REMOVE_ADMIN) {
@@ -300,12 +307,8 @@ const Groups = {
           startPageNum !== undefined
             ? startPageNum
             : getNextJoinedGroupsPage(state.joinedGroup);
-        const { total, entities } = await EMClient.getJoinedGroups({
-          pageNum: nextPageNum,
-          pageSize: pageSize,
-          needAffiliations: true,
-          needRole: true,
-        });
+        const entities = groupManager().getJoinedGroupList();
+        const total = entities.length;
         commit('SET_JOINED_GROUP_COUNT', total);
         if (entities?.length === 0) return;
         commit('SET_JOINED_GROUP', { total, entities });
@@ -321,17 +324,17 @@ const Groups = {
       let groupDetails = [];
       async function fetchDetailsForGroupIds(groupIdArray) {
         try {
-          const result = await EMClient.getGroupInfo({
-            groupId: groupIdArray,
-          });
-          groupDetails = groupDetails.concat(result.data);
+          const results = await Promise.all(
+            groupIdArray.map((groupId) => groupManager().getGroupInfo({ groupId })),
+          );
+          groupDetails = groupDetails.concat(results);
           commit('SET_GROUP_DETAILS', {
             groupDetailsList: groupDetails,
           });
         } catch (error) {
           console.error('[Group Details] fetchGroupDetailFromServer failed', {
             groupIds: groupIdArray,
-            currentUser: EMClient.user,
+            currentUser: getCurrentUserId(),
             error,
           });
           throw error;
@@ -352,7 +355,7 @@ const Groups = {
       { dispatch, commit },
       { groupId, chatType },
     ) => {
-      if (!EMClient.user) {
+      if (!getCurrentUserId()) {
         console.error('[Group Members] 用户未登录，无法获取群组成员', {
           groupId,
           chatType,
@@ -367,16 +370,15 @@ const Groups = {
         let cursor = '';
         let members = [];
         do {
-          const result = await EMClient.getGroupMembers({
-            groupId,
+          const result = await groupManager().getGroup(groupId).getMembers({
             cursor,
-            limit: DEFAULT_GROUP_MEMBERS_PAGE_SIZE,
+            pageSize: DEFAULT_GROUP_MEMBERS_PAGE_SIZE,
           });
           const fetchedMembers = normalizeFetchedGroupMembers(
-            result?.data?.members || [],
+            result?.items || [],
           );
           members = members.concat(fetchedMembers);
-          cursor = result?.data?.cursor || '';
+          cursor = result?.cursor || '';
         } while (cursor);
         commit('SET_GROUPS_MEMBERS', {
           groupId,
@@ -399,13 +401,13 @@ const Groups = {
             : reset
             ? ''
             : state.joinedGroup.publicPagingCursor;
-        const result = await EMClient.getPublicGroups({
-          limit,
+        const result = await groupManager().getPublicGroupList({
+          pageSize: limit,
           cursor: nextCursor,
         });
         commit('SET_PUBLIC_GROUPS', {
-          cursor: result?.cursor || result?.data?.cursor || '',
-          entities: result?.data || [],
+          cursor: result?.cursor || '',
+          entities: result?.items || [],
           isInit: reset || nextCursor === '',
         });
         return result || {};
@@ -416,9 +418,9 @@ const Groups = {
     },
     fetchJoinedGroupCountFromServer: async ({ commit }) => {
       try {
-        const result = await EMClient.getJoinedGroupsCount();
-        commit('SET_JOINED_GROUP_COUNT', result?.data || 0);
-        return result?.data || 0;
+        const total = groupManager().getJoinedGroupList().length;
+        commit('SET_JOINED_GROUP_COUNT', total);
+        return total;
       } catch (error) {
         console.error('群组数量获取失败', error);
         throw error;
@@ -429,12 +431,12 @@ const Groups = {
       try {
         let options = {
           groupId: groupId,
-          userId: EMClient.user,
+          userId: getCurrentUserId(),
         };
-        const { data } = await EMClient.getGroupMemberAttributes(options);
+        const data = await groupManager().getGroupMembersAttributes(options);
         commit('SET_GROUP_MEMBERS_INFO', {
           groupId: groupId,
-          inGroupInfo: [{ [EMClient.user]: { nickName: data.nickName } }],
+          inGroupInfo: [{ [getCurrentUserId()]: { nickName: data.nickName } }],
         });
       } catch (error) {
         console.error('>>>>>群组属性获取失败', error);
@@ -448,31 +450,18 @@ const Groups = {
       const { groupId, members } = params;
       const membersList = _.chunk(members, 10);
 
-      // 添加并发控制
-      const MAX_CONCURRENT = 5;
       const queue = [];
-      const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms)); // 新增延迟函数
-
       while (membersList.length) {
-        const chunk = membersList.splice(0, MAX_CONCURRENT);
-        const requests = chunk.map((list) =>
-          EMClient.getGroupMembersAttributes({
+        const list = membersList.shift();
+        const result = await groupManager().getGroupMembersAttributes({
             groupId,
             userIds: _.flatten(_.map(list, _.values)),
-          }),
-        );
-
-        const results = await Promise.all(requests);
-        queue.push(...results);
-
-        // 添加间隔延迟（最后一个批次不等待）
-        if (membersList.length > 0) {
-          await delay(1000); // 每个并发批次间隔1秒
-        }
+          });
+        queue.push(result);
       }
 
       if (queue.length > 0) {
-        const groupUsersInfo = _.compact(_.flatMap(queue, 'data'));
+        const groupUsersInfo = _.compact(queue);
         // 处理嵌套数据结构并提交到用户信息模块
         _.forEach(groupUsersInfo, (userObj) => {
           _.forEach(userObj, (info, userId) => {
@@ -492,16 +481,16 @@ const Groups = {
     setInTheGroupInfo: async ({ commit }, params) => {
       const { groupId, nickName } = params;
       try {
-        await EMClient.setGroupMemberAttributes({
+        await groupManager().setGroupMemberAttributes({
           groupId: groupId,
-          userId: EMClient.user,
+          userId: getCurrentUserId(),
           memberAttributes: {
             nickName,
           },
         });
         //通知用户信息管理模块更新群内用户属性。
         commit('UsersProfile/UPDATE_USER_PROFILE', {
-          userId: EMClient.user,
+          userId: getCurrentUserId(),
           sourceType: 'group',
           groupId: params.groupId,
           profile: { nickName: nickName },
@@ -516,7 +505,7 @@ const Groups = {
         groupId: groupId,
       };
       try {
-        const { data } = await EMClient.fetchGroupAnnouncement(option);
+        const data = await groupManager().getGroupAnnouncement(option);
         commit('SET_GROUPS_ANNOUN', {
           groupId: groupId,
           announcement: data.announcement,
@@ -528,9 +517,7 @@ const Groups = {
     //群黑名单
     fetchGroupsBlackListFromServer: async ({ commit }, groupId) => {
       try {
-        const { data } = await EMClient.getGroupBlocklist({
-          groupId: groupId,
-        });
+        const data = await groupManager().getGroup(groupId).getBlocklist();
         commit('SET_GROUPS_BLIACK_LIST', {
           groupId: groupId,
           blacklist: data,
@@ -542,7 +529,7 @@ const Groups = {
     //群禁言列表
     fetchGroupsMuteListFromServer: async ({ dispatch, commit }, params) => {
       try {
-        const { data } = await EMClient.getGroupMuteList({
+        const data = await groupManager().getGroupMuteList({
           groupId: params,
         });
         commit('SET_GROUPS_MUTE_LIST', {
@@ -570,7 +557,7 @@ const Groups = {
     modifyGroupInfo: async ({ dispatch, commit }, params) => {
       const { groupId, modifyType, content } = params;
       const modifyMap = {
-        0: { field: 'groupName', cacheType: 'groupName' },
+        0: { field: 'name', cacheType: 'name' },
         1: { field: 'description', cacheType: 'groupDescription' },
         2: { field: 'avatar', cacheType: 'groupAvatar' },
         3: { field: 'ext', cacheType: 'groupExt' },
@@ -583,7 +570,7 @@ const Groups = {
         groupId,
         [config.field]: content,
       });
-      await EMClient.modifyGroup(option);
+      await groupManager().updateGroupInfo(option);
       commit('UPDATE_CACHE_GROUP_INFO', {
         groupId,
         type: config.cacheType,
@@ -596,7 +583,7 @@ const Groups = {
       //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
       const { groupId, announcement } = params;
       try {
-        await EMClient.updateGroupAnnouncement({ ...params });
+        await groupManager().updateGroupAnnouncement({ ...params });
         dispatch('fetchAnnounmentFromServer', groupId);
       } catch (error) {
         console.error('群公告修改失败', error);
@@ -609,8 +596,8 @@ const Groups = {
           ? { groupId: params }
           : { pageNum: 1, pageSize: 20, ...params };
       try {
-        const result = await EMClient.getGroupSharedFilelist(option);
-        const files = normalizeGroupSharedFileList(result);
+        const result = await groupManager().getGroupSharedFileList(option);
+        const files = normalizeGroupSharedFileList({ entities: result.items });
         commit('SET_GROUP_SHARED_FILES', {
           groupId: option.groupId,
           files,
@@ -619,7 +606,7 @@ const Groups = {
       } catch (error) {
         console.error('群共享文件列表获取失败', {
           groupId: option.groupId,
-          currentUser: EMClient.user,
+          currentUser: getCurrentUserId(),
           error,
         });
         throw error;
@@ -627,107 +614,30 @@ const Groups = {
     },
     uploadGroupSharedFile: async ({ dispatch }, params) => {
       const { groupId, file, onFileUploadProgress } = params;
-      return new Promise((resolve, reject) => {
-        try {
-          EMClient.uploadGroupSharedFile({
-            groupId,
-            file,
-            onFileUploadProgress,
-            onFileUploadComplete: async (response) => {
-              console.log('群共享文件上传成功', {
-                groupId,
-                fileName: file?.name,
-                fileSize: file?.size,
-                currentUser: EMClient.user,
-                response,
-              });
-              try {
-                await dispatch('fetchGroupSharedFilesFromServer', { groupId });
-              } catch (refreshError) {
-                console.error('群共享文件上传后刷新列表失败', {
-                  groupId,
-                  fileName: file?.name,
-                  currentUser: EMClient.user,
-                  error: refreshError,
-                });
-              }
-              resolve(response);
-            },
-            onFileUploadError: (error) => {
-              console.error('群共享文件上传失败', {
-                groupId,
-                fileName: file?.name,
-                fileSize: file?.size,
-                currentUser: EMClient.user,
-                error,
-              });
-              reject(error);
-            },
-            onFileUploadCanceled: (error) => {
-              console.error('群共享文件上传取消', {
-                groupId,
-                fileName: file?.name,
-                fileSize: file?.size,
-                currentUser: EMClient.user,
-                error,
-              });
-              reject(error);
-            },
-          });
-        } catch (error) {
-          console.error('群共享文件上传调用失败', {
-            groupId,
-            fileName: file?.name,
-            fileSize: file?.size,
-            currentUser: EMClient.user,
-            error,
-          });
-          reject(error);
-        }
+      await groupManager().uploadGroupSharedFile({
+        groupId,
+        file,
+        onFileUploadProgress,
       });
+      await dispatch('fetchGroupSharedFilesFromServer', { groupId });
     },
     downloadGroupSharedFile: async (_, params) => {
       const { groupId, fileId, secret } = params;
-      return new Promise((resolve, reject) => {
-        try {
-          EMClient.downloadGroupSharedFile({
-            groupId,
-            fileId,
-            secret,
-            onFileDownloadComplete: (response) => {
-              console.log('群共享文件下载成功', {
-                groupId,
-                fileId,
-                currentUser: EMClient.user,
-                response,
-              });
-              resolve(response);
-            },
-            onFileDownloadError: (error) => {
-              console.error('群共享文件下载失败', {
-                groupId,
-                fileId,
-                currentUser: EMClient.user,
-                error,
-              });
-              reject(error);
-            },
-          });
-        } catch (error) {
-          console.error('群共享文件下载调用失败', {
-            groupId,
-            fileId,
-            currentUser: EMClient.user,
-            error,
-          });
-          reject(error);
-        }
+      let downloaded;
+      await groupManager().downloadGroupSharedFile({
+        groupId,
+        fileId,
+        secret,
+        onFileDownloadComplete: (data) => {
+          downloaded = data;
+        },
       });
+      return downloaded;
     },
     deleteGroupSharedFile: async ({ dispatch }, params) => {
       const { groupId, fileId } = params;
       try {
-        const result = await EMClient.deleteGroupSharedFile({
+        const result = await groupManager().deleteGroupSharedFile({
           groupId,
           fileId,
         });
@@ -737,44 +647,27 @@ const Groups = {
         console.error('群共享文件删除失败', {
           groupId,
           fileId,
-          currentUser: EMClient.user,
+          currentUser: getCurrentUserId(),
           error,
         });
         throw error;
       }
     },
     blockGroupMessage: async ({ commit }, groupId) => {
-      try {
-        await EMClient.blockGroupMessage({ groupId });
-        commit('UPDATE_GROUP_SHIELD_STATUS', {
-          groupId,
-          shieldgroup: true,
-        });
-        ElMessage.success('已屏蔽该群消息');
-      } catch (error) {
-        ElMessage.error('屏蔽群消息失败，请稍后重试');
-        throw error;
-      }
+      throw new Error('SDK 5.0 current package does not expose group message blocking; no fallback is configured.');
     },
     unblockGroupMessage: async ({ commit }, groupId) => {
-      try {
-        await EMClient.unblockGroupMessage({ groupId });
-        commit('UPDATE_GROUP_SHIELD_STATUS', {
-          groupId,
-          shieldgroup: false,
-        });
-        ElMessage.success('已取消屏蔽该群消息');
-      } catch (error) {
-        ElMessage.error('取消屏蔽群消息失败，请稍后重试');
-        throw error;
-      }
+      throw new Error('SDK 5.0 current package does not expose group message blocking; no fallback is configured.');
     },
     //邀请群成员
     inviteUserJoinTheGroup: async ({ dispatch }, params) => {
       //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
       const { users, groupId } = params;
+      const userIds = (Array.isArray(users) ? users : [users])
+        .map((userId) => String(userId || '').trim())
+        .filter(Boolean);
       try {
-        await EMClient.inviteUsersToGroup({ users: [users], groupId });
+        await groupManager().inviteUsersToGroup({ groupId, userIds });
         ElMessage({
           message: '群组邀请成功送出~',
           type: 'success',
@@ -782,11 +675,12 @@ const Groups = {
       } catch (error) {
         console.error('[Group Invite] inviteUsersToGroup failed', {
           groupId,
-          users,
+          userIds,
+          currentUser: getCurrentUserId(),
           error,
         });
         ElMessage({
-          message: '群组邀请失败，请稍后重试~',
+          message: `群组邀请失败：${error?.message || 'unknown error'}`,
           type: 'error',
         });
       }
@@ -796,7 +690,7 @@ const Groups = {
       //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
       const { username, groupId } = params;
       try {
-        await EMClient.removeGroupMember({ username, groupId });
+        await groupManager().removeGroupMembers({ userIds: [username], groupId });
         ElMessage({
           message: `已将${username}移出群组!`,
           type: 'success',
@@ -822,7 +716,7 @@ const Groups = {
         //     groupId: "groupId",
         //     usernames: ["user1", "user2"]
         // };
-        await EMClient.blockGroupMembers({ groupId, usernames });
+        await groupManager().blockGroupMembers({ groupId, userIds: usernames });
         ElMessage({
           message: '黑名单添加成功~',
           type: 'success',
@@ -845,7 +739,7 @@ const Groups = {
     removeTheMemberFromBlackList: async ({ dispatch }, params) => {
       const { groupId, usernames } = params;
       try {
-        await EMClient.unblockGroupMembers({ groupId, usernames });
+        await groupManager().unblockGroupMembers({ groupId, userIds: usernames });
         ElMessage({
           message: '黑名单移除成功~',
           type: 'success',
@@ -870,10 +764,10 @@ const Groups = {
       const targetUsername = Array.isArray(username) ? username[0] : username;
 
       try {
-        await EMClient.muteGroupMember({
+        await groupManager().muteGroupMembers({
           groupId,
-          username: targetUsername,
-          muteDuration: 886400000,
+          userIds: [targetUsername],
+          muteDuration: 886400,
         });
         ElMessage({
           message: '禁言成功~',
@@ -899,16 +793,15 @@ const Groups = {
       //   username: 'user',
       //   muteDuration: 886400000, // 禁言时长，单位为毫秒。
       // };
-      // await EMClient.muteGroupMember(option);
     },
     //从禁言列表中移出
     removeTheMemberFromMuteList: async ({ dispatch }, params) => {
       const { groupId, username } = params;
       const targetUsername = Array.isArray(username) ? username[0] : username;
       try {
-        await EMClient.unmuteGroupMember({
+        await groupManager().unmuteGroupMembers({
           groupId,
-          username: targetUsername,
+          userIds: [targetUsername],
         });
         ElMessage({
           message: '移除禁言成功~',
@@ -933,40 +826,15 @@ const Groups = {
     leaveIntheGroup: async ({ commit }, params) => {
       if (!params.groupId) return;
       const { groupId } = params;
-      return new Promise((resolve, reject) => {
-        EMClient.leaveGroup({
-          groupId: groupId,
-        })
-          .then((res) => {
-            commit('DELETE_JOINED_GROUP_LIST', {
-              groupId: groupId,
-            });
-            resolve(res);
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      });
+      await groupManager().leaveGroup({ groupId });
+      commit('DELETE_JOINED_GROUP_LIST', { groupId });
     },
     //解散群组
     destroyInTheGroup: async ({ commit }, params) => {
       if (!params.groupId) return;
       const { groupId } = params;
-      return new Promise((resolve, reject) => {
-        const option = {
-          groupId: groupId,
-        };
-        EMClient.destroyGroup(option)
-          .then((res) => {
-            resolve(res);
-            commit('DELETE_JOINED_GROUP_LIST', {
-              groupId: groupId,
-            });
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      });
+      await groupManager().destroyGroup({ groupId });
+      commit('DELETE_JOINED_GROUP_LIST', { groupId });
     },
   },
   getters: {
@@ -984,7 +852,7 @@ const Groups = {
         (item) => item.groupId === groupId,
       );
       const groupInfo = state.groupDetails.get(groupId) || {};
-      return group?.groupName || groupInfo?.name || groupId;
+      return group?.name || groupInfo?.name || groupId;
     },
   },
 };

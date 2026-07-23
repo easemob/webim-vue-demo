@@ -1,7 +1,7 @@
 <script setup>
 import { ref, toRefs, computed, onMounted } from 'vue';
-import { EMClient } from '@/IM';
-import { Search, Minus, Plus, Select } from '@element-plus/icons-vue';
+import { getCurrentUserId } from '@/IM';
+import { Search, Minus, Plus } from '@element-plus/icons-vue';
 import { useGetUserMapInfo, useSordedContactsWithPinyin } from '@/hooks';
 /* store */
 import store from '@/store';
@@ -22,7 +22,7 @@ const props = defineProps({
 });
 const { groupId, memberRole } = toRefs(props);
 /* 当前登陆的id */
-const loginUserId = computed(() => EMClient.user);
+const loginUserId = computed(() => getCurrentUserId());
 /* 数据获取 */
 //群组成员
 const getGroupMembersList = computed(() => {
@@ -44,32 +44,42 @@ const {
   getContactsNickNameById,
   getUserDisplayNameById,
 } = useGetUserMapInfo();
+const getMemberDisplayName = (userId) => {
+  if (!userId) return '';
+  return getUserDisplayNameById(userId) || userId;
+};
+const getGroupMemberUserId = (item) =>
+  item?.userId || item?.member || item?.owner || '';
 const showGroupsMembersName = computed(() => {
   return (item) => {
-    if (item.member) {
-      const displayName =
-        item.member === loginUserId.value
-          ? '我'
-          : getUserDisplayNameById(item.member);
-      return item.role === 'admin' ? `${displayName}【管理员】` : displayName;
-    }
-    if (item.owner) {
-      return item.owner === loginUserId.value
+    const userId = getGroupMemberUserId(item);
+    if (!userId) return '';
+    if (item.role === 'owner' || item.owner) {
+      return userId === loginUserId.value
         ? '我【群主】'
-        : getUserDisplayNameById(item.owner) + '【群主】';
+        : getMemberDisplayName(userId) + '【群主】';
+    }
+    if (userId) {
+      const displayName =
+        userId === loginUserId.value
+          ? '我'
+          : getMemberDisplayName(userId);
+      return item.role === 'admin' ? `${displayName}【管理员】` : displayName;
     }
   };
 });
 //是否已在群中
 const isInGroupMemberList = (hxId) => {
-  return getGroupMembersList.value.some((m) => (m.member || m.owner) === hxId);
+  return getGroupMembersList.value.some(
+    (member) => getGroupMemberUserId(member) === hxId,
+  );
 };
 const { sortedFriendListWithRemark } = useSordedContactsWithPinyin();
 /**
  * 是否容许邀请加群成员
  * 涉及指标为2
  * @param {Boolean} public 是否为公开群
- * @param {Boolean} allowinvites 是否容许普通群组成员邀请人入群
+ * @param {Boolean} allowInvites 是否容许普通群组成员邀请人入群
  * @description 在公开群中，只容许群主管理员邀请人入群，而私有群则可设置是否容许普通群成员邀请人加群。
  */
 const isAllowedToInviteMember = computed(() => {
@@ -77,13 +87,23 @@ const isAllowedToInviteMember = computed(() => {
   if (groupDetail.value.public && memberRole.value) {
     return true;
   }
-  if (groupDetail.value.public !== true && groupDetail.value.allowinvites) {
+  if (groupDetail.value.public !== true && groupDetail.value.allowInvites) {
     return true;
   }
   if (!groupDetail.value.public && memberRole.value) {
     return true;
   }
   return false;
+});
+const invitableFriendList = computed(() => {
+  const sourceData = _.flatMap(_.values(sortedFriendListWithRemark.value));
+  return sourceData.filter((item) => !isInGroupMemberList(item.userId));
+});
+const groupedInvitableFriendList = computed(() => {
+  return _.groupBy(invitableFriendList.value, (item) => {
+    const firstLetter = item?.pinyin?.[0] || item?.userId?.[0] || ' ';
+    return String(firstLetter).toUpperCase();
+  });
 });
 //邀请成员
 const inviteNewMemberInTheGroup = async (hxId) => {
@@ -102,7 +122,8 @@ const inviteNewMemberInTheGroup = async (hxId) => {
 };
 //移出群成员
 const removeTheMember = async (params) => {
-  const { member } = params;
+  const member = getGroupMemberUserId(params);
+  if (!member) return;
   ElMessageBox.confirm('确定要移出该成员？', '移出群成员', {
     confirmButtonText: '确认移出',
     type: 'warning',
@@ -124,9 +145,7 @@ const serachInputValue = ref('');
 const searchResultList = ref([]);
 const searchUsers = (keyword) => {
   let _searchResultList = [];
-  const searchSourceData = _.flatMap(
-    _.values(sortedFriendListWithRemark.value),
-  );
+  const searchSourceData = invitableFriendList.value;
   searchSourceData.forEach((item) => {
     const str = item.userId + item.remark;
     if (str.includes(keyword)) {
@@ -159,7 +178,7 @@ const searchUsers = (keyword) => {
             <!-- 普通展示模式 -->
             <template v-if="!serachInputValue">
               <div
-                v-for="(sortedItem, key) in sortedFriendListWithRemark"
+                v-for="(sortedItem, key) in groupedInvitableFriendList"
                 :key="key"
               >
                 <div class="title">
@@ -179,16 +198,12 @@ const searchUsers = (keyword) => {
                     <!-- public 为true（公开群不容许群成员邀请他人入群。）memberRole（管理员群主公开私有都可以邀请他人入群）  -->
                     <template v-if="isAllowedToInviteMember">
                       <el-button
-                        v-if="!isInGroupMemberList(item.userId)"
                         type="primary"
                         :icon="Plus"
                         circle
                         size="small"
                         @click="inviteNewMemberInTheGroup(item.userId)"
                       ></el-button>
-                      <el-icon v-else class="checked_btn">
-                        <Select />
-                      </el-icon>
                     </template>
                   </div>
                 </div>
@@ -208,16 +223,12 @@ const searchUsers = (keyword) => {
                   </div>
                   <template v-if="isAllowedToInviteMember">
                     <el-button
-                      v-if="!isInGroupMemberList(item.userId)"
                       type="primary"
                       :icon="Plus"
                       circle
                       size="small"
                       @click="inviteNewMemberInTheGroup(item.userId)"
                     ></el-button>
-                    <el-icon v-else class="checked_btn">
-                      <Select />
-                    </el-icon>
                   </template>
                 </div>
               </div>
@@ -235,18 +246,18 @@ const searchUsers = (keyword) => {
           <p class="title">
             群成员
             {{
-              `${getGroupMembersList.length}/${groupDetail.maxusers || '500'}`
+              `${getGroupMembersList.length}/${groupDetail.maxMembers ?? '-'}`
             }}
           </p>
           <div class="now_exit_group_members">
             <div
               v-for="item in getGroupMembersList"
-              :key="item.member || item.owner"
+              :key="getGroupMemberUserId(item)"
             >
               <div class="friend_user_list">
                 <div class="friend_user_list_left">
                   <el-avatar
-                    :src="getContactsAvatarById(item.member || item.owner)"
+                    :src="getContactsAvatarById(getGroupMemberUserId(item))"
                   ></el-avatar>
                   <b class="friend_list_username">{{
                     showGroupsMembersName(item)
@@ -255,7 +266,7 @@ const searchUsers = (keyword) => {
 
                 <el-button
                   v-if="
-                    memberRole && (item.member || item.owner) !== loginUserId
+                    memberRole && getGroupMemberUserId(item) !== loginUserId
                   "
                   type="danger"
                   :icon="Minus"

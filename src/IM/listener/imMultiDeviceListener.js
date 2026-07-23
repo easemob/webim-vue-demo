@@ -1,4 +1,4 @@
-import { EMClient } from '../index';
+import { requireManager } from '../index';
 import store from '@/store';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
@@ -45,13 +45,13 @@ export const imMultiDeviceListener = () => {
   };
 
   const mountMultiDeviceEventListener = () => {
-    EMClient.addEventHandler(
+    requireManager('chatManager').addEventHandler(
       'multiDeviceEvent',
       wrapImEventHandler({
-      onMultiDeviceEvent: (event) => {
-        onDispatchMultiDeviceEvent(event);
-      },
-    }),
+        onMultiDeviceConversation: (event) => {
+          onDispatchMultiDeviceEvent(event);
+        },
+      }),
     );
   };
 

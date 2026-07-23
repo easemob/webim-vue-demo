@@ -1,23 +1,31 @@
 <script setup>
 import { ref } from 'vue';
-import { EMClient } from '@/IM';
+import { useStore } from 'vuex';
+import { getCurrentUserId, logout } from '@/IM';
 import router from '@/router';
 const dialogVisible = ref(false);
 const isClearStorage = ref(true);
+const store = useStore();
 
-const logoutTheUser = () => {
+const logoutTheUser = async () => {
+  try {
+    await logout();
+  } catch (error) {
+    console.error('[Logout] SDK 5.0 logout failed', error);
+    return;
+  }
+  store.commit('CLEAR_JOINED_CHATROOM_IDS');
   if (isClearStorage.value) {
     clearLocalStorage();
   }
   window.localStorage.removeItem('EASEIM_loginUser');
   dialogVisible.value = false;
-  EMClient.close();
   router.replace('/login');
 };
 
 const clearLocalStorage = () => {
   const storageType = ['INFORM', 'conversationList', 'search_hisory'];
-  const loginUserId = EMClient.user;
+  const loginUserId = getCurrentUserId();
   const storageKey = `EASEIM_${loginUserId}`;
   storageType.map((item) => {
     return window.localStorage.removeItem(`${storageKey}_${item}`);

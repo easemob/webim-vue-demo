@@ -12,7 +12,7 @@ import {
 import { useStore } from 'vuex';
 import { useClipboard, usePermission } from '@vueuse/core';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
 import { CHAT_TYPE, MESSAGE_TYPE } from '@/IM/constant';
 import { CUSTOM_MSG_EVENT_TYPE, MESSAGE_STATUS_TYPE } from '@/constant';
 import { useGetUserMapInfo } from '@/hooks';
@@ -180,19 +180,6 @@ const processedMessageData = computed(() => {
       processed.url = processed.url || '';
     }
 
-    // 确保合并消息属性存在
-    if (processed.type === MESSAGE_TYPE.COMBINE) {
-      processed.title = processed.title || '聊天记录';
-      processed.summary = processed.summary || '';
-      processed.messageList = processed.messageList || [];
-    }
-
-    // 确保透传消息属性存在
-    if (processed.type === MESSAGE_TYPE.COMMAND) {
-      processed.action = processed.action || '';
-      processed.ext = processed.ext || {};
-    }
-
     // 预先计算常用属性
     processed._isMyself = processed.from === loginUserId;
 
@@ -228,7 +215,7 @@ onMounted(() => {
 });
 
 /* login hxId */
-const loginUserId = EMClient.user;
+const loginUserId = getCurrentUserId();
 
 /* 消息来源是否为自己 */
 const isMyself = (msgBody) => {
@@ -578,7 +565,7 @@ const pinMessage = async (msgBody) => {
       conversationId: getMessagePinConversationId(msgBody),
       messageId: msgBody.id
     };
-    await EMClient.pinMessage(options);
+    await requireManager('chatManager').pinMessage(options);
     ElMessage({
       type: 'success',
       message: '置顶消息成功',
@@ -601,7 +588,7 @@ const unpinMessage = async (msgBody) => {
       conversationId: getMessagePinConversationId(msgBody),
       messageId: msgBody.id
     };
-    await EMClient.unpinMessage(options);
+    await requireManager('chatManager').unpinMessage(options);
     ElMessage({
       type: 'success',
       message: '取消置顶消息成功',
@@ -1041,8 +1028,14 @@ const getReactionUserAvatar = (userId) => {
                   <div class="combine_summary">
                     {{ msgBody.summary || '' }}
                   </div>
-                  <div class="combine_count">
-                    共{{ msgBody.messageList?.length || 0 }}条消息
+                  <div
+                    v-if="Array.isArray(msgBody.messageList)"
+                    class="combine_count"
+                  >
+                    共{{ msgBody.messageList.length }}条消息
+                  </div>
+                  <div v-else class="combine_count">
+                    SDK 下行未包含子消息列表
                   </div>
                   <div class="combine_compatible" v-if="msgBody.compatibleText">
                     {{ msgBody.compatibleText }}

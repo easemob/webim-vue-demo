@@ -1,4 +1,5 @@
-import { EMClient } from '../index';
+import { requireManager } from '../index';
+import { normalizeSdk5Message } from '../sdk5/messageAdapter';
 import { CHANGE_MESSAGE_BODAY_TYPE, CHAT_TYPE } from '@/constant';
 import { setMessageKey } from '@/utils/handleSomeData';
 import store from '@/store';
@@ -45,7 +46,7 @@ export const imReviceMessageListener = () => {
       console.warn('【IM】忽略空或非对象消息:', message);
       return;
     }
-    const normalizedMessage = normalizeThreadMessage(message);
+    const normalizedMessage = normalizeThreadMessage(normalizeSdk5Message(message));
     console.log('[IM Message] SDK 收到消息', {
       messageId: normalizedMessage.id || normalizedMessage.mid,
       type: normalizedMessage.type,
@@ -243,7 +244,7 @@ export const imReviceMessageListener = () => {
   };
   const mountReviceMessageEventListener = () => {
     /* message 相关监听 */
-    EMClient.addEventHandler(
+    requireManager('chatManager').addEventHandler(
       'messageListen',
       wrapImEventHandler({
         // 全局消息监听器，接收所有类型的消息
@@ -251,46 +252,13 @@ export const imReviceMessageListener = () => {
           pushNewMessage(message);
         }, // 收到所有类型的消息
 
-        onTextMessage: function (message) {
-          pushNewMessage(message);
-        }, // 收到文本消息。
-        onEmojiMessage: function (message) {
-          pushNewMessage(message);
-        }, // 收到表情消息。
-        onImageMessage: function (message) {
-          pushNewMessage(message);
-        }, // 收到图片消息。
-        onCmdMessage: function (message) {
-          pushNewMessage(message);
-        }, // 收到命令消息。
-        onAudioMessage: function (message) {
-          pushNewMessage(message);
-        }, // 收到音频消息。
-        onLocationMessage: function (message) {
-          pushNewMessage(message);
-        }, // 收到位置消息。
-        onFileMessage: function (message) {
-          pushNewMessage(message);
-        }, // 收到文件消息。
-        onCustomMessage: function (message) {
-          pushNewMessage(message);
-        }, // 收到自定义消息。
-        onVideoMessage: function (message) {
-          pushNewMessage(message);
-        }, // 收到视频消息。
         onStreamMessage: function (message) {
           pushStreamMessage(message);
         }, // 收到流式消息。
-        onGroupMessage: function (message) {
-          pushNewMessage(message);
-        }, // 收到群组消息。
-        onChatRoomMessage: function (message) {
-          pushNewMessage(message);
-        }, // 收到聊天室消息。
-        onRecallMessage: function (message) {
+        onMessageRecalled: function (message) {
           otherRecallMessage(message);
         }, // 收到消息撤回回执。
-        onModifiedMessage: function (message) {
+        onMessageUpdated: function (message) {
           otherModifyMessage(message);
         },
       }),

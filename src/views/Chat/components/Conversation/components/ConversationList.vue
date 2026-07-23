@@ -6,7 +6,7 @@ import { CHAT_TYPE } from '@/IM/constant';
 import { CUSTOM_MSG_EVENT_TYPE, SESSION_MESSAGE_TYPE } from '@/constant';
 import _ from 'lodash';
 import { useRouter, useRoute } from 'vue-router';
-import { EMClient } from '@/IM';
+import { requireManager } from '@/IM';
 import { ElMessage } from 'element-plus';
 import {
   CONVERSATION_PUSH_REMIND_TYPES,
@@ -26,6 +26,7 @@ const route = useRoute();
 const router = useRouter();
 /* store */
 const store = useStore();
+const chatManager = () => requireManager('chatManager');
 const emit = defineEmits(['toInformDetails', 'toChatMessage']);
 //登录用户ID
 const loginUserId = computed(() => store.state.loginUserInfo.hxId);
@@ -135,7 +136,10 @@ const debouncedToChatMessage = _.debounce(
 const toChatMessage = (conversationItem, index) => {
   checkedConverItemIndex.value = index;
   const { conversationId, unReadCount, customField, conversationType } = conversationItem;
-  if (unReadCount > 0) {
+  if (
+    unReadCount > 0 &&
+    [CHAT_TYPE.SINGLE, CHAT_TYPE.GROUP].includes(conversationType)
+  ) {
     store.dispatch('clearConversationUnreadCount', {
       conversationId: conversationId,
       chatType: conversationType,
@@ -181,10 +185,10 @@ const pinConversation = async (conversationItem) => {
   }
   
   try {
-    await EMClient.pinConversation({
+    await chatManager().setConversationPinned({
       conversationId,
       conversationType,
-      isPinned: !isPinned,
+      pinned: !isPinned,
     });
     store.commit('UPDATE_CONVERSATION_PIN_STATUS', [
       {
@@ -235,10 +239,9 @@ const toggleConversationMark = async (conversationItem) => {
   try {
     if (!hasMark) {
       // 添加标记
-      await EMClient.addConversationMark({
-        conversations: [
-          { conversationId, conversationType },
-        ],
+      await chatManager().addConversationMark({
+        conversationId,
+        conversationType,
         mark: CONVERSATION_MARK.STAR,
       });
       store.commit('UPDATE_CONVERSATION_MARK_STATUS', {
@@ -249,7 +252,7 @@ const toggleConversationMark = async (conversationItem) => {
       ElMessage.success('标星成功');
     } else {
       // 移除标记
-      await EMClient.removeConversationMark({
+      await chatManager().removeConversationMark({
         conversations: [
           { conversationId, conversationType },
         ],
@@ -557,7 +560,7 @@ const onScrollToBottom = (event) => {
         <el-radio
           v-for="item in CONVERSATION_PUSH_REMIND_TYPES"
           :key="item.value"
-          :label="item.value"
+          :value="item.value"
         >
           {{ item.label }}
         </el-radio>

@@ -1,4 +1,5 @@
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
+import { normalizeSdk5Messages } from '@/IM/sdk5/messageAdapter';
 import { setMessageKey } from '@/utils/handleSomeData';
 import _ from 'lodash';
 import {
@@ -15,6 +16,9 @@ import {
   isSdkVersionAtLeast,
   shouldTriggerIncomingMessageEffects,
 } from '@/utils/streamMessageSupport';
+
+const chatManager = () => requireManager('chatManager');
+const chatThreadManager = () => requireManager('chatThreadManager');
 
 const normalizeReactionList = (reactions = []) => {
   if (!Array.isArray(reactions)) return [];
@@ -262,7 +266,7 @@ const Message = {
         state.messageIdsCollection[listKey] = new Map();
       }
       if (
-        msgBody.from === EMClient.user &&
+        msgBody.from === getCurrentUserId() &&
         msgBody.chatType === CHAT_TYPE.SINGLE
       ) {
         state.messageIdsCollection[listKey].set(serverMsgId, {
@@ -485,22 +489,13 @@ const Message = {
           (o) => o.id === messageId,
         );
         if (message) {
-          // 创建已读回执消息
-          const readReceipt = {
-            type: 'read',
-            chatType: chatType,
-            to: to,
-            id: messageId,
-            ackContent: 'read',
-          };
-          // 发送已读回执
-          if (
-            typeof EMClient !== 'undefined' &&
-            EMClient.Message &&
-            EMClient.send
-          ) {
-            const msg = EMClient.Message.create(readReceipt);
-            EMClient.send(msg)
+          if (chatType === CHAT_TYPE.SINGLE || chatType === CHAT_TYPE.GROUP) {
+            chatManager()
+              .sendMessageReadReceipts({
+                conversationId: to,
+                conversationType: chatType,
+                messageIds: [messageId],
+              })
               .then((result) => {
                 console.log('[Message Receipt] send read receipt success', {
                   messageId,
@@ -520,7 +515,7 @@ const Message = {
                 });
               });
           } else {
-            console.error('[Message Receipt] EMClient 未定义或缺少必要方法', {
+            console.error('[Message Receipt] SDK 5.0 does not support chatroom receipts', {
               messageId,
               targetId: to,
               chatType,
@@ -583,17 +578,17 @@ const Message = {
         if (
           chatType === CHAT_TYPE.CHATROOM &&
           !isSdkVersionAtLeast(
-            EMClient.version || '',
+          '5.0.0',
             STREAM_MIN_SDK_VERSION,
           )
         ) {
           const error = new Error(
-            `聊天室历史消息需要 Web SDK >= ${STREAM_MIN_SDK_VERSION}，当前版本 ${EMClient.version || '未知'}`,
+            `聊天室历史消息需要 Web SDK >= ${STREAM_MIN_SDK_VERSION}，当前版本 5.0.0`,
           );
           console.error('[History Message] chatroom history unsupported', {
             conversationId: id,
             chatType,
-            sdkVersion: EMClient.version || '',
+            sdkVersion: '5.0.0',
             minimumVersion: STREAM_MIN_SDK_VERSION,
             error,
           });
@@ -610,10 +605,16 @@ const Message = {
           searchDirection,
           ...(searchOptions ? { searchOptions } : {}),
         };
-        EMClient.getHistoryMessages(options)
+        chatManager().getHistoryMessages({
+          conversationId: id,
+          conversationType: chatType,
+          cursor: cursor === -1 ? '' : String(cursor),
+          pageSize: Math.min(Math.max(Number(pageSize) || 20, 1), 50),
+          searchDirection,
+        })
           .then((res) => {
             const nextCursor = normalizeHistoryCursor(getHistoryNextCursor(res));
-            const { messages } = res;
+            const messages = normalizeSdk5Messages(res.items || []);
             const messageCount = messages?.length || 0;
             const reactionMessages = (messages || []).filter(
               (item) =>
@@ -773,7 +774,11 @@ const Message = {
         rawMessage: params,
       });
       return new Promise((resolve, reject) => {
-        EMClient.removeHistoryMessages(deleteOptions)
+        chatManager().removeHistoryMessages({
+          conversationId: to,
+          conversationType: chatType,
+          messageIds: [mid],
+        })
           .then((res) => {
             console.log('[Message Delete] removeHistoryMessages 成功', {
               messageId: mid,
@@ -815,9 +820,10 @@ const Message = {
       const isChatThread = params.isChatThread === true;
 
       return new Promise((resolve, reject) => {
-        EMClient.recallMessage({
-          ...params,
-          isChatThread,
+        chatManager().recallMessage({
+          conversationId: to,
+          conversationType: chatType,
+          messageId: mid,
         })
           .then((result) => {
             const key = setMessageKey({ to, chatType });
@@ -863,18 +869,17 @@ const Message = {
         return Promise.reject(new Error('缺少消息ID'));
       }
       return new Promise((resolve, reject) => {
-        const textMessage = EMClient.Message.create({
-          type: 'txt',
-          msg: msg,
-          to: to,
-          from: EMClient.user,
-          chatType: chatType,
-          ...(isChatThread ? { isChatThread: true } : {}),
+        const textMessage = chatManager().createTextMessage({
+          conversationId: to,
+          conversationType: chatType,
+          content: msg,
         });
 
-        EMClient.modifyMessage({
+        chatManager().modifyMessage({
+          conversationId: to,
+          conversationType: chatType,
           messageId,
-          modifiedMessage: textMessage,
+          message: textMessage,
         })
           .then((res) => {
             const { message } = res || {};
@@ -908,7 +913,7 @@ const Message = {
               modifiedContent: msg,
               isChatThread,
               groupId: params.groupId,
-              loginUser: EMClient.user,
+              loginUser: getCurrentUserId(),
             });
             reject(error);
           });
@@ -920,12 +925,12 @@ const Message = {
         throw new Error('fetchMessageReactionList 缺少参数');
       }
       try {
-        const res = await EMClient.getReactionlist({
+        const res = await chatManager().getReactionList({
           messageId,
-          chatType,
-          groupId,
+          conversationType: chatType,
+          conversationId: groupId || params?.conversationId,
         });
-        const rawList = Array.isArray(res?.data) ? res.data : [];
+        const rawList = Array.isArray(res) ? res : [];
         const target =
           rawList.find(
             (item) => item?.msgId === messageId || item?.messageId === messageId,
@@ -965,7 +970,7 @@ const Message = {
       } = params || {};
       if (!messageId || !reaction) return null;
       try {
-        const res = await EMClient.getReactionDetail({
+        const res = await chatManager().getReactionDetail({
           messageId,
           reaction,
           cursor,
@@ -1007,7 +1012,7 @@ const Message = {
         throw new Error('聊天室暂不支持 Reaction');
       }
       try {
-        await EMClient.addReaction({ messageId, reaction });
+        await chatManager().addReaction({ messageId, reaction });
         console.log('[Reaction] addReaction success', {
           messageId,
           reaction,
@@ -1032,7 +1037,7 @@ const Message = {
       if (chatType === CHAT_TYPE.CHATROOM) {
         throw new Error('聊天室暂不支持 Reaction');
       }
-      await EMClient.deleteReaction({ messageId, reaction });
+      await chatManager().removeReaction({ messageId, reaction });
       console.log('[Reaction] deleteReaction success', {
         messageId,
         reaction,
@@ -1052,7 +1057,7 @@ const Message = {
         throw new Error('createMessageThread 缺少参数');
       }
       try {
-        const res = await EMClient.createChatThread({
+        const res = await chatThreadManager().createChatThread({
           parentId,
           name,
           messageId,
@@ -1081,7 +1086,7 @@ const Message = {
         throw new Error('fetchMessageThreads 缺少 parentId');
       }
       try {
-        const res = await EMClient.getChatThreads({
+        const res = await chatThreadManager().getChatThreadList({
           parentId,
           cursor,
           pageSize,
@@ -1110,7 +1115,7 @@ const Message = {
         throw new Error('fetchMessageThreadLastMessages 缺少 chatThreadIds');
       }
       try {
-        const res = await EMClient.getChatThreadLastMessage({
+        const res = await chatThreadManager().getChatThreadLastMessageList({
           chatThreadIds,
         });
         console.log('[Thread] getChatThreadLastMessage success', {
@@ -1133,7 +1138,7 @@ const Message = {
         throw new Error('joinMessageThread 缺少 chatThreadId');
       }
       return callThreadApi('joinChatThread', { chatThreadId }, () =>
-        EMClient.joinChatThread({ chatThreadId }),
+        chatThreadManager().joinChatThread({ chatThreadId }),
       );
     },
     leaveMessageThread: async (_, params) => {
@@ -1142,7 +1147,7 @@ const Message = {
         throw new Error('leaveMessageThread 缺少 chatThreadId');
       }
       return callThreadApi('leaveChatThread', { chatThreadId }, () =>
-        EMClient.leaveChatThread({ chatThreadId }),
+        chatThreadManager().leaveChatThread({ chatThreadId }),
       );
     },
     destroyMessageThread: async (_, params) => {
@@ -1151,7 +1156,7 @@ const Message = {
         throw new Error('destroyMessageThread 缺少 chatThreadId');
       }
       return callThreadApi('destroyChatThread', { chatThreadId }, () =>
-        EMClient.destroyChatThread({ chatThreadId }),
+        chatThreadManager().destroyChatThread({ chatThreadId }),
       );
     },
     renameMessageThread: async (_, params) => {
@@ -1160,7 +1165,7 @@ const Message = {
         throw new Error('renameMessageThread 缺少参数');
       }
       return callThreadApi('changeChatThreadName', { chatThreadId, name }, () =>
-        EMClient.changeChatThreadName({ chatThreadId, name }),
+        chatThreadManager().updateChatThreadName({ chatThreadId, name }),
       );
     },
     fetchMessageThreadDetail: async (_, params) => {
@@ -1169,7 +1174,7 @@ const Message = {
         throw new Error('fetchMessageThreadDetail 缺少 chatThreadId');
       }
       return callThreadApi('getChatThreadDetail', { chatThreadId }, () =>
-        EMClient.getChatThreadDetail({ chatThreadId }),
+        chatThreadManager().getChatThreadInfo({ chatThreadId }),
       );
     },
     fetchMessageThreadMembers: async (_, params) => {
@@ -1183,7 +1188,7 @@ const Message = {
         pageSize,
       };
       return callThreadApi('getChatThreadMembers', options, () =>
-        EMClient.getChatThreadMembers(options),
+        chatThreadManager().getChatThreadMemberList(options),
       );
     },
     removeMessageThreadMember: async (_, params) => {
@@ -1196,7 +1201,10 @@ const Message = {
         username,
       };
       return callThreadApi('removeChatThreadMember', options, () =>
-        EMClient.removeChatThreadMember(options),
+        chatThreadManager().removeChatThreadMember({
+          chatThreadId,
+          memberId: username,
+        }),
       );
     },
     fetchJoinedMessageThreads: async (_, params = {}) => {
@@ -1207,7 +1215,7 @@ const Message = {
         pageSize,
       };
       return callThreadApi('getJoinedChatThreads', options, () =>
-        EMClient.getJoinedChatThreads(options),
+        chatThreadManager().getJoinedChatThreadList(options),
       );
     },
   },

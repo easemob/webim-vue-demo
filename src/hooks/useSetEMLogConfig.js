@@ -1,19 +1,17 @@
 import { watchEffect } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
-import { EMClient } from '@/IM';
+import { setLogLevel } from 'easemob-websdk';
 export const useSetEMLogConfig = () => {
   const isOpenedEMLog = useLocalStorage('isOpenedEMLog', false);
-  const closeEMLog = () => EMClient.logger.disableAll();
+  const closeEMLog = () => setLogLevel('error');
   const openEMLog = () => {
-    EMClient.logger.setConfig({
-      useCache: true, // 是否缓存
-      maxCache: 3 * 1024 * 1024, // 最大缓存字节,
-    });
-    // 缓存全部等级日志
-    EMClient.logger.setLevel(0);
-    EMClient.logger.enableAll();
+    setLogLevel('debug');
   };
-  const donwLoadEMLog = () => EMClient.logger.download();
+  const donwLoadEMLog = () => {
+    throw new Error(
+      'SDK 5.0 current package does not expose log download; no fallback is configured.',
+    );
+  };
   watchEffect(() => {
     if (isOpenedEMLog.value) {
       openEMLog();

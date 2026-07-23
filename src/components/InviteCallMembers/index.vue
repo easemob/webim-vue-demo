@@ -1,7 +1,7 @@
 <script setup>
 import { ref, toRaw } from 'vue';
 import { useStore } from 'vuex';
-import { EMClient } from '@/IM';
+import { getCurrentUserId } from '@/IM';
 /* store */
 const store = useStore();
 /* emits */
@@ -56,7 +56,7 @@ defineExpose({
         v-for="item in members"
         :key="item"
         :label="item"
-        :disabled="item === EMClient.user"
+        :disabled="item === getCurrentUserId()"
         >{{ item }}</el-checkbox
       >
     </el-checkbox-group>

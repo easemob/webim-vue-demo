@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, toRefs, watch } from 'vue';
 import { useStore } from 'vuex';
-import { EMClient } from '@/IM';
+import { requireManager } from '@/IM';
 import { ElNotification } from 'element-plus';
 import { RefreshRight } from '@element-plus/icons-vue';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
@@ -39,9 +39,9 @@ const selectPublicGroup = (group) => {
 //判断是否为公开群
 const getTheGroupIsPublic = async (groupId) => {
   try {
-    const res = await EMClient.getGroupInfo({ groupId: groupId + '' });
+    const res = await requireManager('groupManager').getGroupInfo({ groupId: groupId + '' });
 
-    if (res && res?.data && res.data[0]?.public === false) {
+    if (res?.isPublic === false) {
       return ElNotification({
         title: '申请入群',
         message: '该群为私有群不可主动申请！',
@@ -78,7 +78,10 @@ const joinGroups = async () => {
     message: applyJoinGroupsForm.applyJoinMessage, // 请求信息
   };
   try {
-    await EMClient.joinGroup(options);
+    await requireManager('groupManager').joinGroup({
+      groupId: options.groupId,
+      reason: options.message,
+    });
     ElNotification({
       title: '群组操作',
       message: '群申请已发送！',

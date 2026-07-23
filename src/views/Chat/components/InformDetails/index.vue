@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
 import { CHAT_TYPE } from '@/IM/constant';
 import dateFormater from '@/utils/dateFormater';
 import { INFORM_FROM } from '@/constant';
@@ -10,6 +10,8 @@ import { ElMessageBox, ElMessage } from 'element-plus';
 import { Delete } from '@element-plus/icons-vue';
 const store = useStore();
 const router = useRouter();
+const contactManager = () => requireManager('contactManager');
+const groupManager = () => requireManager('groupManager');
 
 const informList = computed(() => store.state.Conversation.informDetail);
 
@@ -36,17 +38,17 @@ const clearAllInform = () => {
 
 //处理申请
 const handleClickBtn = ({ informData, index, type }) => {
-  const loginUserId = EMClient.user;
+  const loginUserId = getCurrentUserId();
   const { fromType, from } = informData;
   //好友申请操作相关
   if (fromType === INFORM_FROM.FRIEND) {
     const handleFriendApply = {
-      agree: () => {
-        EMClient.acceptContactInvite(from);
+      agree: async () => {
+        await contactManager().acceptContactInvite({ userId: from });
         store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 });
       },
-      refuse: () => {
-        EMClient.declineContactInvite(from);
+      refuse: async () => {
+        await contactManager().declineContactInvite({ userId: from });
         //拒绝并更改当前通知卡片按钮状态
         store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 });
       },
@@ -62,8 +64,7 @@ const handleClickBtn = ({ informData, index, type }) => {
     const handleGroupInvite = {
       agree: async () => {
         try {
-          await EMClient.acceptGroupInvite({
-            invitee: loginUserId,
+          await groupManager().acceptInvitation({
             groupId: informData.groupId,
           });
           store.commit('UPDATE_INFORM_BTNSTATUS', {
@@ -92,8 +93,7 @@ const handleClickBtn = ({ informData, index, type }) => {
         }
       },
       refuse: async () => {
-        await EMClient.rejectGroupInvite({
-          invitee: loginUserId,
+        await groupManager().rejectInvitation({
           groupId: informData.groupId,
         });
         store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 });
@@ -109,8 +109,8 @@ const handleClickBtn = ({ informData, index, type }) => {
     const handleGroupInvite = {
       agree: async () => {
         try {
-          EMClient.acceptGroupJoinRequest({
-            applicant: from,
+          await groupManager().acceptGroupJoinRequest({
+            userId: from,
             groupId: informData.groupId,
           });
           store.commit('UPDATE_INFORM_BTNSTATUS', {
@@ -127,8 +127,8 @@ const handleClickBtn = ({ informData, index, type }) => {
         }
       },
       refuse: async () => {
-        EMClient.rejectGroupJoinRequest({
-          applicant: from,
+        await groupManager().rejectGroupJoinRequest({
+          userId: from,
           groupId: informData.groupId,
           reason: '不好意思，不同意你的入群申请！',
         });

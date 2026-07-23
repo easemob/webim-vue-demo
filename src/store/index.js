@@ -1,5 +1,5 @@
 import { createStore } from 'vuex';
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
 import Conversation from './modules/conversation';
 import Contacts from './modules/contacts';
 import Message from './modules/message';
@@ -12,6 +12,8 @@ export default createStore({
     networkStatus: true,
     isShowWarningTips: true,
     chatroomMembers: new Map(),
+    // 只保存本次运行中由 SDK 5.0 加入/退出调用确认的成员关系；不是“已加入聊天室列表”。
+    joinedChatroomIds: new Set(),
     loginUserInfo: {
       hxId: '',
       nickname: '',
@@ -37,6 +39,20 @@ export default createStore({
       const { chatRoomId, members } = payload;
       state.chatroomMembers.set(String(chatRoomId), [...members]);
     },
+    SET_JOINED_CHATROOM_STATUS: (state, { roomId, joined }) => {
+      const key = roomId == null || roomId === '' ? '' : String(roomId);
+      if (!key) return;
+      const nextJoinedChatroomIds = new Set(state.joinedChatroomIds);
+      if (joined) {
+        nextJoinedChatroomIds.add(key);
+      } else {
+        nextJoinedChatroomIds.delete(key);
+      }
+      state.joinedChatroomIds = nextJoinedChatroomIds;
+    },
+    CLEAR_JOINED_CHATROOM_IDS: (state) => {
+      state.joinedChatroomIds = new Set();
+    },
 
     SET_LOGIN_USER_INFO: (state, infos) => {
       state.loginUserInfo = Object.assign(state.loginUserInfo, infos);
@@ -48,16 +64,22 @@ export default createStore({
   actions: {
     //获取登陆用户的用户属性
     getMyUserInfo: async ({ commit }, userId) => {
-      const { data } = await EMClient.fetchUserInfoById(userId);
-      data[userId].hxId = userId;
-      commit('SET_LOGIN_USER_INFO', data[userId]);
+      const users = await requireManager('userInfoManager').getUserInfoByUserId({
+        userIds: [userId],
+      });
+      const user = users[0];
+      if (!user) {
+        throw new Error(`SDK 5.0 returned no user profile for ${userId}`);
+      }
+      const data = { ...user, hxId: userId };
+      commit('SET_LOGIN_USER_INFO', data);
       commit(
         'UsersProfile/UPDATE_USER_PROFILE',
         {
           userId,
           sourceType: SOURCE_TYPE.CONTACT,
           profile: {
-            ...data[userId],
+            ...data,
           },
         },
         { root: true },
@@ -65,12 +87,12 @@ export default createStore({
     },
     //修改登陆用户的用户属性
     updateMyUserInfo: async ({ commit }, params) => {
-      const { data } = await EMClient.updateUserInfo({ ...params });
+      const data = await requireManager('userInfoManager').updateOwnInfo({ ...params });
       commit('SET_LOGIN_USER_INFO', data);
     },
     //查询登录用户自己的在线状态。只展示 SDK/服务端返回的真实状态，不做本地默认在线。
     fetchLoginUserPresenceStatus: async ({ commit, dispatch }, userId) => {
-      const currentUserId = userId || EMClient.user;
+      const currentUserId = userId || getCurrentUserId();
       if (!currentUserId) {
         commit('SET_LOGIN_USER_ONLINE_STATUS', 'Unset');
         return null;
@@ -84,7 +106,7 @@ export default createStore({
     handlePresenceChanges: ({ commit }, status) => {
       const presenceUserId = status?.userId ?? status?.uid;
       const statusType = status?.ext ?? status?.description;
-      if (presenceUserId === EMClient.user) {
+      if (presenceUserId === getCurrentUserId()) {
         commit(
           'SET_LOGIN_USER_ONLINE_STATUS',
           statusType ? statusType : 'Unset',

@@ -7,8 +7,7 @@ export const CONVERSATION_PUSH_REMIND_TYPES = [
 export function isPushSettingSupportedConversation(conversationType) {
   return (
     conversationType === 'singleChat' ||
-    conversationType === 'groupChat' ||
-    conversationType === 'chatRoom'
+    conversationType === 'groupChat'
   );
 }
 
@@ -20,11 +19,15 @@ export function buildConversationPushSettingParams(conversation, remindType) {
     throw new Error('缺少会话 ID 或会话类型');
   }
 
+  if (!isPushSettingSupportedConversation(type)) {
+    throw new Error('SDK 5.0 conversation push settings only support singleChat and groupChat');
+  }
+
   return {
     conversationId,
-    type,
-    options: {
-      paramType: 0,
+    conversationType: type,
+    rule: {
+      mode: 'REMIND_TYPE',
       remindType,
     },
   };
@@ -46,12 +49,16 @@ export function buildConversationDndDurationParams(
     throw new Error('免打扰时长必须为 1 到 10080 分钟');
   }
 
+  if (!isPushSettingSupportedConversation(type)) {
+    throw new Error('SDK 5.0 conversation push settings only support singleChat and groupChat');
+  }
+
   return {
     conversationId,
-    type,
-    options: {
-      paramType: 1,
-      duration: duration * 60 * 1000,
+    conversationType: type,
+    rule: {
+      mode: 'DURATION',
+      duration: duration * 60,
     },
   };
 }
@@ -64,19 +71,18 @@ export function buildConversationPushQueryParams(conversation) {
     throw new Error('缺少会话 ID 或会话类型');
   }
 
+  if (!isPushSettingSupportedConversation(type)) {
+    throw new Error('SDK 5.0 conversation push settings only support singleChat and groupChat');
+  }
+
   return {
     conversationId,
-    type,
+    conversationType: type,
   };
 }
 
 export function getConversationPushRemindType(response) {
-  const remindType =
-    response?.data?.type ||
-    response?.data?.remindType ||
-    response?.data?.value ||
-    response?.type ||
-    '';
+  const remindType = response?.rule?.remindType || '';
 
   return remindType === 'DEFAULT' ? '' : remindType;
 }

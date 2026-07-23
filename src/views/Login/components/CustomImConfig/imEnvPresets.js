@@ -63,10 +63,10 @@ const ENV_PRIVATE_CONFIGS = {
 export function createImEnvironmentConfig(environment) {
   const env = environment || IM_ENVIRONMENTS.NGI;
 
-  if (env === IM_ENVIRONMENTS.NGI) {
+  if (env === IM_ENVIRONMENTS.NGI || env === IM_ENVIRONMENTS.VIP6) {
     return {
       ...BASE_ENV_CONFIG,
-      environment: IM_ENVIRONMENTS.NGI,
+      environment: env,
       isPrivate: false,
     };
   }
@@ -86,6 +86,8 @@ export function normalizeImEnvironmentConfig(config = {}) {
     ...config,
     environment,
     isPrivate:
-      environment === IM_ENVIRONMENTS.NGI ? false : config.isPrivate ?? true,
+      environment === IM_ENVIRONMENTS.NGI || environment === IM_ENVIRONMENTS.VIP6
+        ? false
+        : config.isPrivate ?? true,
   };
 }

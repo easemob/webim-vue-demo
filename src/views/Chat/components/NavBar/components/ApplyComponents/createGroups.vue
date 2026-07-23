@@ -4,11 +4,11 @@ import { useStore } from 'vuex';
 import _ from 'lodash';
 import { ElNotification } from 'element-plus';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
-import { EMClient } from '@/IM';
+import { getCurrentUserId, requireManager } from '@/IM';
 import { CHAT_TYPE } from '@/IM/constant';
 import { Search, CircleCheckFilled } from '@element-plus/icons-vue';
 import { useGetUserMapInfo } from '@/hooks';
-import { buildCreateGroupVNextPayload } from '@/utils/groupDocAdapters';
+import { buildCreateGroupPayload } from '@/utils/groupDocAdapters';
 /* 路由 */
 import router from '@/router';
 const emit = defineEmits(['closeDialogVisible']);
@@ -95,9 +95,8 @@ const createNewGroups = async () => {
   if (groupCreateForm.groupname === '')
     return ElNotification.error('请设置群组名称！');
   try {
-    const payload = buildCreateGroupVNextPayload(groupCreateForm);
-    const { data } = await EMClient.createGroupVNext(payload);
-    const groupId = data?.groupId;
+    const payload = buildCreateGroupPayload(groupCreateForm);
+    const { groupId } = await requireManager('groupManager').createGroup(payload);
     //更新群组列表
     await store.dispatch('fetchJoinedGroupListFromServer', {
       startPageNum: 0,
@@ -113,7 +112,7 @@ const createNewGroups = async () => {
       query: { id: groupId, chatType: CHAT_TYPE.GROUP },
     });
     store.dispatch('createInformMessage', {
-      from: EMClient.user,
+      from: getCurrentUserId(),
       to: groupId,
       chatType: CHAT_TYPE.GROUP,
       msg: `您的群组，【${groupCreateForm.groupname}】创建成功,聊两句吧！`,

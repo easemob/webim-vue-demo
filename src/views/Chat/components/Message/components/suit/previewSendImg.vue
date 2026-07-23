@@ -1,7 +1,7 @@
 <script setup>
 import { ref, toRefs } from 'vue';
-import { EMClient } from '@/IM';
-import { MESSAGE_TYPE, CHAT_TYPE } from '@/IM/constant';
+import { createMessage, sendMessage } from '@/IM/sdk5/chat';
+import { CHAT_TYPE } from '@/IM/constant';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 import store from '@/store';
 import { ElMessage } from 'element-plus';
@@ -56,15 +56,12 @@ const sendImagesMessage = () => {
   const url = window.URL || window.webkitURL;
   const img = new Image(); //手动创建一个Image对象
   const msgOptions = {
-    type: MESSAGE_TYPE.IMAGE,
     to: targetId.value,
     chatType: chatType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    ...deliverOnlineOnlyOptions.value,
     file: file,
     width: 0,
     height: 0,
-    from: EMClient.user,
     onFileUploadError: (error) => {
       console.error('图片上传失败:', error);
       if (
@@ -103,8 +100,13 @@ const sendImagesMessage = () => {
     msgOptions.width = img.width;
     msgOptions.height = img.height;
     try {
-      const msg = EMClient.Message.create(msgOptions);
-      const { message } = await EMClient.send(msg);
+      const msg = createMessage('img', msgOptions);
+      const message = await sendMessage(msg, {
+        ...deliverOnlineOnlyOptions.value,
+        onFileUploadError: msgOptions.onFileUploadError,
+        onFileUploadProgress: msgOptions.onFileUploadProgress,
+        onFileUploadComplete: msgOptions.onFileUploadComplete,
+      });
       store.dispatch('senedShowTypeMessage', { ...message });
     } catch (error) {
       console.error('发送图片消息失败:', {
