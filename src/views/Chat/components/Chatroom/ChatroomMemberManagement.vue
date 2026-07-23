@@ -4,10 +4,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getCurrentUserId, requireManager } from '@/IM';
-import {
-  CHATROOM_EVENT_OPERATIONS,
-  createChatroomEventHandler,
-} from '@/utils/chatroomEvents';
 import { normalizeChatroomMembers } from '@/utils/chatroomMembers';
 
 const route = useRoute();
@@ -930,40 +926,44 @@ const registerChatroomMemberManagementHandler = () => {
 
   chatroomEventHandler = chatRoomManager().addEventHandler(
     'CHATROOM_MEMBER_MANAGEMENT',
-    createChatroomEventHandler('ChatroomMemberManagement', (e, normalizedEvent) => {
-      if (normalizedEvent.roomId !== String(chatRoomId.value || '')) return;
-
-      switch (e.operation) {
-        case CHATROOM_EVENT_OPERATIONS.UNMUTE_ALL_MEMBERS:
-          isMuteAll.value = false;
-          getChatRoomMutelist();
-          break;
-        case CHATROOM_EVENT_OPERATIONS.MUTE_ALL_MEMBERS:
-          isMuteAll.value = true;
-          getChatRoomMutelist();
-          break;
-        case CHATROOM_EVENT_OPERATIONS.SET_ADMIN:
-        case CHATROOM_EVENT_OPERATIONS.REMOVE_ADMIN:
-          getChatRoomAdmin();
-          getChatRoomMembers();
-          break;
-        case CHATROOM_EVENT_OPERATIONS.MUTE_MEMBER:
-        case CHATROOM_EVENT_OPERATIONS.UNMUTE_MEMBER:
-          getChatRoomMutelist();
-          break;
-        case CHATROOM_EVENT_OPERATIONS.ADD_USER_TO_ALLOWLIST:
-        case CHATROOM_EVENT_OPERATIONS.REMOVE_ALLOWLIST_MEMBER:
-          getChatRoomAllowlist();
-          break;
-        case CHATROOM_EVENT_OPERATIONS.REMOVE_MEMBER:
-        case CHATROOM_EVENT_OPERATIONS.UNBLOCK_MEMBER:
-          getChatRoomBlocklist();
-          getChatRoomMembers();
-          break;
-        default:
-          break;
-      }
-    }),
+    {
+      onAllMemberMuteStateChanged: (payload) => {
+        if (payload.chatRoomId !== String(chatRoomId.value || '')) return;
+        isMuteAll.value = payload.isMuted;
+        getChatRoomMutelist();
+      },
+      onAdminAdded: (payload) => {
+        if (payload.chatRoomId !== String(chatRoomId.value || '')) return;
+        getChatRoomAdmin();
+        getChatRoomMembers();
+      },
+      onAdminRemoved: (payload) => {
+        if (payload.chatRoomId !== String(chatRoomId.value || '')) return;
+        getChatRoomAdmin();
+        getChatRoomMembers();
+      },
+      onMuteListAdded: (payload) => {
+        if (payload.chatRoomId !== String(chatRoomId.value || '')) return;
+        getChatRoomMutelist();
+      },
+      onMuteListRemoved: (payload) => {
+        if (payload.chatRoomId !== String(chatRoomId.value || '')) return;
+        getChatRoomMutelist();
+      },
+      onAllowListAdded: (payload) => {
+        if (payload.chatRoomId !== String(chatRoomId.value || '')) return;
+        getChatRoomAllowlist();
+      },
+      onAllowListRemoved: (payload) => {
+        if (payload.chatRoomId !== String(chatRoomId.value || '')) return;
+        getChatRoomAllowlist();
+      },
+      onMembersExited: (payload) => {
+        if (payload.chatRoomId !== String(chatRoomId.value || '')) return;
+        getChatRoomBlocklist();
+        getChatRoomMembers();
+      },
+    },
   );
 };
 

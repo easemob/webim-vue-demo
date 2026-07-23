@@ -25,13 +25,33 @@ assert.doesNotMatch(source, /\bEMClient\b/);
 // SDK 5.0 addContact only accepts `message` as the optional invitation text.
 assert.match(
   addFriendsSource,
-  /addContact\(\{\s*userId:\s*applyAddFriendsForm\.username,\s*message:\s*applyAddFriendsForm\.applyFriendMessage,\s*\}\)/s,
+  /const request = \{\s*userId:\s*applyAddFriendsForm\.username,\s*message:\s*applyAddFriendsForm\.applyFriendMessage,\s*\};[\s\S]*?addContact\(request\)/s,
 );
 assert.doesNotMatch(addFriendsSource, /\breason:\s*applyAddFriendsForm\.applyFriendMessage/);
+assert.match(
+  addFriendsSource,
+  /\[SDK5 Contact\] addContact request/,
+  'Friend-invitation diagnostics must log the exact WebSDK 5.0 request boundary.',
+);
+assert.match(
+  addFriendsSource,
+  /\[SDK5 Contact\] addContact succeeded/,
+  'Friend-invitation diagnostics must log SDK 5.0 request success.',
+);
+assert.match(
+  addFriendsSource,
+  /\[SDK5 Contact\] addContact failed/,
+  'Friend-invitation diagnostics must preserve the SDK 5.0 request failure.',
+);
 
 // Friend requests are notification-driven only: the invited user receives the
 // SDK callback and it is forwarded to the notification store without polling.
 assert.match(contactListenerSource, /onContactInvited:\s*\(data\)\s*=>/);
+assert.match(
+  contactListenerSource,
+  /\[SDK5 Contact\] onContactInvited received/,
+  'Friend-invitation diagnostics must log the real SDK 5.0 inbound event payload.',
+);
 assert.match(
   contactListenerSource,
   /onDispatchContactEvent\(\s*CONTACT_OPERATION_CUSTOM_TYPE\.CONTACT_INVITED,\s*data,\s*\)/s,

@@ -169,18 +169,21 @@ const handleClickBtn = ({ informData, index, type }) => {
             <template #header>
               <div class="card-header">
                 <span
-                  >{{ item.title }}
-                  {{
-                    (item.fromType === INFORM_FROM.GROUP &&
-                      `(${item.groupId})`) ||
-                    ''
+                  >{{
+                    item.fromType === INFORM_FROM.GROUP && item.sdk5EventName
+                      ? item.sdk5EventName
+                      : item.title
                   }}</span
                 >
               </div>
             </template>
             <span v-if="item.untreated" class="badge"></span>
             <div class="card-main">
-              <div class="text item">{{ item.from }}：{{ item.desc }}</div>
+              <pre
+                v-if="item.fromType === INFORM_FROM.GROUP && item.sdk5EventName"
+                class="text item sdk5-payload"
+              >{{ JSON.stringify(item.sdk5Payload, null, 2) }}</pre>
+              <div v-else class="text item">{{ item.from }}：{{ item.desc }}</div>
               <el-dropdown
                 v-if="item.isOpearationBtn && item.operationStatus < 1"
                 trigger="click"
@@ -316,6 +319,10 @@ const handleClickBtn = ({ informData, index, type }) => {
           max-width: 80%;
           word-break: break-all;
           white-space: wrap;
+        }
+
+        .sdk5-payload {
+          white-space: pre-wrap;
         }
       }
     }

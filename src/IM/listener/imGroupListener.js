@@ -81,7 +81,7 @@ export const imGroupListener = () => {
       case 'onMembersJoined':
         return { ...base, operation: GROUP_OPERATION_TYPE.MEMBERS_PRESENCE, members: normalizeSdk5UserIds(payload.members) };
       case 'onMembersExited':
-        return { ...base, operation: GROUP_OPERATION_TYPE.MEMBERS_ABSENCE, from: normalizeSdk5UserIds(payload.members)[0] || '', members: normalizeSdk5UserIds(payload.members) };
+        return { ...base, operation: GROUP_OPERATION_TYPE.MEMBERS_ABSENCE, members: normalizeSdk5UserIds(payload.members) };
       case 'onAnnouncementChanged':
         return { ...base, operation: payload.announcement ? GROUP_OPERATION_TYPE.UPDATE_ANNOUNCEMENT : GROUP_OPERATION_TYPE.DELETE_ANNOUNCEMENT };
       case 'onSharedFileAdded':
@@ -132,41 +132,19 @@ export const imGroupListener = () => {
             reset: true,
           });
           refreshGroupDetailFromServer(groupId);
-        }
-        break;
-      //入群通知
-      case GROUP_OPERATION_TYPE.MEMBER_PRESENCE:
-        {
-          if (typeof groupevent.memberCount === 'number') {
-            store.commit('UPDATE_CACHE_GROUP_INFO', {
-              groupId,
-              type: 'groupMemberCount',
-              params: groupevent.memberCount,
-            });
-          }
-          store.commit('UPDATE_GROUP_MEMBERS', {
+          store.dispatch('fetchGroupsMemberFromServer', {
             groupId,
-            type: GROUP_OPERATION_TYPE.MEMBER_PRESENCE,
-            member: from,
+            chatType: 'groupChat',
           });
-          refreshGroupDetailFromServer(groupId);
         }
         break;
-      //群成员退群通知
+      case GROUP_OPERATION_TYPE.MEMBER_PRESENCE:
       case GROUP_OPERATION_TYPE.MEMBER_ABSENCE:
       case GROUP_OPERATION_TYPE.MEMBERS_ABSENCE:
         {
-          if (typeof groupevent.memberCount === 'number') {
-            store.commit('UPDATE_CACHE_GROUP_INFO', {
-              groupId,
-              type: 'groupMemberCount',
-              params: groupevent.memberCount,
-            });
-          }
-          store.commit('UPDATE_GROUP_MEMBERS', {
+          store.dispatch('fetchGroupsMemberFromServer', {
             groupId,
-            type: GROUP_OPERATION_TYPE.MEMBER_ABSENCE,
-            member: from,
+            chatType: 'groupChat',
           });
           refreshGroupDetailFromServer(groupId);
         }
@@ -264,13 +242,24 @@ export const imGroupListener = () => {
   const mountGroupEventListener = () => {
     const onSdk5GroupEvent = (eventName, payload) => {
       const groupevent = normalizeSdk5GroupEvent(eventName, payload);
+      if (eventName === 'onMembersExited') {
+        console.log('[SDK 5.0 Group Event] onMembersExited', {
+          groupId: payload.groupId,
+          members: payload.members,
+          rawEvent: payload,
+        });
+      }
       console.log('[SDK 5.0 Group Event] received', {
         eventName,
         rawEvent: payload,
         normalizedEvent: groupevent,
       });
       if (!groupevent) return;
-      submitInformData(INFORM_FROM.GROUP, groupevent);
+      submitInformData(INFORM_FROM.GROUP, {
+        ...groupevent,
+        sdk5EventName: eventName,
+        sdk5Payload: payload,
+      });
       onDispatchGroupEvent(groupevent);
     };
     requireManager('groupManager').addEventHandler(

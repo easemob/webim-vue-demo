@@ -92,7 +92,7 @@ assert.match(
 );
 assert.match(
   groupAdapter,
-  /userId: item\.user\?\.userId,\s*role: item\.role,\s*joinedTime: item\.joinedAt,/s,
+  /userId: item\.user\?\.userId,\s*role: item\.role,\s*joinedAt: item\.joinedAt,/s,
   'SDK 5.0 group members must normalize GroupMemberEntry.user.userId and joinedAt.',
 );
 assert.match(
@@ -115,6 +115,21 @@ assert.match(
   createGroups,
   /buildCreateGroupPayload\(groupCreateForm\)/,
   'The UI must call the SDK 5.0 create-group adapter.',
+);
+assert.match(
+  createGroups,
+  /await store\.dispatch\('addCreatedGroupToJoinedList', groupId\)/,
+  'A newly created group must be added from the SDK 5.0 server detail before local sync catches up.',
+);
+assert.match(
+  source,
+  /addCreatedGroupToJoinedList: async \(\{ commit \}, groupId\) => \{[\s\S]*?groupManager\(\)\.getGroupInfo\(\{ groupId \}\)[\s\S]*?commit\('UPSERT_JOINED_GROUP', groupDetail\)/,
+  'Created groups must be populated from the SDK 5.0 getGroupInfo result, not a fabricated legacy object.',
+);
+assert.match(
+  source,
+  /UPSERT_JOINED_GROUP: \(state, group\) => \{/,
+  'The store must upsert the created SDK 5.0 group into the joined-group list.',
 );
 assert.doesNotMatch(createGroups, /buildCreateGroupVNextPayload/);
 assert.match(
@@ -142,7 +157,7 @@ assert.match(groupMembers, /groupDetail\.maxMembers/);
 assert.doesNotMatch(groupMembers, /groupDetail\.maxusers/);
 assert.match(
   groupMembers,
-  /item\?\.userId \|\| item\?\.member \|\| item\?\.owner/,
+  /item\?\.userId \|\| ''/,
   'SDK 5.0 group member rows must render the normalized userId.',
 );
 assert.match(

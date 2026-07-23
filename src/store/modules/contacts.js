@@ -208,8 +208,13 @@ const Contacts = {
     },
     //订阅好友的在线状态
     subFriendsPresence: async ({ commit }, users) => {
+      const validUserIds = Array.isArray(users)
+        ? users
+            .filter((userId) => typeof userId === 'string' && userId.trim())
+            .map((userId) => userId.trim())
+        : [];
       const requestTask = [];
-      const usersArr = _.chunk([...users], 100); //分拆users 订阅好友状态一次不能超过100个
+      const usersArr = _.chunk(validUserIds, 100); //分拆users 订阅好友状态一次不能超过100个
       try {
         usersArr.length > 0 &&
           usersArr.map((userItem) =>
@@ -230,7 +235,7 @@ const Contacts = {
           commit('SET_CONTACTS_PRESENCE_TO_MAP', list);
         }
         console.log('[环信 Presence] subscribePresence 已请求', {
-          userIds: users,
+          userIds: validUserIds,
           snapshotCount: list.length,
           snapshot: list,
         });

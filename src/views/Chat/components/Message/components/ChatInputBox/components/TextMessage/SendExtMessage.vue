@@ -6,10 +6,10 @@
     width="500px"
     @close="onDialogClose"
   >
-    <el-form label-position="top" class="ext-msg-form">
+    <el-form label-position="top" class="ext-message-form">
       <el-form-item label="文本内容" required>
         <el-input
-          v-model="form.msg"
+          v-model="form.content"
           type="textarea"
           :rows="3"
           placeholder="请输入消息内容"
@@ -44,11 +44,11 @@ import { useUserInfoExt } from '@/hooks';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 
 const props = defineProps({
-  chatType: {
+  conversationType: {
     type: String,
     required: true,
   },
-  targetId: {
+  conversationId: {
     type: String,
     default: '',
     required: true,
@@ -63,14 +63,19 @@ const props = defineProps({
   },
 });
 
-const { chatType, targetId, isChatThread, deliverOnlineOnlyOptions } =
+const {
+  conversationType,
+  conversationId,
+  isChatThread,
+  deliverOnlineOnlyOptions,
+} =
   toRefs(props);
 const { setUserInfoExt } = useUserInfoExt();
 
 const dialogVisible = ref(false);
 const sending = ref(false);
 const form = ref({
-  msg: 'message content',
+  content: 'message content',
   extStr: '{"key1":"Self-defined value1","key2":{"key3":"Self-defined value3"}}',
 });
 
@@ -79,18 +84,18 @@ const closeDialog = () => {
 };
 
 const onDialogClose = () => {
-  form.value.msg = 'message content';
+  form.value.content = 'message content';
   form.value.extStr =
     '{"key1":"Self-defined value1","key2":{"key3":"Self-defined value3"}}';
 };
 
 const sendExtMessage = async () => {
-  const msg = (form.value.msg || '').trim();
-  if (!msg) {
+  const content = (form.value.content || '').trim();
+  if (!content) {
     ElMessage.warning('请输入消息内容');
     return;
   }
-  if (!targetId.value) {
+  if (!conversationId.value) {
     ElMessage.error('请先选择聊天对象');
     return;
   }
@@ -118,18 +123,21 @@ const sendExtMessage = async () => {
   }
 
   const msgOptions = {
-    to: targetId.value,
-    chatType: chatType.value,
+    conversationId: conversationId.value,
+    conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    msg,
+    content,
     ext,
   };
   setUserInfoExt(msgOptions);
 
   sending.value = true;
   try {
-    const message = createMessage('txt', msgOptions);
-    const sentMessage = await sendMessage(message, deliverOnlineOnlyOptions.value);
+    const messageToSend = createMessage('text', msgOptions);
+    const sentMessage = await sendMessage(
+      messageToSend,
+      deliverOnlineOnlyOptions.value,
+    );
     await store.dispatch('senedShowTypeMessage', sentMessage);
     ElMessage.success('扩展消息发送成功');
     closeDialog();
@@ -153,7 +161,7 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
-.ext-msg-form {
+.ext-message-form {
   :deep(.el-textarea__inner) {
     border-radius: 4px;
   }

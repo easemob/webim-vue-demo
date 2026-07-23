@@ -1,9 +1,10 @@
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 
 export const MAX_DIRECTED_MESSAGE_RECEIVERS = 21;
 
-export const supportsDirectedMessage = (chatType) =>
-  chatType === CHAT_TYPE.GROUP || chatType === CHAT_TYPE.CHATROOM;
+export const supportsDirectedMessage = (conversationType) =>
+  conversationType === CONVERSATION_TYPE.GROUP ||
+  conversationType === CONVERSATION_TYPE.CHATROOM;
 
 export const normalizeReceiverList = (value) => {
   if (Array.isArray(value)) {

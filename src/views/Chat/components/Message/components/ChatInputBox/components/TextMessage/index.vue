@@ -2,7 +2,7 @@
 import { ref, toRefs, computed, onMounted, onUpdated } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 import { MENTION_ALL } from '@/constant';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { createMessage, sendMessage } from '@/IM/sdk5/chat';
 import { getCurrentUserId } from '@/IM';
 import { useGetUserMapInfo, useUserInfoExt } from '@/hooks';
@@ -12,12 +12,12 @@ import { notifySdkSendError } from '@/utils/handleSomeData';
 import VueAt from 'vue-at/dist/vue-at-textarea'; // for textarea
 import { ElMessage } from 'element-plus';
 const props = defineProps({
-  chatType: {
+  conversationType: {
     type: String,
-    default: CHAT_TYPE.SINGLE,
+    default: CONVERSATION_TYPE.SINGLE,
     required: true,
   },
-  targetId: {
+  conversationId: {
     type: String,
     default: '',
     required: true,
@@ -26,7 +26,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  groupId: {
+  parentConversationId: {
     type: String,
     default: '',
   },
@@ -36,10 +36,10 @@ const props = defineProps({
   },
 });
 const {
-  chatType,
-  targetId,
+  conversationType,
+  conversationId,
   isChatThread,
-  groupId,
+  parentConversationId,
   deliverOnlineOnlyOptions,
 } = toRefs(props);
 const emit = defineEmits([
@@ -60,14 +60,16 @@ onUpdated(() => {
  */
 const { getUserDisplayNameById } = useGetUserMapInfo();
 //AT 逻辑
-const atGroupId = computed(() => groupId.value || targetId.value);
+const atGroupId = computed(
+  () => parentConversationId.value || conversationId.value,
+);
 const atMembersList = computed(() => {
   const members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }];
   //TODO text部分应为获取群组成员的自定义属性，待后续增加可设置自定在群组当中的自定义属性。
   if (atGroupId.value) {
     const sourceMembers =
       store.getters.getGroupMembersMap.get(atGroupId.value) ||
-      store.dispatch('fetchGroupsMemberFromServer', { groupId: atGroupId.value, chatType: chatType.value }) ||
+      store.dispatch('fetchGroupsMemberFromServer', { groupId: atGroupId.value }) ||
       [];
     sourceMembers.length &&
       sourceMembers.forEach((item) => {
@@ -151,21 +153,20 @@ const { setUserInfoExt } = useUserInfoExt();
 const sendTextMessage = _.debounce(async () => {
   //如果输入框全部为空格同样拒绝发送
   if (textContent.value.match(/^\s*$/)) return;
-  //验证targetId是否有效
-  if (!targetId.value || targetId.value === '') {
+  if (!conversationId.value) {
     console.error('发送文本消息失败: 缺少目标ID');
     ElMessage.error('发送文本消息失败: 请先选择聊天对象');
     return;
   }
   checkAtMembers(textContent.value);
   const msgOptions = {
-    to: targetId.value,
-    chatType: chatType.value,
+    conversationId: conversationId.value,
+    conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    ...(chatType.value === CHAT_TYPE.GROUP
-      ? { msgConfig: { allowGroupAck: true } }
+    ...(conversationType.value === CONVERSATION_TYPE.GROUP
+      ? { needReadReceipt: true }
       : {}),
-    msg: textContent.value,
+    content: textContent.value,
     ext: {
       em_at_list: isAtAll.value
         ? MENTION_ALL.VALUE
@@ -184,10 +185,10 @@ const sendTextMessage = _.debounce(async () => {
   emit('getMessageQuoteContent', callback);
   textContent.value = '';
   try {
-    const msg = createMessage('txt', msgOptions);
-    const message = await sendMessage(msg, {
+    const messageToSend = createMessage('text', msgOptions);
+    const message = await sendMessage(messageToSend, {
       ...deliverOnlineOnlyOptions.value,
-      needReadReceipt: chatType.value === CHAT_TYPE.GROUP,
+      needReadReceipt: conversationType.value === CONVERSATION_TYPE.GROUP,
     });
     await store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
@@ -202,15 +203,15 @@ const sendTextMessage = _.debounce(async () => {
 /* 监听输出面板粘贴事件 */
 const dispatchPasteEvent = (event) => {
   const items = (event.clipboardData || window.clipboardData).items;
-  const isImage = Array.from(items).some(
+  const isImage = [...items].some(
     (item) => item.kind === 'file' && item.type.startsWith('image/'),
   );
   if (isImage) {
     emit('getImageFileFromClipboard', items);
   }
 };
-const onEditMessage = (msg) => {
-  textContent.value = msg;
+const onEditMessage = (content) => {
+  textContent.value = content;
 };
 defineExpose({
   onAddOneEmoji,
@@ -219,7 +220,7 @@ defineExpose({
 });
 </script>
 <template>
-  <template v-if="chatType === CHAT_TYPE.SINGLE">
+  <template v-if="conversationType === CONVERSATION_TYPE.SINGLE">
     <textarea
       ref="editable"
       v-model="textContent"
@@ -233,7 +234,7 @@ defineExpose({
     </textarea>
   </template>
   <template
-    v-else-if="chatType === CHAT_TYPE.GROUP || chatType === CHAT_TYPE.CHATROOM"
+    v-else-if="conversationType === CONVERSATION_TYPE.GROUP || conversationType === CONVERSATION_TYPE.CHATROOM"
   >
     <vue-at :members="atMembersList" name-key="text" @insert="onInsert">
       <textarea

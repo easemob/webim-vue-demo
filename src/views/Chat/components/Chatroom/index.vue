@@ -3,15 +3,11 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useStore } from 'vuex';
 import { ElMessage } from 'element-plus';
 import { getCurrentUserId, requireManager } from '@/IM';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import router from '@/router';
 import SearchInput from '@/components/SearchInput';
 import Welcome from '@/components/Welcome';
-import {
-  CHATROOM_EVENT_OPERATIONS,
-  createChatroomEventHandler,
-  logChatroomActionResult,
-} from '@/utils/chatroomEvents';
+import { logChatroomActionResult } from '@/utils/chatroomActionLog';
 import {
   isImAuthFailedReason,
   redirectToLoginClearImSession,
@@ -49,69 +45,28 @@ const setupChatroomEventHandler = () => {
     chatRoomManager().removeEventHandler('CHATROOM');
   }
 
-  chatroomEventHandler = chatRoomManager().addEventHandler(
-    'CHATROOM',
-    createChatroomEventHandler('ChatroomIndex', (e) => {
-      switch (e.operation) {
-        case CHATROOM_EVENT_OPERATIONS.MEMBER_PRESENCE:
-        case CHATROOM_EVENT_OPERATIONS.MEMBER_ABSENCE:
-          break;
-        case CHATROOM_EVENT_OPERATIONS.DESTROY:
-          ElMessage.warning('聊天室已解散');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.REMOVE_MEMBER:
-          ElMessage.warning('你已被移出聊天室');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.UNBLOCK_MEMBER:
-          ElMessage.info('你已被移出聊天室黑名单');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.UPDATE_INFO:
-          ElMessage.info('聊天室信息已更新');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.MUTE_ALL_MEMBERS:
-          ElMessage.warning('聊天室已开启全员禁言');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.UNMUTE_ALL_MEMBERS:
-          ElMessage.success('聊天室已解除全员禁言');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.ADD_USER_TO_ALLOWLIST:
-          ElMessage.success('你已被添加到聊天室白名单');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.REMOVE_ALLOWLIST_MEMBER:
-          ElMessage.warning('你已被移出聊天室白名单');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.UPDATE_ANNOUNCEMENT:
-          ElMessage.info('聊天室公告已更新');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.DELETE_ANNOUNCEMENT:
-          ElMessage.info('聊天室公告已删除');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.MUTE_MEMBER:
-          ElMessage.warning('你已被禁言');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.UNMUTE_MEMBER:
-          ElMessage.success('你已被解除禁言');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.SET_ADMIN:
-          ElMessage.success('你已被设置为管理员');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.REMOVE_ADMIN:
-          ElMessage.warning('你已被移除管理员');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.CHANGE_OWNER:
-          ElMessage.info('聊天室所有者已变更');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.UPDATE_CHATROOM_ATTRIBUTES:
-          ElMessage.info('聊天室自定义属性已更新');
-          break;
-        case CHATROOM_EVENT_OPERATIONS.REMOVE_CHATROOM_ATTRIBUTES:
-          ElMessage.info('聊天室自定义属性已删除');
-          break;
-        default:
-          break;
-      }
-    }),
-  );
+  chatroomEventHandler = chatRoomManager().addEventHandler('CHATROOM', {
+    onChatRoomDestroyed: () => ElMessage.warning('聊天室已解散'),
+    onRemovedFromChatRoom: () => ElMessage.warning('你已被移出聊天室'),
+    onMembersJoined: () => {},
+    onMembersExited: () => {},
+    onAllMemberMuteStateChanged: (payload) => {
+      ElMessage[payload.isMuted ? 'warning' : 'success'](
+        payload.isMuted ? '聊天室已开启全员禁言' : '聊天室已解除全员禁言',
+      );
+    },
+    onAllowListAdded: () => ElMessage.success('你已被添加到聊天室白名单'),
+    onAllowListRemoved: () => ElMessage.warning('你已被移出聊天室白名单'),
+    onAnnouncementChanged: () => ElMessage.info('聊天室公告已更新'),
+    onMuteListAdded: () => ElMessage.warning('你已被禁言'),
+    onMuteListRemoved: () => ElMessage.success('你已被解除禁言'),
+    onAdminAdded: () => ElMessage.success('你已被设置为管理员'),
+    onAdminRemoved: () => ElMessage.warning('你已被移除管理员'),
+    onOwnerChanged: () => ElMessage.info('聊天室所有者已变更'),
+    onChatRoomInfoChanged: () => ElMessage.info('聊天室信息已更新'),
+    onAttributesUpdate: () => ElMessage.info('聊天室自定义属性已更新'),
+    onAttributesRemoved: () => ElMessage.info('聊天室自定义属性已删除'),
+  });
 };
 
 const isJoiningRoom = (roomId) => {
@@ -219,7 +174,7 @@ const joinChatroom = async (roomId) => {
   }
   const JOIN_CHAT_ROOM_METHOD = 'joinChatRoom';
   const joinChatRoomParams = {
-    roomId: roomId,
+    chatRoomId: roomId,
     ext: joinRoomExt.value,
     leaveOtherRooms: false,
   };
@@ -235,7 +190,7 @@ const joinChatroom = async (roomId) => {
       `\n目标聊天室ID:`,
       roomId,
     );
-    const res = await chatRoomManager().joinChatRoom({ chatRoomId: roomId, ext: joinRoomExt.value, leaveOtherRooms: false });
+    const res = await chatRoomManager().joinChatRoom(joinChatRoomParams);
 
     logChatroomActionResult(
       'ChatroomIndex',
@@ -291,8 +246,8 @@ const toChatroomMessage = (roomId) => {
   router.push({
     path: '/chat/chatroom/message',
     query: {
-      id: roomId,
-      chatType: CHAT_TYPE.CHATROOM,
+      conversationId: roomId,
+      conversationType: CONVERSATION_TYPE.CHATROOM,
     },
   });
 };

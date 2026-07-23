@@ -3,7 +3,7 @@ import { ref, toRefs, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { CHAT_TYPE, MESSAGE_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE, MESSAGE_TYPE } from '@/IM/constant';
 import { CUSTOM_MSG_EVENT_TYPE, SESSION_MESSAGE_TYPE } from '@/constant';
 import dateFormater from '@/utils/dateFormater';
 
@@ -89,7 +89,7 @@ const getLatestMessageText = (message) => {
   if (message.isRecall) return '撤回了一条消息';
   if (SESSION_MESSAGE_TYPE[message.type]) return SESSION_MESSAGE_TYPE[message.type];
   if (message.type === MESSAGE_TYPE.CUSTOM) {
-    return CUSTOM_MSG_EVENT_TYPE[message.customEvent] || '[自定义消息]';
+    return CUSTOM_MSG_EVENT_TYPE[message.body?.event] || '[自定义消息]';
   }
   if (message.type === MESSAGE_TYPE.COMMAND) return '[透传消息]';
   return message.msg || message.payload?.text || '暂无最新消息';
@@ -346,10 +346,10 @@ const openThread = (thread) => {
   router.push({
     path: '/chat/conversation/message',
     query: {
-      id: threadId,
-      chatType: CHAT_TYPE.GROUP,
+      conversationId: threadId,
+      conversationType: CONVERSATION_TYPE.GROUP,
       isChatThread: 'true',
-      groupId: groupId.value,
+      parentConversationId: groupId.value,
       threadName: getThreadName(thread),
     },
   });

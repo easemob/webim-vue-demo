@@ -45,6 +45,16 @@ assert.match(
 );
 assert.match(source, /id: payload\.groupId/);
 assert.match(source, /members: normalizeSdk5UserIds\(payload\.members\)/);
+assert.match(
+  source,
+  /case GROUP_OPERATION_TYPE\.MEMBERS_PRESENCE:[\s\S]*?fetchGroupsMemberFromServer[\s\S]*?chatType: 'groupChat'/,
+  'SDK 5.0 member-join events must refresh the real group-member snapshot.',
+);
+assert.match(
+  source,
+  /case GROUP_OPERATION_TYPE\.MEMBERS_ABSENCE:[\s\S]*?fetchGroupsMemberFromServer[\s\S]*?chatType: 'groupChat'/,
+  'SDK 5.0 member-exit events must refresh the real group-member snapshot.',
+);
 assert.match(source, /from: payload\.inviter\?\.userId/);
 assert.match(source, /from: payload\.applicant\?\.userId/);
 assert.match(source, /to: payload\.administrator\?\.userId/);

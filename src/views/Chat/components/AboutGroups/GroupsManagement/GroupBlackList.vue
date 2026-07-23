@@ -42,12 +42,12 @@ const handleAddBlackList = (memberId) => {
           //存在黑名单中移除
           await store.dispatch('removeTheMemberFromBlackList', {
             groupId: groupId.value,
-            usernames: [memberId],
+            userIds: [memberId],
           });
         } else {
           await store.dispatch('addMemberToBlackList', {
             groupId: groupId.value,
-            usernames: [memberId],
+            userIds: [memberId],
           });
         }
       }
@@ -70,7 +70,7 @@ const serachInputValue = ref('');
 const searchResultValue = ref([]);
 const searchUsers = () => {
   searchResultValue.value = getGroupMembersList.value.filter((item) => {
-    return item?.member?.includes(serachInputValue.value);
+    return item?.userId?.includes(serachInputValue.value);
   });
 };
 </script>
@@ -89,17 +89,17 @@ const searchUsers = () => {
           </el-input>
         </div>
         <div
-          v-for="{ member, owner } in !serachInputValue
+          v-for="{ userId } in !serachInputValue
             ? getGroupMembersList
             : searchResultValue"
-          :key="member || owner"
+          :key="userId"
         >
-          <template v-if="member">
+          <template v-if="userId">
             <div class="friend_user_list">
               <div class="friend_user_list_left">
-                <el-avatar :src="getUserDisplayAvatarById(member)"></el-avatar>
+                <el-avatar :src="getUserDisplayAvatarById(userId)"></el-avatar>
                 <b class="friend_list_username">{{
-                  getUserDisplayNameById(member)
+                  getUserDisplayNameById(userId)
                 }}</b>
               </div>
               <el-button
@@ -107,7 +107,7 @@ const searchUsers = () => {
                 :icon="Plus"
                 circle
                 size="small"
-                @click="handleAddBlackList(member)"
+                @click="handleAddBlackList(userId)"
               />
             </div>
             <el-divider style="margin: 12px 0" />

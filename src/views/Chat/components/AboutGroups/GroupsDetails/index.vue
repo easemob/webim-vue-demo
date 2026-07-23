@@ -115,7 +115,7 @@ const editGroupName = async (type, oldGroupName) => {
   }
 };
 const getGroupExtValue = (groupDetail = {}) => {
-  return groupDetail.ext || groupDetail.custom || '';
+  return groupDetail.ext || '';
 };
 const editGroupField = async (type, oldValue, fieldConfig) => {
   if (type === 'edit') {
@@ -288,10 +288,17 @@ const groupMutelist = computed(() => {
 const currentGroupDetail = computed(() => {
   return store.getters.getGroupDetailMap.get(groupId.value) || {};
 });
+const memberCountDisplay = computed(() => {
+  return (
+    currentGroupDetail.value.memberCount ??
+    getGroupDetailFromGroupList.value.memberCount ??
+    '-'
+  );
+});
 const maxUsersDisplay = computed(() => {
   return (
-    getGroupDetailFromGroupList.value.maxMembers ??
     currentGroupDetail.value.maxMembers ??
+    getGroupDetailFromGroupList.value.maxMembers ??
     '-'
   );
 });
@@ -486,7 +493,7 @@ onMounted(() => {
         <div class="member_count">
           {{
             `${
-              getGroupDetailFromGroupList.memberCount ?? '-'
+              memberCountDisplay
             }/${maxUsersDisplay}`
           }}
         </div>

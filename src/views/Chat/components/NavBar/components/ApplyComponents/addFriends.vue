@@ -42,9 +42,14 @@ const applyAddFriends = async () => {
       type: 'warning',
     });
   try {
-    await requireManager('contactManager').addContact({
+    const request = {
       userId: applyAddFriendsForm.username,
       message: applyAddFriendsForm.applyFriendMessage,
+    };
+    console.info('[SDK5 Contact] addContact request', request);
+    await requireManager('contactManager').addContact(request);
+    console.info('[SDK5 Contact] addContact succeeded', {
+      userId: request.userId,
     });
     ElNotification({
       title: '好友操作',
@@ -52,6 +57,10 @@ const applyAddFriends = async () => {
       type: 'success',
     });
   } catch (error) {
+    console.error('[SDK5 Contact] addContact failed', {
+      userId: applyAddFriendsForm.username,
+      error,
+    });
     ElNotification({
       title: '好友操作',
       message: '好友申请发送失败！',

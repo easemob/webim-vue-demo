@@ -2,12 +2,9 @@ import _ from 'lodash';
 import {
   createInform,
   checkLastMsgIsHasMention,
-  setMessageKey,
 } from '@/utils/handleSomeData/index';
-import messageStore from '@/store/modules/message';
 import { getCurrentUserId, requireManager } from '@/IM';
-import { INFORM_FROM } from '@/constant';
-import { GROUP_OPERATION_TYPE, CHAT_TYPE } from '@/IM/constant';
+import { CHAT_TYPE } from '@/IM/constant';
 import {
   buildConversationDndDurationParams,
   buildConversationPushQueryParams,
@@ -15,81 +12,21 @@ import {
 } from '@/utils/conversationPushSettings';
 
 //获取messageList数组中的最新一条消息
-const getLatestMessageBodyFromMessageStore = (conversationId, chatType) => {
-  // 生成正确的消息列表键
-  const listKey = setMessageKey({ to: conversationId, chatType });
-  const messageList = messageStore.state.messageList[listKey];
-  if (messageList && messageList.length) {
-    const latestMessage = messageList[messageList.length - 1];
-    return latestMessage;
-  }
-  return null;
-};
-
 const getConversationTime = (conversation) =>
-  Number(
-    conversation?.lastMessage?.time ||
-      conversation?.lastMessage?.timestamp ||
-      conversation?.lastMessageAt ||
-      0,
-  );
+  Number(conversation?.lastMessage?.timestamp || conversation?.lastMessageAt || 0);
 
 const chatManager = () => requireManager('chatManager');
 const pushManager = () => requireManager('pushManager');
-
-const toDisplayConversation = (conversation) => {
-  const lastMessage = conversation?.lastMessage
-    ? {
-        ...conversation.lastMessage,
-        time:
-          conversation.lastMessage.time ?? conversation.lastMessage.timestamp ?? 0,
-      }
-    : null;
-  return {
-    ...conversation,
-    lastMessage,
-    unReadCount: Number(conversation?.unreadCount ?? conversation?.unReadCount ?? 0),
-    pinnedTime: conversation?.pinnedTimestamp ?? conversation?.pinnedTime ?? 0,
-  };
-};
 
 const sortConversationList = (conversationList) => {
   conversationList.sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
     if (a.isPinned && b.isPinned) {
-      return Number(b.pinnedTime || b.pinnedTimestamp || 0) -
-        Number(a.pinnedTime || a.pinnedTimestamp || 0);
+      return Number(b.pinnedTimestamp || 0) - Number(a.pinnedTimestamp || 0);
     }
     return getConversationTime(b) - getConversationTime(a);
   });
-};
-
-const getFirstValidValue = (values) =>
-  values.find((value) => value !== undefined && value !== null && value !== '');
-
-const normalizeGroupEventUserIds = (value) => {
-  if (Array.isArray(value)) return value.filter(Boolean);
-  if (typeof value === 'string') {
-    return value
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-  return [];
-};
-
-const getGroupEventDisplayName = (informContent, getters, fallbackText = '') => {
-  const userId = getFirstValidValue([
-    informContent?.from,
-    informContent?.userId,
-    informContent?.invitee,
-    informContent?.applicant,
-    ...normalizeGroupEventUserIds(informContent?.users),
-    ...normalizeGroupEventUserIds(informContent?.members),
-  ]);
-  if (!userId) return fallbackText;
-  return getters['UsersProfile/getDisplayName'](userId) || userId;
 };
 
 const Conversation = {
@@ -129,28 +66,22 @@ const Conversation = {
         (c) => c.conversationId === conversationItem.conversationId,
       );
 
-      // 确保会话对象的lastMessage存在
-      if (!conversationItem.lastMessage) {
-        conversationItem.lastMessage = {};
-      }
-
       if (_index > -1) {
         const existing = list[_index];
         list[_index] = {
           ...existing,
           ...conversationItem,
-          lastMessage: conversationItem.lastMessage || existing.lastMessage,
+          lastMessage: conversationItem.lastMessage,
           customField: {
             ...(existing.customField || {}),
             ...(conversationItem.customField || {}),
           },
-          unReadCount: Number(conversationItem.unReadCount || 0),
+          unreadCount: Number(conversationItem.unreadCount || 0),
         };
       } else {
         // 添加新会话到列表开头
         list.unshift({
           customField: {},
-          unReadCount: 0,
           ...conversationItem,
         });
       }
@@ -176,7 +107,7 @@ const Conversation = {
       list?.length &&
         list.forEach((conversationItem) => {
           if (conversationItem.conversationId === conversationId) {
-            conversationItem.unReadCount = 0;
+            conversationItem.unreadCount = 0;
           }
         });
     },
@@ -227,8 +158,8 @@ const Conversation = {
         );
         if (existingConversation) {
           existingConversation.isPinned = pinnedItem.isPinned ?? true;
-          existingConversation.pinnedTime = existingConversation.isPinned
-            ? pinnedItem.pinnedTime || Date.now()
+          existingConversation.pinnedTimestamp = existingConversation.isPinned
+            ? pinnedItem.pinnedTimestamp || Date.now()
             : 0;
         }
       });
@@ -255,112 +186,14 @@ const Conversation = {
   },
   actions: {
     //添加新系统通知
-    createNewInform: ({ dispatch, commit, getters }, params) => {
+    createNewInform: ({ commit }, params) => {
       const { fromType, informContent } = params;
       commit('UPDATE_INFORM_LIST', createInform(fromType, informContent));
-
-      // 消息生成器函数
-      const generateMessage = (type, config) => {
-        const fromName = getGroupEventDisplayName(
-          informContent,
-          getters,
-          '',
-        );
-        const memberName = getGroupEventDisplayName(
-          informContent,
-          getters,
-          '成员',
-        );
-        const baseMsg = {
-          id: Date.now() + '',
-          chatType: type === 'friend' ? CHAT_TYPE.SINGLE : CHAT_TYPE.GROUP,
-          from: informContent.from,
-          to: type === 'friend' ? informContent.to : informContent.id,
-          fromName,
-          toName:
-            type === 'friend'
-              ? getters['UsersProfile/getDisplayName'](informContent.to)
-              : getters['getGroupName'](informContent.id),
-        };
-
-        // 消息模板映射
-        const templates = {
-          friend: {
-            unsubscribed: '你俩的友尽了，可重新发起好友申请',
-            subscribed: '你们已成为你的好友,开始聊天吧',
-          },
-          group: {
-            [GROUP_OPERATION_TYPE.CREATE]: `${baseMsg.fromName}创建了群组`,
-            [GROUP_OPERATION_TYPE.MEMBER_PRESENCE]: `${memberName}加入了群组`,
-            [GROUP_OPERATION_TYPE.MEMBERS_PRESENCE]: `${memberName}加入了群组`,
-            [GROUP_OPERATION_TYPE.MEMBER_ABSENCE]: `${baseMsg.fromName}退出了群组`,
-            [GROUP_OPERATION_TYPE.MEMBERS_ABSENCE]: `${baseMsg.fromName}移除了多个群成员`,
-            [GROUP_OPERATION_TYPE.UPDATE_ANNOUNCEMENT]: `${baseMsg.fromName}更新了群组公告，去看看更新的什么吧~`,
-            [GROUP_OPERATION_TYPE.DELETE_ANNOUNCEMENT]: `${baseMsg.fromName}删除了群组公告`,
-            [GROUP_OPERATION_TYPE.SET_ADMIN]: `${baseMsg.fromName}设定${baseMsg.toName}为管理员~`,
-            [GROUP_OPERATION_TYPE.REMOVE_ADMIN]: `${baseMsg.fromName}移除了${baseMsg.toName}的管理员身份~`,
-            [GROUP_OPERATION_TYPE.CHANGE_OWNER]: `${baseMsg.fromName}转让了群组`,
-            [GROUP_OPERATION_TYPE.INVITE_TO_JOIN]: `${baseMsg.fromName}邀请你加入群组`,
-            [GROUP_OPERATION_TYPE.ACCEPT_INVITE]: `${getGroupEventDisplayName(informContent, getters, '成员')}接受了入群邀请`,
-            [GROUP_OPERATION_TYPE.REJECT_INVITE]: `${getGroupEventDisplayName(informContent, getters, '成员')}拒绝了入群邀请`,
-            [GROUP_OPERATION_TYPE.REQUEST_TO_JOIN]: `${baseMsg.fromName}申请加入群组`,
-            [GROUP_OPERATION_TYPE.JOIN_PUBLIC_GROUP_DECLINED]: `${baseMsg.fromName}的入群申请被拒绝`,
-            [GROUP_OPERATION_TYPE.MUTE_MEMBER]: `${
-              baseMsg.fromName
-            }禁言了${config.getTargetName()}~`,
-            [GROUP_OPERATION_TYPE.UNMUTE_MEMBER]: `${
-              baseMsg.fromName
-            }取消了${config.getTargetName()}的禁言~`,
-            [GROUP_OPERATION_TYPE.MUTE_ALL_MEMBERS]: `${baseMsg.fromName}开启了全员禁言`,
-            [GROUP_OPERATION_TYPE.UNMUTE_ALL_MEMBERS]: `${baseMsg.fromName}关闭了全员禁言`,
-            [GROUP_OPERATION_TYPE.ADD_USER_TO_ALLOWLIST]: `${baseMsg.fromName}添加了群白名单成员`,
-            [GROUP_OPERATION_TYPE.REMOVE_ALLOWLIST_MEMBER]: `${baseMsg.fromName}移除了群白名单成员`,
-            [GROUP_OPERATION_TYPE.UNBLOCK_MEMBER]: `${baseMsg.fromName}将成员移出了黑名单`,
-            [GROUP_OPERATION_TYPE.REMOVE_MEMBER]: `${baseMsg.fromName}将你移出了群组${baseMsg.toName}~`,
-            [GROUP_OPERATION_TYPE.DESTROY]: `${baseMsg.fromName}解散了该群~`,
-            [GROUP_OPERATION_TYPE.UPDATE_INFO]: `${baseMsg.fromName}更新了群组详情~`,
-            [GROUP_OPERATION_TYPE.DIRECT_JOINED]: `${baseMsg.fromName}直接将你加入了群组`,
-            [GROUP_OPERATION_TYPE.MEMBER_ATTRIBUTES_UPDATE]: `${baseMsg.fromName}修改群内昵称为【${informContent?.attributes?.nickName}】`,
-          },
-        };
-
-        return { ...baseMsg, msg: templates[type][config.operation] };
-      };
-
-      // 处理好友通知
-      if (fromType === INFORM_FROM.FRIEND) {
-        const operation = informContent.type;
-        if (['unsubscribed', 'subscribed'].includes(operation)) {
-          const config = {
-            // 新增配置对象
-            operation,
-            getTargetName: () => informContent.to || '你', // 添加默认方法
-          };
-          dispatch(
-            'createInformMessage',
-            generateMessage('friend', config), // 传入完整配置
-          );
-        }
-        return;
-      }
-
-      // 处理群组通知
-      if (fromType === INFORM_FROM.GROUP) {
-        const config = {
-          operation: informContent.operation,
-          getTargetName: () => informContent.to || '你',
-        };
-        if (Object.values(GROUP_OPERATION_TYPE).includes(config.operation)) {
-          dispatch('createInformMessage', generateMessage('group', config));
-        }
-      }
     },
     //从本地加载会话列表数据
     getConversationListFromLocal: async ({ dispatch, commit }) => {
       try {
-        const conversationList = chatManager()
-          .getConversationList()
-          .map(toDisplayConversation);
+        const conversationList = chatManager().getConversationList();
         sortConversationList(conversationList);
         commit('GET_CONVERSATION_LIST_FROM_LOCAL', conversationList);
         dispatch('callGroupDetailWithConversationId', conversationList);
@@ -377,9 +210,7 @@ const Conversation = {
     getConversationListFromServer: async ({ state, commit, dispatch }, params) => {
       const { isInit } = params || {};
       try {
-        const allConversations = chatManager()
-          .getConversationList()
-          .map(toDisplayConversation);
+        const allConversations = chatManager().getConversationList();
 
         commit('GET_CONVERSATION_LIST_FROM_SERVER', {
           isInit: isInit !== false,
@@ -401,9 +232,7 @@ const Conversation = {
     //获取服务端置顶会话列表
     getServerPinnedConversations: async ({ commit }, params) => {
       try {
-        const conversations = chatManager()
-          .getConversationList({ isPinned: true })
-          .map(toDisplayConversation);
+        const conversations = chatManager().getConversationList({ isPinned: true });
         commit('UPDATE_CONVERSATION_PIN_STATUS', conversations);
         return { conversations };
       } catch (error) {
@@ -417,9 +246,7 @@ const Conversation = {
         filter,
       } = params || {};
       try {
-        const conversations = chatManager()
-          .getConversationList(filter)
-          .map(toDisplayConversation);
+        const conversations = chatManager().getConversationList(filter);
         commit('GET_CONVERSATION_LIST_FROM_SERVER', {
           isInit: true,
           conversationListData: conversations,
@@ -438,79 +265,41 @@ const Conversation = {
     },
     //更新Store中的会话列表（数据来源为本地会话插件）
     updateConversationWithLocal: async ({ commit }, params) => {
-      const { conversationId, chatType } = params;
+      const { conversationId, conversationType } = params;
       try {
         const conversation = chatManager()
           .getConversationList()
           .find(
             (item) =>
               item.conversationId === conversationId &&
-              item.conversationType === chatType,
+              item.conversationType === conversationType,
           );
-        if (!conversation) return;
-        const displayConversation = toDisplayConversation(conversation);
-        displayConversation.customField = {
-          ...(displayConversation.customField || {}),
-          mention: checkLastMsgIsHasMention(displayConversation.lastMessage),
-        };
-        commit('UPDATE_CONVERSATION_LIST', displayConversation);
+        if (!conversation) {
+          console.error('[Conversation] SDK 5.0 cache has no conversation snapshot', {
+            conversationId,
+            conversationType,
+          });
+          return;
+        }
+        commit('UPDATE_CONVERSATION_LIST', {
+          ...conversation,
+          customField: {
+            mention: checkLastMsgIsHasMention(conversation.lastMessage),
+          },
+        });
       } catch (error) {
         console.error('[Conversation] getLocalConversation failed', {
           conversationId,
-          chatType,
+          conversationType,
           error,
         });
       }
     },
-    //更新Store中的会话列表（远端会话会在环信服务自动更新。）
-    updateConversationWithServer: async ({ state, commit }, params) => {
-      const { conversationId, chatType, incrementUnread = true } = params;
-
-      //从messageStore中获取最新一条消息
-      const latestMessage = getLatestMessageBodyFromMessageStore(
-        conversationId,
-        chatType,
-      );
-
-      if (!latestMessage) return;
-
-      const conversationItem = state.conversationListFromServer.find(
-        (c) => c.conversationId === conversationId,
-      );
-      const isUnreadMessage = latestMessage.from !== getCurrentUserId();
-
-      //如果缓存中存在会话则直接更新
-      if (conversationItem) {
-        commit('UPDATE_CONVERSATION_LIST', {
-          ...conversationItem,
-          lastMessage: latestMessage,
-          customField: {
-            ...(conversationItem.customField || {}),
-            mention:
-              conversationItem.customField?.mention ||
-              checkLastMsgIsHasMention(latestMessage),
-          },
-          unReadCount:
-            Number(conversationItem.unReadCount || 0) +
-            (isUnreadMessage && incrementUnread ? 1 : 0),
-        });
-      } //如果本地没有则手动创建一个同结构的会话数据
-      else {
-        const toBeUpdateConversationItem = {
-          conversationId,
-          conversationType: chatType,
-          unReadCount: isUnreadMessage && incrementUnread ? 1 : 0,
-          lastMessage: latestMessage,
-          customField: {
-            mention: checkLastMsgIsHasMention(latestMessage),
-          },
-        };
-        commit('UPDATE_CONVERSATION_LIST', toBeUpdateConversationItem);
-      }
-    },
-    //更新缓存中的会话列表
+    //更新缓存中的会话列表，只读取 SDK 5.0 的会话快照。
+    updateConversationWithServer: async ({ dispatch }, params) =>
+      dispatch('updateConversationWithLocal', params),
     updateConversationList: async ({ dispatch }, params) => {
-      dispatch('updateConversationWithServer', params);
+      return dispatch('updateConversationWithServer', params);
     },
     //删除会话列表（本地以及远端）
     removeLocalConversation: async ({ state, commit }, params) => {
@@ -535,7 +324,7 @@ const Conversation = {
         const result = await pushManager().getConversationSilentMode(options);
         console.log('获取单个会话推送通知设置成功', {
           conversationId: options.conversationId,
-          chatType: options.conversationType,
+          conversationType: options.conversationType,
           currentUser: getCurrentUserId(),
           result,
         });
@@ -543,7 +332,7 @@ const Conversation = {
       } catch (error) {
         console.error('获取单个会话推送通知设置失败', {
           conversationId: options.conversationId,
-          chatType: options.conversationType,
+          conversationType: options.conversationType,
           currentUser: getCurrentUserId(),
           error,
         });
@@ -557,7 +346,7 @@ const Conversation = {
         const result = await pushManager().setConversationSilentMode(options);
         console.log('设置单个会话推送通知方式成功', {
           conversationId: options.conversationId,
-          chatType: options.conversationType,
+          conversationType: options.conversationType,
           remindType,
           currentUser: getCurrentUserId(),
           result,
@@ -566,7 +355,7 @@ const Conversation = {
       } catch (error) {
         console.error('设置单个会话推送通知方式失败', {
           conversationId: options.conversationId,
-          chatType: options.conversationType,
+          conversationType: options.conversationType,
           remindType,
           currentUser: getCurrentUserId(),
           error,
@@ -584,7 +373,7 @@ const Conversation = {
         const result = await pushManager().setConversationSilentMode(options);
         console.log('设置单个会话免打扰时长成功', {
           conversationId: options.conversationId,
-          chatType: options.conversationType,
+          conversationType: options.conversationType,
           durationMinutes,
           duration: options.rule.duration,
           currentUser: getCurrentUserId(),
@@ -594,7 +383,7 @@ const Conversation = {
       } catch (error) {
         console.error('设置单个会话免打扰时长失败', {
           conversationId: options.conversationId,
-          chatType: options.conversationType,
+          conversationType: options.conversationType,
           durationMinutes,
           duration: options.rule.duration,
           currentUser: getCurrentUserId(),
@@ -609,7 +398,7 @@ const Conversation = {
         const result = await pushManager().clearConversationRemindType(options);
         console.log('清除单个会话推送通知方式成功', {
           conversationId: options.conversationId,
-          chatType: options.conversationType,
+          conversationType: options.conversationType,
           currentUser: getCurrentUserId(),
           result,
         });
@@ -617,7 +406,7 @@ const Conversation = {
       } catch (error) {
         console.error('清除单个会话推送通知方式失败', {
           conversationId: options.conversationId,
-          chatType: options.conversationType,
+          conversationType: options.conversationType,
           currentUser: getCurrentUserId(),
           error,
         });
@@ -626,26 +415,23 @@ const Conversation = {
     },
     //设置会话已读（发送会话已读回执。）
     clearConversationUnreadCount: async ({ state, commit }, params) => {
-      if (!params || !params.conversationId || !params.chatType) {
+      if (!params || !params.conversationId || !params.conversationType) {
         console.error('clearConversationUnreadCount 参数错误:', params);
         return;
       }
 
-      const { conversationId, chatType } = params;
-      if (![CHAT_TYPE.SINGLE, CHAT_TYPE.GROUP].includes(chatType)) {
-        return;
-      }
+      const { conversationId, conversationType } = params;
 
       try {
         await chatManager().clearConversationUnreadMessageCount({
           conversationId,
-          conversationType: chatType,
+          conversationType,
         });
         commit('CLEAR_CONVERSATION_ITEM_UNREAD_COUNT', conversationId);
       } catch (error) {
         console.error('[Conversation] clearConversationUnreadCount failed', {
           conversationId,
-          chatType,
+          conversationType,
           error,
         });
       }

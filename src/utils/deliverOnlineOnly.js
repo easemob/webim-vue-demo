@@ -1,10 +1,11 @@
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 
 export const DELIVER_ONLINE_ONLY_VALUE = 'true';
 
-export const supportsDeliverOnlineOnly = (chatType, isChatThread = false) =>
+export const supportsDeliverOnlineOnly = (conversationType, isChatThread = false) =>
   !isChatThread &&
-  (chatType === CHAT_TYPE.SINGLE || chatType === CHAT_TYPE.GROUP);
+  (conversationType === CONVERSATION_TYPE.SINGLE ||
+    conversationType === CONVERSATION_TYPE.GROUP);
 
 export const buildDeliverOnlineOnlyOptions = (enabled) =>
   enabled ? { deliverOnlineOnly: DELIVER_ONLINE_ONLY_VALUE } : {};

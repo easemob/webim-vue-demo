@@ -45,11 +45,11 @@ import { createMessage, sendMessage } from '@/IM/sdk5/chat';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 
 const props = defineProps({
-  chatType: {
+  conversationType: {
     type: String,
     required: true,
   },
-  targetId: {
+  conversationId: {
     type: String,
     default: '',
     required: true,
@@ -64,7 +64,12 @@ const props = defineProps({
   },
 });
 
-const { chatType, targetId, isChatThread, deliverOnlineOnlyOptions } =
+const {
+  conversationType,
+  conversationId,
+  isChatThread,
+  deliverOnlineOnlyOptions,
+} =
   toRefs(props);
 
 const dialogVisible = ref(false);
@@ -103,28 +108,29 @@ const sendCmdMessage = async () => {
     }
   }
 
-  if (!targetId.value) {
+  if (!conversationId.value) {
     ElMessage.error('请先选择聊天对象');
     return;
   }
 
-  const msgOptions = {
-    chatType: chatType.value,
-    to: targetId.value,
+  const messageOptions = {
+    conversationType: conversationType.value,
+    conversationId: conversationId.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
     ...deliverOnlineOnlyOptions.value,
     action,
     ext,
   };
-  setUserInfoExt(msgOptions);
+  setUserInfoExt(messageOptions);
 
   sending.value = true;
   try {
-    const msg = createMessage('cmd', msgOptions);
-    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
+    const messageToSend = createMessage('cmd', messageOptions);
+    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
     console.log('[Message Send] cmd success', {
-      targetId: targetId.value,
-      chatType: chatType.value,
+      messageId: message.msgServerId || message.msgLocalId,
+      conversationId: message.conversationId,
+      conversationType: message.conversationType,
       action,
       displayMessage: message,
     });

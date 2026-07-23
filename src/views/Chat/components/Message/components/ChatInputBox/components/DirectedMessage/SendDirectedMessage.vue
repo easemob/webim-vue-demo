@@ -6,10 +6,10 @@
     width="520px"
     @close="onDialogClose"
   >
-    <el-form label-position="top" class="directed-msg-form">
+    <el-form label-position="top" class="directed-message-form">
       <el-form-item label="消息内容" required>
         <el-input
-          v-model="form.msg"
+          v-model="form.content"
           type="textarea"
           :rows="4"
           placeholder="请输入消息内容"
@@ -24,7 +24,7 @@
           :placeholder="receiverPlaceholder"
         />
       </el-form-item>
-      <div class="directed-msg-hint">
+      <div class="directed-message-hint">
         {{
           receiverList.length > 0
             ? `当前将定向发送给 ${receiverList.length} 个成员`
@@ -49,22 +49,19 @@ import { useStore } from 'vuex';
 import { ElMessage } from 'element-plus';
 import { createMessage, sendMessage } from '@/IM/sdk5/chat';
 import { getCurrentUserId, requireManager } from '@/IM';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { useUserInfoExt } from '@/hooks';
 import { notifySdkSendError } from '@/utils/handleSomeData';
-import {
-  appendDirectedMessageOptions,
-  normalizeReceiverList,
-} from '@/utils/directedMessage';
+import { normalizeReceiverList } from '@/utils/directedMessage';
 import { getDefaultDirectedReceivers } from '@/utils/directedMessageDefaults';
 import { normalizeChatroomMembers } from '@/utils/chatroomMembers';
 
 const props = defineProps({
-  chatType: {
+  conversationType: {
     type: String,
     required: true,
   },
-  targetId: {
+  conversationId: {
     type: String,
     default: '',
     required: true,
@@ -75,7 +72,8 @@ const props = defineProps({
   },
 });
 
-const { chatType, targetId, deliverOnlineOnlyOptions } = toRefs(props);
+const { conversationType, conversationId, deliverOnlineOnlyOptions } =
+  toRefs(props);
 const store = useStore();
 const { setUserInfoExt } = useUserInfoExt();
 
@@ -83,7 +81,7 @@ const dialogVisible = ref(false);
 const sending = ref(false);
 const receiverInput = ref('');
 const form = ref({
-  msg: '这是一条定向消息',
+  content: '这是一条定向消息',
 });
 
 const receiverList = computed(() => normalizeReceiverList(receiverInput.value));
@@ -93,18 +91,20 @@ const receiverPlaceholder = computed(
 );
 
 const receiverLabel = computed(() =>
-  chatType.value === CHAT_TYPE.CHATROOM ? '聊天室成员' : '群组成员',
+  conversationType.value === CONVERSATION_TYPE.CHATROOM
+    ? '聊天室成员'
+    : '群组成员',
 );
 
 const getCachedMembers = () => {
-  if (!targetId.value) {
+  if (!conversationId.value) {
     return [];
   }
-  if (chatType.value === CHAT_TYPE.GROUP) {
-    return store.getters.getGroupMembersMap.get(targetId.value) || [];
+  if (conversationType.value === CONVERSATION_TYPE.GROUP) {
+    return store.getters.getGroupMembersMap.get(conversationId.value) || [];
   }
-  if (chatType.value === CHAT_TYPE.CHATROOM) {
-    return store.getters.getChatroomMembersMap.get(String(targetId.value)) || [];
+  if (conversationType.value === CONVERSATION_TYPE.CHATROOM) {
+    return store.getters.getChatroomMembersMap.get(String(conversationId.value)) || [];
   }
   return [];
 };
@@ -115,7 +115,7 @@ const fetchChatroomMembers = async () => {
 
   do {
     const res = await requireManager('chatRoomManager').getMemberList({
-      chatRoomId: targetId.value,
+      chatRoomId: conversationId.value,
       cursor,
       pageSize: 50,
     });
@@ -125,11 +125,27 @@ const fetchChatroomMembers = async () => {
   } while (cursor);
 
   store.commit('SET_CHATROOM_MEMBERS', {
-    chatRoomId: targetId.value,
+    chatRoomId: conversationId.value,
     members: allMembers,
   });
 
   return allMembers;
+};
+
+const fetchGroupMembers = async () => {
+  const members = [];
+  let cursor = '';
+
+  do {
+    const result = await requireManager('groupManager').getGroup(conversationId.value).getMembers({
+      cursor,
+      pageSize: 50,
+    });
+    members.push(...(result?.items || []));
+    cursor = result?.cursor || '';
+  } while (cursor);
+
+  return members;
 };
 
 const ensureMembersLoaded = async () => {
@@ -138,19 +154,15 @@ const ensureMembersLoaded = async () => {
     return cachedMembers;
   }
 
-  if (!targetId.value) {
+  if (!conversationId.value) {
     return [];
   }
 
-  if (chatType.value === CHAT_TYPE.GROUP) {
-    await store.dispatch('fetchGroupsMemberFromServer', {
-      groupId: targetId.value,
-      chatType: chatType.value,
-    });
-    return getCachedMembers();
+  if (conversationType.value === CONVERSATION_TYPE.GROUP) {
+    return fetchGroupMembers();
   }
 
-  if (chatType.value === CHAT_TYPE.CHATROOM) {
+  if (conversationType.value === CONVERSATION_TYPE.CHATROOM) {
     try {
       return await fetchChatroomMembers();
     } catch (error) {
@@ -164,9 +176,9 @@ const ensureMembersLoaded = async () => {
 
 const populateDefaultReceivers = async () => {
   if (
-    !targetId.value ||
-    (chatType.value !== CHAT_TYPE.GROUP &&
-      chatType.value !== CHAT_TYPE.CHATROOM)
+    !conversationId.value ||
+    (conversationType.value !== CONVERSATION_TYPE.GROUP &&
+      conversationType.value !== CONVERSATION_TYPE.CHATROOM)
   ) {
     receiverInput.value = '';
     return;
@@ -182,7 +194,7 @@ const populateDefaultReceivers = async () => {
 };
 
 watch(
-  () => [dialogVisible.value, targetId.value, chatType.value],
+  () => [dialogVisible.value, conversationId.value, conversationType.value],
   async ([visible]) => {
     if (!visible) {
       return;
@@ -192,7 +204,7 @@ watch(
 );
 
 const resetForm = () => {
-  form.value.msg = '这是一条定向消息';
+  form.value.content = '这是一条定向消息';
   receiverInput.value = '';
 };
 
@@ -210,20 +222,20 @@ const openDialog = async () => {
 };
 
 const sendDirectedMessage = async () => {
-  const msg = (form.value.msg || '').trim();
-  if (!msg) {
+  const content = (form.value.content || '').trim();
+  if (!content) {
     ElMessage.warning('请输入消息内容');
     return;
   }
 
-  if (!targetId.value) {
+  if (!conversationId.value) {
     ElMessage.error('请先选择聊天对象');
     return;
   }
 
   if (
-    chatType.value !== CHAT_TYPE.GROUP &&
-    chatType.value !== CHAT_TYPE.CHATROOM
+    conversationType.value !== CONVERSATION_TYPE.GROUP &&
+    conversationType.value !== CONVERSATION_TYPE.CHATROOM
   ) {
     ElMessage.error('当前会话类型不支持定向消息');
     return;
@@ -234,27 +246,27 @@ const sendDirectedMessage = async () => {
     return;
   }
 
-  const msgOptions = {
-    to: targetId.value,
-    chatType: chatType.value,
+  const messageOptions = {
+    conversationId: conversationId.value,
+    conversationType: conversationType.value,
     ...deliverOnlineOnlyOptions.value,
-    msg,
+    content,
     receiverList: receiverList.value,
     ext: {},
   };
-  setUserInfoExt(msgOptions);
+  setUserInfoExt(messageOptions);
   console.log('[Directed Message] 准备发送定向消息', {
-    targetId: targetId.value,
-    chatType: chatType.value,
+    conversationId: conversationId.value,
+    conversationType: conversationType.value,
     receiverCount: receiverList.value.length,
     receiverList: receiverList.value,
-    sdkOptions: msgOptions,
+    sdkOptions: messageOptions,
   });
 
   sending.value = true;
   try {
-    const message = createMessage('txt', msgOptions);
-    const sentMessage = await sendMessage(message, {
+    const messageToSend = createMessage('text', messageOptions);
+    const sentMessage = await sendMessage(messageToSend, {
       ...deliverOnlineOnlyOptions.value,
     });
     await store.dispatch('senedShowTypeMessage', sentMessage);
@@ -276,14 +288,14 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
-.directed-msg-hint {
+.directed-message-hint {
   margin-top: -8px;
   color: #909399;
   font-size: 12px;
   line-height: 18px;
 }
 
-.directed-msg-form {
+.directed-message-form {
   :deep(.el-textarea__inner) {
     border-radius: 4px;
   }

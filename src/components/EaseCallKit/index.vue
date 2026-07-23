@@ -1,5 +1,6 @@
 <script setup>
-import { ref, toRaw, onUnmounted } from 'vue';
+import { ref, onUnmounted } from 'vue';
+import { getClient, requireManager } from '@/IM';
 import {
   CALLSTATUS,
   CALL_ACTIONS_TYPE,
@@ -7,10 +8,7 @@ import {
   CALL_TYPES,
 } from './constants';
 import CallKitMessages from './utils/callMessages';
-import { _setImClient } from './constants/imClient';
 import { useManageChannel, useCallKitEvent } from './hooks';
-import getRtcToken from './utils/getRtcToken';
-import getChannelDetails from './utils/getChannelDetails';
 /* 组件 */
 //待确认弹出框
 import AlertModal from './alertModal.vue';
@@ -27,29 +25,11 @@ import MultiCall from './components/multiCall.vue';
             ----------confirmCallee---------->
 */
 
-/* props */
-const props = defineProps({
-  //实力化后的SDK
-  EaseIMClient: {
-    type: Object,
-    default: () => ({}),
-    required: true,
-  },
-  //消息创建方法
-  msgCreateFunc: {
-    type: Function,
-    default: () => ({}),
-    required: true,
-  },
-});
 /* emits */
 const emits = defineEmits(['onInviteMembers']);
-/* 环信相关初始化配置 */
-// const { EaseIM, connectionName } = toRefs(props)
-const { EaseIMClient, msgCreateFunc } = props;
-_setImClient(EaseIMClient, msgCreateFunc);
+const sdkClient = getClient();
 const msgListenerName = 'IM_MESSAGE';
-EaseIMClient.addEventHandler('IM_CONNECT', {
+sdkClient.addEventHandler('IM_CONNECT', {
   onConnected: () => {
     setLoginUserHxId();
     console.log('EASEIMCALLKIT_IM_CONNECTED');
@@ -61,23 +41,21 @@ EaseIMClient.addEventHandler('IM_CONNECT', {
 //设置信令监听
 const setMessageListener = () => {
   const msgListener = {
-    onTextMessage: (msg) => {
-      const { ext } = msg;
-
-      if (ext && ext?.action === CALL_ACTIONS_TYPE.INVITE)
-        handleCallKitInvite(msg);
-    },
-    onCmdMessage: (msg) => {
-      if (msg && msg?.action === CALL_ACTIONS_TYPE.RTC_CALL)
-        handleCallKitCommand(msg);
+    onMessage: (message) => {
+      if (message.type === 'text' && message.ext?.action === CALL_ACTIONS_TYPE.INVITE) {
+        handleCallKitInvite(message);
+      }
+      if (message.type === 'cmd' && message.body?.action === 'rtcCall') {
+        handleCallKitCommand(message);
+      }
     },
   };
-  EaseIMClient.addEventHandler(msgListenerName, msgListener);
+  requireManager('chatManager').addEventHandler(msgListenerName, msgListener);
 };
 setMessageListener();
 //当前登录用户ID
 const loginUserHxId = ref('');
-const setLoginUserHxId = () => (loginUserHxId.value = EaseIMClient.user || '');
+const setLoginUserHxId = () => (loginUserHxId.value = sdkClient.getCurrentUserId() || '');
 /* CallKit status */
 const callCompsType = {
   singleCall: SingleCall,
@@ -103,13 +81,14 @@ const {
 const SignalMsgs = new CallKitMessages();
 //处理收到为文本的邀请信息
 const handleCallKitInvite = (msgBody) => {
-  const { from, ext } = msgBody || {};
+  const { sender, ext } = msgBody || {};
+  const senderId = sender?.userId;
   //邀请消息发送者为自己则忽略
-  if (from === EaseIMClient.user) return;
+  if (senderId === sdkClient.getCurrentUserId()) return;
   //非空闲回复busy
   if (callKitStatus.localClientStatus > CALLSTATUS.idle) {
     const payload = {
-      targetId: from,
+      targetId: senderId,
       sendBody: ext,
     };
     SignalMsgs.sendAnswerMsg(payload, ANSWER_TYPE.BUSY);
@@ -125,11 +104,11 @@ const handleCallKitInvite = (msgBody) => {
 //处理接收到通话交互过程的CMD命令消息
 const handleCallKitCommand = (msgBody) => {
   //多端状态下信令消息发送者为自己则忽略
-  if (msgBody.from === EaseIMClient.user) return;
+  if (msgBody.sender?.userId === sdkClient.getCurrentUserId()) return;
 
   const cmdMsgBody = Object.assign({}, msgBody.ext) || {};
   const { calleeDevId, callerDevId } = cmdMsgBody;
-  const clientResource = EaseIMClient.context.jid.clientResource;
+  const clientResource = sdkClient.getClientResource();
   const { action } = cmdMsgBody;
   const { localClientStatus, channelInfos } = callKitStatus;
   //当前有效会议ID
@@ -137,7 +116,7 @@ const handleCallKitCommand = (msgBody) => {
   //返回给对方的confirmRing状态
   let status = true;
   const params = {
-    targetId: msgBody.from,
+    targetId: msgBody.sender?.userId,
     sendBody: cmdMsgBody,
     status,
   };
@@ -204,7 +183,7 @@ const handleCallKitCommand = (msgBody) => {
         updateLocalStatus(CALLSTATUS.receivedAnswerCall);
         callKitTimer.value && clearTimeout(callKitTimer.value);
         const params = {
-          targetId: msgBody.from,
+          targetId: msgBody.sender?.userId,
           sendBody: cmdMsgBody,
         };
         if (
@@ -247,7 +226,7 @@ const handleCallKitCommand = (msgBody) => {
               eventParams.ext = { message: '对方拒绝接听' };
             }
             eventParams.callType = callKitStatus.channelInfos.callType;
-            eventParams.eventHxId = msgBody.from || '';
+            eventParams.eventHxId = msgBody.sender?.userId || '';
             PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams });
             //修改当前状态为空闲
 
@@ -258,7 +237,7 @@ const handleCallKitCommand = (msgBody) => {
       break;
     case CALL_ACTIONS_TYPE.CONFIRM_CALLEE:
       {
-        if (msgBody.to === EaseIMClient.user) {
+        if (msgBody.sender?.userId === sdkClient.getCurrentUserId()) {
           if (cmdMsgBody.result && cmdMsgBody.result === ANSWER_TYPE.BUSY) {
             return;
           }
@@ -269,7 +248,7 @@ const handleCallKitCommand = (msgBody) => {
               CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.OTHER_HANDLE];
             eventParams.ext = { message: '已在其他设备处理' };
             eventParams.callType = callKitStatus.channelInfos.callType;
-            eventParams.eventHxId = msgBody.from || '';
+            eventParams.eventHxId = msgBody.sender?.userId || '';
             PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams });
             return;
           }
@@ -286,13 +265,13 @@ const handleCallKitCommand = (msgBody) => {
       }
       break;
     case CALL_ACTIONS_TYPE.CANCEL: {
-      if (msgBody.from === EaseIMClient.user) return; //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
-      if (msgBody.from === callKitStatus.channelInfos.callerIMName)
+      if (msgBody.sender?.userId === sdkClient.getCurrentUserId()) return; //【多端情况】被叫方设备id 如果不为当前用户登陆设备ID，则不处理。
+      if (msgBody.sender?.userId === callKitStatus.channelInfos.callerIMName)
         return updateLocalStatus(CALLSTATUS.idle);
       eventParams.type = CALLKIT_EVENT_TYPE[CALLKIT_EVENT_CODE.CALLER_CANCEL];
       eventParams.ext = { message: '对方取消呼叫' };
       eventParams.callType = callKitStatus.channelInfos.callType;
-      eventParams.eventHxId = msgBody.from || '';
+      eventParams.eventHxId = msgBody.sender?.userId || '';
       PUB_CHANNEL_EVENT(EVENT_NAME, { ...eventParams });
       break;
     }
@@ -393,37 +372,27 @@ const handleCancelCall = () => {
 const handleVideoToVioce = () => {
   const { calleeIMName, callerIMName, callId } = callKitStatus.channelInfos;
   const targetId =
-    calleeIMName === EaseIMClient.user ? callerIMName : calleeIMName;
+    calleeIMName === sdkClient.getCurrentUserId() ? callerIMName : calleeIMName;
   SignalMsgs.sendVideoToVioce(targetId, callId);
   callKitStatus.channelInfos.callType = CALL_TYPES.SINGLE_VOICE;
 };
 /* 获取agoraToken */
 const getAgoraRtcToken = async (callback) => {
-  const username = EaseIMClient.user;
   const channelName = callKitStatus.channelInfos.channelName;
+  if (!sdkClient.getCurrentUserId() || !channelName) return;
+  const { rtcToken, rtcUid } = await sdkClient.getRTCTokenInfo({ channelName });
 
-  if (!username && !channelName) return;
-  const { accessToken, agoraUserId } = await getRtcToken(EaseIMClient, {
-    username,
-    channelName,
-  });
-
-  callKitStatus.channelInfos.agoraChannelToken = accessToken;
-  callKitStatus.channelInfos.agoraUserId = agoraUserId;
+  callKitStatus.channelInfos.agoraChannelToken = rtcToken;
+  callKitStatus.channelInfos.agoraUserId = rtcUid;
   callback();
 };
 /* 获取channel信息 */
 const getAgoraChannelDetails = async (callback) => {
-  const username = EaseIMClient.user;
-  const channelName = callKitStatus.channelInfos.channelName;
-  if (!username && !channelName) return;
-  const { result } = await getChannelDetails(EaseIMClient, {
-    username,
-    channelName,
-  });
-
-  callKitStatus.channelInfos.channelUsers = { ...result };
-  callback();
+  const error = new Error(
+    'WebSDK 5.0.1 does not expose a channel-member query API for EaseCallKit.',
+  );
+  console.error('EASEIMCALLKIT_CHANNEL_MEMBERS_UNSUPPORTED', error);
+  throw error;
 };
 
 /* 对外通知触发邀请事件 */

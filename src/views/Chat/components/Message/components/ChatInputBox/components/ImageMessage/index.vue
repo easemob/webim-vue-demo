@@ -12,18 +12,18 @@
 <script setup>
 import { ref, toRefs } from 'vue';
 import { createMessage, sendMessage } from '@/IM/sdk5/chat';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 import { useUserInfoExt } from '@/hooks';
 import store from '@/store';
 import { ElMessage } from 'element-plus';
 const props = defineProps({
-  chatType: {
+  conversationType: {
     type: String,
-    default: CHAT_TYPE.SINGLE,
+    default: CONVERSATION_TYPE.SINGLE,
     required: true,
   },
-  targetId: {
+  conversationId: {
     type: String,
     default: '',
     required: true,
@@ -37,7 +37,12 @@ const props = defineProps({
     default: () => ({}),
   },
 });
-const { chatType, targetId, isChatThread, deliverOnlineOnlyOptions } =
+const {
+  conversationType,
+  conversationId,
+  isChatThread,
+  deliverOnlineOnlyOptions,
+} =
   toRefs(props);
 const emit = defineEmits(['onStartLoading', 'onLoadending']);
 const uploadImgs = ref(null);
@@ -48,25 +53,21 @@ const openChooseImages = () => {
 //发送图片
 const { setUserInfoExt } = useUserInfoExt();
 const sendImageFile = async (imgFile) => {
-  //验证targetId是否有效
-  if (!targetId.value || targetId.value === '') {
+  if (!conversationId.value) {
     console.error('发送图片消息失败: 缺少目标ID');
     ElMessage.error('发送图片消息失败: 请先选择聊天对象');
     return;
   }
 
-  const file = {
-    data: null, // file 对象。
-    filename: '', //文件名称。
-    filetype: '', //文件类型。
-  };
   const url = window.URL || window.webkitURL;
   const img = new Image(); //手动创建一个Image对象
-  const msgOptions = {
-    to: targetId.value,
-    chatType: chatType.value,
+  const messageOptions = {
+    conversationId: conversationId.value,
+    conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    file: file,
+    data: imgFile,
+    filename: imgFile?.name,
+    filetype: imgFile?.type,
     width: 0,
     height: 0,
     onFileUploadError: (error) => {
@@ -85,8 +86,8 @@ const sendImageFile = async (imgFile) => {
     onFileUploadProgress: (e) => {
       // 图片文件上传进度。
       console.log('[Message Upload] image progress', {
-        targetId: targetId.value,
-        chatType: chatType.value,
+        conversationId: conversationId.value,
+        conversationType: conversationType.value,
         fileName: imgFile?.name,
         loaded: e?.loaded,
         total: e?.total,
@@ -99,7 +100,7 @@ const sendImageFile = async (imgFile) => {
     },
   };
   //在消息体内携带该用户的昵称头像信息
-  setUserInfoExt(msgOptions);
+  setUserInfoExt(messageOptions);
   //读取图片的宽高
   if (!imgFile) {
     return;
@@ -113,22 +114,19 @@ const sendImageFile = async (imgFile) => {
     return;
   }
 
-  file.data = imgFile;
-  file.filename = imgFile.name;
-  file.filetype = imgFile.type;
   img.src = url.createObjectURL(imgFile); //创建Image的对象的url
   img.onload = async () => {
-    msgOptions.width = img.width;
-    msgOptions.height = img.height;
+    messageOptions.width = img.width;
+    messageOptions.height = img.height;
     try {
-      const msg = createMessage('img', msgOptions);
-      const message = await sendMessage(msg, {
+      const messageToSend = createMessage('image', messageOptions);
+      const message = await sendMessage(messageToSend, {
         ...deliverOnlineOnlyOptions.value,
-        onFileUploadError: msgOptions.onFileUploadError,
-        onFileUploadProgress: msgOptions.onFileUploadProgress,
-        onFileUploadComplete: msgOptions.onFileUploadComplete,
+        onFileUploadError: messageOptions.onFileUploadError,
+        onFileUploadProgress: messageOptions.onFileUploadProgress,
+        onFileUploadComplete: messageOptions.onFileUploadComplete,
       });
-      store.dispatch('senedShowTypeMessage', { ...message });
+      store.dispatch('senedShowTypeMessage', message);
     } catch (error) {
       notifySdkSendError(error);
     }

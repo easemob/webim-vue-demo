@@ -8,9 +8,10 @@ export const imReactionListener = () => {
       'REACTION',
       wrapImEventHandler({
         onReactionChanged: async (reactionMsg) => {
-          console.log('[Reaction] onReactionChange received', {
+            console.log('[Reaction] onReactionChange received', {
             messageId: reactionMsg?.messageId,
-            chatType: reactionMsg?.chatType,
+            conversationId: reactionMsg?.conversationId,
+            conversationType: reactionMsg?.conversationType,
             reactions: reactionMsg?.reactions,
             rawEvent: reactionMsg,
           });

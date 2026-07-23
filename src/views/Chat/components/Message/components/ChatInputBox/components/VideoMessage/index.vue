@@ -41,17 +41,17 @@
 import { ref, toRefs, computed, nextTick } from 'vue';
 import { createMessage, sendMessage } from '@/IM/sdk5/chat';
 import { notifySdkSendError } from '@/utils/handleSomeData';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { useUserInfoExt } from '@/hooks';
 import store from '@/store';
 import { ElMessage } from 'element-plus';
 const props = defineProps({
-  chatType: {
+  conversationType: {
     type: String,
-    default: CHAT_TYPE.SINGLE,
+    default: CONVERSATION_TYPE.SINGLE,
     required: true,
   },
-  targetId: {
+  conversationId: {
     type: String,
     default: '',
     required: true,
@@ -65,7 +65,12 @@ const props = defineProps({
     default: () => ({}),
   },
 });
-const { chatType, targetId, isChatThread, deliverOnlineOnlyOptions } =
+const {
+  conversationType,
+  conversationId,
+  isChatThread,
+  deliverOnlineOnlyOptions,
+} =
   toRefs(props);
 const emit = defineEmits(['onStartLoading', 'onLoadending']);
 const uploadVideo = ref(null);
@@ -142,7 +147,7 @@ function getVideoMetadata(videoFile) {
 async function sendVideoByUrl() {
   const url = videoUrlTrimmed.value;
   if (!url) return;
-  if (!targetId.value || targetId.value === '') {
+  if (!conversationId.value) {
     ElMessage.error('发送视频消息失败: 请先选择聊天对象');
     return;
   }
@@ -174,15 +179,12 @@ async function sendVideoByUrl() {
 
 async function doSendVideoFile(videoFile) {
   const metadata = await getVideoMetadata(videoFile);
-  const messageFileBody = {
+  const options = {
     data: videoFile,
     filetype: videoFile.type,
     filename: videoFile.name,
-  };
-  const options = {
-    file: messageFileBody,
-    to: targetId.value,
-    chatType: chatType.value,
+    conversationId: conversationId.value,
+    conversationType: conversationType.value,
     duration: metadata.duration,
     width: metadata.width,
     height: metadata.height,
@@ -204,18 +206,18 @@ async function doSendVideoFile(videoFile) {
     },
   };
   setUserInfoExt(options);
-  const msg = createMessage('video', options);
-  const message = await sendMessage(msg, {
+  const messageToSend = createMessage('video', options);
+  const message = await sendMessage(messageToSend, {
     ...deliverOnlineOnlyOptions.value,
     onFileUploadError: options.onFileUploadError,
     onFileUploadProgress: options.onFileUploadProgress,
     onFileUploadComplete: options.onFileUploadComplete,
   });
-  store.dispatch('senedShowTypeMessage', { ...message });
+  store.dispatch('senedShowTypeMessage', message);
 }
 
 const sendVideoMessage = async (event) => {
-  if (!targetId.value || targetId.value === '') {
+  if (!conversationId.value) {
     ElMessage.error('发送视频消息失败: 请先选择聊天对象');
     return;
   }
@@ -230,8 +232,8 @@ const sendVideoMessage = async (event) => {
     await doSendVideoFile(videoFile);
   } catch (error) {
     console.error('发送视频消息失败', {
-      targetId: targetId.value,
-      chatType: chatType.value,
+      conversationId: conversationId.value,
+      conversationType: conversationType.value,
       fileName: videoFile.name,
       error,
     });
@@ -245,7 +247,7 @@ defineExpose({
   openChooseVideo,
   openVideoDialog,
   sendPresetVideo: async () => {
-    if (!targetId.value || targetId.value === '') {
+    if (!conversationId.value) {
       ElMessage.error('发送视频消息失败: 请先选择聊天对象');
       return;
     }

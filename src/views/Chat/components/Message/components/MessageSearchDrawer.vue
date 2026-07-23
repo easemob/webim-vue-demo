@@ -3,7 +3,7 @@ import { computed, ref, toRefs, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
 import { getCurrentUserId, requireManager } from '@/IM';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 
 const props = defineProps({
   modelValue: {
@@ -13,8 +13,8 @@ const props = defineProps({
   routeQueryData: {
     type: Object,
     default: () => ({
-      id: '',
-      chatType: CHAT_TYPE.SINGLE,
+      conversationId: '',
+      conversationType: CONVERSATION_TYPE.SINGLE,
     }),
     required: true,
   },
@@ -38,9 +38,9 @@ const messageTypeOptions = [
 ];
 
 const conversationTypeOptions = [
-  { label: '单聊', value: CHAT_TYPE.SINGLE },
-  { label: '群聊', value: CHAT_TYPE.GROUP },
-  { label: '聊天室', value: CHAT_TYPE.CHATROOM },
+  { label: '单聊', value: CONVERSATION_TYPE.SINGLE },
+  { label: '群聊', value: CONVERSATION_TYPE.GROUP },
+  { label: '聊天室', value: CONVERSATION_TYPE.CHATROOM },
 ];
 
 const form = ref({
@@ -48,7 +48,7 @@ const form = ref({
   keywordListMatchType: 'or',
   inConversation: true,
   conversationId: '',
-  conversationType: CHAT_TYPE.SINGLE,
+  conversationType: CONVERSATION_TYPE.SINGLE,
   msgTypes: [],
   searchScope: 'none',
   pageNum: 1,
@@ -61,13 +61,13 @@ const searchError = ref('');
 const searchErrorType = ref('error');
 
 const currentConversationLabel = computed(() => {
-  const id = routeQueryData.value?.id || '';
-  const chatType = routeQueryData.value?.chatType || '';
-  if (!id || !chatType) return '当前会话';
+  const conversationId = routeQueryData.value?.conversationId || '';
+  const conversationType = routeQueryData.value?.conversationType || '';
+  if (!conversationId || !conversationType) return '当前会话';
   const label =
-    conversationTypeOptions.find((item) => item.value === chatType)?.label ||
-    chatType;
-  return `${label} ${id}`;
+    conversationTypeOptions.find((item) => item.value === conversationType)
+      ?.label || conversationType;
+  return `${label} ${conversationId}`;
 });
 
 const messages = computed(() => {
@@ -76,21 +76,17 @@ const messages = computed(() => {
 });
 
 const resultMeta = computed(() => ({
-  pageNum: searchResult.value?.pageNum ?? form.value.pageNum,
-  pageSize: searchResult.value?.pageSize ?? form.value.pageSize,
-  totalPages: searchResult.value?.totalPages ?? '-',
-  isLast:
-    typeof searchResult.value?.isLast === 'boolean'
-      ? searchResult.value.isLast
-      : '-',
-  requestId: searchResult.value?.requestId || '-',
-  timestamp: searchResult.value?.timestamp || '-',
+  pageNum: searchResult.value?.pageNum,
+  pageSize: searchResult.value?.pageSize,
+  totalPages: searchResult.value?.totalPages,
+  isLast: searchResult.value?.isLast,
 }));
 
 const syncConversationDefaults = () => {
-  form.value.conversationId = routeQueryData.value?.id || '';
-  form.value.conversationType = routeQueryData.value?.chatType || CHAT_TYPE.SINGLE;
-  form.value.inConversation = !!routeQueryData.value?.id;
+  form.value.conversationId = routeQueryData.value?.conversationId || '';
+  form.value.conversationType =
+    routeQueryData.value?.conversationType || CONVERSATION_TYPE.SINGLE;
+  form.value.inConversation = !!routeQueryData.value?.conversationId;
 };
 
 const splitKeywords = (rawText) =>
@@ -99,11 +95,7 @@ const splitKeywords = (rawText) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
-const normalizeSearchResult = (response) => {
-  if (response?.messages) return response;
-  if (response?.data?.messages) return response.data;
-  return response || {};
-};
+const getSearchResult = (response) => response;
 
 const stringifyJson = (value) => {
   try {
@@ -113,111 +105,13 @@ const stringifyJson = (value) => {
   }
 };
 
-const parseSearchServerErrorData = (value) => {
-  if (!value) return null;
-  if (typeof value === 'string') {
-    try {
-      return JSON.parse(value);
-    } catch {
-      return null;
-    }
-  }
-  if (typeof value === 'object') return value;
-  return null;
-};
-
-const getSearchServerDetailErrorText = (serverErrorData) => {
-  const details =
-    serverErrorData?.error?.details ||
-    serverErrorData?.details ||
-    serverErrorData?.data?.error?.details ||
-    serverErrorData?.data?.details;
-  if (!Array.isArray(details)) return '';
-  return details
-    .map((detail) => detail?.error)
-    .filter(Boolean)
-    .join('；');
-};
-
 const getErrorMessageText = (error) => {
   if (!error) return '';
-  const parsedServerErrorData =
-    parseSearchServerErrorData(error?.data) ||
-    parseSearchServerErrorData(error?.data?.data) ||
-    parseSearchServerErrorData(error);
-  const serverDetailErrorText =
-    getSearchServerDetailErrorText(parsedServerErrorData);
-  if (serverDetailErrorText) return serverDetailErrorText;
   if (typeof error === 'string') return error;
-  return [
-    parsedServerErrorData?.error?.message,
-    parsedServerErrorData?.message,
-    parsedServerErrorData?.msg,
-    parsedServerErrorData?.reason,
-    parsedServerErrorData?.error_description,
-    parsedServerErrorData?.error,
-    parsedServerErrorData?.data?.error?.message,
-    parsedServerErrorData?.data?.message,
-    parsedServerErrorData?.data?.msg,
-    parsedServerErrorData?.data?.reason,
-    parsedServerErrorData?.data?.error_description,
-    error.data?.message,
-    error.data?.msg,
-    error.data?.reason,
-    error.data?.error_description,
-    error.data?.error,
-    error.data?.data?.message,
-    error.data?.data?.error_description,
-    error.message,
-    error.msg,
-    error.reason,
-    error.error_description,
-    error.error,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  return error.message || stringifyJson(error);
 };
 
-const isSearchServiceNotEnabledError = (error) => {
-  const text = getErrorMessageText(error).toLowerCase();
-  const codeText = [
-    error?.type,
-    error?.code,
-    error?.data?.type,
-    error?.data?.code,
-    error?.data?.error?.code,
-    error?.data?.data?.code,
-  ]
-    .filter((item) => item !== undefined && item !== null)
-    .map(String)
-    .join(' ')
-    .toLowerCase();
-
-  return (
-    text.includes('message search') ||
-    text.includes('search service') ||
-    text.includes('service not enabled') ||
-    text.includes('not enabled') ||
-    text.includes('not open') ||
-    text.includes('not activated') ||
-    (text.includes('permission') && text.includes('search')) ||
-    (text.includes('forbidden') && text.includes('search')) ||
-    text.includes('未开通') ||
-    text.includes('未开启') ||
-    text.includes('未启用') ||
-    (text.includes('无权限') && text.includes('搜索')) ||
-    codeText.includes('4031001') ||
-    codeText.includes('service_not_enabled') ||
-    codeText.includes('permission_denied')
-  );
-};
-
-const getSearchErrorTip = (error) => {
-  if (isSearchServiceNotEnabledError(error)) {
-    return '服务端消息搜索功能未开通，请联系环信商务开通后再试';
-  }
-  return getErrorMessageText(error) || '未返回错误详情';
-};
+const getSearchErrorTip = (error) => getErrorMessageText(error);
 
 const formatTime = (timestamp) => {
   const value = Number(timestamp);
@@ -225,14 +119,20 @@ const formatTime = (timestamp) => {
   return new Date(value).toLocaleString();
 };
 
-const getMessageSummary = (message) =>
-  message?.text ||
-  message?.msg ||
-  message?.filename ||
-  message?.addr ||
-  message?.url ||
-  message?.customEvent ||
-  '';
+const getMessageSummary = (message) => {
+  if (message?.text) return message.text;
+  const body = message?.body || {};
+  if (message?.type === 'text') return body.content || '';
+  if (message?.type === 'image') return body.filename || '';
+  if (message?.type === 'video') return body.filename || '';
+  if (message?.type === 'voice') return body.filename || '';
+  if (message?.type === 'location') return body.address || '';
+  if (message?.type === 'file') return body.filename || '';
+  if (message?.type === 'cmd') return body.action || '';
+  if (message?.type === 'custom') return body.event || '';
+  if (message?.type === 'combine') return body.summary || '';
+  return '';
+};
 
 const buildSearchParams = () => {
   const keywordList = splitKeywords(form.value.keywordsText);
@@ -298,7 +198,7 @@ const searchMessages = async () => {
       params,
     });
     const response = await requireManager('chatManager').searchMessages(params);
-    searchResult.value = normalizeSearchResult(response);
+    searchResult.value = getSearchResult(response);
     console.log('[Message Search] searchMessages success', {
       user: getCurrentUserId(),
       params,
@@ -306,10 +206,9 @@ const searchMessages = async () => {
     });
     ElMessage.success('服务端消息搜索完成');
   } catch (error) {
-    const isSearchServiceNotEnabled = isSearchServiceNotEnabledError(error);
     const errorTip = getSearchErrorTip(error);
     searchError.value = errorTip;
-    searchErrorType.value = isSearchServiceNotEnabled ? 'warning' : 'error';
+    searchErrorType.value = 'error';
     searchResult.value = null;
     console.error('[Message Search] searchMessages failed', {
       user: getCurrentUserId(),
@@ -317,14 +216,17 @@ const searchMessages = async () => {
       params,
       error,
     });
-    ElMessage[isSearchServiceNotEnabled ? 'warning' : 'error'](errorTip);
+    ElMessage.error(errorTip);
   } finally {
     loading.value = false;
   }
 };
 
 watch(
-  () => [routeQueryData.value?.id, routeQueryData.value?.chatType],
+  () => [
+    routeQueryData.value?.conversationId,
+    routeQueryData.value?.conversationType,
+  ],
   syncConversationDefaults,
   { immediate: true },
 );
@@ -464,8 +366,6 @@ watch(
           <span>每页：{{ resultMeta.pageSize }}</span>
           <span>总页数：{{ resultMeta.totalPages }}</span>
           <span>最后页：{{ resultMeta.isLast }}</span>
-          <span>requestId：{{ resultMeta.requestId }}</span>
-          <span>响应时间：{{ formatTime(resultMeta.timestamp) }}</span>
         </div>
 
         <el-empty
@@ -477,13 +377,13 @@ watch(
         <div v-else class="message_search_list">
           <div
             v-for="message in messages"
-            :key="message.id || `${message.from}-${message.time}`"
+            :key="message.msgServerId || message.msgLocalId"
             class="message_search_item"
           >
             <div class="message_search_item_header">
               <span>{{ message.type || '-' }}</span>
-              <span>{{ message.chatType || '-' }}</span>
-              <span>{{ message.conversationId || message.to || '-' }}</span>
+              <span>{{ message.conversationType || '-' }}</span>
+              <span>{{ message.conversationId || '-' }}</span>
             </div>
             <div class="message_search_item_summary">
               {{ getMessageSummary(message) || '无摘要内容' }}
@@ -494,15 +394,15 @@ watch(
             >
               <span
                 v-for="(highlight, index) in message.highlight"
-                :key="`${message.id}-highlight-${index}`"
+                :key="`${message.msgServerId || message.msgLocalId}-highlight-${index}`"
               >
                 {{ highlight }}
               </span>
             </div>
             <div class="message_search_item_meta">
-              <span>ID：{{ message.id || '-' }}</span>
-              <span>{{ message.from || '-' }} -> {{ message.to || '-' }}</span>
-              <span>{{ formatTime(message.time) }}</span>
+              <span>ID：{{ message.msgServerId || message.msgLocalId || '-' }}</span>
+              <span>{{ message.sender?.userId || '-' }}</span>
+              <span>{{ formatTime(message.timestamp) }}</span>
             </div>
             <pre>{{ stringifyJson(message) }}</pre>
           </div>

@@ -44,6 +44,21 @@ const Groups = {
       );
       state.joinedGroup.joinedGroupCount = total;
     },
+    UPSERT_JOINED_GROUP: (state, group) => {
+      const existingIndex = state.joinedGroup.joinedGroupList.findIndex(
+        (item) => item.groupId === group.groupId,
+      );
+      if (existingIndex >= 0) {
+        state.joinedGroup.joinedGroupList.splice(existingIndex, 1, {
+          ...state.joinedGroup.joinedGroupList[existingIndex],
+          ...group,
+        });
+      } else {
+        state.joinedGroup.joinedGroupList.unshift(group);
+        state.joinedGroup.joinedGroupListTotal += 1;
+        state.joinedGroup.joinedGroupCount += 1;
+      }
+    },
     RESET_JOINED_GROUP_LIST: (state, payload = {}) => {
       const { pageNum = 0 } = payload;
       state.joinedGroup.pagingParams.pageNum = pageNum;
@@ -186,7 +201,6 @@ const Groups = {
           });
         if (state.groupDetails.has(groupId)) {
           state.groupDetails.get(groupId).ext = params;
-          state.groupDetails.get(groupId).custom = params;
         }
       }
       //更新群成员数
@@ -221,7 +235,7 @@ const Groups = {
                 .get(groupId)
                 .findIndex(
                   (item) =>
-                    (item.member || item.owner || item.userId) === member,
+                    item.userId === member,
                 );
               if (_index > -1) {
                 state.groupMembers.get(groupId).splice(_index, 1);
@@ -287,6 +301,11 @@ const Groups = {
     },
   },
   actions: {
+    addCreatedGroupToJoinedList: async ({ commit }, groupId) => {
+      const groupDetail = await groupManager().getGroupInfo({ groupId });
+      commit('UPSERT_JOINED_GROUP', groupDetail);
+      commit('SET_GROUP_DETAILS', { groupDetailsList: [groupDetail] });
+    },
     //从服务端获取加入的群组列表
     fetchJoinedGroupListFromServer: async (
       { state, dispatch, commit },
@@ -597,7 +616,7 @@ const Groups = {
           : { pageNum: 1, pageSize: 20, ...params };
       try {
         const result = await groupManager().getGroupSharedFileList(option);
-        const files = normalizeGroupSharedFileList({ entities: result.items });
+        const files = normalizeGroupSharedFileList(result);
         commit('SET_GROUP_SHARED_FILES', {
           groupId: option.groupId,
           files,
@@ -709,14 +728,9 @@ const Groups = {
     },
     //添加用户到黑名单
     addMemberToBlackList: async ({ dispatch }, params) => {
-      const { groupId, usernames } = params;
+      const { groupId, userIds } = params;
       try {
-        //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
-        //   let option = {
-        //     groupId: "groupId",
-        //     usernames: ["user1", "user2"]
-        // };
-        await groupManager().blockGroupMembers({ groupId, userIds: usernames });
+        await groupManager().blockGroupMembers({ groupId, userIds });
         ElMessage({
           message: '黑名单添加成功~',
           type: 'success',
@@ -737,9 +751,9 @@ const Groups = {
     },
     //从黑名单中移出
     removeTheMemberFromBlackList: async ({ dispatch }, params) => {
-      const { groupId, usernames } = params;
+      const { groupId, userIds } = params;
       try {
-        await groupManager().unblockGroupMembers({ groupId, userIds: usernames });
+        await groupManager().unblockGroupMembers({ groupId, userIds });
         ElMessage({
           message: '黑名单移除成功~',
           type: 'success',
@@ -749,7 +763,7 @@ const Groups = {
       } catch (error) {
         console.error('[Group Blocklist] unblockGroupMembers failed', {
           groupId,
-          usernames,
+          userIds,
           error,
         });
         ElMessage({

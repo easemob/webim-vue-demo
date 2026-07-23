@@ -38,10 +38,15 @@ export default function (fromType, informContnet) {
     let informBody = {};
 
     const { operation, from, to, id } = informContnet;
+    const sdk5Fields = {
+      sdk5EventName: informContnet.sdk5EventName,
+      sdk5Payload: informContnet.sdk5Payload,
+    };
     //收到群组邀请加入通知
     if (operation === 'inviteToJoin') {
       informBody = {
         fromType,
+        ...sdk5Fields,
         operation,
         title: '群组通知',
         from: from,
@@ -55,6 +60,7 @@ export default function (fromType, informContnet) {
     } else if (operation === 'requestToJoin') {
       informBody = {
         fromType,
+        ...sdk5Fields,
         operation,
         title: '群组通知',
         from: from,
@@ -68,6 +74,7 @@ export default function (fromType, informContnet) {
     } else {
       informBody = {
         fromType,
+        ...sdk5Fields,
         operation,
         title: '群组通知',
         from: from,

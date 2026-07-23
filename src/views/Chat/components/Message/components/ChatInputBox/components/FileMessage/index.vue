@@ -11,18 +11,18 @@
 <script setup>
 import { ref, toRefs } from 'vue';
 import { createMessage, sendMessage } from '@/IM/sdk5/chat';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 import { useUserInfoExt } from '@/hooks';
 import store from '@/store';
 import { ElMessage } from 'element-plus';
 const props = defineProps({
-  chatType: {
+  conversationType: {
     type: String,
-    default: CHAT_TYPE.SINGLE,
+    default: CONVERSATION_TYPE.SINGLE,
     required: true,
   },
-  targetId: {
+  conversationId: {
     type: String,
     default: '',
     required: true,
@@ -36,7 +36,12 @@ const props = defineProps({
     default: () => ({}),
   },
 });
-const { chatType, targetId, isChatThread, deliverOnlineOnlyOptions } =
+const {
+  conversationType,
+  conversationId,
+  isChatThread,
+  deliverOnlineOnlyOptions,
+} =
   toRefs(props);
 const emit = defineEmits(['onStartLoading', 'onLoadending']);
 const PRESET_FILE_PATH = '/resource/loadtest-ngi.jmx';
@@ -48,8 +53,7 @@ const openChooseFiles = () => {
 //发送文件
 const { setUserInfoExt } = useUserInfoExt();
 const sendFileMessage = async (commonFile) => {
-  //验证targetId是否有效
-  if (!targetId.value || targetId.value === '') {
+  if (!conversationId.value) {
     console.error('发送文件消息失败: 缺少目标ID');
     ElMessage.error('发送文件消息失败: 请先选择聊天对象');
     return;
@@ -69,18 +73,14 @@ const sendFileMessage = async (commonFile) => {
     return;
   }
 
-  const file = {
-    data: commonFile, // file 对象。
-    filename: commonFile.name, //文件名称。
-    filetype: commonFile.type, //文件类型。
-    size: commonFile.size,
-  };
-
-  const msgOptions = {
-    to: targetId.value,
-    chatType: chatType.value,
+  const messageOptions = {
+    conversationId: conversationId.value,
+    conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    file: file,
+    data: commonFile,
+    filename: commonFile.name,
+    filetype: commonFile.type,
+    fileSize: commonFile.size,
     onFileUploadError: (error) => {
       console.error('文件上传失败:', error);
       if (
@@ -96,8 +96,8 @@ const sendFileMessage = async (commonFile) => {
     onFileUploadProgress: (e) => {
       // 图片文件上传进度。
       console.log('[Message Upload] file progress', {
-        targetId: targetId.value,
-        chatType: chatType.value,
+        conversationId: conversationId.value,
+        conversationType: conversationType.value,
         fileName: commonFile.name,
         loaded: e?.loaded,
         total: e?.total,
@@ -110,20 +110,20 @@ const sendFileMessage = async (commonFile) => {
     },
   };
   //在消息体内携带该用户的昵称头像信息
-  setUserInfoExt(msgOptions);
+  setUserInfoExt(messageOptions);
   try {
-    const msg = createMessage('file', msgOptions);
-    const message = await sendMessage(msg, {
+    const messageToSend = createMessage('file', messageOptions);
+    const message = await sendMessage(messageToSend, {
       ...deliverOnlineOnlyOptions.value,
-      onFileUploadError: msgOptions.onFileUploadError,
-      onFileUploadProgress: msgOptions.onFileUploadProgress,
-      onFileUploadComplete: msgOptions.onFileUploadComplete,
+      onFileUploadError: messageOptions.onFileUploadError,
+      onFileUploadProgress: messageOptions.onFileUploadProgress,
+      onFileUploadComplete: messageOptions.onFileUploadComplete,
     });
-    store.dispatch('senedShowTypeMessage', { ...message });
+    store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
     console.error('发送文件消息失败:', {
-      targetId: targetId.value,
-      chatType: chatType.value,
+      conversationId: conversationId.value,
+      conversationType: conversationType.value,
       fileName: commonFile.name,
       error,
     });

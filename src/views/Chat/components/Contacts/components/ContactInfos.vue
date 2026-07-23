@@ -137,8 +137,8 @@ const toChatMessage = () => {
   router.push({
     path: '/chat/contacts/message',
     query: {
-      id: route.query.id,
-      chatType: route.query.chatType,
+      conversationId: route.query.id,
+      conversationType: route.query.chatType,
     },
   });
 };

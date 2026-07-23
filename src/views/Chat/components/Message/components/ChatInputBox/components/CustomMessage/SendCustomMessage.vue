@@ -6,18 +6,18 @@
     width="500px"
     @close="onDialogClose"
   >
-    <el-form label-position="top" class="custom-msg-form">
-      <el-form-item label="自定义事件 (customEvent)" required>
+    <el-form label-position="top" class="custom-message-form">
+      <el-form-item label="自定义事件 (event)" required>
         <el-input
-          v-model="form.customEvent"
-          placeholder="customEvent"
+          v-model="form.event"
+          placeholder="event"
           clearable
           class="custom-input-rect"
         />
       </el-form-item>
-      <el-form-item label="自定义内容 (customExts，JSON，key/value 仅支持字符串)">
+      <el-form-item label="自定义内容 (params，JSON，key/value 仅支持字符串)">
         <el-input
-          v-model="form.customExtsStr"
+          v-model="form.paramsStr"
           type="textarea"
           :rows="4"
           placeholder='例如：{"key1": "value1", "key2": "value2"}'
@@ -45,11 +45,11 @@ import { createMessage, sendMessage } from '@/IM/sdk5/chat';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 
 const props = defineProps({
-  chatType: {
+  conversationType: {
     type: String,
     required: true,
   },
-  targetId: {
+  conversationId: {
     type: String,
     default: '',
     required: true,
@@ -64,15 +64,20 @@ const props = defineProps({
   },
 });
 
-const { chatType, targetId, isChatThread, deliverOnlineOnlyOptions } =
+const {
+  conversationType,
+  conversationId,
+  isChatThread,
+  deliverOnlineOnlyOptions,
+} =
   toRefs(props);
 
 const dialogVisible = ref(false);
 const sending = ref(false);
 
 const form = ref({
-  customEvent: 'customEvent',
-  customExtsStr: '{"key": "value"}',
+  event: 'event',
+  paramsStr: '{"key": "value"}',
 });
 
 const closeDialog = () => {
@@ -80,11 +85,11 @@ const closeDialog = () => {
 };
 
 const onDialogClose = () => {
-  form.value.customEvent = 'customEvent';
-  form.value.customExtsStr = '{"key": "value"}';
+  form.value.event = 'event';
+  form.value.paramsStr = '{"key": "value"}';
 };
 
-// customExts 的 key 和 value 仅支持字符串，将 JSON 转为纯字符串键值对
+// SDK 5.0 body.params 的 key 和 value 仅支持字符串，将 JSON 转为纯字符串键值对
 function ensureStringKeyValue(obj) {
   if (obj == null || typeof obj !== 'object') return {};
   const result = {};
@@ -97,43 +102,43 @@ function ensureStringKeyValue(obj) {
 const { setUserInfoExt } = useUserInfoExt();
 
 const sendCustomMessage = async () => {
-  const customEvent = (form.value.customEvent || '').trim();
-  if (!customEvent) {
-    ElMessage.warning('请输入自定义事件 (customEvent)');
+  const event = (form.value.event || '').trim();
+  if (!event) {
+    ElMessage.warning('请输入自定义事件 (event)');
     return;
   }
 
-  let customExts = {};
-  if (form.value.customExtsStr && form.value.customExtsStr.trim()) {
+  let params = {};
+  if (form.value.paramsStr && form.value.paramsStr.trim()) {
     try {
-      const parsed = JSON.parse(form.value.customExtsStr.trim());
-      customExts = ensureStringKeyValue(parsed);
+      const parsed = JSON.parse(form.value.paramsStr.trim());
+      params = ensureStringKeyValue(parsed);
     } catch (e) {
-      ElMessage.warning('自定义内容 (customExts) 必须是合法 JSON 格式');
+      ElMessage.warning('自定义内容 (params) 必须是合法 JSON 格式');
       return;
     }
   }
 
-  if (!targetId.value) {
+  if (!conversationId.value) {
     ElMessage.error('请先选择聊天对象');
     return;
   }
 
-  const msgOptions = {
-    chatType: chatType.value,
-    to: targetId.value,
+  const messageOptions = {
+    conversationType: conversationType.value,
+    conversationId: conversationId.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
     ...deliverOnlineOnlyOptions.value,
-    customEvent,
-    customExts,
+    event,
+    params,
     ext: {},
   };
-  setUserInfoExt(msgOptions);
+  setUserInfoExt(messageOptions);
 
   sending.value = true;
   try {
-    const msg = createMessage('custom', msgOptions);
-    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
+    const messageToSend = createMessage('custom', messageOptions);
+    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
     await store.dispatch('senedShowTypeMessage', message);
     ElMessage.success('自定义消息发送成功');
     closeDialog();

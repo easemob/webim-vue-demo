@@ -62,15 +62,15 @@ import store from '@/store';
 import { Search, CircleCheckFilled } from '@element-plus/icons-vue';
 import { useGetUserMapInfo, useUserInfoExt } from '@/hooks';
 import { createMessage, sendMessage } from '@/IM/sdk5/chat';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 const props = defineProps({
-  chatType: {
+  conversationType: {
     type: String,
-    default: CHAT_TYPE.SINGLE,
+    default: CONVERSATION_TYPE.SINGLE,
     required: true,
   },
-  targetId: {
+  conversationId: {
     type: String,
     default: '',
     required: true,
@@ -84,7 +84,12 @@ const props = defineProps({
     default: () => ({}),
   },
 });
-const { chatType, targetId, isChatThread, deliverOnlineOnlyOptions } =
+const {
+  conversationType,
+  conversationId,
+  isChatThread,
+  deliverOnlineOnlyOptions,
+} =
   toRefs(props);
 //modal显隐
 const dialogVisible = ref(false);
@@ -131,22 +136,22 @@ const getUserInfos = () => {
 };
 const { setUserInfoExt } = useUserInfoExt();
 const sendShareUserCardMessage = async () => {
-  const msgOptions = {
-    to: targetId.value,
-    chatType: chatType.value,
+  const messageOptions = {
+    conversationId: conversationId.value,
+    conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
     ...deliverOnlineOnlyOptions.value,
-    customEvent: 'userCard',
-    customExts: {
+    event: 'userCard',
+    params: {
       uid: shareContactUserId.value,
       ...getUserInfos(),
     },
   };
   //在消息体内携带该用户的昵称头像信息
-  setUserInfoExt(msgOptions);
+  setUserInfoExt(messageOptions);
   try {
-    const msg = createMessage('custom', msgOptions);
-    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
+    const messageToSend = createMessage('custom', messageOptions);
+    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
     await store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
     console.error('发送信息卡片消息失败', error);

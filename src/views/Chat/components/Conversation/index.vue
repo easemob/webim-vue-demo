@@ -28,12 +28,12 @@ const toInformDetails = () => {
 };
 
 //路由跳转-对应好友会话
-const toChatMessage = (id, chatType) => {
+const toChatMessage = (conversationId, conversationType) => {
   router.push({
     path: '/chat/conversation/message',
     query: {
-      id,
-      chatType,
+      conversationId,
+      conversationType,
     },
   });
 };

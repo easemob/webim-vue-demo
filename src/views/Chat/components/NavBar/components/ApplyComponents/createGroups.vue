@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { ElNotification } from 'element-plus';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
 import { getCurrentUserId, requireManager } from '@/IM';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { Search, CircleCheckFilled } from '@element-plus/icons-vue';
 import { useGetUserMapInfo } from '@/hooks';
 import { buildCreateGroupPayload } from '@/utils/groupDocAdapters';
@@ -97,11 +97,12 @@ const createNewGroups = async () => {
   try {
     const payload = buildCreateGroupPayload(groupCreateForm);
     const { groupId } = await requireManager('groupManager').createGroup(payload);
-    //更新群组列表
     await store.dispatch('fetchJoinedGroupListFromServer', {
       startPageNum: 0,
       reset: true,
     });
+    // SDK 5.0 joined-group list is a local cache; make the server detail authoritative for this new group.
+    await store.dispatch('addCreatedGroupToJoinedList', groupId);
     ElNotification({
       title: '群组操作',
       message: `${groupCreateForm.groupname}创建成功！`,
@@ -109,7 +110,10 @@ const createNewGroups = async () => {
     });
     router.push({
       path: '/chat/conversation/message',
-      query: { id: groupId, chatType: CHAT_TYPE.GROUP },
+      query: {
+        conversationId: groupId,
+        conversationType: CONVERSATION_TYPE.GROUP,
+      },
     });
     store.dispatch('createInformMessage', {
       from: getCurrentUserId(),

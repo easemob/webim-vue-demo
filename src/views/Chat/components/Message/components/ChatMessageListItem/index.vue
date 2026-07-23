@@ -13,20 +13,18 @@ import { useStore } from 'vuex';
 import { useClipboard, usePermission } from '@vueuse/core';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getCurrentUserId, requireManager } from '@/IM';
-import { CHAT_TYPE, MESSAGE_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { CUSTOM_MSG_EVENT_TYPE, MESSAGE_STATUS_TYPE } from '@/constant';
 import { useGetUserMapInfo } from '@/hooks';
 import BenzAMRRecorder from 'benz-amr-recorder';
 import fileSizeFormat from '@/utils/fileSizeFormat';
 import dateFormat from '@/utils/dateFormater';
-import { CUSTOM_MESSAGE_TYPE } from '@/constant';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
 import {
   getStreamStatusDetailText,
   getStreamStatusText,
   isStreamMessage,
 } from '@/utils/streamMessageSupport';
-import { getThreadIdFromResponse } from '@/utils/messageThread';
 import router from '@/router';
 /* utils */
 import paseLink from '@/utils/paseLink';
@@ -47,8 +45,8 @@ const props = defineProps({
   routeQueryData: {
     type: Object,
     default: () => ({
-      id: '',
-      chatType: CHAT_TYPE.SINGLE,
+      conversationId: '',
+      conversationType: CONVERSATION_TYPE.SINGLE,
     }),
     required: true,
   },
@@ -61,9 +59,50 @@ const emit = defineEmits([
   'messageQuote',
 ]);
 const REACTION_PRESETS = ['👍', '❤️', '😂', '😮', '😢', '👏'];
+const activeCombineMessageId = ref('');
+const combineMessageList = ref([]);
+const combineMessageLoading = ref(false);
+const combineMessageError = ref('');
+const messageIdOf = (message) => message?.msgServerId || message?.msgLocalId || '';
+
+const getCombineChildMessageText = (message) => {
+  const body = message?.body || {};
+  if (message?.type === 'text') return body.content || '';
+  if (message?.type === 'image') return '[图片]';
+  if (message?.type === 'video') return '[视频]';
+  if (message?.type === 'voice') return '[语音]';
+  if (message?.type === 'file') return `[文件] ${body.filename || ''}`;
+  if (message?.type === 'location') return `[位置] ${body.address || ''}`;
+  return `[${message?.type || '未知消息'}]`;
+};
+
+const loadCombineMessageList = async (combineMessage) => {
+  const messageId = messageIdOf(combineMessage);
+  if (!messageId || combineMessageLoading.value) return;
+
+  if (activeCombineMessageId.value === messageId) {
+    activeCombineMessageId.value = '';
+    return;
+  }
+
+  combineMessageLoading.value = true;
+  combineMessageError.value = '';
+  try {
+    combineMessageList.value = await requireManager('chatManager').downloadAndParseCombineMessage({
+      message: combineMessage,
+    });
+    activeCombineMessageId.value = messageId;
+  } catch (error) {
+    combineMessageList.value = [];
+    activeCombineMessageId.value = messageId;
+    combineMessageError.value = error?.message || '合并消息子消息加载失败';
+  } finally {
+    combineMessageLoading.value = false;
+  }
+};
 
 const currentConversation = computed(() => {
-  const conversationId = routeQueryData.value?.id;
+  const conversationId = routeQueryData.value?.conversationId;
   if (!conversationId) return null;
   const conversationList =
     store.state.Conversation?.conversationListFromServer || [];
@@ -100,8 +139,6 @@ const getDisplayableExt = (ext) => {
 // 组件挂载状态标志
 const isMounted = ref(true);
 
-// 预处理消息数据，添加计算属性到每个消息对象
-// 避免在模板中频繁调用函数
 const processedMessageData = computed(() => {
   let rawData;
   if (Array.isArray(props.messageData)) {
@@ -112,89 +149,7 @@ const processedMessageData = computed(() => {
     rawData = [];
   }
 
-  // 过滤掉null/undefined项
-  const filtered = rawData.filter((item) => item != null);
-
-  // 优化：避免不必要的对象创建，只在需要时创建新对象
-  return filtered.map((msgBody, index) => {
-    // 检查消息对象是否已经被处理过
-    if (msgBody._isMyself !== undefined) {
-      return msgBody;
-    }
-
-    // 创建一个新对象，避免修改原始数据
-    // 使用Object.assign确保正确复制所有属性
-    const processed = Object.assign({}, msgBody);
-
-    if (!processed.chatType) {
-      console.error('[Message Render] 消息缺少 chatType，按服务端原始结果展示，未默认成 singleChat', {
-        index,
-        messageId: processed.id || processed.mid,
-        from: processed.from,
-        to: processed.to,
-        rawMessage: msgBody,
-      });
-    }
-
-    // 确保展示层基础字段存在，避免异常数据导致页面崩溃
-    processed.id = processed.id || `missing_id_${index}`;
-    processed.from = processed.from || '';
-    processed.to = processed.to || '';
-    processed.time = processed.time || Date.now();
-    processed.type = processed.type || MESSAGE_TYPE.TEXT;
-    processed.isRecall = processed.isRecall || false;
-
-    // 确保消息内容和扩展属性存在
-    processed.msg = processed.msg || '';
-    processed.ext = processed.ext || {};
-    processed.ext.msgQuote = processed.ext.msgQuote || null;
-
-    // 确保自定义消息属性存在
-    if (processed.type === MESSAGE_TYPE.CUSTOM) {
-      processed.customEvent = processed.customEvent || '';
-      processed.customExts = processed.customExts || {};
-    }
-
-    // 确保文件消息属性存在
-    if (processed.type === MESSAGE_TYPE.FILE) {
-      processed.filename = processed.filename || 'unknown_file';
-      processed.file_length = processed.file_length || 0;
-      processed.url = processed.url || '';
-    }
-
-    // 确保图片消息属性存在
-    if (processed.type === MESSAGE_TYPE.IMAGE) {
-      processed.thumb = processed.thumb || '';
-      processed.url = processed.url || '';
-    }
-
-    // 确保音频消息属性存在
-    if (processed.type === MESSAGE_TYPE.AUDIO) {
-      processed.length = processed.length || 0;
-      processed.url = processed.url || '';
-    }
-
-    // 确保视频消息属性存在
-    if (processed.type === MESSAGE_TYPE.VIDEO) {
-      processed.thumb = processed.thumb || '';
-      processed.url = processed.url || '';
-    }
-
-    // 预先计算常用属性
-    processed._isMyself = processed.from === loginUserId;
-
-    // 安全计算是否可以撤回消息
-    let canRecall = processed._isMyself;
-    if (!canRecall && processed.chatType !== CHAT_TYPE.SINGLE) {
-      canRecall = hasConversationRecallPermission.value;
-    }
-    processed._canRecall = canRecall;
-
-    // 计算时间显示（但不在此处缓存，因为依赖于前后消息）
-    processed._timeShow = null;
-
-    return processed;
-  });
+  return rawData.filter((item) => item != null);
 });
 
 // 确保messageData始终作为数组处理，并过滤掉null/undefined项
@@ -206,7 +161,7 @@ const messageDataArray = computed(() => {
 // 会话维度 key：切换会话时整块替换列表 DOM，避免 patch 时 parentNode 为 null
 const messageListKey = computed(
   () =>
-    `msg-list-${routeQueryData.value?.id ?? ''}-${routeQueryData.value?.chatType ?? ''}`,
+    `msg-list-${routeQueryData.value?.conversationId ?? ''}-${routeQueryData.value?.conversationType ?? ''}`,
 );
 
 // 组件挂载和卸载处理
@@ -219,13 +174,13 @@ const loginUserId = getCurrentUserId();
 
 /* 消息来源是否为自己 */
 const isMyself = (msgBody) => {
-  return msgBody.from === loginUserId;
+  return msgBody.sender?.userId === loginUserId;
 };
 
 /* 是否有撤回权限 */
 const canRecallMessage = (msgBody) => {
   if (isMyself(msgBody)) return true;
-  if (msgBody.chatType === CHAT_TYPE.SINGLE) return false;
+  if (msgBody.conversationType === CONVERSATION_TYPE.SINGLE) return false;
   return hasConversationRecallPermission.value;
 };
 /* 获取消息id集合 */
@@ -251,11 +206,11 @@ const currentMessageIds = ref(null);
 
 // 监听路由变化，更新当前会话的消息ID集合
 watch(
-  () => routeQueryData.value.id,
-  (newId) => {
-    if (newId) {
-      currentSessionId.value = newId;
-      currentMessageIds.value = messageIdsCollection.value[newId] || null;
+  () => routeQueryData.value.conversationId,
+  (conversationId) => {
+    if (conversationId) {
+      currentSessionId.value = conversationId;
+      currentMessageIds.value = messageIdsCollection.value[conversationId] || null;
     } else {
       currentSessionId.value = '';
       currentMessageIds.value = null;
@@ -278,9 +233,9 @@ watch(
 /* 消息已读未读逻辑 */
 //判断消息已读未读状态
 const msgReadStatus = (msgBody) => {
-  const { id } = msgBody;
-  if (currentMessageIds.value && currentMessageIds.value.has(id)) {
-    return currentMessageIds.value.get(id)[MESSAGE_STATUS_TYPE.READ_STATUS];
+  const messageId = messageIdOf(msgBody);
+  if (currentMessageIds.value && currentMessageIds.value.has(messageId)) {
+    return currentMessageIds.value.get(messageId)[MESSAGE_STATUS_TYPE.READ_STATUS];
   }
   return false;
 };
@@ -296,16 +251,16 @@ const { getUserDisplayNameById, getUserDisplayAvatarById } =
   useGetUserMapInfo();
 //处理他人头像展示
 const handleOtherAvatar = (msgBody) => {
-  return getUserDisplayAvatarById(msgBody.from);
+  return getUserDisplayAvatarById(msgBody.sender?.userId);
 };
 //处理聊天对方昵称展示
 const handleNickName = (msgBody) => {
-  const { chatType, id: groupId } = routeQueryData.value;
-  const userId = msgBody.from;
-  if (chatType === CHAT_TYPE.SINGLE) {
+  const { conversationType, conversationId: groupId } = routeQueryData.value;
+  const userId = msgBody.sender?.userId;
+  if (conversationType === CONVERSATION_TYPE.SINGLE) {
     return getUserDisplayNameById(userId);
   }
-  if (chatType === CHAT_TYPE.GROUP) {
+  if (conversationType === CONVERSATION_TYPE.GROUP) {
     return getUserDisplayNameById(userId, groupId);
   }
 };
@@ -325,7 +280,7 @@ const handleMsgTimeShow = (time, index) => {
   // 计算时间显示
   let result;
   if (index !== 0 && index < messageDataArray.value.length) {
-    const lastTime = messageDataArray.value[index - 1].time;
+    const lastTime = messageDataArray.value[index - 1].timestamp;
     result = time - lastTime > 50000 ? dateFormat('MM/DD/HH:mm', time) : false;
   } else {
     result = dateFormat('MM/DD/HH:mm', time);
@@ -356,8 +311,8 @@ const startplayAudio = (msgBody) => {
   const armRec = new BenzAMRRecorder();
   audioInstances.value.push(armRec);
 
-  const src = msgBody.url;
-  audioPlayStatus.playMsgId = msgBody.id;
+  const src = msgBody.body.url;
+  audioPlayStatus.playMsgId = messageIdOf(msgBody);
 
   //初始化音频源并调用播放
   armRec
@@ -379,7 +334,7 @@ const startplayAudio = (msgBody) => {
     armRec.onPlay(() => {
       if (isMounted.value) {
         audioPlayStatus.isPlaying = true;
-        audioPlayStatus.playMsgId = msgBody.id;
+        audioPlayStatus.playMsgId = messageIdOf(msgBody);
       }
     });
   }
@@ -440,8 +395,8 @@ onUnmounted(() => {
 // const permissionRead = usePermission('clipboard-read') //请求剪切板读的权限
 // const permissionWrite = usePermission('clipboard-write') //请求剪切板写的权限
 const { copy, copied, isSupported } = useClipboard(); //copy 复制方法 copied 是否已经复制 isSupported 是否支持剪切板
-const copyTextMessages = (msg) => {
-  copy(msg);
+const copyTextMessages = (content) => {
+  copy(content);
   if (copied) {
     ElMessage({
       type: 'success',
@@ -460,7 +415,7 @@ const clickQuoteMessage = (msgQuote) => {
     const messageQuery = document.querySelectorAll('.messageList_box');
     const filterQuoteMsg =
       messageQuery.length &&
-      Array.from(messageQuery).filter((node) => msgID === node.dataset.mid);
+      [...messageQuery].filter((node) => msgID === node.dataset.messageId);
     if (filterQuoteMsg.length) {
       filterQuoteMsg[0].scrollIntoView();
       clickQuoteMsgId.value = msgID;
@@ -483,12 +438,11 @@ const clickQuoteMessage = (msgQuote) => {
 };
 
 //撤回消息
-const recallMessage = async ({ id, to, chatType }) => {
+const recallMessage = async (message) => {
   const options = {
-    mid: id,
-    to: routeQueryData.value.isChatThread === true ? routeQueryData.value.id : to,
-    chatType: chatType,
-    isChatThread: routeQueryData.value.isChatThread === true,
+    messageId: messageIdOf(message),
+    conversationId: message.conversationId,
+    conversationType: message.conversationType,
   };
   try {
     await store.dispatch('recallMessage', options);
@@ -498,16 +452,12 @@ const recallMessage = async ({ id, to, chatType }) => {
 };
 //编辑消息
 const modifyMessageRef = ref(null);
-const showModifyMsgModal = (msgBody) => {
+const showModifyMsgModal = (message) => {
   nextTick(() => {
     modifyMessageRef.value.initModifyMessage({
-      ...msgBody,
-      to:
-        routeQueryData.value.isChatThread === true
-          ? routeQueryData.value.id
-          : msgBody.to,
+      ...message,
       isChatThread: routeQueryData.value.isChatThread === true,
-      groupId: routeQueryData.value.groupId || msgBody.groupId || '',
+      parentConversationId: routeQueryData.value.parentConversationId || '',
     });
   });
 };
@@ -523,7 +473,11 @@ const deleteMessage = async (msgBody) => {
         type: 'warning',
       },
     );
-    await store.dispatch('removeMessage', { ...msgBody });
+    await store.dispatch('removeMessage', {
+      messageId: messageIdOf(msgBody),
+      conversationId: msgBody.conversationId,
+      conversationType: msgBody.conversationType,
+    });
     ElMessage({
       type: 'success',
       message: '消息已删除',
@@ -545,25 +499,13 @@ const reportMessage = ref(null);
 const informOnMessage = (msgBody) => {
   reportMessage.value.alertReportMsgModal(msgBody);
 };
-const getMessagePinConversationId = (msgBody) => {
-  if (msgBody.chatType === CHAT_TYPE.SINGLE) return msgBody.from;
-  if (routeQueryData.value.isChatThread === true) {
-    return (
-      routeQueryData.value.groupId ||
-      msgBody.groupId ||
-      msgBody.chatThread?.parentId ||
-      ''
-    );
-  }
-  return msgBody.to;
-};
 // 消息置顶
 const pinMessage = async (msgBody) => {
   try {
     const options = {
-      conversationType: msgBody.chatType,
-      conversationId: getMessagePinConversationId(msgBody),
-      messageId: msgBody.id
+      conversationType: msgBody.conversationType,
+      conversationId: msgBody.conversationId,
+      messageId: messageIdOf(msgBody),
     };
     await requireManager('chatManager').pinMessage(options);
     ElMessage({
@@ -584,9 +526,9 @@ const pinMessage = async (msgBody) => {
 const unpinMessage = async (msgBody) => {
   try {
     const options = {
-      conversationType: msgBody.chatType,
-      conversationId: getMessagePinConversationId(msgBody),
-      messageId: msgBody.id
+      conversationType: msgBody.conversationType,
+      conversationId: msgBody.conversationId,
+      messageId: messageIdOf(msgBody),
     };
     await requireManager('chatManager').unpinMessage(options);
     ElMessage({
@@ -604,9 +546,9 @@ const unpinMessage = async (msgBody) => {
   }
 };
 //父组件重新编辑方法
-const reEdit = (msg) => {
+const reEdit = (content) => {
   if (isMounted.value) {
-    emit('reEditMessage', msg);
+    emit('reEditMessage', content);
   }
 };
 //调用父组件引用消息
@@ -616,19 +558,17 @@ const onMsgQuote = (msg) => {
   }
 };
 const reactionLoadingMap = ref({});
-const messageListConversationKey = computed(() => routeQueryData.value.id || '');
+const messageListConversationKey = computed(() => routeQueryData.value.conversationId || '');
 const getMessageReactions = (msgBody) => {
   return Array.isArray(msgBody?.reactions) ? msgBody.reactions : [];
 };
 const canUseReaction = (msgBody) => {
   return (
-    !!msgBody?.id &&
-    !msgBody.isRecall &&
-    routeQueryData.value.chatType !== CHAT_TYPE.CHATROOM
+    !!messageIdOf(msgBody) && !msgBody.isRecall
   );
 };
 const getMessageThreadParentMessageId = (msgBody) => {
-  return msgBody?.mid || msgBody?.id || '';
+  return msgBody?.msgServerId || '';
 };
 const describeThreadError = (error) => {
   if (!error) return null;
@@ -639,13 +579,13 @@ const describeThreadError = (error) => {
     name: error.name || '',
   };
 };
-const getCreatedThreadId = (response) => getThreadIdFromResponse(response);
+const getCreatedThreadId = (response) => response.chatThreadId;
 const canCreateMessageThread = (msgBody) => {
   return (
     !!getMessageThreadParentMessageId(msgBody) &&
     !msgBody.isRecall &&
-    routeQueryData.value.chatType === CHAT_TYPE.GROUP &&
-    !!routeQueryData.value.id
+    routeQueryData.value.conversationType === CONVERSATION_TYPE.GROUP &&
+    !!routeQueryData.value.conversationId
   );
 };
 const createMessageThreadLoading = ref(false);
@@ -667,7 +607,7 @@ const createMessageThread = async (msgBody) => {
     if (!name) return;
     createMessageThreadLoading.value = true;
     const response = await store.dispatch('createMessageThread', {
-      parentId: routeQueryData.value.id,
+      parentId: routeQueryData.value.conversationId,
       name,
       messageId: getMessageThreadParentMessageId(msgBody),
     });
@@ -683,20 +623,19 @@ const createMessageThread = async (msgBody) => {
     router.push({
       path: '/chat/conversation/message',
       query: {
-        id: getCreatedThreadId(response),
-        chatType: CHAT_TYPE.GROUP,
+        conversationId: getCreatedThreadId(response),
+        conversationType: CONVERSATION_TYPE.GROUP,
         isChatThread: 'true',
-        groupId: routeQueryData.value.id,
+        parentConversationId: routeQueryData.value.conversationId,
         threadName: name,
       },
     });
   } catch (error) {
     if (error === 'cancel') return;
     console.error('[Thread] createMessageThread UI failed', {
-      parentId: routeQueryData.value.id,
+      parentId: routeQueryData.value.conversationId,
       messageId,
-      localMessageId: msgBody?.id,
-      serverMessageId: msgBody?.mid,
+      serverMessageId: msgBody?.msgServerId,
       errorSummary: describeThreadError(error),
       error,
     });
@@ -725,44 +664,44 @@ const addReactionToMessage = async (msgBody, reaction) => {
     await removeReactionFromMessage(msgBody, reaction);
     return;
   }
-  setReactionLoading(msgBody.id, reaction, true);
+  setReactionLoading(messageIdOf(msgBody), reaction, true);
   try {
     await store.dispatch('addMessageReaction', {
       key: messageListConversationKey.value,
-      messageId: msgBody.id,
+      messageId: messageIdOf(msgBody),
       reaction,
-      chatType: routeQueryData.value.chatType,
+      conversationType: msgBody.conversationType,
       groupId:
-        routeQueryData.value.chatType === CHAT_TYPE.GROUP
-          ? routeQueryData.value.id
+        msgBody.conversationType === CONVERSATION_TYPE.GROUP
+          ? msgBody.conversationId
           : undefined,
     });
   } catch (error) {
     console.error('[Reaction] addMessageReaction 失败', error);
     handleSDKErrorNotifi(error?.type, error?.message || 'Reaction 添加失败');
   } finally {
-    setReactionLoading(msgBody.id, reaction, false);
+    setReactionLoading(messageIdOf(msgBody), reaction, false);
   }
 };
 const removeReactionFromMessage = async (msgBody, reaction) => {
   if (!canUseReaction(msgBody) || !reaction) return;
-  setReactionLoading(msgBody.id, reaction, true);
+  setReactionLoading(messageIdOf(msgBody), reaction, true);
   try {
     await store.dispatch('deleteMessageReaction', {
       key: messageListConversationKey.value,
-      messageId: msgBody.id,
+      messageId: messageIdOf(msgBody),
       reaction,
-      chatType: routeQueryData.value.chatType,
+      conversationType: msgBody.conversationType,
       groupId:
-        routeQueryData.value.chatType === CHAT_TYPE.GROUP
-          ? routeQueryData.value.id
+        msgBody.conversationType === CONVERSATION_TYPE.GROUP
+          ? msgBody.conversationId
           : undefined,
     });
   } catch (error) {
     console.error('[Reaction] deleteMessageReaction 失败', error);
     handleSDKErrorNotifi(error?.type, error?.message || 'Reaction 删除失败');
   } finally {
-    setReactionLoading(msgBody.id, reaction, false);
+    setReactionLoading(messageIdOf(msgBody), reaction, false);
   }
 };
 const toggleReaction = async (msgBody, reactionItem) => {
@@ -796,17 +735,12 @@ const loadReactionDetail = async (msgBody, reaction) => {
   selectedReactionDetail.value = reaction;
   try {
     const res = await store.dispatch('fetchMessageReactionDetail', {
-      messageId: msgBody.id,
+      messageId: messageIdOf(msgBody),
       reaction,
       cursor: null,
       pageSize: 100,
     });
-    const data = res?.data || {};
-    reactionDetailUsers.value = Array.isArray(data?.userList)
-      ? data.userList
-      : Array.isArray(data?.users)
-        ? data.users
-        : [];
+    reactionDetailUsers.value = res.reactionUsers;
   } catch (error) {
     reactionDetailUsers.value = [];
     handleSDKErrorNotifi(
@@ -817,11 +751,11 @@ const loadReactionDetail = async (msgBody, reaction) => {
     reactionDetailLoading.value = false;
   }
 };
-const getReactionUserName = (userId) => {
-  return getUserDisplayNameById(userId) || userId;
+const getReactionUserName = (user) => {
+  return getUserDisplayNameById(user.userId) || user.userId;
 };
-const getReactionUserAvatar = (userId) => {
-  return getUserDisplayAvatarById(userId) || defaultAvatar;
+const getReactionUserAvatar = (user) => {
+  return getUserDisplayAvatarById(user.userId) || defaultAvatar;
 };
 </script>
 <template>
@@ -829,39 +763,39 @@ const getReactionUserAvatar = (userId) => {
     <div :key="messageListKey">
       <div
         v-for="(msgBody, index) in messageDataArray"
-        :key="msgBody.id || `msg_${String(msgBody.time ?? '')}_${msgBody.from ?? ''}_${index}`"
+        :key="messageIdOf(msgBody) || `message_${String(msgBody.timestamp ?? '')}_${index}`"
         class="messageList_box"
-        :data-mid="msgBody.id"
+        :data-message-id="messageIdOf(msgBody)"
       >
       <!-- 普通消息气泡 -->
       <template
-        v-if="!msgBody.isRecall && msgBody.type !== CUSTOM_MESSAGE_TYPE.INFORM"
+        v-if="!msgBody.isRecall"
       >
         <div
           class="message_box_item"
           :style="{
-            flexDirection: msgBody._isMyself ? 'row-reverse' : 'row',
+            flexDirection: isMyself(msgBody) ? 'row-reverse' : 'row',
           }"
         >
           <div class="message_item_time">
-            {{ handleMsgTimeShow(msgBody.time, index) || '' }}
+            {{ handleMsgTimeShow(msgBody.timestamp, index) || '' }}
           </div>
           <div class="message_avatar_container">
             <el-avatar
               class="message_item_avatar"
               :src="
-                msgBody._isMyself
+                isMyself(msgBody)
                   ? loginUserInfo.avatarurl
                   : handleOtherAvatar(msgBody)
               "
             >
             </el-avatar>
-            <span class="message_item_account">{{ msgBody.from }}</span>
+            <span class="message_item_account">{{ msgBody.sender?.userId }}</span>
           </div>
           <!-- 普通消息内容 -->
           <div class="message_box_card">
             <div class="message_box_meta">
-              <span v-show="!msgBody._isMyself" class="message_box_nickname">{{
+              <span v-show="!isMyself(msgBody)" class="message_box_nickname">{{
                 handleNickName(msgBody)
               }}</span>
               <span
@@ -875,10 +809,10 @@ const getReactionUserAvatar = (userId) => {
             <el-dropdown
               class="message_box_content"
               :class="[
-                msgBody._isMyself
+                isMyself(msgBody)
                   ? 'message_box_content_mine'
                   : 'message_box_content_other',
-                clickQuoteMsgId === msgBody.id && 'quote_msg_avtive',
+                clickQuoteMsgId === messageIdOf(msgBody) && 'quote_msg_avtive',
               ]"
               trigger="contextmenu"
               placement="bottom-end"
@@ -888,10 +822,10 @@ const getReactionUserAvatar = (userId) => {
                 <!-- 文本类型消息 -->
                 <p
                   style="padding: 10px; line-height: 20px"
-                  v-if="msgBody.type === MESSAGE_TYPE.TEXT"
+                  v-if="msgBody.type === 'text'"
                 >
-                  <template v-if="!isLink(msgBody.msg)">
-                    {{ msgBody.msg }}
+                  <template v-if="!isLink(msgBody.body.content)">
+                    {{ msgBody.body.content }}
                     <!-- 已编辑 -->
                     <sup
                       style="font-size: 7px; color: #707784"
@@ -900,12 +834,12 @@ const getReactionUserAvatar = (userId) => {
                     >
                   </template>
                   <template v-else>
-                    <span v-html="paseLink(msgBody.msg).msg"> </span
+                    <span v-html="paseLink(msgBody.body.content).content"> </span
                   ></template>
                 </p>
                 <p
                   v-if="
-                    msgBody.type === MESSAGE_TYPE.TEXT &&
+                    msgBody.type === 'text' &&
                     getDisplayableExt(msgBody.ext)
                   "
                   class="message_text_ext"
@@ -930,18 +864,18 @@ const getReactionUserAvatar = (userId) => {
                 </div>
                 <!-- 图片类型消息 -->
                 <el-image
-                  v-if="msgBody.type === MESSAGE_TYPE.IMAGE"
+                  v-if="msgBody.type === 'image'"
                   style="border-radius: 5px"
-                  :src="msgBody.thumb"
-                  :preview-src-list="[msgBody.url]"
+                  :src="msgBody.body.thumbnailUrl"
+                  :preview-src-list="[msgBody.body.bigImageUrl || msgBody.body.originalImageUrl || msgBody.body.localUrl]"
                   :initial-index="1"
                   fit="cover"
                 />
                 <!-- 视频类型消息 -->
                 <video
-                  v-if="msgBody.type === MESSAGE_TYPE.VIDEO"
-                  :src="msgBody.url"
-                  :poster="msgBody.thumb"
+                  v-if="msgBody.type === 'video'"
+                  :src="msgBody.body.url"
+                  :poster="msgBody.body.thumbnailUrl"
                   style="height: 100%; width: 100%; border-radius: 5px"
                   controls
                 ></video>
@@ -949,68 +883,68 @@ const getReactionUserAvatar = (userId) => {
                 <div
                   :class="[
                     'message_box_content_audio',
-                    msgBody._isMyself
+                    isMyself(msgBody)
                       ? 'message_box_content_audio_mine'
                       : 'message_box_content_audio_other',
                   ]"
-                  v-if="msgBody.type === MESSAGE_TYPE.AUDIO"
+                  v-if="msgBody.type === 'voice'"
                   @click="startplayAudio(msgBody)"
-                  :style="`width:${msgBody.length * 10}px`"
+                  :style="`width:${msgBody.body.duration * 10}px`"
                 >
-                  <span class="audio_length_text"> {{ msgBody.length }}′′ </span>
+                  <span class="audio_length_text"> {{ msgBody.body.duration }}′′ </span>
                   <div
                     :class="[
-                      msgBody._isMyself
+                      isMyself(msgBody)
                         ? 'play_audio_icon_mine'
                         : 'play_audio_icon_other',
-                      audioPlayStatus.playMsgId === msgBody.id &&
+                      audioPlayStatus.playMsgId === messageIdOf(msgBody) &&
                         'start_play_audio',
                     ]"
                     style="background-size: 100% 100%"
                   ></div>
                 </div>
                 <div
-                  v-if="msgBody.type === MESSAGE_TYPE.LOCAL"
+                  v-if="msgBody.type === 'location'"
                   class="message_box_content_location"
                 >
                   <p class="location_title">
-                    {{ msgBody.addr || '位置消息' }}
+                    {{ msgBody.body.address || '位置消息' }}
                   </p>
-                  <p v-if="msgBody.buildingName" class="location_detail">
-                    建筑：{{ msgBody.buildingName }}
+                  <p v-if="msgBody.body.buildingName" class="location_detail">
+                    建筑：{{ msgBody.body.buildingName }}
                   </p>
                   <p class="location_detail">
-                    纬度：{{ msgBody.lat ?? '-' }}，经度：{{ msgBody.lng ?? '-' }}
+                    纬度：{{ msgBody.body.latitude }}，经度：{{ msgBody.body.longitude }}
                   </p>
                 </div>
                 <!-- 透传消息 -->
                 <div
-                  v-if="msgBody.type === MESSAGE_TYPE.COMMAND"
+                  v-if="msgBody.type === 'cmd'"
                   class="message_box_content_cmd"
                   style="padding: 10px; line-height: 20px"
                 >
                   <p style="margin: 0; color: #666">[透传消息]</p>
-                  <p style="margin: 4px 0 0 0">action: {{ msgBody.action || '-' }}</p>
+                  <p style="margin: 4px 0 0 0">action: {{ msgBody.body.action }}</p>
                   <p
                     v-if="msgBody.ext && Object.keys(msgBody.ext).length"
                     style="margin: 4px 0 0 0; font-size: 12px; color: #999"
                   >
-                    ext: {{ JSON.stringify(msgBody.ext) }}
+                    params: {{ JSON.stringify(msgBody.body.params) }}
                   </p>
                 </div>
                 <!-- 文件类型消息 -->
                 <div
-                  v-if="msgBody.type === MESSAGE_TYPE.FILE"
+                  v-if="msgBody.type === 'file'"
                   class="message_box_content_file"
                 >
                   <div class="file_text_box">
                     <div class="file_name">
-                      {{ msgBody.filename }}
+                      {{ msgBody.body.filename }}
                     </div>
                     <div class="file_size">
-                      {{ fileSizeFormat(msgBody.file_length) }}
+                      {{ fileSizeFormat(msgBody.body.fileLength) }}
                     </div>
-                    <a class="file_download" :href="msgBody.url" download
+                    <a class="file_download" :href="msgBody.body.url" download
                       >点击下载</a
                     >
                   </div>
@@ -1018,38 +952,46 @@ const getReactionUserAvatar = (userId) => {
                 </div>
                 <!-- 合并消息 -->
                 <div
-                  v-if="msgBody.type === MESSAGE_TYPE.COMBINE"
+                  v-if="msgBody.type === 'combine'"
                   class="message_box_content_combine"
+                  @click.stop="loadCombineMessageList(msgBody)"
                 >
                   <div class="combine_title">
                     <span class="iconfont icon-hebing"></span>
-                    {{ msgBody.title || '聊天记录' }}
+                    {{ msgBody.body.title }}
                   </div>
                   <div class="combine_summary">
-                    {{ msgBody.summary || '' }}
+                    {{ msgBody.body.summary }}
                   </div>
-                  <div
-                    v-if="Array.isArray(msgBody.messageList)"
-                    class="combine_count"
-                  >
-                    共{{ msgBody.messageList.length }}条消息
+                  <div v-if="combineMessageLoading" class="combine_count">
+                    正在加载子消息...
                   </div>
-                  <div v-else class="combine_count">
-                    SDK 下行未包含子消息列表
-                  </div>
-                  <div class="combine_compatible" v-if="msgBody.compatibleText">
-                    {{ msgBody.compatibleText }}
-                  </div>
+                  <template v-else-if="activeCombineMessageId === messageIdOf(msgBody)">
+                    <div v-if="combineMessageError" class="combine_count">
+                      {{ combineMessageError }}
+                    </div>
+                    <template v-else>
+                      <div class="combine_count">共{{ combineMessageList.length }}条消息</div>
+                      <div
+                        v-for="(combineChildMessage, combineChildIndex) in combineMessageList"
+                        :key="combineChildMessage.msgServerId || combineChildMessage.msgLocalId || combineChildIndex"
+                        class="combine_summary"
+                      >
+                        {{ getCombineChildMessageText(combineChildMessage) }}
+                      </div>
+                    </template>
+                  </template>
+                  <div v-else class="combine_count">点击查看子消息</div>
                 </div>
                 <!-- 自定义类型消息 -->
                 <div
-                  v-if="msgBody.type === MESSAGE_TYPE.CUSTOM"
+                  v-if="msgBody.type === 'custom'"
                   class="message_box_content_custom"
                 >
                   <template
                     v-if="
-                      msgBody.customEvent &&
-                      CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent]
+                      msgBody.body?.event &&
+                      CUSTOM_MSG_EVENT_TYPE[msgBody.body.event]
                     "
                   >
                     <div class="user_card">
@@ -1059,17 +1001,16 @@ const getReactionUserAvatar = (userId) => {
                           shape="circle"
                           :size="50"
                           :src="
-                            (msgBody.customExts &&
-                              msgBody.customExts.avatarurl) ||
-                            msgBody.customExts.avatar ||
+                            msgBody.body?.params?.avatarurl ||
+                            msgBody.body?.params?.avatar ||
                             defaultAvatar
                           "
                           fit="cover"
                         />
                         <!-- 昵称 -->
                         <span class="nickname">{{
-                          (msgBody.customExts && msgBody.customExts.nickname) ||
-                          msgBody.customExts.uid
+                          msgBody.body?.params?.nickname ||
+                          msgBody.body?.params?.uid
                         }}</span>
                       </div>
                       <el-divider
@@ -1078,7 +1019,7 @@ const getReactionUserAvatar = (userId) => {
                       <p style="font-size: 8px">个人名片</p>
                     </div>
                   </template>
-                  <!-- 其他自定义消息：展示 customEvent 与 customExts -->
+                  <!-- 其他自定义消息：展示 SDK 5.0 body.event 与 body.params -->
                   <div
                     v-else
                     class="message_box_content_custom_generic"
@@ -1086,13 +1027,13 @@ const getReactionUserAvatar = (userId) => {
                   >
                     <p style="margin: 0; color: #666">[自定义消息]</p>
                     <p style="margin: 4px 0 0 0">
-                      event: {{ msgBody.customEvent || '-' }}
+                      event: {{ msgBody.body?.event || '-' }}
                     </p>
                     <p
-                      v-if="msgBody.customExts && Object.keys(msgBody.customExts).length"
+                      v-if="msgBody.body?.params && Object.keys(msgBody.body.params).length"
                       style="margin: 4px 0 0 0; font-size: 12px; color: #999"
                     >
-                      {{ JSON.stringify(msgBody.customExts) }}
+                      {{ JSON.stringify(msgBody.body.params) }}
                     </p>
                   </div>
                 </div>
@@ -1101,20 +1042,20 @@ const getReactionUserAvatar = (userId) => {
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item
-                    v-if="msgBody.type === MESSAGE_TYPE.TEXT && isSupported"
-                    @click="copyTextMessages(msgBody.msg)"
+                    v-if="msgBody.type === 'text' && isSupported"
+                    @click="copyTextMessages(msgBody.body.content)"
                   >
                     复制
                   </el-dropdown-item>
                   <el-dropdown-item
-                    v-if="msgBody._canRecall"
+                    v-if="canRecallMessage(msgBody)"
                     @click="recallMessage(msgBody)"
                   >
                     撤回
                   </el-dropdown-item>
                   <el-dropdown-item
                     v-if="
-                      msgBody.type === MESSAGE_TYPE.TEXT && msgBody._isMyself
+                      msgBody.type === 'text' && isMyself(msgBody)
                     "
                     @click="showModifyMsgModal(msgBody)"
                   >
@@ -1146,7 +1087,7 @@ const getReactionUserAvatar = (userId) => {
                     删除
                   </el-dropdown-item>
                   <el-dropdown-item
-                    v-if="!msgBody._isMyself"
+                    v-if="!isMyself(msgBody)"
                     @click="informOnMessage(msgBody)"
                   >
                     举报
@@ -1169,7 +1110,7 @@ const getReactionUserAvatar = (userId) => {
             <div
               v-if="canUseReaction(msgBody)"
               class="message_reaction_bar"
-              :class="msgBody._isMyself && 'is-mine'"
+              :class="isMyself(msgBody) && 'is-mine'"
             >
               <div
                 v-if="getMessageReactions(msgBody).length > 0"
@@ -1177,11 +1118,11 @@ const getReactionUserAvatar = (userId) => {
               >
                 <button
                   v-for="reactionItem in getMessageReactions(msgBody)"
-                  :key="`${msgBody.id}_${reactionItem.reaction}`"
+                  :key="`${messageIdOf(msgBody)}_${reactionItem.reaction}`"
                   class="message_reaction_chip"
                   :class="reactionItem.isAddedBySelf && 'is-active'"
                   :disabled="
-                    isReactionLoading(msgBody.id, reactionItem.reaction)
+                    isReactionLoading(messageIdOf(msgBody), reactionItem.reaction)
                   "
                   @click="toggleReaction(msgBody, reactionItem)"
                 >
@@ -1191,7 +1132,7 @@ const getReactionUserAvatar = (userId) => {
               </div>
               <el-popover
                 trigger="click"
-                :placement="msgBody._isMyself ? 'bottom-end' : 'bottom-start'"
+                :placement="isMyself(msgBody) ? 'bottom-end' : 'bottom-start'"
                 :width="248"
                 popper-class="message_reaction_picker_popover"
                 :show-arrow="false"
@@ -1213,7 +1154,7 @@ const getReactionUserAvatar = (userId) => {
                       getExistingReactionItem(msgBody, reaction)?.isAddedBySelf &&
                       'is-active'
                     "
-                    :disabled="isReactionLoading(msgBody.id, reaction)"
+                    :disabled="isReactionLoading(messageIdOf(msgBody), reaction)"
                     @click="addReactionToMessage(msgBody, reaction)"
                   >
                     {{ reaction }}
@@ -1226,7 +1167,7 @@ const getReactionUserAvatar = (userId) => {
           <div class="message_item_status">
             <!-- 消息送达状态 -->
             <span
-              v-if="msgBody.delivered && msgBody._isMyself"
+              v-if="msgBody.delivered && isMyself(msgBody)"
               class="message_item_delivered_icon"
               title="消息已送达"
             >
@@ -1235,7 +1176,7 @@ const getReactionUserAvatar = (userId) => {
             <!-- 消息已读状态 -->
             <img
               class="message_item_readed_icon"
-              v-if="msgReadStatus(msgBody) && msgBody._isMyself"
+              v-if="msgReadStatus(msgBody) && isMyself(msgBody)"
               :src="messageReadedIcon"
               title="消息已读"
             />
@@ -1244,7 +1185,7 @@ const getReactionUserAvatar = (userId) => {
               v-if="
                 msgBody.groupReadCount !== undefined &&
                 msgBody.groupReadCount !== null &&
-                msgBody._isMyself
+                isMyself(msgBody)
               "
               class="message_item_group_read_count"
               title="已读人数"
@@ -1258,23 +1199,15 @@ const getReactionUserAvatar = (userId) => {
       <template v-if="msgBody.isRecall">
         <div class="recall_style">
           {{
-            msgBody._isMyself
+            isMyself(msgBody)
               ? '你'
-              : `${getUserDisplayNameById(msgBody.from)}`
+              : `${getUserDisplayNameById(msgBody.sender?.userId)}`
           }}撤回了一条消息<span
             class="reEdit"
-            v-show="msgBody._isMyself && msgBody.type === MESSAGE_TYPE.TEXT"
-            @click="reEdit(msgBody.msg)"
+            v-show="isMyself(msgBody) && msgBody.type === 'text'"
+            @click="reEdit(msgBody.body.content)"
             >重新编辑</span
           >
-        </div>
-      </template>
-      <!-- 灰色系统通知 -->
-      <template v-if="msgBody.type === CUSTOM_MESSAGE_TYPE.INFORM">
-        <div class="inform_style">
-          <p>
-            {{ msgBody.msg }}
-          </p>
         </div>
       </template>
     </div>
@@ -1292,7 +1225,7 @@ const getReactionUserAvatar = (userId) => {
           <div class="reaction_detail_selector">
             <button
               v-for="reactionItem in getMessageReactions(reactionDetailMsgBody)"
-              :key="`detail_${reactionDetailMsgBody.id}_${reactionItem.reaction}`"
+              :key="`detail_${messageIdOf(reactionDetailMsgBody)}_${reactionItem.reaction}`"
               class="message_reaction_chip"
               :class="
                 selectedReactionDetail === reactionItem.reaction && 'is-active'
@@ -1306,20 +1239,20 @@ const getReactionUserAvatar = (userId) => {
           <div v-loading="reactionDetailLoading" class="reaction_detail_user_list">
             <template v-if="reactionDetailUsers.length > 0">
               <div
-                v-for="userId in reactionDetailUsers"
-                :key="userId"
+                v-for="user in reactionDetailUsers"
+                :key="user.userId"
                 class="reaction_detail_user_item"
               >
                 <el-avatar
                   :size="30"
-                  :src="getReactionUserAvatar(userId)"
+                  :src="getReactionUserAvatar(user)"
                 />
                 <div class="reaction_detail_user_meta">
                   <div class="reaction_detail_user_name">
-                    {{ getReactionUserName(userId) }}
+                    {{ getReactionUserName(user) }}
                   </div>
                   <div class="reaction_detail_user_id">
-                    {{ userId }}
+                    {{ user.userId }}
                   </div>
                 </div>
               </div>

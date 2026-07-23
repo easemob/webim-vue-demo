@@ -2,7 +2,7 @@
 import { toRefs, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import UserStatus from '@/components/UserStatus';
-import { CHAT_TYPE } from '@/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import store from '@/store';
 import { useGetUserMapInfo } from '@/hooks';
 import { ElMessage } from 'element-plus';
@@ -11,8 +11,8 @@ const props = defineProps({
   routeQueryData: {
     type: Object,
     default: () => ({
-      id: '',
-      chatType: CHAT_TYPE.SINGLE,
+      conversationId: '',
+      conversationType: CONVERSATION_TYPE.SINGLE,
     }),
     required: true,
   },
@@ -22,26 +22,26 @@ const router = useRouter();
 //处理获取单人用户昵称等信息。
 const { getContactsNickNameById, getGroupNameByGroupId } = useGetUserMapInfo();
 const getContactsNickName = computed(() => {
-  return getContactsNickNameById(routeQueryData.value.id);
+  return getContactsNickNameById(routeQueryData.value.conversationId);
 });
 const threadTitle = computed(() => {
   if (!routeQueryData.value.isChatThread) return '';
-  return routeQueryData.value.threadName || routeQueryData.value.id || '';
+  return routeQueryData.value.threadName || routeQueryData.value.conversationId || '';
 });
 const threadParentTitle = computed(() => {
   if (!routeQueryData.value.isChatThread) return '';
-  return getGroupNameByGroupId(routeQueryData.value.groupId) || '';
+  return getGroupNameByGroupId(routeQueryData.value.parentConversationId) || '';
 });
 const backToParentGroup = () => {
-  if (!routeQueryData.value.groupId) {
+  if (!routeQueryData.value.parentConversationId) {
     ElMessage.error('缺少父群组 ID，无法返回群组');
     return;
   }
   router.push({
     path: '/chat/conversation/message',
     query: {
-      id: routeQueryData.value.groupId,
-      chatType: CHAT_TYPE.GROUP,
+      conversationId: routeQueryData.value.parentConversationId,
+      conversationType: CONVERSATION_TYPE.GROUP,
     },
   });
 };
@@ -50,7 +50,7 @@ const backToParentGroup = () => {
 const groupDetail = computed(() => {
   if (routeQueryData.value.isChatThread) return {};
   const groupDetail = store.getters.getJoinedGroupList.filter((item) => {
-    if (item.groupId === routeQueryData.value.id) {
+    if (item.groupId === routeQueryData.value.conversationId) {
       return item;
     }
   });
@@ -60,7 +60,7 @@ const groupDetail = computed(() => {
 //获取某用户的在订阅状态
 const getPersonUserStatus = computed(() => {
   return (
-    store.getters.getContactsUsersPresenceMap.get(routeQueryData.value.id) ?? {}
+    store.getters.getContactsUsersPresenceMap.get(routeQueryData.value.conversationId) ?? {}
   );
 });
 const isSubscribedUserPresence = computed(() => {
@@ -69,9 +69,9 @@ const isSubscribedUserPresence = computed(() => {
   };
 });
 onMounted(() => {
-  const { chatType, id: conversationId } = routeQueryData.value;
+  const { conversationType, conversationId } = routeQueryData.value;
   if (
-    chatType !== CHAT_TYPE.GROUP &&
+    conversationType !== CONVERSATION_TYPE.GROUP &&
     !isSubscribedUserPresence.value(conversationId)
   ) {
     store.dispatch('subFriendsPresence', [conversationId]);
@@ -80,13 +80,13 @@ onMounted(() => {
 </script>
 <template>
   <el-header class="chat_message_header">
-    <template v-if="routeQueryData.chatType === CHAT_TYPE.SINGLE">
+    <template v-if="routeQueryData.conversationType === CONVERSATION_TYPE.SINGLE">
       <div class="chat_user_box">
         <span class="chat_user_name"> {{ getContactsNickName }}</span>
         <UserStatus :userStatus="getPersonUserStatus" />
       </div>
     </template>
-    <template v-if="routeQueryData.chatType === CHAT_TYPE.GROUP">
+    <template v-if="routeQueryData.conversationType === CONVERSATION_TYPE.GROUP">
       <div class="chat_user_box">
         <el-button
           v-if="routeQueryData.isChatThread"
@@ -102,7 +102,7 @@ onMounted(() => {
           <small v-if="threadParentTitle"> - {{ threadParentTitle }}</small>
         </span>
         <span v-else class="chat_user_name">
-          {{ getGroupNameByGroupId(routeQueryData.id) || '' }}
+          {{ getGroupNameByGroupId(routeQueryData.conversationId) || '' }}
           {{ `(${groupDetail?.memberCount ?? '-'})` }}
         </span>
       </div>

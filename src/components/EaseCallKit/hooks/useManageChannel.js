@@ -1,5 +1,5 @@
 import { ref, reactive, watch } from 'vue';
-import { IMClient } from '../constants/imClient';
+import { getClient } from '@/IM';
 import {
   CALLSTATUS,
   CALL_TYPES,
@@ -121,15 +121,15 @@ export default function useManageChannel() {
   };
   //更新频道信息
   const updateChannelInfos = (msgBody) => {
-    const { from, to, ext } = msgBody || {};
+    const { sender, ext } = msgBody || {};
     const params = {
       channelName: ext.channelName || callKitStatus.channelInfos.channelName,
       callId: ext.callId || callKitStatus.channelInfos.callId,
       callType: CALL_TYPE[ext.type] || callKitStatus.channelInfos.callType,
       callerDevId: ext.callerDevId || 0,
       calleeDevId: ext.calleeDevId,
-      callerIMName: from,
-      calleeIMName: to,
+      callerIMName: sender?.userId,
+      calleeIMName: getClient().getCurrentUserId(),
       groupId: ext?.ext?.groupId ? ext.ext.groupId : '',
     };
 
@@ -172,13 +172,12 @@ export default function useManageChannel() {
     } catch (error) {}
     //更改部分ChannelInfos
     const params = {
-      from: IMClient.user,
-      to: callType === CALL_TYPES.MULTI_VIDEO ? '' : targetId,
+      sender: { userId: getClient().getCurrentUserId() },
       ext: {
         channelName: channelInfors.channelName,
         callId: channelInfors.callId,
         type: callType,
-        callerDevId: IMClient.context.jid.clientResource,
+        callerDevId: getClient().getClientResource(),
       },
     };
     //如果存在群组ID则增加ext字段进入到groupId

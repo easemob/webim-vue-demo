@@ -1,4 +1,4 @@
-import { getCurrentUserId, requireManager } from '../index';
+import { requireManager } from '../index';
 import store from '@/store';
 import { MESSAGE_STATUS_TYPE } from '@/constant';
 import { wrapImEventHandler } from '@/utils/safeCall';
@@ -8,44 +8,45 @@ export const imReadAckListener = () => {
     requireManager('chatManager').addEventHandler(
       'aboutReadAckMessage',
       wrapImEventHandler({
-        onMessageReceipts: (message) => {
-          updateMessageReadStatus(message);
-        },
-        onConversationUnreadMessageCountCleared: (message) => {
-          updateConversationReadStatus(message);
+        onMessageReceipts: (receipts) => {
+          updateMessageReadStatus(receipts);
         },
       }),
     );
   };
-  //根据收到的单条消息已读回执更新消息已读状态状态
-  const updateMessageReadStatus = (message) => {
-    if (!message || typeof message !== 'object') {
-      console.warn('[updateMessageReadStatus] 无效 message', message);
+  // SDK 5.0 onMessageReceipts 传入回执数组；每项以 conversationId、
+  // conversationType 和 messageIds 定位已读消息。
+  const updateMessageReadStatus = (receipts) => {
+    if (!Array.isArray(receipts)) {
+      console.warn('[updateMessageReadStatus] SDK 5.0 回执不是数组', receipts);
       return;
     }
-    const { mid, to, from } = message;
-    const key = to === getCurrentUserId() ? from : to;
-    const payload = {
-      id: mid,
-      key,
-      type: MESSAGE_STATUS_TYPE.READ_STATUS,
-    };
-    store.commit('UPDATE_MESSAGE_IDS_COLLECTION', payload);
-  };
-  //根据收到会话已读回执更新整个会话为已读状态
-  const updateConversationReadStatus = (message) => {
-    if (!message || typeof message !== 'object') {
-      console.warn('[updateConversationReadStatus] 无效 message', message);
-      return;
-    }
-    const { to, from } = message;
-    const key = to === getCurrentUserId() ? from : to;
-    const payload = {
-      key,
-      type: MESSAGE_STATUS_TYPE.CHANLE_STATUS,
-    };
-    store.commit('UPDATE_MESSAGE_IDS_COLLECTION', payload);
-    store.commit('CLEAR_CONVERSATION_ITEM_UNREAD_COUNT', key);
+    receipts.forEach((receipt) => {
+      if (!receipt?.conversationId || !Array.isArray(receipt.messageIds)) {
+        return;
+      }
+      if (receipt.conversationType === 'singleChat') {
+        receipt.messageIds.forEach((messageId) => {
+          if (!messageId) return;
+          store.commit('UPDATE_MESSAGE_IDS_COLLECTION', {
+            messageId,
+            key: receipt.conversationId,
+            type: MESSAGE_STATUS_TYPE.READ_STATUS,
+          });
+        });
+        return;
+      }
+      if (receipt.conversationType === 'groupChat') {
+        receipt.receiptDetails.forEach(({ messageId, count }) => {
+          store.commit('UPDATE_MESSAGE_READ', {
+            messageId,
+            conversationId: receipt.conversationId,
+            conversationType: receipt.conversationType,
+            groupReadCount: count,
+          });
+        });
+      }
+    });
   };
   return {
     mountReadAckEventListener,

@@ -1,43 +1,27 @@
 import { getCurrentUserId, requireManager } from '@/IM';
-import { normalizeSdk5Messages } from '@/IM/sdk5/messageAdapter';
-import { setMessageKey } from '@/utils/handleSomeData';
 import _ from 'lodash';
 import {
   MESSAGE_STATUS_TYPE,
-  CUSTOM_MESSAGE_TYPE,
   CHANGE_MESSAGE_BODAY_TYPE,
   CHAT_TYPE,
   MAX_MESSAGE_LIST_COUNT,
 } from '@/constant';
 import { isDirectedMessage } from '@/utils/directedMessage';
 import eventEmitter from '@/utils/eventEmitter';
-import {
-  STREAM_MIN_SDK_VERSION,
-  isSdkVersionAtLeast,
-  shouldTriggerIncomingMessageEffects,
-} from '@/utils/streamMessageSupport';
+import { shouldTriggerIncomingMessageEffects } from '@/utils/streamMessageSupport';
 
 const chatManager = () => requireManager('chatManager');
 const chatThreadManager = () => requireManager('chatThreadManager');
-
-const normalizeReactionList = (reactions = []) => {
-  if (!Array.isArray(reactions)) return [];
-  return reactions
-    .filter((item) => item && item.reaction)
-    .map((item) => ({
-      reaction: item.reaction,
-      count: Number(item.count ?? item.userCount) || 0,
-      userList: Array.isArray(item.userList) ? item.userList : [],
-      isAddedBySelf: !!item.isAddedBySelf,
-      op: Array.isArray(item.op) ? item.op : [],
-    }));
-};
+const messageIdOf = (message) => message?.msgServerId || message?.msgLocalId || '';
 
 const updateMessageReactionByKey = (state, listKey, messageId, reactions) => {
   if (!state.messageList[listKey]) return false;
-  const message = _.find(state.messageList[listKey], (o) => o.id === messageId);
+  const message = _.find(
+    state.messageList[listKey],
+    (item) => messageIdOf(item) === messageId,
+  );
   if (!message) return false;
-  message.reactions = normalizeReactionList(reactions);
+  message.reactions = reactions;
   return true;
 };
 
@@ -57,7 +41,7 @@ const updateMessageReactionInAllLists = (state, messageId, reactions) => {
 
 const isSameMessage = (message, messageId) => {
   if (!message || !messageId) return false;
-  return message.id === messageId || message.mid === messageId;
+  return messageIdOf(message) === messageId;
 };
 
 const findMessageById = (state, preferredKey, messageId) => {
@@ -97,11 +81,9 @@ const findLocalMessageMetaById = (state, messageId) => {
   const message = findMessageById(state, '', messageId);
   if (!message) return null;
   return {
-    id: message.id,
-    mid: message.mid,
-    to: message.to,
-    from: message.from,
-    chatType: message.chatType,
+    messageId: messageIdOf(message),
+    conversationId: message.conversationId,
+    conversationType: message.conversationType,
     isChatThread: message.isChatThread,
     groupId: message.groupId,
   };
@@ -143,39 +125,23 @@ const callThreadApi = async (methodName, params, request) => {
   }
 };
 
-const getHistoryNextCursor = (res) =>
-  res?.cursor ??
-  res?.next_key ??
-  res?.nextKey ??
-  res?.nex_key ??
-  res?.data?.cursor ??
-  res?.data?.next_key ??
-  res?.data?.nextKey ??
-  res?.data?.nex_key;
-
-const normalizeHistoryCursor = (cursor) => {
-  if (cursor === undefined || cursor === null) return '';
-  const normalized = String(cursor).trim();
-  if (normalized === '') return '';
-  if (normalized.toLowerCase() === 'undefined') return '';
-  if (normalized.toLowerCase() === 'null') return '';
-  return normalized;
-};
-
 const shouldPreserveEditedText = (currentMessage, incomingMessage) => {
   if (!currentMessage || !incomingMessage) return false;
-  if (currentMessage.type !== 'txt') return false;
-  if (incomingMessage.type !== undefined && incomingMessage.type !== 'txt')
+  if (currentMessage.type !== 'text') return false;
+  if (incomingMessage.type !== undefined && incomingMessage.type !== 'text')
     return false;
   const currentOperationCount =
     Number(currentMessage?.modifiedInfo?.operationCount) || 0;
   const incomingOperationCount =
     Number(incomingMessage?.modifiedInfo?.operationCount) || 0;
   if (currentOperationCount <= 0) return false;
-  if (currentMessage.msg === undefined || incomingMessage.msg === undefined)
+  if (
+    currentMessage.body?.content === undefined ||
+    incomingMessage.body?.content === undefined
+  )
     return false;
   return (
-    currentMessage.msg !== incomingMessage.msg &&
+    currentMessage.body.content !== incomingMessage.body.content &&
     incomingOperationCount <= currentOperationCount
   );
 };
@@ -192,7 +158,7 @@ const mergeMessagePreservingEditedText = (currentMessage, incomingMessage) => {
     ...incomingMessage,
   };
   if (shouldKeepEditedText) {
-    nextMessage.msg = currentMessage.msg;
+    nextMessage.body = { ...nextMessage.body, content: currentMessage.body.content };
   }
   return nextMessage;
 };
@@ -206,47 +172,39 @@ const Message = {
     },
   },
   mutations: {
-    UPDATE_MESSAGE_LIST: (state, msgBody) => {
+    UPDATE_MESSAGE_LIST: (state, message) => {
       // 确保msgBody有基本属性
-      if (!msgBody) {
-        console.error('msgBody为空，无法更新消息列表');
+      if (!message?.conversationId || !message?.conversationType) {
+        console.error('SDK 5.0 message is incomplete; cannot update message list', message);
         return;
       }
-
-      const serverMsgId =
-        msgBody.id || Date.now() + Math.random().toString(36).substring(2);
-      const listKey = setMessageKey(msgBody);
+      const messageId = messageIdOf(message);
+      if (!messageId) {
+        console.error('SDK 5.0 message has no msgServerId or msgLocalId', message);
+        return;
+      }
+      const listKey = message.conversationId;
 
       if (!state.messageList[listKey]) {
         state.messageList[listKey] = [];
       }
 
-      // 为所有类型的消息生成临时ID（如果没有）
-      if (!msgBody.id) {
-        msgBody.id = serverMsgId;
-      }
-
-      // 先检查是否已存在相同ID的消息，仅在不存在时添加
-      if (msgBody.id) {
+      {
         const exists = state.messageList[listKey].some(
-          (m) => m.id === msgBody.id,
+          (item) => messageIdOf(item) === messageId,
         );
         if (!exists) {
-          state.messageList[listKey].push(msgBody);
+          state.messageList[listKey].push(message);
         } else {
-          // 如果存在相同ID的消息，更新它而不是忽略
           const index = state.messageList[listKey].findIndex(
-            (m) => m.id === msgBody.id,
+            (item) => messageIdOf(item) === messageId,
           );
           if (index !== -1) {
             const currentMessage = state.messageList[listKey][index];
             state.messageList[listKey][index] =
-              mergeMessagePreservingEditedText(currentMessage, msgBody);
+              mergeMessagePreservingEditedText(currentMessage, message);
           }
         }
-      } else {
-        // 如果没有ID，直接添加
-        state.messageList[listKey].push(msgBody);
       }
 
       // 限制数组的长度为 MAX_MESSAGE_LIST_COUNT
@@ -261,15 +219,15 @@ const Message = {
        */
       if (
         !state.messageIdsCollection[listKey] &&
-        msgBody.chatType === CHAT_TYPE.SINGLE
+        message.conversationType === CHAT_TYPE.SINGLE
       ) {
         state.messageIdsCollection[listKey] = new Map();
       }
       if (
-        msgBody.from === getCurrentUserId() &&
-        msgBody.chatType === CHAT_TYPE.SINGLE
+        message.sender?.userId === getCurrentUserId() &&
+        message.conversationType === CHAT_TYPE.SINGLE
       ) {
-        state.messageIdsCollection[listKey].set(serverMsgId, {
+        state.messageIdsCollection[listKey].set(messageId, {
           [MESSAGE_STATUS_TYPE.READ_STATUS]: false,
         });
       }
@@ -283,41 +241,42 @@ const Message = {
       const mergedById = new Map();
 
       currentMessages.forEach((message) => {
-        if (message?.id) {
-          mergedById.set(message.id, message);
+        if (messageIdOf(message)) {
+          mergedById.set(messageIdOf(message), message);
         }
       });
 
       historyMessageList.forEach((message) => {
-        if (!message?.id) {
+        if (!messageIdOf(message)) {
           return;
         }
-        const currentMessage = mergedById.get(message.id);
+        const messageId = messageIdOf(message);
+        const currentMessage = mergedById.get(messageId);
         mergedById.set(
-          message.id,
+          messageId,
           mergeMessagePreservingEditedText(currentMessage, message),
         );
       });
 
       const historyIds = new Set(
-        historyMessageList.map((message) => message?.id).filter(Boolean),
+        historyMessageList.map(messageIdOf).filter(Boolean),
       );
       const mergedHistory = historyMessageList.map(
-        (message) => mergedById.get(message.id) || message,
+        (message) => mergedById.get(messageIdOf(message)) || message,
       );
       const remainedCurrent = currentMessages.filter(
-        (message) => !message?.id || !historyIds.has(message.id),
+        (message) => !messageIdOf(message) || !historyIds.has(messageIdOf(message)),
       );
 
       state.messageList[listKey] = [...mergedHistory, ...remainedCurrent];
     },
     UPDATE_MESSAGE_IDS_COLLECTION: (state, payload) => {
-      const { id: serverMsgId, key, type } = payload;
+      const { messageId, key, type } = payload;
       switch (type) {
         case MESSAGE_STATUS_TYPE.READ_STATUS:
           {
             if (state.messageIdsCollection[key]) {
-              state.messageIdsCollection[key].set(serverMsgId, {
+              state.messageIdsCollection[key].set(messageId, {
                 [MESSAGE_STATUS_TYPE.READ_STATUS]: true,
               });
             }
@@ -346,16 +305,19 @@ const Message = {
     },
     //修改本地原消息【撤回、删除、编辑】
     CHANGE_MESSAGE_BODAY: (state, payload) => {
-      const { type, key, mid } = payload;
+      const { type, key, messageId } = payload;
       switch (type) {
         case CHANGE_MESSAGE_BODAY_TYPE.RECALL:
           {
             if (state.messageList[key]) {
-              const res = _.find(state.messageList[key], (o) => o.id === mid);
+              const res = _.find(
+                state.messageList[key],
+                (item) => messageIdOf(item) === messageId,
+              );
               if (res) {
                 res.isRecall = true;
               } else {
-                console.warn('未找到要撤回的消息:', mid);
+                console.warn('未找到要撤回的消息:', messageId);
               }
             }
           }
@@ -367,7 +329,7 @@ const Message = {
               const sourceData = state.messageList[key];
               const index = _.findIndex(
                 state.messageList[key],
-                (o) => o.id === mid,
+                (item) => messageIdOf(item) === messageId,
               );
               sourceData.splice(index, 1);
               state.messageList[key] = _.assign([], sourceData);
@@ -376,27 +338,17 @@ const Message = {
           break;
         case CHANGE_MESSAGE_BODAY_TYPE.MODIFY:
           {
-            const res = findMessageById(state, key, mid);
+            const res = findMessageById(state, key, messageId);
             if (res) {
-              // 保存原始的发送者信息和聊天类型
-              const originalMessage = { ...res };
-              const originalFrom = res.from;
-              const originalChatType = res.chatType;
-              const originalMsg = res.msg;
-              // 更新消息内容，但保持发送者和聊天类型不变
-              _.assign(res, payload?.message);
-              if (payload?.msg !== undefined) {
-                res.msg = payload.msg;
-              } else if (
-                shouldPreserveEditedText(originalMessage, payload?.message)
-              ) {
-                res.msg = originalMsg;
+              res.body = payload?.message?.body;
+              res.ext = payload?.message?.ext;
+              res.modifiedInfo = payload?.message?.modifiedInfo;
+              const updatedContent = payload?.message?.body?.content;
+              if (updatedContent !== undefined) {
+                res.body = { ...res.body, content: updatedContent };
               }
-              // 恢复原始的发送者信息和聊天类型
-              res.from = originalFrom;
-              res.chatType = originalChatType;
             } else {
-              console.warn('未找到要修改的消息:', mid);
+              console.warn('未找到要修改的消息:', messageId);
             }
           }
           break;
@@ -420,12 +372,12 @@ const Message = {
     },
     // 更新消息送达状态
     UPDATE_MESSAGE_DELIVERED: (state, payload) => {
-      const { messageId, conversationId, chatType } = payload;
-      const key = setMessageKey({ to: conversationId, chatType });
+      const { messageId, conversationId, conversationType } = payload;
+      const key = conversationId;
       if (state.messageList[key]) {
         const message = _.find(
           state.messageList[key],
-          (o) => o.id === messageId,
+          (item) => messageIdOf(item) === messageId,
         );
         if (message) {
           message.delivered = true;
@@ -433,7 +385,7 @@ const Message = {
           console.warn('[Message Receipt] 未找到送达回执对应消息', {
             messageId,
             conversationId,
-            chatType,
+            conversationType,
             listKey: key,
           });
         }
@@ -441,19 +393,19 @@ const Message = {
         console.warn('[Message Receipt] 送达回执对应消息列表不存在', {
           messageId,
           conversationId,
-          chatType,
+          conversationType,
           listKey: key,
         });
       }
     },
     // 更新消息已读状态
     UPDATE_MESSAGE_READ: (state, payload) => {
-      const { messageId, conversationId, chatType, groupReadCount } = payload;
-      const key = setMessageKey({ to: conversationId, chatType });
+      const { messageId, conversationId, conversationType, groupReadCount } = payload;
+      const key = conversationId;
       if (state.messageList[key]) {
         const message = _.find(
           state.messageList[key],
-          (o) => o.id === messageId,
+          (item) => messageIdOf(item) === messageId,
         );
         if (message) {
           message.read = true;
@@ -464,7 +416,7 @@ const Message = {
           console.warn('[Message Receipt] 未找到已读回执对应消息', {
             messageId,
             conversationId,
-            chatType,
+            conversationType,
             groupReadCount,
             listKey: key,
           });
@@ -473,7 +425,7 @@ const Message = {
         console.warn('[Message Receipt] 已读回执对应消息列表不存在', {
           messageId,
           conversationId,
-          chatType,
+          conversationType,
           groupReadCount,
           listKey: key,
         });
@@ -481,26 +433,29 @@ const Message = {
     },
     // 发送消息已读回执
     SEND_MESSAGE_READ_RECEIPT: (state, payload) => {
-      const { messageId, to, chatType } = payload;
-      const key = setMessageKey({ to, chatType });
+      const { messageId, conversationId, conversationType } = payload;
+      const key = conversationId;
       if (state.messageList[key]) {
         const message = _.find(
           state.messageList[key],
-          (o) => o.id === messageId,
+          (item) => messageIdOf(item) === messageId,
         );
         if (message) {
-          if (chatType === CHAT_TYPE.SINGLE || chatType === CHAT_TYPE.GROUP) {
+          if (
+            conversationType === CHAT_TYPE.SINGLE ||
+            conversationType === CHAT_TYPE.GROUP
+          ) {
             chatManager()
               .sendMessageReadReceipts({
-                conversationId: to,
-                conversationType: chatType,
+                conversationId,
+                conversationType,
                 messageIds: [messageId],
               })
               .then((result) => {
                 console.log('[Message Receipt] send read receipt success', {
                   messageId,
-                  targetId: to,
-                  chatType,
+                  conversationId,
+                  conversationType,
                   listKey: key,
                   result,
                 });
@@ -508,8 +463,8 @@ const Message = {
               .catch((error) => {
                 console.error('[Message Receipt] send read receipt failed', {
                   messageId,
-                  targetId: to,
-                  chatType,
+                  conversationId,
+                  conversationType,
                   listKey: key,
                   error,
                 });
@@ -517,24 +472,24 @@ const Message = {
           } else {
             console.error('[Message Receipt] SDK 5.0 does not support chatroom receipts', {
               messageId,
-              targetId: to,
-              chatType,
+              conversationId,
+              conversationType,
               listKey: key,
             });
           }
         } else {
           console.warn('[Message Receipt] 未找到需要发送已读回执的消息', {
             messageId,
-            targetId: to,
-            chatType,
+            conversationId,
+            conversationType,
             listKey: key,
           });
         }
       } else {
         console.warn('[Message Receipt] 已读回执对应消息列表不存在', {
           messageId,
-          targetId: to,
-          chatType,
+          conversationId,
+          conversationType,
           listKey: key,
         });
       }
@@ -542,24 +497,24 @@ const Message = {
   },
   actions: {
     //添加新消息
-    createNewMessage: ({ dispatch, commit, state }, params) => {
-      const key = setMessageKey(params);
-      const existedBefore = hasMessageInList(state, key, params?.id);
+    createNewMessage: ({ dispatch, commit, state }, message) => {
+      const key = message.conversationId;
+      const existedBefore = hasMessageInList(state, key, messageIdOf(message));
       const shouldTriggerSideEffects = shouldTriggerIncomingMessageEffects({
-        message: params,
+        message,
         existedBefore,
       });
 
-      commit('UPDATE_MESSAGE_LIST', params);
+      commit('UPDATE_MESSAGE_LIST', message);
       // 流式消息后续分片只更新原消息内容，不重复触发新消息副作用
       if (shouldTriggerSideEffects) {
-        eventEmitter.emit('newMessage', params);
+        eventEmitter.emit('newMessage', message);
       }
 
-      if (!isDirectedMessage(params)) {
+      if (!isDirectedMessage(message)) {
         dispatch('updateConversationList', {
           conversationId: key,
-          chatType: params.chatType,
+          conversationType: message.conversationType,
           incrementUnread: shouldTriggerSideEffects,
         });
       }
@@ -567,56 +522,25 @@ const Message = {
     //获取历史消息
     getHistoryMessage: async ({ state, dispatch, commit }, params) => {
       const {
-        id,
-        chatType,
+        conversationId,
+        conversationType,
         cursor = -1,
         pageSize = 20,
         searchDirection = 'up',
-        searchOptions,
       } = params;
       return new Promise((resolve, reject) => {
-        if (
-          chatType === CHAT_TYPE.CHATROOM &&
-          !isSdkVersionAtLeast(
-          '5.0.0',
-            STREAM_MIN_SDK_VERSION,
-          )
-        ) {
-          const error = new Error(
-            `聊天室历史消息需要 Web SDK >= ${STREAM_MIN_SDK_VERSION}，当前版本 5.0.0`,
-          );
-          console.error('[History Message] chatroom history unsupported', {
-            conversationId: id,
-            chatType,
-            sdkVersion: '5.0.0',
-            minimumVersion: STREAM_MIN_SDK_VERSION,
-            error,
-          });
-          reject(error);
-          return;
-        }
-
         const options = {
-          targetId: id,
+          conversationId,
+          conversationType,
           pageSize: Math.min(Math.max(Number(pageSize) || 20, 1), 50),
-          cursor,
-          chatType: chatType,
-          isChatThread: params.isChatThread === true,
-          searchDirection,
-          ...(searchOptions ? { searchOptions } : {}),
-        };
-        chatManager().getHistoryMessages({
-          conversationId: id,
-          conversationType: chatType,
           cursor: cursor === -1 ? '' : String(cursor),
-          pageSize: Math.min(Math.max(Number(pageSize) || 20, 1), 50),
           searchDirection,
-        })
+        };
+        chatManager().getHistoryMessages(options)
           .then((res) => {
-            const nextCursor = normalizeHistoryCursor(getHistoryNextCursor(res));
-            const messages = normalizeSdk5Messages(res.items || []);
-            const messageCount = messages?.length || 0;
-            const reactionMessages = (messages || []).filter(
+            const { items: messages, cursor: nextCursor, hasMore } = res;
+            const messageCount = messages.length;
+            const reactionMessages = messages.filter(
               (item) =>
                 Array.isArray(item?.reactions) && item.reactions.length > 0,
             );
@@ -624,21 +548,25 @@ const Message = {
               console.log(
                 '[Reaction] getHistoryMessages 返回的消息包含 Reaction 概览',
                 reactionMessages.map((item) => ({
-                  messageId: item.id,
-                  chatType: item.chatType,
+                  messageId: messageIdOf(item),
+                  conversationId: item.conversationId,
+                  conversationType: item.conversationType,
                   reactions: item.reactions,
                 })),
               );
             }
-            const historyMessagesMissingFields = (messages || []).filter(
-              (item) => !item?.chatType || !item?.to,
+            const historyMessagesMissingFields = messages.filter(
+              (item) =>
+                !item?.conversationId ||
+                !item?.conversationType ||
+                !messageIdOf(item),
             );
             if (historyMessagesMissingFields.length > 0) {
               console.error(
                 '[History Message] 服务端返回的历史消息缺少关键字段，按原始结果展示/入库',
                 {
-                  conversationId: id,
-                  requestChatType: chatType,
+                  conversationId,
+                  conversationType,
                   missingCount: historyMessagesMissingFields.length,
                   messages: historyMessagesMissingFields,
                 },
@@ -647,48 +575,46 @@ const Message = {
             resolve({
               messages,
               cursor: nextCursor,
-              hasMore: String(nextCursor) !== '',
+              hasMore,
             });
-            const reversedMessages = _.reverse(_.cloneDeep(messages || []));
-            // 为历史消息生成正确的listKey
-            const listKey = setMessageKey({ to: id, chatType });
+            const reversedMessages = [...messages].reverse();
+            const listKey = conversationId;
+            const hasLocalConversation = !!state.messageList[listKey];
             commit('UPDATE_HISTORY_MESSAGE', {
-              listKey: listKey,
+              listKey,
               historyMessageList: reversedMessages,
             });
-            if (!state.messageList[listKey]) {
+            if (!hasLocalConversation) {
               //提示会话列表更新
               dispatch('updateConversationList', {
-                conversationId: id,
-                chatType: chatType,
+                conversationId,
+                conversationType,
               });
             }
             dispatch('UsersProfile/processMessageExt', reversedMessages, {
               root: true,
             });
             console.log('[History Message] getHistoryMessages success', {
-              conversationId: id,
-              chatType,
+              conversationId,
+              conversationType,
               cursor,
               nextCursor,
               pageSize: options.pageSize,
               searchDirection,
-              searchOptions,
               messageCount,
-              firstMessageId: messageCount > 0 ? messages[0].id : '',
+              firstMessageId: messageCount > 0 ? messageIdOf(messages[0]) : '',
               lastMessageId:
-                messageCount > 0 ? messages[messageCount - 1].id : '',
+                messageCount > 0 ? messageIdOf(messages[messageCount - 1]) : '',
               listKey,
             });
           })
           .catch((error) => {
             console.error('[History Message] getHistoryMessages failed', {
-              conversationId: id,
-              chatType,
+              conversationId,
+              conversationType,
               cursor,
               pageSize: options.pageSize,
               searchDirection,
-              searchOptions,
               error,
               errorType: error.type,
               errorMessage: error.message,
@@ -702,8 +628,8 @@ const Message = {
               error.message?.includes('Invalid token')
             ) {
               console.error('[History Message] 令牌无效，跳转到登录页面', {
-                conversationId: id,
-                chatType,
+                conversationId,
+                conversationType,
                 error,
               });
               // 清除本地存储的登录信息
@@ -722,90 +648,66 @@ const Message = {
       if (!isDirectedMessage(message)) {
         // 提示会话列表更新
         dispatch('updateConversationList', {
-          conversationId: setMessageKey(message), // 使用setMessageKey生成正确的列表键
-          chatType: message.chatType,
+          conversationId: message.conversationId,
+          conversationType: message.conversationType,
         });
       }
     },
-    //添加通知类消息
-    createInformMessage: ({ dispatch, commit }, params) => {
-      /** 
-               const params = {
-                    from: '',
-                    to: '',
-                    chatType: '',
-                    msg:''
-                }
-            */
-      const msgBody = _.cloneDeep(params);
-      msgBody.type = CUSTOM_MESSAGE_TYPE.INFORM;
-      const key = setMessageKey(params);
-
-      commit('UPDATE_MESSAGE_LIST', msgBody);
-      dispatch('updateConversationList', {
-        conversationId: key,
-        chatType: msgBody.chatType,
-      });
-    },
     //删除消息
     removeMessage: ({ dispatch, commit }, params) => {
-      const { id: mid, to, chatType } = params;
+      const { messageId, conversationId, conversationType } = params;
 
       // 验证参数
-      if (!to || to === '') {
-        return Promise.reject(new Error('缺少targetId参数'));
+      if (!conversationId) {
+        return Promise.reject(new Error('缺少conversationId参数'));
       }
 
-      const key = setMessageKey(params);
+      const key = conversationId;
       const deleteOptions = {
-        targetId: to,
-        chatType: chatType,
-        messageIds: [mid],
+        conversationId,
+        conversationType,
+        messageIds: [messageId],
       };
       console.log('[Message Delete] removeHistoryMessages 请求参数', {
         event: '聊天室/会话消息删除',
-        messageId: mid,
-        targetId: deleteOptions.targetId,
+        messageId,
+        conversationId,
         conversationKey: key,
-        chatType,
-        to,
-        from: params?.from,
+        conversationType,
         sdkOptions: deleteOptions,
         rawMessage: params,
       });
       return new Promise((resolve, reject) => {
         chatManager().removeHistoryMessages({
-          conversationId: to,
-          conversationType: chatType,
-          messageIds: [mid],
+          conversationId,
+          conversationType,
+          messageIds: [messageId],
         })
           .then((res) => {
             console.log('[Message Delete] removeHistoryMessages 成功', {
-              messageId: mid,
-              targetId: deleteOptions.targetId,
+              messageId,
+              conversationId,
               conversationKey: key,
-              chatType,
+              conversationType,
               response: res,
             });
             commit('CHANGE_MESSAGE_BODAY', {
               type: CHANGE_MESSAGE_BODAY_TYPE.DELETE,
               key: key,
-              mid,
+              messageId,
             });
             dispatch('updateConversationList', {
               conversationId: key,
-              chatType,
+              conversationType,
             });
             resolve('OK');
           })
           .catch((error) => {
             console.error('[Message Delete] removeHistoryMessages 失败', {
-              messageId: mid,
-              targetId: deleteOptions.targetId,
+              messageId,
+              conversationId,
               conversationKey: key,
-              chatType,
-              to,
-              from: params?.from,
+              conversationType,
               sdkOptions: deleteOptions,
               rawMessage: params,
               error,
@@ -816,26 +718,26 @@ const Message = {
     },
     //撤回消息
     recallMessage: async ({ dispatch, commit }, params) => {
-      const { mid, to, chatType } = params;
+      const { messageId, conversationId, conversationType } = params;
       const isChatThread = params.isChatThread === true;
 
       return new Promise((resolve, reject) => {
         chatManager().recallMessage({
-          conversationId: to,
-          conversationType: chatType,
-          messageId: mid,
+          conversationId,
+          conversationType,
+          messageId,
         })
           .then((result) => {
-            const key = setMessageKey({ to, chatType });
+            const key = conversationId;
             commit('CHANGE_MESSAGE_BODAY', {
               type: CHANGE_MESSAGE_BODAY_TYPE.RECALL,
               key: key,
-              mid,
+              messageId,
             });
 
             dispatch('updateConversationList', {
               conversationId: key,
-              chatType,
+              conversationType,
             });
 
             resolve('OK');
@@ -851,18 +753,17 @@ const Message = {
     modifyMessage: async ({ dispatch, commit }, params) => {
       if (
         !params ||
-        !params.id ||
-        !params.to ||
-        !params.chatType ||
-        !params.msg
+        !params.messageId ||
+        !params.conversationId ||
+        !params.conversationType ||
+        !params.content
       ) {
         console.error('modifyMessage 参数错误:', params);
         return Promise.reject(new Error('参数错误'));
       }
 
-      const { id, mid, to, chatType, msg } = params;
-      const messageId = mid || id;
-      const key = setMessageKey(params);
+      const { messageId, conversationId, conversationType, content } = params;
+      const key = conversationId;
       const isChatThread = params.isChatThread === true;
       if (!messageId) {
         console.error('modifyMessage 缺少可用的消息 ID:', params);
@@ -870,36 +771,27 @@ const Message = {
       }
       return new Promise((resolve, reject) => {
         const textMessage = chatManager().createTextMessage({
-          conversationId: to,
-          conversationType: chatType,
-          content: msg,
+          conversationId,
+          conversationType,
+          content,
         });
 
         chatManager().modifyMessage({
-          conversationId: to,
-          conversationType: chatType,
+          conversationId,
+          conversationType,
           messageId,
           message: textMessage,
         })
-          .then((res) => {
-            const { message } = res || {};
+          .then((message) => {
             commit('CHANGE_MESSAGE_BODAY', {
               type: CHANGE_MESSAGE_BODAY_TYPE.MODIFY,
               key: key,
-              mid: messageId,
-              msg,
-              message: {
-                ...(message || {}),
-                id: message?.id || id || messageId,
-                mid: message?.mid || mid || messageId,
-                to: message?.to || to,
-                chatType: message?.chatType || chatType,
-                msg,
-              },
+              messageId,
+              message,
             });
             dispatch('updateConversationList', {
               conversationId: key,
-              chatType,
+              conversationType,
             });
             resolve('OK');
           })
@@ -907,10 +799,10 @@ const Message = {
             console.error('[Message Modify] modifyMessage 失败', {
               error,
               messageId,
-              targetId: to,
-              chatType,
+              conversationId,
+              conversationType,
               conversationKey: key,
-              modifiedContent: msg,
+              modifiedContent: content,
               isChatThread,
               groupId: params.groupId,
               loginUser: getCurrentUserId(),
@@ -920,27 +812,21 @@ const Message = {
       });
     },
     fetchMessageReactionList: async ({ commit }, params) => {
-      const { messageId, chatType, groupId, key } = params || {};
-      if (!messageId || !chatType) {
+      const { messageId, conversationType, groupId, key } = params || {};
+      if (!messageId || !conversationType) {
         throw new Error('fetchMessageReactionList 缺少参数');
       }
       try {
         const res = await chatManager().getReactionList({
           messageId,
-          conversationType: chatType,
-          conversationId: groupId || params?.conversationId,
+          conversationType,
+          groupId,
         });
-        const rawList = Array.isArray(res) ? res : [];
-        const target =
-          rawList.find(
-            (item) => item?.msgId === messageId || item?.messageId === messageId,
-          ) || {};
-        const reactions = normalizeReactionList(
-          target?.reactionList || target?.reactions || [],
-        );
+        const target = res.find((item) => item.messageId === messageId);
+        const reactions = target ? target.reactions : [];
         console.log('[Reaction] getReactionlist success', {
           messageId,
-          chatType,
+          conversationType,
           groupId,
           reactionCount: reactions.length,
           response: res,
@@ -954,7 +840,7 @@ const Message = {
       } catch (error) {
         console.error('[Reaction] getReactionlist failed', {
           messageId,
-          chatType,
+          conversationType,
           groupId,
           error,
         });
@@ -981,7 +867,7 @@ const Message = {
           reaction,
           cursor,
           pageSize,
-          userCount: Array.isArray(res?.data) ? res.data.length : undefined,
+          userCount: res.reactionUsers.length,
           response: res,
         });
         return res;
@@ -1004,19 +890,16 @@ const Message = {
       });
     },
     addMessageReaction: async ({ dispatch }, params) => {
-      const { messageId, reaction, chatType, groupId, key } = params || {};
+      const { messageId, reaction, conversationType, groupId, key } = params || {};
       if (!messageId || !reaction) {
         throw new Error('addMessageReaction 缺少参数');
-      }
-      if (chatType === CHAT_TYPE.CHATROOM) {
-        throw new Error('聊天室暂不支持 Reaction');
       }
       try {
         await chatManager().addReaction({ messageId, reaction });
         console.log('[Reaction] addReaction success', {
           messageId,
           reaction,
-          chatType,
+          conversationType,
           groupId,
         });
       } catch (error) {
@@ -1024,29 +907,26 @@ const Message = {
       }
       return dispatch('fetchMessageReactionList', {
         messageId,
-        chatType,
+        conversationType,
         groupId,
         key,
       });
     },
     deleteMessageReaction: async ({ dispatch }, params) => {
-      const { messageId, reaction, chatType, groupId, key } = params || {};
+      const { messageId, reaction, conversationType, groupId, key } = params || {};
       if (!messageId || !reaction) {
         throw new Error('deleteMessageReaction 缺少参数');
-      }
-      if (chatType === CHAT_TYPE.CHATROOM) {
-        throw new Error('聊天室暂不支持 Reaction');
       }
       await chatManager().removeReaction({ messageId, reaction });
       console.log('[Reaction] deleteReaction success', {
         messageId,
         reaction,
-        chatType,
+        conversationType,
         groupId,
       });
       return dispatch('fetchMessageReactionList', {
         messageId,
-        chatType,
+        conversationType,
         groupId,
         key,
       });

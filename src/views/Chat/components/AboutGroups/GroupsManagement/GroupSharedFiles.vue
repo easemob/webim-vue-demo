@@ -68,7 +68,6 @@ const downloadSharedFile = async (file) => {
     const response = await store.dispatch('downloadGroupSharedFile', {
       groupId: groupId.value,
       fileId: file.fileId,
-      secret: file.secret,
     });
     if (response instanceof Blob) {
       const url = window.URL.createObjectURL(response);
@@ -142,7 +141,11 @@ onMounted(fetchSharedFiles);
           {{ row.fileSize ? formatFileSize(row.fileSize) : '-' }}
         </template>
       </el-table-column>
-      <el-table-column prop="owner" label="上传者" width="140" />
+      <el-table-column label="上传者" width="140">
+        <template #default="{ row }">
+          {{ row.fileOwner?.userId || '' }}
+        </template>
+      </el-table-column>
       <el-table-column prop="fileId" label="文件 ID" min-width="180" />
       <el-table-column label="操作" width="120" fixed="right">
         <template #default="{ row }">

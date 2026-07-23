@@ -1,33 +1,17 @@
 import { requireManager } from '../index';
-import { normalizeSdk5Message } from '../sdk5/messageAdapter';
-import { CHANGE_MESSAGE_BODAY_TYPE, CHAT_TYPE } from '@/constant';
-import { setMessageKey } from '@/utils/handleSomeData';
+import { CHANGE_MESSAGE_BODAY_TYPE } from '@/constant';
 import store from '@/store';
 import { safeSync, wrapImEventHandler } from '@/utils/safeCall';
-import {
-  getThreadIdFromMessage,
-  normalizeThreadMessage as normalizeThreadMessagePayload,
-} from '@/utils/messageThread';
+
+const messageIdOf = (message) => message?.msgServerId || message?.msgLocalId || '';
 
 export const imReviceMessageListener = () => {
-  const normalizeThreadMessage = (message) => {
-    const normalizedMessage = normalizeThreadMessagePayload(message);
-    if (normalizedMessage?.isChatThread && normalizedMessage?.chatThread) {
-      normalizedMessage.to = normalizedMessage.chatThread.chatThreadId;
-    } else {
-      const chatThreadId = getThreadIdFromMessage(normalizedMessage);
-      if (chatThreadId) {
-        normalizedMessage.to = chatThreadId;
-      }
-    }
-    return normalizedMessage;
-  };
   //接收的消息往store中push
   const pushNewMessage = (message) => {
     if (Array.isArray(message)) {
       console.log('[IM Message] SDK 收到批量消息', {
         messageCount: message.length,
-        firstMessageChatType: message[0]?.chatType,
+        firstMessageConversationType: message[0]?.conversationType,
         rawMessages: message,
       });
       message.forEach((messageItem, index) => {
@@ -46,36 +30,39 @@ export const imReviceMessageListener = () => {
       console.warn('【IM】忽略空或非对象消息:', message);
       return;
     }
-    const normalizedMessage = normalizeThreadMessage(normalizeSdk5Message(message));
     console.log('[IM Message] SDK 收到消息', {
-      messageId: normalizedMessage.id || normalizedMessage.mid,
-      type: normalizedMessage.type,
-      chatType: normalizedMessage.chatType,
-      from: normalizedMessage.from,
-      to: normalizedMessage.to,
-      isChatThread: normalizedMessage.isChatThread,
-      chatThread: normalizedMessage.chatThread,
+      messageId: messageIdOf(message),
+      type: message.type,
+      conversationId: message.conversationId,
+      conversationType: message.conversationType,
+      senderId: message.sender?.userId,
+      timestamp: message.timestamp,
+      isChatThread: message.isChatThread,
+      chatThread: message.chatThread,
+      body: message.body,
+      ext: message.ext,
       rawMessage: message,
     });
 
-    if (!normalizedMessage.chatType) {
-      console.error('[IM Message] SDK 消息缺少 chatType，未写入本地消息列表', {
-        messageId: normalizedMessage.id || normalizedMessage.mid,
-        type: normalizedMessage.type,
-        from: normalizedMessage.from,
-        to: normalizedMessage.to,
+    if (!message.conversationId || !message.conversationType || !messageIdOf(message)) {
+      console.error('[IM Message] SDK 5.0 消息缺少关键字段，未写入本地消息列表', {
+        messageId: messageIdOf(message),
+        type: message.type,
+        conversationId: message.conversationId,
+        conversationType: message.conversationType,
+        senderId: message.sender?.userId,
         rawMessage: message,
       });
       return;
     }
 
-    Promise.resolve(store.dispatch('createNewMessage', normalizedMessage)).catch(
+    Promise.resolve(store.dispatch('createNewMessage', message)).catch(
       (err) => {
         console.error('[pushNewMessage.createNewMessage]', err);
       },
     );
     Promise.resolve(
-      store.dispatch('UsersProfile/processMessageExt', normalizedMessage, {
+      store.dispatch('UsersProfile/processMessageExt', message, {
         root: true,
       }),
     ).catch((err) => {
@@ -88,11 +75,11 @@ export const imReviceMessageListener = () => {
       return;
     }
     console.log('【Stream Message】收到流式消息分片:', {
-      id: message.id,
-      chatType: message.chatType,
-      from: message.from,
-      to: message.to,
-      msg: message.msg,
+      messageId: messageIdOf(message),
+      conversationId: message.conversationId,
+      conversationType: message.conversationType,
+      senderId: message.sender?.userId,
+      body: message.body,
       stream: message.stream,
     });
     pushNewMessage(message);
@@ -103,69 +90,29 @@ export const imReviceMessageListener = () => {
       console.warn('【IM】忽略空撤回事件:', message);
       return;
     }
-    const { mid, id, chatType } = message;
-    const messageId = mid || id;
-    if (!messageId) {
-      console.warn('【IM】撤回事件缺少消息 ID，已忽略:', message);
+    const { messageId, conversationId, conversationType } = message;
+    if (!messageId || !conversationId || !conversationType) {
+      console.error('[IM Recall] SDK 5.0 recall event is incomplete', {
+        messageId,
+        conversationId,
+        conversationType,
+        rawMessage: message,
+      });
       return;
     }
-    const localMessage = store.getters.getMessageById?.(messageId);
-    if (!chatType && localMessage?.chatType === CHAT_TYPE.CHATROOM) {
-      console.error(
-        '[IM Recall] SDK 撤回事件缺少 chatType，聊天室消息未更新本地撤回状态',
-        {
-          messageId,
-          from: message.from,
-          to: message.to,
-          localMessage,
-          rawMessage: message,
-        },
-      );
-      return;
-    }
-    const resolvedChatType = chatType || localMessage?.chatType;
-    const resolvedMessage = {
-      ...message,
-      to: message.to || localMessage?.to,
-      chatType: resolvedChatType,
-    };
-    if (!resolvedChatType) {
-      console.error(
-        '[IM Recall] SDK 撤回事件缺少 chatType，未更新本地消息或会话',
-        {
-          messageId,
-          from: message.from,
-          to: message.to,
-          rawMessage: message,
-        },
-      );
-      return;
-    }
-    if (!chatType) {
-      console.log(
-        '[IM Recall] SDK 撤回事件缺少 chatType，使用本地原消息真实 chatType 更新',
-        {
-          messageId,
-          from: message.from,
-          to: message.to,
-          resolvedChatType,
-          localMessage,
-          rawMessage: message,
-        },
-      );
-    }
-    const key = setMessageKey(resolvedMessage);
+    const recalledMessageId = messageId;
+    const key = conversationId;
     safeSync('otherRecallMessage.commit', () => {
       store.commit('CHANGE_MESSAGE_BODAY', {
         type: CHANGE_MESSAGE_BODAY_TYPE.RECALL,
         key,
-        mid: messageId,
+        messageId: recalledMessageId,
       });
     });
     Promise.resolve(
       store.dispatch('updateConversationList', {
         conversationId: key,
-        chatType: resolvedChatType,
+        conversationType,
       }),
     ).catch((err) =>
       console.error('[otherRecallMessage.updateConversationList]', err),
@@ -177,66 +124,30 @@ export const imReviceMessageListener = () => {
       console.warn('【IM】忽略空编辑消息事件:', message);
       return;
     }
-    const { from, to, id, mid, editMessageId, chatType } = message;
-    //单对单的撤回to必然为登陆的用户id，群组发起撤回to必然为群组id 所以key可以这样来区分群组或者单人。
-    if (!to) {
-      console.error(
-        '[IM Modify] SDK 编辑事件缺少 to，未更新本地消息或会话',
-        message,
-      );
+    const { messageId, conversationId, conversationType, message: updatedMessage } = message;
+    if (!messageId || !conversationId || !conversationType || !updatedMessage) {
+      console.error('[IM Modify] SDK 5.0 edit event is incomplete', {
+        messageId,
+        conversationId,
+        conversationType,
+        updatedMessage,
+        rawMessage: message,
+      });
       return;
     }
-    const messageId = editMessageId || mid || id;
-    if (!messageId) {
-      console.warn('【IM】编辑消息事件缺少原消息 ID，已忽略:', message);
-      return;
-    }
-    const localMessage = store.getters.getMessageById?.(messageId);
-    const resolvedChatType = chatType || localMessage?.chatType;
-    const resolvedTo = to || localMessage?.to;
-    const resolvedMessage = {
-      ...message,
-      to: resolvedTo,
-      chatType: resolvedChatType,
-    };
-    if (!resolvedChatType) {
-      console.error(
-        '[IM Modify] SDK 编辑事件缺少 chatType，未更新本地消息或会话',
-        {
-          messageId,
-          from,
-          to,
-          rawMessage: message,
-        },
-      );
-      return;
-    }
-    if (!chatType) {
-      console.log(
-        '[IM Modify] SDK 编辑事件缺少 chatType，使用本地原消息真实 chatType 更新',
-        {
-          messageId,
-          from,
-          to,
-          resolvedChatType,
-          localMessage,
-          rawMessage: message,
-        },
-      );
-    }
-    const key = setMessageKey(resolvedMessage);
+    const key = conversationId;
     safeSync('otherModifyMessage.commit', () => {
       store.commit('CHANGE_MESSAGE_BODAY', {
         type: CHANGE_MESSAGE_BODAY_TYPE.MODIFY,
         key,
-        mid: messageId,
-        message: resolvedMessage,
+        messageId,
+        message: updatedMessage,
       });
     });
     Promise.resolve(
       store.dispatch('updateConversationList', {
         conversationId: key,
-        chatType: resolvedChatType,
+        conversationType,
       }),
     ).catch((err) =>
       console.error('[otherModifyMessage.updateConversationList]', err),
@@ -255,6 +166,14 @@ export const imReviceMessageListener = () => {
         onStreamMessage: function (message) {
           pushStreamMessage(message);
         }, // 收到流式消息。
+        onMessageDelivered: function (receipt) {
+          store.commit('UPDATE_MESSAGE_DELIVERED', {
+            messageId: receipt.messageId,
+            conversationId: receipt.conversationId,
+            conversationType: receipt.conversationType,
+          });
+          console.log('[Message Delivery] SDK 5.0 receipt', receipt);
+        },
         onMessageRecalled: function (message) {
           otherRecallMessage(message);
         }, // 收到消息撤回回执。

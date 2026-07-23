@@ -2,7 +2,7 @@
 import { ref, watch, nextTick, computed, onMounted } from 'vue';
 import _ from 'lodash';
 import { getCurrentUserId, requireManager } from '@/IM';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { useStore } from 'vuex';
 import { useRoute, onBeforeRouteLeave } from 'vue-router';
 import { EASEIM_HINT, SWINDLER_GO_DIE, WARM_TIP } from '@/constant';
@@ -44,10 +44,14 @@ const showMessageSearchDrawer = () => {
 };
 const isMessageSearchVisible = computed(() => {
   return (
-    routeQueryData.value.id &&
+    routeQueryData.value.conversationId &&
     !routeQueryData.value.isChatThread &&
-    [CHAT_TYPE.SINGLE, CHAT_TYPE.GROUP, CHAT_TYPE.CHATROOM].includes(
-      routeQueryData.value.chatType,
+    [
+      CONVERSATION_TYPE.SINGLE,
+      CONVERSATION_TYPE.GROUP,
+      CONVERSATION_TYPE.CHATROOM,
+    ].includes(
+      routeQueryData.value.conversationType,
     )
   );
 });
@@ -65,8 +69,8 @@ const openFriendBlackList = async () => {
 };
 //删除好友
 const delTheFriend = async () => {
-  if (routeQueryData.value?.id) {
-    const targetId = routeQueryData.value.id;
+  if (routeQueryData.value?.conversationId) {
+    const targetId = routeQueryData.value.conversationId;
     try {
       await contactManager().deleteContact({ userId: targetId });
       store.commit('DELETE_CONTACTS_FROM_MAP', targetId);
@@ -85,8 +89,8 @@ const delTheFriend = async () => {
 const remarkDialogVisible = ref(false);
 const friendRemark = ref('');
 const setFriendRemark = async () => {
-  if (routeQueryData.value?.id && friendRemark.value.trim()) {
-    const targetId = routeQueryData.value.id;
+  if (routeQueryData.value?.conversationId && friendRemark.value.trim()) {
+    const targetId = routeQueryData.value.conversationId;
     const remark = friendRemark.value.trim();
     
     // 检查备注长度
@@ -118,15 +122,15 @@ const setFriendRemark = async () => {
 };
 //检查用户是否在黑名单中
 const isInBlackList = computed(() => {
-  const targetId = routeQueryData.value?.id;
+  const targetId = routeQueryData.value?.conversationId;
   if (!targetId) return false;
-  return Array.from(store.state.Contacts.friendBlackList).includes(targetId);
+  return [...store.state.Contacts.friendBlackList].includes(targetId);
 });
 
 //加入好友到黑名单
 const addFriendToBlackList = async () => {
-  if (routeQueryData.value?.id) {
-    const targetId = routeQueryData.value.id;
+  if (routeQueryData.value?.conversationId) {
+    const targetId = routeQueryData.value.conversationId;
     try {
       const result = await contactManager().addUsersToBlocklist({
         userIds: [targetId],
@@ -163,8 +167,8 @@ const addFriendToBlackList = async () => {
 
 //从黑名单中移除用户
 const removeFriendFromBlackList = async () => {
-  if (routeQueryData.value?.id) {
-    const targetId = routeQueryData.value.id;
+  if (routeQueryData.value?.conversationId) {
+    const targetId = routeQueryData.value.conversationId;
     try {
       await contactManager().removeUserFromBlocklist({
         userIds: [targetId]
@@ -201,14 +205,14 @@ const removeUserFromFriendBlackList = async (userId) => {
   }
 };
 const clearCurrentConversationMessages = async () => {
-  if (!routeQueryData.value?.id) return;
+  if (!routeQueryData.value?.conversationId) return;
   try {
     await ElMessageBox.confirm('确认清空当前聊天记录？', '清空聊天记录', {
       confirmButtonText: '确认',
       cancelButtonText: '取消',
       type: 'warning',
     });
-    store.commit('CLEAR_SOMEONE_MESSAGE', routeQueryData.value.id);
+    store.commit('CLEAR_SOMEONE_MESSAGE', routeQueryData.value.conversationId);
     ElMessage({ type: 'success', center: true, message: '聊天记录已清空' });
   } catch (error) {
     if (error !== 'cancel') {
@@ -224,163 +228,68 @@ const randomTips = computed(() => {
 });
 
 const getCurrentConversation = () => {
-  const { id } = routeQueryData.value;
-  if (!id) return null;
+  const { conversationId, conversationType } = routeQueryData.value;
+  if (!conversationId) return null;
   const list = store.state.Conversation.conversationFromMethod
     ? store.state.Conversation.conversationListFromLocal
     : store.state.Conversation.conversationListFromServer;
-  return list.find((item) => item.conversationId === id) || null;
+  return list.find(
+    (item) =>
+      item.conversationId === conversationId &&
+      item.conversationType === conversationType,
+  ) || null;
 };
 
 const markConversationReadIfNeeded = (options = {}) => {
-  const { id, chatType } = routeQueryData.value;
-  if (!id || !chatType || chatType === CHAT_TYPE.CHATROOM) return;
+  const { conversationId, conversationType } = routeQueryData.value;
+  if (!conversationId || !conversationType) return;
 
   const conversation = getCurrentConversation();
-  if (!options.force && (!conversation || conversation.unReadCount <= 0)) {
+  if (!options.force && (!conversation || conversation.unreadCount <= 0)) {
     return;
   }
 
   store.dispatch('clearConversationUnreadCount', {
-    conversationId: id,
-    chatType,
+    conversationId,
+    conversationType,
   });
 };
 
 const isMessageInCurrentConversation = (message) => {
-  if (!message || !routeQueryData.value.id) return false;
-  if (message.from === getCurrentUserId()) return false;
-  const { id, chatType } = routeQueryData.value;
-  if (chatType === CHAT_TYPE.SINGLE) {
-    return message.chatType === CHAT_TYPE.SINGLE && message.from === id;
-  }
-  return message.chatType === chatType && message.to === id;
+  if (!message || !routeQueryData.value.conversationId) return false;
+  return (
+    message.conversationId === routeQueryData.value.conversationId &&
+    message.conversationType === routeQueryData.value.conversationType &&
+    message.sender?.userId !== getCurrentUserId()
+  );
 };
 
 /* warterMark */
 onMounted(() => {
   const chatContainer = document.querySelector('.chat_message_main');
   chatContainer && waterMark({ container: chatContainer });
-
-  // 监听消息送达回执事件
-  window.addEventListener('hx:messageDelivered', handleMessageDelivered);
-
-  // 监听消息已读回执事件
-  window.addEventListener('hx:messageRead', handleMessageRead);
-
-  // 监听会话已读回执事件
-  window.addEventListener('hx:channelMessage', handleChannelMessage);
-
-  // 监听统计消息事件（离线回执）
-  window.addEventListener('hx:statisticMessage', handleStatisticMessage);
 });
 
-// 处理消息送达回执
-const handleMessageDelivered = (event) => {
-  const message = event.detail;
-
-  // 确定会话 ID
-  const conversationId =
-    message.chatType === CHAT_TYPE.SINGLE ? message.from : message.to;
-
-  // 更新消息送达状态
-  store.commit('UPDATE_MESSAGE_DELIVERED', {
-    messageId: message.id,
-    conversationId: conversationId,
-    chatType: message.chatType,
-  });
-};
-
-// 处理消息已读回执
-const handleMessageRead = (event) => {
-  const message = event.detail;
-
-  // 确定会话 ID
-  const conversationId =
-    message.chatType === CHAT_TYPE.SINGLE ? message.from : message.to;
-
-  // 更新消息已读状态
-  store.commit('UPDATE_MESSAGE_READ', {
-    messageId: message.id,
-    conversationId: conversationId,
-    chatType: message.chatType,
-    groupReadCount: message.groupReadCount,
-  });
-};
-
-// 处理会话已读回执
-const handleChannelMessage = (event) => {
-  const message = event.detail;
-
-  const conversationId = message?.from || message?.to;
-  if (!conversationId) return;
-
-  // 单聊收到会话已读回执后，将当前会话中我发送的消息标记为已读。
-  // 群聊会话已读回执仅用于清空服务端未读数，不会通过 onChannelMessage 回调给发送方。
-  if (message.chatType === CHAT_TYPE.SINGLE) {
-    const listKey = `${CHAT_TYPE.SINGLE}${conversationId}`;
-    const currentList = store.state.Message.messageList[listKey] || [];
-    currentList
-      .filter((item) => item.from === getCurrentUserId() && !item.read)
-      .forEach((item) => {
-        store.commit('UPDATE_MESSAGE_READ', {
-          messageId: item.id,
-          conversationId,
-          chatType: CHAT_TYPE.SINGLE,
-        });
-      });
-  }
-};
-
-// 处理统计消息事件（离线回执）
-const handleStatisticMessage = (event) => {
-  const message = event.detail;
-  
-  // 解析群组已读回执信息
-  if (message.location) {
-    try {
-      const statisticMsg = JSON.parse(message.location);
-      const groupAck = statisticMsg.group_ack || [];
-      
-      // 处理群组已读回执
-      groupAck.forEach(ack => {
-        store.commit('UPDATE_MESSAGE_READ', {
-          messageId: ack.mid,
-          conversationId: message.from,
-          chatType: CHAT_TYPE.GROUP,
-          groupReadCount: ack.count
-        });
-      });
-    } catch (error) {
-      console.error('解析统计消息失败:', error);
-    }
-  }
-};
-
-// 离开该路由销毁事件监听
+// 离开该路由销毁路由监听。
 onBeforeRouteLeave(() => {
   stopWatchRoute();
-  window.removeEventListener('hx:messageDelivered', handleMessageDelivered);
-  window.removeEventListener('hx:messageRead', handleMessageRead);
-  window.removeEventListener('hx:channelMessage', handleChannelMessage);
-  window.removeEventListener('hx:statisticMessage', handleStatisticMessage);
 });
 const closeWarningTips = () => store.commit('CLOSE_WARNING_TIPS');
 /* userInfo */
 const routeQueryData = ref({
-  id: '',
-  chatType: CHAT_TYPE.SINGLE,
+  conversationId: '',
+  conversationType: CONVERSATION_TYPE.SINGLE,
   isChatThread: false,
-  groupId: '',
+  parentConversationId: '',
   threadName: '',
 });
 const getRouteQueryWithIdInfo = (data) => {
-  const { id, chatType, groupId, threadName } = data;
+  const { conversationId, conversationType, parentConversationId, threadName } = data;
   routeQueryData.value = {
-    id,
-    chatType,
+    conversationId,
+    conversationType,
     isChatThread: data.isChatThread === 'true',
-    groupId: groupId || '',
+    parentConversationId: parentConversationId || '',
     threadName: threadName || '',
   };
 };
@@ -398,9 +307,9 @@ const stopWatchRoute = watch(
 );
 
 watch(
-  () => getCurrentConversation()?.unReadCount || 0,
-  (unReadCount) => {
-    if (unReadCount > 0) {
+  () => getCurrentConversation()?.unreadCount || 0,
+  (unreadCount) => {
+    if (unreadCount > 0) {
       markConversationReadIfNeeded();
     }
   },
@@ -421,8 +330,8 @@ const fechHistoryMessage = async (loadType) => {
     let messages = [];
     if (loadType == 'fistLoad') {
       const result = await store.dispatch('getHistoryMessage', {
-        ...routeQueryData.value,
-        isChatThread: routeQueryData.value.isChatThread === true,
+        conversationId: routeQueryData.value.conversationId,
+        conversationType: routeQueryData.value.conversationType,
         cursor: -1,
         pageSize: 20,
         searchDirection: 'up',
@@ -438,8 +347,8 @@ const fechHistoryMessage = async (loadType) => {
       if (historyMessageCursor.value === '') return [];
 
       const result = await store.dispatch('getHistoryMessage', {
-        ...routeQueryData.value,
-        isChatThread: routeQueryData.value.isChatThread === true,
+        conversationId: routeQueryData.value.conversationId,
+        conversationType: routeQueryData.value.conversationType,
         cursor: historyMessageCursor.value,
         pageSize: 20,
         searchDirection: 'up',
@@ -461,11 +370,11 @@ const fechHistoryMessage = async (loadType) => {
     notScrollBottom.value = false;
   }
 };
-//获取其id对应的消息内容
+//获取当前会话的原始 SDK 5.0 消息列表。
 const messageData = computed(() => {
   // 只返回本地缓存的消息列表，异步获取通过watch处理
-  if (loginState.value && routeQueryData.value.id) {
-    return store.state.Message.messageList[routeQueryData.value.id] || [];
+  if (loginState.value && routeQueryData.value.conversationId) {
+    return store.state.Message.messageList[routeQueryData.value.conversationId] || [];
   }
   return [];
 });
@@ -474,13 +383,17 @@ const messageData = computed(() => {
 watch(
   () => routeQueryData.value,
   async (newRouteQuery, oldRouteQuery) => {
-    if (loginState.value && newRouteQuery.id && newRouteQuery.chatType) {
+    if (
+      loginState.value &&
+      newRouteQuery.conversationId &&
+      newRouteQuery.conversationType
+    ) {
       // 只有当会话ID变化或者是首次加载时才获取历史消息
       // 首次加载时oldRouteQuery是undefined，需要特殊处理
       if (
         !oldRouteQuery ||
-        !oldRouteQuery.id ||
-        newRouteQuery.id !== oldRouteQuery.id
+        !oldRouteQuery.conversationId ||
+        newRouteQuery.conversationId !== oldRouteQuery.conversationId
       ) {
         historyMessageCursor.value = -1;
         isMoreHistoryMsg.value = true;
@@ -554,7 +467,8 @@ watch(
 
 //消息重新编辑
 const inputBoxComp = ref(null);
-const reEditMessage = (msg) => inputBoxComp.value?.handleEditTextMessage(msg);
+const reEditMessage = (content) =>
+  inputBoxComp.value?.handleEditTextMessage(content);
 //消息引用
 const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
 </script>
@@ -582,7 +496,7 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
           </el-tooltip>
           <div
             class="more thread_list_trigger"
-            v-if="routeQueryData.chatType === CHAT_TYPE.GROUP && !routeQueryData.isChatThread"
+            v-if="routeQueryData.conversationType === CONVERSATION_TYPE.GROUP && !routeQueryData.isChatThread"
             title="子区列表"
             @click="showThreadListDrawer"
           >
@@ -593,7 +507,7 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
           <!-- 群组展示抽屉 -->
           <div
             class="more"
-            v-if="routeQueryData.chatType === CHAT_TYPE.GROUP && !routeQueryData.isChatThread"
+            v-if="routeQueryData.conversationType === CONVERSATION_TYPE.GROUP && !routeQueryData.isChatThread"
             @click="handleDrawer"
           >
             <svg
@@ -610,7 +524,7 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
           </div>
           <div
             class="more"
-            v-if="routeQueryData.chatType === CHAT_TYPE.SINGLE"
+            v-if="routeQueryData.conversationType === CONVERSATION_TYPE.SINGLE"
             @click="handleDrawer"
           >
             <svg
@@ -632,7 +546,7 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
     <div v-if="isShowWarningTips" class="easeim_safe_tips">
       <p>{{ EASEIM_HINT }}</p>
       <p>【防骗提示】{{ randomTips }}</p>
-      <p v-show="routeQueryData.chatType === CHAT_TYPE.GROUP">
+      <p v-show="routeQueryData.conversationType === CONVERSATION_TYPE.GROUP">
         {{ WARM_TIP }}
       </p>
       <span class="easeim_close_tips" @click="closeWarningTips">
@@ -647,7 +561,7 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
         <div class="innerRef">
           <div v-show="isMoreHistoryMsg" class="chat_message_tips">
             <div
-              v-show="messageData?.length && messageData[0].type !== 'inform'"
+              v-show="messageData?.length"
               class="load_more_msg"
             >
               <el-link
@@ -689,14 +603,14 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
       size="280px"
     >
       <GroupsDetails
-        v-if="routeQueryData.chatType === CHAT_TYPE.GROUP"
+        v-if="routeQueryData.conversationType === CONVERSATION_TYPE.GROUP"
         ref="groupsDetailsComponent"
-        :groupId="routeQueryData.id"
+        :groupId="routeQueryData.conversationId"
         @handleDrawer="handleDrawer"
       />
       <SingleChatDetails
-        v-else-if="routeQueryData.chatType === CHAT_TYPE.SINGLE"
-        :user-id="routeQueryData.id"
+        v-else-if="routeQueryData.conversationType === CONVERSATION_TYPE.SINGLE"
+        :user-id="routeQueryData.conversationId"
         :is-in-black-list="isInBlackList"
         @setRemark="remarkDialogVisible = true"
         @addBlackList="addFriendToBlackList"
@@ -708,7 +622,7 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
     </el-drawer>
     <MessageThreadListDrawer
       v-model="threadListDrawer"
-      :group-id="routeQueryData.id"
+      :group-id="routeQueryData.conversationId"
     />
     <MessageSearchDrawer
       v-model="messageSearchDrawer"

@@ -1,17 +1,17 @@
 <script setup>
 import { ref, toRefs } from 'vue';
 import { createMessage, sendMessage } from '@/IM/sdk5/chat';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 import store from '@/store';
 import { ElMessage } from 'element-plus';
 const props = defineProps({
-  chatType: {
+  conversationType: {
     type: String,
-    default: CHAT_TYPE.SINGLE,
+    default: CONVERSATION_TYPE.SINGLE,
     required: true,
   },
-  targetId: {
+  conversationId: {
     type: String,
     default: '',
     required: true,
@@ -25,7 +25,12 @@ const props = defineProps({
     default: () => ({}),
   },
 });
-const { chatType, targetId, isChatThread, deliverOnlineOnlyOptions } =
+const {
+  conversationType,
+  conversationId,
+  isChatThread,
+  deliverOnlineOnlyOptions,
+} =
   toRefs(props);
 const emit = defineEmits(['onStartLoading', 'onLoadending']);
 import fileSizeFormat from '@/utils/fileSizeFormat';
@@ -47,19 +52,15 @@ const sendTheImg = () => {
   sendImagesMessage();
 };
 const sendImagesMessage = () => {
-  // if (type === 'other') {
-  const file = {
-    data: null, // file 对象。
-    filename: '', //文件名称。
-    filetype: '', //文件类型。
-  };
   const url = window.URL || window.webkitURL;
   const img = new Image(); //手动创建一个Image对象
-  const msgOptions = {
-    to: targetId.value,
-    chatType: chatType.value,
+  const messageOptions = {
+    conversationId: conversationId.value,
+    conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    file: file,
+    data: fileObj,
+    filename: fileObj?.name,
+    filetype: fileObj?.type,
     width: 0,
     height: 0,
     onFileUploadError: (error) => {
@@ -77,8 +78,8 @@ const sendImagesMessage = () => {
     onFileUploadProgress: (e) => {
       // 图片文件上传进度。
       console.log('[Message Upload] image progress', {
-        targetId: targetId.value,
-        chatType: chatType.value,
+        conversationId: conversationId.value,
+        conversationType: conversationType.value,
         fileName: fileObj?.name,
         loaded: e?.loaded,
         total: e?.total,
@@ -91,34 +92,30 @@ const sendImagesMessage = () => {
     },
   };
   const imgFile = fileObj;
-  file.data = imgFile;
-  file.filename = imgFile.name;
-  file.filetype = imgFile.type;
 
   img.src = url.createObjectURL(imgFile); //创建Image的对象的url
   img.onload = async () => {
-    msgOptions.width = img.width;
-    msgOptions.height = img.height;
+    messageOptions.width = img.width;
+    messageOptions.height = img.height;
     try {
-      const msg = createMessage('img', msgOptions);
-      const message = await sendMessage(msg, {
+      const messageToSend = createMessage('image', messageOptions);
+      const message = await sendMessage(messageToSend, {
         ...deliverOnlineOnlyOptions.value,
-        onFileUploadError: msgOptions.onFileUploadError,
-        onFileUploadProgress: msgOptions.onFileUploadProgress,
-        onFileUploadComplete: msgOptions.onFileUploadComplete,
+        onFileUploadError: messageOptions.onFileUploadError,
+        onFileUploadProgress: messageOptions.onFileUploadProgress,
+        onFileUploadComplete: messageOptions.onFileUploadComplete,
       });
-      store.dispatch('senedShowTypeMessage', { ...message });
+      store.dispatch('senedShowTypeMessage', message);
     } catch (error) {
       console.error('发送图片消息失败:', {
-        targetId: targetId.value,
-        chatType: chatType.value,
+        conversationId: conversationId.value,
+        conversationType: conversationType.value,
         fileName: imgFile?.name,
         error,
       });
       notifySdkSendError(error);
     }
   };
-  // }
 };
 defineExpose({
   showPreviewImgModal,

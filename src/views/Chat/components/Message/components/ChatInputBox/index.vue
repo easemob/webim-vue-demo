@@ -1,20 +1,13 @@
 <script setup>
 import { ref, toRefs, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
-import {
-  handleSDKErrorNotifi,
-  notifySdkSendError,
-  setMessageKey,
-} from '@/utils/handleSomeData';
+import { notifySdkSendError } from '@/utils/handleSomeData';
 import { ElLoading, ElMessageBox, ElMessage } from 'element-plus';
 import { onClickOutside } from '@vueuse/core';
 import { useUserInfoExt } from '@/hooks';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { createMessage, sendMessage } from '@/IM/sdk5/chat';
-import { toSdk5CombineMessage } from '@/IM/sdk5/messageAdapter';
-import _ from 'lodash';
 import { getCurrentUserId } from '@/IM';
-import parseDownloadResponse from '@/utils/parseDownloadResponse';
 import { supportsDirectedMessage } from '@/utils/directedMessage';
 import {
   buildDeliverOnlineOnlyOptions,
@@ -34,27 +27,27 @@ import ShareUserCard from './components/CustomMessage/ShareUserCard.vue';
 import SendCustomMessage from './components/CustomMessage/SendCustomMessage.vue';
 import CmdMessage from './components/CmdMessage/index.vue';
 import SendDirectedMessage from './components/DirectedMessage/SendDirectedMessage.vue';
-//EaseCallKit Invite
-// import { useManageChannel } from '@/components/EaseCallKit/hooks';
-//inviteMembers modal
-// import InviteCallMembers from '@/components/InviteCallMembers';
 const store = useStore();
 const props = defineProps({
   routeQueryData: {
     type: Object,
     required: true,
     default: () => ({
-      id: '',
-      chatType: CHAT_TYPE.SINGLE,
+      conversationId: '',
+      conversationType: CONVERSATION_TYPE.SINGLE,
     }),
   },
 });
 const { routeQueryData } = toRefs(props);
 const isDirectedMessageEnabled = computed(() =>
-  !isChatThread.value && supportsDirectedMessage(routeQueryData.value.chatType),
+  !isChatThread.value &&
+  supportsDirectedMessage(routeQueryData.value.conversationType),
 );
 const isDeliverOnlineOnlySupported = computed(() =>
-  supportsDeliverOnlineOnly(routeQueryData.value.chatType, isChatThread.value),
+  supportsDeliverOnlineOnly(
+    routeQueryData.value.conversationType,
+    isChatThread.value,
+  ),
 );
 const isChatThread = computed(() => routeQueryData.value.isChatThread === true);
 const threadMessageOptions = computed(() =>
@@ -68,8 +61,8 @@ const deliverOnlineOnlyOptions = computed(() =>
 );
 const onDeliverOnlineOnlySwitchChange = (enabled) => {
   const context = {
-    targetId: routeQueryData.value.id,
-    chatType: routeQueryData.value.chatType,
+    conversationId: routeQueryData.value.conversationId,
+    conversationType: routeQueryData.value.conversationType,
     currentUser: getCurrentUserId(),
   };
   if (enabled) {
@@ -118,17 +111,17 @@ const showEmojisBox = () => {
 
 
 //文本消息重新编辑
-const handleEditTextMessage = (msg) => {
-  textMessageComp.value?.onEditMessage(msg);
+const handleEditTextMessage = (content) => {
+  textMessageComp.value?.onEditMessage(content);
 };
 /* 消息引用 */
 const messageQuoteRef = ref(null);
 //暴露给messagelist组件用来设置引用消息内容
-const handleQuoteMessage = (msgBody) => {
-  messageQuoteRef.value && messageQuoteRef.value.setQuoteContent(msgBody);
+const handleQuoteMessage = (message) => {
+  messageQuoteRef.value && messageQuoteRef.value.setQuoteContent(message);
 };
 const getMessageQuoteContent = (cb) => {
-  cb(messageQuoteRef.value?.msgQuote);
+  cb(messageQuoteRef.value?.quote);
 };
 const clearQuoteContent = () => {
   messageQuoteRef.value?.clearQuoteContent();
@@ -143,7 +136,7 @@ const chooseImages = () => {
 const previewSendImg = ref(null);
 //从输入框剪切板获取图片
 const getImageFileFromClipboard = (items) => {
-  const item = Array.from(items).find(
+  const item = [...items].find(
     (item) => item.kind === 'file' && item.type.startsWith('image/'),
   );
   if (item) {
@@ -230,8 +223,7 @@ const getAudioDuration = (file) =>
   });
 
 const sendPresetAudio = async () => {
-  //验证targetId是否有效
-  if (!routeQueryData.value.id || routeQueryData.value.id === '') {
+  if (!routeQueryData.value.conversationId) {
     console.error('发送语音消息失败: 缺少目标ID');
     ElMessage.error('发送语音消息失败: 请先选择聊天对象');
     return;
@@ -250,14 +242,12 @@ const sendPresetAudio = async () => {
     const duration = await getAudioDuration(file);
 
     const msgOptions = {
-      to: routeQueryData.value.id,
-      chatType: routeQueryData.value.chatType,
+      conversationId: routeQueryData.value.conversationId,
+      conversationType: routeQueryData.value.conversationType,
       ...threadMessageOptions.value,
-      file: {
-        data: file,
-        filename: file.name,
-        filetype: file.type,
-      },
+      data: file,
+      filename: file.name,
+      filetype: file.type,
       duration,
       onFileUploadError: (error) => {
         notifySdkSendError(error);
@@ -271,14 +261,14 @@ const sendPresetAudio = async () => {
       },
     };
     setUserInfoExt(msgOptions);
-    const msg = createMessage('audio', msgOptions);
-    const message = await sendMessage(msg, {
+    const messageToSend = createMessage('voice', msgOptions);
+    const message = await sendMessage(messageToSend, {
       ...deliverOnlineOnlyOptions.value,
       onFileUploadError: msgOptions.onFileUploadError,
       onFileUploadProgress: msgOptions.onFileUploadProgress,
       onFileUploadComplete: msgOptions.onFileUploadComplete,
     });
-    store.dispatch('senedShowTypeMessage', { ...message });
+    store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
     console.error('发送预置语音失败:', error);
     notifySdkSendError(error);
@@ -287,33 +277,31 @@ const sendPresetAudio = async () => {
   }
 };
 const sendAudioMessages = async (audioData) => {
-  //验证targetId是否有效
-  if (!routeQueryData.value.id || routeQueryData.value.id === '') {
+  if (!routeQueryData.value.conversationId) {
     console.error('发送语音消息失败: 缺少目标ID');
     ElMessage.error('发送语音消息失败: 请先选择聊天对象');
     isShowRecordBox.value = false;
     return;
   }
 
-  const file = {
-    url: parseDownloadResponse(audioData.src),
-    filename: '录音',
-    filetype: '.amr',
-    data: audioData.src,
-  };
+  const recordedAudio = new File([audioData.src], 'recording.amr', {
+    type: 'audio/amr',
+  });
 
   const msgOptions = {
-    to: routeQueryData.value.id,
-    chatType: routeQueryData.value.chatType,
+    conversationId: routeQueryData.value.conversationId,
+    conversationType: routeQueryData.value.conversationType,
     ...threadMessageOptions.value,
-    file: file,
-    length: audioData.length,
+    data: recordedAudio,
+    filename: recordedAudio.name,
+    filetype: recordedAudio.type,
+    duration: audioData.length,
   };
   setUserInfoExt(msgOptions);
   try {
-    const msg = createMessage('audio', msgOptions);
-    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
-    store.dispatch('senedShowTypeMessage', { ...message });
+    const messageToSend = createMessage('voice', msgOptions);
+    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
+    store.dispatch('senedShowTypeMessage', message);
     isShowRecordBox.value = false;
   } catch (error) {
     notifySdkSendError(error);
@@ -329,7 +317,7 @@ const onShowContactsModal = () => {
 /* 透传消息 */
 const cmdMessageComp = ref(null);
 const onShowCmdModal = () => {
-  if (!routeQueryData.value.id || routeQueryData.value.id === '') {
+  if (!routeQueryData.value.conversationId) {
     ElMessage.error('请先选择聊天对象');
     return;
   }
@@ -339,7 +327,7 @@ const onShowCmdModal = () => {
 /* 自定义消息 */
 const customMessageComp = ref(null);
 const onShowCustomMessageModal = () => {
-  if (!routeQueryData.value.id || routeQueryData.value.id === '') {
+  if (!routeQueryData.value.conversationId) {
     ElMessage.error('请先选择聊天对象');
     return;
   }
@@ -348,7 +336,7 @@ const onShowCustomMessageModal = () => {
 /* 定向消息 */
 const directedMessageComp = ref(null);
 const onShowDirectedMessageModal = () => {
-  if (!routeQueryData.value.id || routeQueryData.value.id === '') {
+  if (!routeQueryData.value.conversationId) {
     ElMessage.error('请先选择聊天对象');
     return;
   }
@@ -361,7 +349,7 @@ const onShowDirectedMessageModal = () => {
 /* 文本扩展消息 */
 const extMessageComp = ref(null);
 const onShowExtMessageModal = () => {
-  if (!routeQueryData.value.id || routeQueryData.value.id === '') {
+  if (!routeQueryData.value.conversationId) {
     ElMessage.error('请先选择聊天对象');
     return;
   }
@@ -370,33 +358,32 @@ const onShowExtMessageModal = () => {
 
 /* 位置消息 */
 const sendLocationMessage = async () => {
-  //验证targetId是否有效
-  if (!routeQueryData.value.id || routeQueryData.value.id === '') {
+  if (!routeQueryData.value.conversationId) {
     console.error('发送位置消息失败: 缺少目标ID');
     ElMessage.error('发送位置消息失败: 请先选择聊天对象');
     return;
   }
 
   const msgOptions = {
-    to: routeQueryData.value.id,
-    chatType: routeQueryData.value.chatType,
+    conversationId: routeQueryData.value.conversationId,
+    conversationType: routeQueryData.value.conversationType,
     ...threadMessageOptions.value,
-    addr: '四通桥东',
+    address: '四通桥东',
     buildingName: '数码大厦',
-    lat: 39,
-    lng: 116,
+    latitude: 39,
+    longitude: 116,
   };
   setUserInfoExt(msgOptions);
   try {
-    const msg = createMessage('loc', msgOptions);
-    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
+    const messageToSend = createMessage('location', msgOptions);
+    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
     console.log('[Message Send] location success', {
-      messageId: message?.id || message?.mid,
-      targetId: routeQueryData.value.id,
-      chatType: routeQueryData.value.chatType,
-      lat: msgOptions.lat,
-      lng: msgOptions.lng,
-      addr: msgOptions.addr,
+      messageId: message.msgServerId || message.msgLocalId,
+      conversationId: message.conversationId,
+      conversationType: message.conversationType,
+      latitude: message.body.latitude,
+      longitude: message.body.longitude,
+      address: message.body.address,
     });
     ElMessage.success('发送位置消息成功');
     await store.dispatch('senedShowTypeMessage', message);
@@ -413,88 +400,25 @@ const clearScreen = () => {
     type: 'warning',
   })
     .then(() => {
-      const key = routeQueryData.value.id;
+      const key = routeQueryData.value.conversationId;
       store.commit('CLEAR_SOMEONE_MESSAGE', key);
     })
     .catch(() => {
       return false;
     });
 };
-/* About EaseCallKit */
-// const { CALL_TYPES, sendInviteMessage } = useManageChannel();
-// //处理发起的音视频呼叫类型
-// const handleInviteCall = (handleType) => {
-//   const toId = routeQueryData.value.id;
-//   //语音类型
-//   if (handleType === 'voice') {
-//     const callType = CALL_TYPES.SINGLE_VOICE;
-//     sendInviteMessage(toId, callType);
-//     //发送邀请信息后创建一条本地系统通知类消息上屏展示
-//     const params = {
-//       to: toId,
-//       chatType: CHAT_TYPE.SINGLE,
-//       msg: `邀请【${toId}】进行语音通话`,
-//     };
-//     store.dispatch('createInformMessage', params);
-//   }
-//   if (handleType === 'video') {
-//     if (routeQueryData.value?.chatType === CHAT_TYPE.SINGLE) {
-//       const callType = CALL_TYPES.SINGLE_VIDEO;
-//       sendInviteMessage(toId, callType);
-//       //发送邀请信息后创建一条本地系统通知类消息上屏展示
-//       const params = {
-//         to: toId,
-//         chatType: CHAT_TYPE.SINGLE,
-//         msg: `邀请【${toId}】进行视频通话`,
-//       };
-//       store.dispatch('createInformMessage', params);
-//     } else if (routeQueryData.value?.chatType === CHAT_TYPE.GROUP) {
-//       //群组则弹出多人模态框
-//       showInviteCallMembersModal();
-//     }
-//   }
-// };
-// const inviteCallMembersComp = ref(null);
-// //调起多人邀请组件
-// const showInviteCallMembersModal = () => {
-//   const groupId = routeQueryData.value.id;
-//   if (groupId) {
-//     inviteCallMembersComp.value.alertDialog(groupId);
-//   } else {
-//   }
-// };
-// //发送多人场景邀请信息的方法
-// const sendMulitInviteMsg = (targetIMId) => {
-//   const callType = CALL_TYPES.MULTI_VIDEO;
-//   const groupId = routeQueryData.value.id;
-//   sendInviteMessage(targetIMId, callType, groupId);
-//   const params = {
-//     to: groupId,
-//     chatType: CHAT_TYPE.GROUP,
-//     msg: '已发起多人音视频通话',
-//   };
-//   store.dispatch('createInformMessage', params);
-// };
-//func 对应事件 icon class样式等
 // 发送合并消息
 const sendCombineMessage = async () => {
-  //验证targetId是否有效
-  if (!routeQueryData.value.id || routeQueryData.value.id === '') {
+  if (!routeQueryData.value.conversationId) {
     console.error('发送合并消息失败: 缺少目标ID');
     ElMessage.error('发送合并消息失败: 请先选择聊天对象');
     return;
   }
 
   try {
-    // 模拟获取最近5条消息作为合并内容
-    const listKey = setMessageKey({
-      to: routeQueryData.value.id,
-      chatType: routeQueryData.value.chatType,
-    });
-    const currentChatMessages = store.state.Message.messageList[listKey] || [];
-    const recentMessages = currentChatMessages
-      .slice(-5)
-      .map(toSdk5CombineMessage);
+    const currentChatMessages =
+      store.state.Message.messageList[routeQueryData.value.conversationId] || [];
+    const recentMessages = currentChatMessages.slice(-5);
 
     if (recentMessages.length === 0) {
       ElMessage.warning('暂无消息可合并');
@@ -503,22 +427,21 @@ const sendCombineMessage = async () => {
 
     // 准备合并消息参数
     const combineMsgOptions = {
-      chatType: routeQueryData.value.chatType,
-      to: routeQueryData.value.id,
+      conversationId: routeQueryData.value.conversationId,
+      conversationType: routeQueryData.value.conversationType,
       ...threadMessageOptions.value,
-      compatibleText: 'SDK 版本低，请升级',
       title: '聊天记录',
       summary: `共${recentMessages.length}条消息`,
       messageList: recentMessages,
     };
 
     // 发送合并消息
-    const msg = createMessage('combine', combineMsgOptions);
-    const message = await sendMessage(msg, deliverOnlineOnlyOptions.value);
+    const messageToSend = createMessage('combine', combineMsgOptions);
+    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
     console.log('[Message Send] combine success', {
-      messageId: message?.id || message?.mid,
-      targetId: routeQueryData.value.id,
-      chatType: routeQueryData.value.chatType,
+      messageId: message.msgServerId || message.msgLocalId,
+      conversationId: message.conversationId,
+      conversationType: message.conversationType,
       sourceMessageCount: recentMessages.length,
       summary: combineMsgOptions.summary,
     });
@@ -665,30 +588,13 @@ defineExpose({
         @click.stop="iconItem.methodName"
       ></span>
     </el-tooltip>
-    <!-- EaseCallKit 音视频邀请icon【不需要可移除】 -->
-    <!-- 群组没有语音发起 -->
-    <!-- <template v-if="isHttps">
-      <span
-        class="iconfont icon-31dianhua"
-        style="font-size: 20px"
-        title="语音通话"
-        v-show="routeQueryData.chatType === CHAT_TYPE.SINGLE"
-        @click="handleInviteCall('voice')"
-      ></span>
-      <span
-        class="iconfont icon-shipintonghua-hei"
-        style="font-size: 22px"
-        title="视频通话"
-        @click="handleInviteCall('video')"
-      ></span>
-    </template> -->
     <!-- 表情框 -->
     <emojiContainer ref="emojiContainerComp" @appendEmoji="appendEmoji" />
     <!-- 图片附件choose -->
     <ImageMessage
       ref="ImageMessageComp"
-      :targetId="routeQueryData.id"
-      :chatType="routeQueryData.chatType"
+      :conversationId="routeQueryData.conversationId"
+      :conversationType="routeQueryData.conversationType"
       :isChatThread="isChatThread"
       :deliverOnlineOnlyOptions="deliverOnlineOnlyOptions"
       @onStartLoading="onStartLoading"
@@ -697,8 +603,8 @@ defineExpose({
     <!-- 视频附件choose -->
     <VideoMessage
       ref="videoMessageComp"
-      :targetId="routeQueryData.id"
-      :chatType="routeQueryData.chatType"
+      :conversationId="routeQueryData.conversationId"
+      :conversationType="routeQueryData.conversationType"
       :isChatThread="isChatThread"
       :deliverOnlineOnlyOptions="deliverOnlineOnlyOptions"
       @onStartLoading="onStartLoading"
@@ -707,8 +613,8 @@ defineExpose({
     <!-- 文件附件choose -->
     <FileMessage
       ref="fileMessageComp"
-      :targetId="routeQueryData.id"
-      :chatType="routeQueryData.chatType"
+      :conversationId="routeQueryData.conversationId"
+      :conversationType="routeQueryData.conversationType"
       :isChatThread="isChatThread"
       :deliverOnlineOnlyOptions="deliverOnlineOnlyOptions"
       @onStartLoading="onStartLoading"
@@ -731,28 +637,27 @@ defineExpose({
   </div>
   <TextMessage
     ref="textMessageComp"
-    :targetId="routeQueryData.id"
-    :chatType="routeQueryData.chatType"
+    :conversationId="routeQueryData.conversationId"
+    :conversationType="routeQueryData.conversationType"
     :isChatThread="isChatThread"
     :deliverOnlineOnlyOptions="deliverOnlineOnlyOptions"
-    :groupId="routeQueryData.isChatThread ? routeQueryData.groupId : routeQueryData.id"
+    :parentConversationId="routeQueryData.parentConversationId"
     @getMessageQuoteContent="getMessageQuoteContent"
     @getImageFileFromClipboard="getImageFileFromClipboard"
     @clearQuoteContent="clearQuoteContent"
   />
   <SendExtMessage
     ref="extMessageComp"
-    :targetId="routeQueryData.id"
-    :chatType="routeQueryData.chatType"
+    :conversationId="routeQueryData.conversationId"
+    :conversationType="routeQueryData.conversationType"
     :isChatThread="isChatThread"
     :deliverOnlineOnlyOptions="deliverOnlineOnlyOptions"
   />
   <MsgQuote ref="messageQuoteRef" />
-  <!-- <InviteCallMembers ref="inviteCallMembersComp" @sendMulitInviteMsg="sendMulitInviteMsg" /> -->
   <PreviewSendImg
     ref="previewSendImg"
-    :targetId="routeQueryData.id"
-    :chatType="routeQueryData.chatType"
+    :conversationId="routeQueryData.conversationId"
+    :conversationType="routeQueryData.conversationType"
     :isChatThread="isChatThread"
     :deliverOnlineOnlyOptions="deliverOnlineOnlyOptions"
     @onStartLoading="onStartLoading"
@@ -760,29 +665,29 @@ defineExpose({
   />
   <ShareUserCard
     ref="personalCardMessageComp"
-    :targetId="routeQueryData.id"
-    :chatType="routeQueryData.chatType"
+    :conversationId="routeQueryData.conversationId"
+    :conversationType="routeQueryData.conversationType"
     :isChatThread="isChatThread"
     :deliverOnlineOnlyOptions="deliverOnlineOnlyOptions"
   />
   <CmdMessage
     ref="cmdMessageComp"
-    :targetId="routeQueryData.id"
-    :chatType="routeQueryData.chatType"
+    :conversationId="routeQueryData.conversationId"
+    :conversationType="routeQueryData.conversationType"
     :isChatThread="isChatThread"
     :deliverOnlineOnlyOptions="deliverOnlineOnlyOptions"
   />
   <SendCustomMessage
     ref="customMessageComp"
-    :targetId="routeQueryData.id"
-    :chatType="routeQueryData.chatType"
+    :conversationId="routeQueryData.conversationId"
+    :conversationType="routeQueryData.conversationType"
     :isChatThread="isChatThread"
     :deliverOnlineOnlyOptions="deliverOnlineOnlyOptions"
   />
   <SendDirectedMessage
     ref="directedMessageComp"
-    :targetId="routeQueryData.id"
-    :chatType="routeQueryData.chatType"
+    :conversationId="routeQueryData.conversationId"
+    :conversationType="routeQueryData.conversationType"
     :deliverOnlineOnlyOptions="deliverOnlineOnlyOptions"
   />
 </template>

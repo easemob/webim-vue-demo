@@ -1,21 +1,11 @@
 export const DEFAULT_GROUP_MEMBERS_PAGE_SIZE = 50;
 
 export function normalizeFetchedGroupMembers(members = []) {
-  return members.map((item) => {
-    const normalized = {
-      userId: item.user?.userId,
-      role: item.role,
-      joinedTime: item.joinedAt,
-    };
-
-    if (item.role === 'owner') {
-      normalized.owner = item.user?.userId;
-    } else {
-      normalized.member = item.user?.userId;
-    }
-
-    return normalized;
-  });
+  return members.map((item) => ({
+    userId: item.user?.userId,
+    role: item.role,
+    joinedAt: item.joinedAt,
+  }));
 }
 
 export function buildCreateGroupPayload(form = {}) {
@@ -71,24 +61,12 @@ export function buildModifyGroupPayload(params = {}) {
 }
 
 export function normalizeGroupSharedFileList(response = {}) {
-  const source = Array.isArray(response?.data)
-    ? response.data
-    : Array.isArray(response?.data?.data)
-    ? response.data.data
-    : Array.isArray(response?.entities)
-    ? response.entities
-    : [];
-
-  return source.map((item) => {
-    const fileId = item.fileId || item.file_id || item.id || '';
-    return {
-      fileId,
-      fileName: item.fileName || item.filename || item.name || fileId,
-      fileSize: item.fileSize ?? item.file_size ?? item.size ?? 0,
-      created: item.created ?? item.createdAt ?? item.create_time ?? '',
-      owner: item.owner || item.uploader || item.user || '',
-      secret: item.secret || item.fileSecret || item.secretKey || '',
-      raw: item,
-    };
-  });
+  const source = Array.isArray(response?.items) ? response.items : [];
+  return source.map((item) => ({
+    fileId: item.fileId,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
+    createdAt: item.createdAt,
+    fileOwner: item.fileOwner,
+  }));
 }

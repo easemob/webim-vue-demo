@@ -135,14 +135,14 @@ const debouncedToChatMessage = _.debounce(
 ); // 300毫秒内的连续触发将被防抖处理
 const toChatMessage = (conversationItem, index) => {
   checkedConverItemIndex.value = index;
-  const { conversationId, unReadCount, customField, conversationType } = conversationItem;
+  const { conversationId, unreadCount, customField, conversationType } = conversationItem;
   if (
-    unReadCount > 0 &&
+    unreadCount > 0 &&
     [CHAT_TYPE.SINGLE, CHAT_TYPE.GROUP].includes(conversationType)
   ) {
     store.dispatch('clearConversationUnreadCount', {
-      conversationId: conversationId,
-      chatType: conversationType,
+      conversationId,
+      conversationType,
     });
   }
   if (customField?.mention)

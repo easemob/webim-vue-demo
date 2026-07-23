@@ -48,13 +48,12 @@ const getMemberDisplayName = (userId) => {
   if (!userId) return '';
   return getUserDisplayNameById(userId) || userId;
 };
-const getGroupMemberUserId = (item) =>
-  item?.userId || item?.member || item?.owner || '';
+const getGroupMemberUserId = (item) => item?.userId || '';
 const showGroupsMembersName = computed(() => {
   return (item) => {
     const userId = getGroupMemberUserId(item);
     if (!userId) return '';
-    if (item.role === 'owner' || item.owner) {
+    if (item.role === 'owner') {
       return userId === loginUserId.value
         ? '我【群主】'
         : getMemberDisplayName(userId) + '【群主】';
@@ -246,7 +245,7 @@ const searchUsers = (keyword) => {
           <p class="title">
             群成员
             {{
-              `${getGroupMembersList.length}/${groupDetail.maxMembers ?? '-'}`
+              `${groupDetail.memberCount ?? '-'}/${groupDetail.maxMembers ?? '-'}`
             }}
           </p>
           <div class="now_exit_group_members">

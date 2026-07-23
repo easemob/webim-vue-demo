@@ -57,10 +57,12 @@ export const imContactListener = () => {
       // 收到好友邀请触发此方法。
       onContactInvited: (data) => {
         //写入INFORM
-        console.log('[IM Contact Event] received', {
+        console.info('[SDK5 Contact] onContactInvited received', {
           eventType: CONTACT_OPERATION_CUSTOM_TYPE.CONTACT_INVITED,
           from: data?.from,
           to: data?.to,
+          type: data?.type,
+          status: data?.status,
           rawEvent: data,
         });
         onDispatchContactEvent(

@@ -4,13 +4,9 @@ import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getCurrentUserId, requireManager } from '@/IM';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { DEFAULT_EASEMOB_REST_URL } from '@/IM/config';
-import {
-  CHATROOM_EVENT_OPERATIONS,
-  createChatroomEventHandler,
-  logChatroomActionResult,
-} from '@/utils/chatroomEvents';
+import { logChatroomActionResult } from '@/utils/chatroomActionLog';
 
 const route = useRoute();
 const router = useRouter();
@@ -748,7 +744,7 @@ const registerChatroomDetailEventHandler = () => {
       onAdminAdded: getChatRoomAdmin,
       onAdminRemoved: getChatRoomAdmin,
       onAnnouncementChanged: getChatRoomAnnouncement,
-      onAttributesUpdated: getChatRoomAttributes,
+      onAttributesUpdate: getChatRoomAttributes,
       onAttributesRemoved: getChatRoomAttributes,
       onChatRoomDestroyed: () => {
         ElMessage.warning('当前聊天室已被解散');
@@ -838,7 +834,10 @@ watch(
             () =>
               router.push({
                 path: '/chat/chatroom/message',
-                query: { id: route.query.roomId, chatType: CHAT_TYPE.CHATROOM },
+                query: {
+                  conversationId: route.query.roomId,
+                  conversationType: CONVERSATION_TYPE.CHATROOM,
+                },
               })
           "
         >
