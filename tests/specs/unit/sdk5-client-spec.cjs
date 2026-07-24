@@ -13,12 +13,15 @@ assert.throws(
 );
 
 assert.deepEqual(
-  toConversationLocator({ id: 'user-1', type: 'singleChat' }),
+  toConversationLocator({
+    conversationId: 'user-1',
+    conversationType: 'singleChat',
+  }),
   { conversationId: 'user-1', conversationType: 'singleChat' },
 );
 
 assert.throws(
-  () => toConversationLocator({ id: 'user-1' }),
+  () => toConversationLocator({ conversationId: 'user-1' }),
   /conversationType is required/,
 );
 
@@ -35,6 +38,11 @@ assert.doesNotMatch(
   clientAdapterSource,
   /getClient\(\)\.userId/,
   'the SDK 5 adapter must not read the removed v4-style userId instance property.',
+);
+assert.doesNotMatch(
+  clientAdapterSource,
+  /input\?\.(?:id|type)/,
+  'SDK 5 conversation locators must not accept V4 id/type aliases.',
 );
 
 console.log('sdk5 client contract: PASS');

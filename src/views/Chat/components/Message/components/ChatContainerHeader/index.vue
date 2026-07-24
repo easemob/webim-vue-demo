@@ -71,7 +71,8 @@ const isSubscribedUserPresence = computed(() => {
 onMounted(() => {
   const { conversationType, conversationId } = routeQueryData.value;
   if (
-    conversationType !== CONVERSATION_TYPE.GROUP &&
+    conversationType === CONVERSATION_TYPE.SINGLE &&
+    conversationId &&
     !isSubscribedUserPresence.value(conversationId)
   ) {
     store.dispatch('subFriendsPresence', [conversationId]);

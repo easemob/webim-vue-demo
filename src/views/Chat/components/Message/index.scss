@@ -63,6 +63,11 @@
   .thread_list_trigger {
     font-size: 19px;
   }
+
+  .pinned_message_list_trigger {
+    width: 42px;
+    font-size: 12px;
+  }
 }
 
 .easeim_safe_tips {
@@ -83,6 +88,30 @@
     right: 10px;
     top: 10px;
   }
+}
+
+.sdk_current_conversation_context {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 20px;
+  background: #f7fbff;
+  border-bottom: 1px solid #e8f2ff;
+  color: #607089;
+  font-size: 12px;
+  line-height: 18px;
+  word-break: break-all;
+
+  &.is-error {
+    background: #fff2f0;
+    border-bottom-color: #ffd6d1;
+    color: #c23b32;
+  }
+}
+
+.sdk_current_conversation_label {
+  flex: none;
+  color: #8a94a6;
 }
 
 .chat_message_main {
@@ -176,5 +205,69 @@
 .friend_black_list_user {
   min-width: 0;
   flex: 1;
+  word-break: break-all;
+}
+
+.pinned_message_list_drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #333333;
+}
+
+.pinned_message_list_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ebeef5;
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.pinned_message_list_error {
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff2f0;
+  border: 1px solid #ffd6d1;
+  color: #c23b32;
+  word-break: break-all;
+}
+
+.pinned_message_item {
+  padding: 10px;
+  border-radius: 10px;
+  background: #f7f8fa;
+}
+
+.pinned_message_item_title {
+  margin-bottom: 6px;
+  color: #333333;
+  font-size: 14px;
+  line-height: 20px;
+  word-break: break-all;
+}
+
+.pinned_message_item_meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 8px;
+  color: #8a94a6;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.pinned_message_item pre {
+  max-height: 160px;
+  padding: 8px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #333333;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: pre-wrap;
   word-break: break-all;
 }

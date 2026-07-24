@@ -71,16 +71,8 @@ const sendImageFile = async (imgFile) => {
     width: 0,
     height: 0,
     onFileUploadError: (error) => {
-      // 被拉黑等错误常在上传阶段返回，不会进入 send 的 catch，需走统一 SDK 错误解析
       console.error('图片上传失败:', error);
-      if (
-        error?.type === 413 ||
-        error?.data?.error === 'Request Entity Too Large'
-      ) {
-        ElMessage.error('图片大小超过服务器限制');
-      } else {
-        notifySdkSendError(error);
-      }
+      notifySdkSendError(error);
       emit('onLoadending');
     },
     onFileUploadProgress: (e) => {

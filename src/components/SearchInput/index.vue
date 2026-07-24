@@ -1,12 +1,11 @@
 <script setup>
 import { ref, toRaw, toRefs, watch, computed } from 'vue';
 import { getCurrentUserId } from '@/IM';
-import { CHAT_TYPE, MESSAGE_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { Search } from '@element-plus/icons-vue';
-import { useLocalStorage, onKeyStroke } from '@vueuse/core';
+import { useLocalStorage } from '@vueuse/core';
 import _ from 'lodash';
 import { onClickOutside } from '@vueuse/core';
-import { SESSION_MESSAGE_TYPE, CUSTOM_MSG_EVENT_TYPE } from '@/constant';
 import dateFormater from '@/utils/dateFormater';
 import { useGetUserMapInfo } from '@/hooks';
 /* 单人头像 */
@@ -35,7 +34,7 @@ const inputValue = ref(modelValue.value || '');
 const isShowResultContent = ref(false);
 //搜索本地记录
 const searchHistory = useLocalStorage(
-  `EASEIM_${getCurrentUserId()}_search_hisory`,
+  `EASEIM_${getCurrentUserId()}_sdk5_search_history`,
   [],
 );
 //点击非搜索部分关闭页面
@@ -61,6 +60,28 @@ watch(inputValue, (newValue) => {
     searchSuggest.value = [];
   }
 });
+const getLastMessageSearchText = (message) => {
+  const body = message?.body || {};
+  switch (message?.type) {
+    case 'text':
+      return body.content || '';
+    case 'image':
+    case 'file':
+    case 'voice':
+    case 'video':
+      return body.filename || '';
+    case 'location':
+      return body.address || '';
+    case 'cmd':
+      return body.action || '';
+    case 'custom':
+      return body.event || '';
+    case 'combine':
+      return body.summary || '';
+    default:
+      return '';
+  }
+};
 //搜索相匹配的值
 const querySearch = () => {
   if (searchType.value === 'chatroom') {
@@ -71,24 +92,20 @@ const querySearch = () => {
   //搜索会话 conversation
   if (searchType.value === 'conversation') {
     const resultList = _.filter(props.searchData, (o) => {
-      //文本类型消息支持按照文本内容搜索
-      // if (o.lastMessage?.type === ALL_MESSAGE_TYPE.TEXT) {
-      //     return o.lastMessage.msg.indexOf(inputValue.value) > -1
-      // }
-      if (o.conversationType === CHAT_TYPE.SINGLE) {
+      if (o.conversationType === CONVERSATION_TYPE.SINGLE) {
         return (
           getUserDisplayNameById(o.conversationId).indexOf(inputValue.value) >
             -1 ||
           o.conversationId.indexOf(inputValue.value) > -1 ||
-          String(o.lastMessage?.msg ?? '').includes(inputValue.value)
+          String(getLastMessageSearchText(o.lastMessage)).includes(inputValue.value)
         );
       }
-      if (o.conversationType === CHAT_TYPE.GROUP)
+      if (o.conversationType === CONVERSATION_TYPE.GROUP)
         return (
           getGroupNameByGroupId(o.conversationId).indexOf(inputValue.value) >
             -1 ||
           o.conversationId.indexOf(inputValue.value) > -1 ||
-          String(o.lastMessage?.msg ?? '').includes(inputValue.value)
+          String(getLastMessageSearchText(o.lastMessage)).includes(inputValue.value)
         );
     });
     searchSuggest.value = resultList;
@@ -108,26 +125,16 @@ const querySearch = () => {
   }
 };
 //处理lastmsg预览内容
-const handleLastMsgContent = computed(() => {
-  return (msgBody) => {
-    const { type, msg } = msgBody;
-    let resultContent = '';
-    //如果消息类型，在预设非展示文本类型中，就返回预设值
-    if (SESSION_MESSAGE_TYPE[type]) {
-      resultContent = SESSION_MESSAGE_TYPE[type];
-    } else if (type === MESSAGE_TYPE.CUSTOM) {
-      //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
-      if (msgBody.customEvent) {
-        (CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent] &&
-          (resultContent = CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent])) ||
-          '';
-      }
-    } else {
-      resultContent = msg;
-    }
-    return resultContent;
+const handleLastMsgContent = (message) => {
+  const messageTypePreview = {
+    image: '[图片]',
+    file: '[文件]',
+    voice: '[语音]',
+    location: '[位置]',
+    video: '[视频]',
   };
-});
+  return messageTypePreview[message?.type] || getLastMessageSearchText(message);
+};
 //点击历史记录通知对应类型的不同的组件跳转 例如 通知会话部分 通知联系人部分
 const clickHistoryItem = (historyItem) => {
   if (searchType.value === 'conversation') {
@@ -147,13 +154,13 @@ const emitConversation = (fromType, item) => {
           searchHistory.value.unshift(item);
         }
       });
-    emit('toChatMessage', item.value, item.chatType);
+    emit('toChatMessage', item.value, item.conversationType);
   }
   if (fromType === 1) {
     const searchItem = {
       label: item.conversationId,
       value: item.conversationId,
-      chatType: item.conversationType,
+      conversationType: item.conversationType,
     };
     const _rawSearchHistory = _.cloneDeep(toRaw(searchHistory.value));
     if (_rawSearchHistory.length === 0 || _rawSearchHistory === null) {
@@ -176,10 +183,16 @@ const emitConversation = (fromType, item) => {
 //选中通知联系人跳转 联系人搜索暂不写入本地存储
 const emitContacts = (item) => {
   if (item.userId) {
-    emit('toContacts', { id: item.userId, chatType: CHAT_TYPE.SINGLE });
+    emit('toContacts', {
+      conversationId: item.userId,
+      conversationType: CONVERSATION_TYPE.SINGLE,
+    });
   }
   if (item.groupId) {
-    emit('toContacts', { id: item.groupId, chatType: CHAT_TYPE.GROUP });
+    emit('toContacts', {
+      conversationId: item.groupId,
+      conversationType: CONVERSATION_TYPE.GROUP,
+    });
   }
 };
 //监听ESC键关闭搜索会话
@@ -240,7 +253,7 @@ const {
               @click="clickHistoryItem(item)"
             >
               <span>{{
-                item.chatType === CHAT_TYPE.SINGLE
+                item.conversationType === CONVERSATION_TYPE.SINGLE
                   ? getUserDisplayNameById(item.value)
                   : getGroupNameByGroupId(item.value)
               }}</span>
@@ -254,14 +267,14 @@ const {
       <div v-if="searchType === 'conversation'">
         <div v-for="(conversationItem, index) in searchSuggest" :key="index">
           <div
-            v-if="conversationItem.conversationType === CHAT_TYPE.SINGLE"
+            v-if="conversationItem.conversationType === CONVERSATION_TYPE.SINGLE"
             class="title"
           >
             联系人
           </div>
           <div
             class="title"
-            v-if="conversationItem.conversationType === CHAT_TYPE.GROUP"
+            v-if="conversationItem.conversationType === CONVERSATION_TYPE.GROUP"
           >
             群组
           </div>
@@ -274,7 +287,7 @@ const {
                 <el-avatar
                   :size="34"
                   :src="
-                    conversationItem.conversationType === CHAT_TYPE.SINGLE
+                    conversationItem.conversationType === CONVERSATION_TYPE.SINGLE
                       ? getUserDisplayAvatarById(
                           conversationItem.conversationId,
                         )
@@ -286,7 +299,7 @@ const {
             <div class="item_body item_main">
               <div class="name">
                 {{
-                  conversationItem.conversationType === CHAT_TYPE.SINGLE
+                  conversationItem.conversationType === CONVERSATION_TYPE.SINGLE
                     ? getUserDisplayNameById(conversationItem.conversationId)
                     : getGroupNameByGroupId(conversationItem.conversationId)
                 }}
@@ -297,7 +310,7 @@ const {
             </div>
             <div class="item_body item_right">
               <span class="time">{{
-                dateFormater('MM/DD/HH:mm', conversationItem?.lastMessage?.time)
+                dateFormater('MM/DD/HH:mm', conversationItem?.lastMessage?.timestamp)
               }}</span>
             </div>
           </div>

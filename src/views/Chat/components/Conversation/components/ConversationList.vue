@@ -2,12 +2,12 @@
 import { ref, computed } from 'vue';
 import { useStore } from 'vuex';
 import dateFormater from '@/utils/dateFormater';
-import { CHAT_TYPE } from '@/IM/constant';
-import { CUSTOM_MSG_EVENT_TYPE, SESSION_MESSAGE_TYPE } from '@/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import _ from 'lodash';
 import { useRouter, useRoute } from 'vue-router';
 import { requireManager } from '@/IM';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { getSdk5ErrorMessage } from '@/utils/sdk5ErrorInfo';
 import {
   CONVERSATION_PUSH_REMIND_TYPES,
   getConversationPushRemindType,
@@ -18,7 +18,6 @@ import informIcon from '@/assets/images/avatar/inform.png';
 import defaultAvatar from '@/assets/images/avatar/theme2x.png';
 import defaultGroupAvatar from '@/assets/images/avatar/jiaqun2x.png';
 import { useGetUserMapInfo } from '@/hooks';
-import { MESSAGE_TYPE } from '@/IM/constant';
 import { CONVERSATION_MARK, hasConversationMark } from '@/constant';
 /* route */
 const route = useRoute();
@@ -56,13 +55,13 @@ const handleConversationName = computed(() => {
   return (conversationItem) => {
     if (!conversationItem) return '未知会话';
     const { conversationType, conversationId } = conversationItem;
-    if (conversationType === CHAT_TYPE.SINGLE) {
+    if (conversationType === CONVERSATION_TYPE.SINGLE) {
       return getUserDisplayNameById(conversationId) || conversationId;
     }
-    if (conversationType === CHAT_TYPE.GROUP) {
+    if (conversationType === CONVERSATION_TYPE.GROUP) {
       return getGroupNameByGroupId(conversationId) || conversationId;
     }
-    if (conversationType === CHAT_TYPE.CHATROOM) {
+    if (conversationType === CONVERSATION_TYPE.CHATROOM) {
       return getChatroomNameByChatroomId(conversationId) || conversationId;
     }
     return conversationId;
@@ -73,23 +72,23 @@ const handleConversationAvatar = computed(() => {
   return (conversationItem) => {
     if (!conversationItem) return defaultAvatar;
     const { conversationType, conversationId } = conversationItem;
-    if (conversationType === CHAT_TYPE.SINGLE) {
+    if (conversationType === CONVERSATION_TYPE.SINGLE) {
       return getUserDisplayAvatarById(conversationId) || defaultAvatar;
     }
-    if (conversationType === CHAT_TYPE.GROUP) {
+    if (conversationType === CONVERSATION_TYPE.GROUP) {
       return getGroupAvatarByGroupId(conversationId) || defaultGroupAvatar;
     }
-    if (conversationType === CHAT_TYPE.CHATROOM) {
+    if (conversationType === CONVERSATION_TYPE.CHATROOM) {
       return getChatroomAvatarByChatroomId(conversationId) || defaultGroupAvatar;
     }
     return defaultAvatar;
   };
 });
-//处理lastmsg的from昵称
+//处理 SDK 5.0 最后一条消息发送者昵称
 const handleLastMsgNickName = computed(() => {
   return (conversationItem) => {
     const { conversationId: groupId, lastMessage } = conversationItem;
-    const { from: userId } = lastMessage || {};
+    const userId = lastMessage?.sender?.userId;
     if (!userId || userId === loginUserId.value) {
       return '我：';
     } else {
@@ -97,30 +96,39 @@ const handleLastMsgNickName = computed(() => {
     }
   };
 });
-//处理lastmsg预览内容
-const handleLastMsgContent = computed(() => {
-  return (msgBody) => {
-    if (!msgBody) return '';
-    const { type, msg } = msgBody;
-    let resultContent = '';
-    //如果消息类型，在预设非展示文本类型中，就返回预设值
-    if (SESSION_MESSAGE_TYPE[type]) {
-      resultContent = SESSION_MESSAGE_TYPE[type];
-    } else if (type === MESSAGE_TYPE.CUSTOM) {
-      //如果为自定义类型消息就匹配自定义消息对应的lastmsg文本
-      if (msgBody.customEvent) {
-        (CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent] &&
-          (resultContent = CUSTOM_MSG_EVENT_TYPE[msgBody.customEvent])) ||
-          '';
-      }
-    } else if (msgBody?.isRecall) {
-      return (resultContent = '撤回了一条消息');
-    } else {
-      resultContent = msg;
-    }
-    return resultContent;
+const getLastMessageContent = (message) => {
+  const body = message?.body || {};
+  switch (message?.type) {
+    case 'text':
+      return body.content || '';
+    case 'image':
+    case 'file':
+    case 'voice':
+    case 'video':
+      return body.filename || '';
+    case 'location':
+      return body.address || '';
+    case 'cmd':
+      return body.action || '';
+    case 'custom':
+      return body.event || '';
+    case 'combine':
+      return body.summary || '';
+    default:
+      return '';
+  }
+};
+//处理 SDK 5.0 最后一条消息预览内容
+const handleLastMsgContent = (message) => {
+  const messageTypePreview = {
+    image: '[图片]',
+    file: '[文件]',
+    voice: '[语音]',
+    location: '[位置]',
+    video: '[视频]',
   };
-});
+  return messageTypePreview[message?.type] || getLastMessageContent(message);
+};
 //取网络状态
 const networkStatus = computed(() => {
   return store.state.networkStatus;
@@ -138,7 +146,7 @@ const toChatMessage = (conversationItem, index) => {
   const { conversationId, unreadCount, customField, conversationType } = conversationItem;
   if (
     unreadCount > 0 &&
-    [CHAT_TYPE.SINGLE, CHAT_TYPE.GROUP].includes(conversationType)
+    [CONVERSATION_TYPE.SINGLE, CONVERSATION_TYPE.GROUP].includes(conversationType)
   ) {
     store.dispatch('clearConversationUnreadCount', {
       conversationId,
@@ -156,7 +164,7 @@ const deleteConversation = async (conversationItem) => {
   const { conversationId, conversationType } = conversationItem;
   
   // 检查会话类型，如果是聊天室会话，不支持删除操作
-  if (conversationType === CHAT_TYPE.CHATROOM) {
+  if (conversationType === CONVERSATION_TYPE.CHATROOM) {
     ElMessage.info('聊天室会话不支持删除操作');
     return;
   }
@@ -164,8 +172,10 @@ const deleteConversation = async (conversationItem) => {
   try {
     await store.dispatch('removeLocalConversation', conversationItem);
     ElMessage.success('删除会话成功');
-    //如果删除的itemKey与当前的message会话页的id一致则跳转至会话默认页。
-    if (route?.query?.id && route.query.id === conversationId) {
+    if (
+      route?.query?.conversationId &&
+      route.query.conversationId === conversationId
+    ) {
       router.push('/chat/conversation');
     }
   } catch (error) {
@@ -179,37 +189,38 @@ const pinConversation = async (conversationItem) => {
   const { conversationId, conversationType, isPinned } = conversationItem;
   
   // 检查会话类型，如果是聊天室会话，不支持置顶操作
-  if (conversationType === CHAT_TYPE.CHATROOM) {
+  if (conversationType === CONVERSATION_TYPE.CHATROOM) {
     ElMessage.info('聊天室会话不支持置顶/取消置顶操作');
     return;
   }
   
   try {
-    await chatManager().setConversationPinned({
+    const result = await chatManager().setConversationPinned({
       conversationId,
       conversationType,
       pinned: !isPinned,
     });
+    if (typeof result.isPinned !== 'boolean') {
+      console.error('[Conversation] setConversationPinned missing SDK 5.0 isPinned', {
+        conversationId,
+        conversationType,
+        result,
+      });
+      ElMessage.error('置顶状态未更新：SDK 未下发 isPinned');
+      return;
+    }
     store.commit('UPDATE_CONVERSATION_PIN_STATUS', [
       {
-        conversationId,
-        isPinned: !isPinned,
-        pinnedTime: !isPinned ? Date.now() : 0,
+        conversationId: result.conversationId,
+        isPinned: result.isPinned,
+        pinnedTimestamp: result.pinnedTime,
       },
     ]);
 
     ElMessage.success(isPinned ? '取消置顶成功' : '置顶成功');
   } catch (error) {
     console.error('置顶/取消置顶会话失败', error);
-    const errorText = [
-      error?.message,
-      error?.error_description,
-      error?.data,
-      error?.error,
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
+    const errorText = getSdk5ErrorMessage(error).toLowerCase();
 
     if (
       errorText.includes('50') &&
@@ -229,7 +240,7 @@ const toggleConversationMark = async (conversationItem) => {
   const { conversationId, conversationType, marks } = conversationItem;
   
   // 检查会话类型，如果是聊天室会话，不支持标记操作
-  if (conversationType === CHAT_TYPE.CHATROOM) {
+  if (conversationType === CONVERSATION_TYPE.CHATROOM) {
     ElMessage.info('聊天室会话不支持标记操作');
     return;
   }
@@ -273,6 +284,8 @@ const toggleConversationMark = async (conversationItem) => {
 const pushSettingDialogVisible = ref(false);
 const pushSettingLoading = ref(false);
 const pushSettingSaving = ref(false);
+const conversationListRefreshLoading = ref(false);
+const globalConversationClearLoading = ref('');
 const selectedPushConversation = ref(null);
 const selectedPushRemindType = ref('ALL');
 const selectedDndDurationMinutes = ref(60);
@@ -362,6 +375,65 @@ const clearConversationPushSetting = async () => {
     pushSettingSaving.value = false;
   }
 };
+const refreshConversationListFromServer = async () => {
+  if (conversationListRefreshLoading.value) return;
+  conversationListRefreshLoading.value = true;
+  try {
+    await store.dispatch('refreshConversationListFromServer', { includeEmpty: true });
+    ElMessage.success('会话列表已刷新');
+  } catch (error) {
+    console.error('[Conversation] refreshSessionList UI failed', {
+      error,
+    });
+    ElMessage.error(error?.message || '会话列表刷新失败');
+  } finally {
+    conversationListRefreshLoading.value = false;
+  }
+};
+const clearAllConversationUnreadMessageCount = async () => {
+  if (globalConversationClearLoading.value) return;
+  globalConversationClearLoading.value = 'unread';
+  try {
+    await store.dispatch('clearAllConversationUnreadMessageCount');
+    ElMessage.success('全部会话未读数已清空');
+  } catch (error) {
+    console.error('[Conversation] clearAllConversationUnreadMessageCount UI failed', {
+      error,
+    });
+    ElMessage.error(error?.message || '全部会话未读数清空失败');
+  } finally {
+    globalConversationClearLoading.value = '';
+  }
+};
+const clearAllMessagesAndConversations = async () => {
+  if (globalConversationClearLoading.value) return;
+  try {
+    await ElMessageBox.confirm(
+      '该操作会调用 SDK 5.0 清空当前用户的所有会话和服务端漫游消息，确认继续？',
+      '清空全部消息与会话',
+      {
+        confirmButtonText: '确认清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+      },
+    );
+    globalConversationClearLoading.value = 'all';
+    await store.dispatch('clearAllMessagesAndConversations');
+    ElMessage.success('全部消息与会话已清空');
+    if (route?.query?.conversationId) {
+      router.push('/chat/conversation');
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('[Conversation] clearAllMessagesAndConversations UI failed', {
+        error,
+      });
+      ElMessage.error(error?.message || '全部消息与会话清空失败');
+    }
+  } finally {
+    globalConversationClearLoading.value = '';
+  }
+};
 /* 加载到底拉取新数据 */
 const scrollbarComp = ref(null);
 const loadingStatus = ref(false);
@@ -405,6 +477,38 @@ const onScrollToBottom = (event) => {
     <li class="offline_hint" v-if="!networkStatus">
       <span class="plaint_icon">!</span> 网络不给力，请检查网络设置。
     </li>
+    <li class="session_global_actions">
+      <el-button
+        link
+        type="primary"
+        size="small"
+        :loading="conversationListRefreshLoading"
+        :disabled="conversationListRefreshLoading"
+        @click.stop="refreshConversationListFromServer"
+      >
+        刷新会话列表
+      </el-button>
+      <el-button
+        link
+        type="primary"
+        size="small"
+        :loading="globalConversationClearLoading === 'unread'"
+        :disabled="!!globalConversationClearLoading"
+        @click.stop="clearAllConversationUnreadMessageCount"
+      >
+        清空全部未读
+      </el-button>
+      <el-button
+        link
+        type="danger"
+        size="small"
+        :loading="globalConversationClearLoading === 'all'"
+        :disabled="!!globalConversationClearLoading"
+        @click.stop="clearAllMessagesAndConversations"
+      >
+        清空全部消息与会话
+      </el-button>
+    </li>
     <!-- 系统通知会话 -->
     <li
       v-if="
@@ -423,14 +527,12 @@ const onScrollToBottom = (event) => {
       <div class="item_body item_main">
         <div class="name">系统通知</div>
         <div class="last_msg_body">
-          {{ informDetail.lastInformDeatail.from }}:{{
-            informDetail.lastInformDeatail.desc
-          }}
+          {{ informDetail.lastInformDeatail.sdkEventName }}
         </div>
       </div>
       <div class="item_body item_right">
         <span class="time">{{
-          dateFormater('MM/DD/HH:mm', informDetail.lastInformDeatail.time)
+          dateFormater('MM/DD/HH:mm', informDetail.lastInformDeatail.receivedAt)
         }}</span>
         <span class="unReadNum_box" v-if="informDetail.untreated >= 1">
           <sup
@@ -482,7 +584,7 @@ const onScrollToBottom = (event) => {
                     v-if="item?.customField?.mention"
                     >[有人@我]</span
                   >
-                  <span v-show="item.conversationType === CHAT_TYPE.GROUP">{{
+                  <span v-show="item.conversationType === CONVERSATION_TYPE.GROUP">{{
                     handleLastMsgNickName(item)
                   }}</span>
                   {{
@@ -492,14 +594,14 @@ const onScrollToBottom = (event) => {
               </div>
               <div class="item_body item_right">
                 <span class="time">{{
-                  item?.lastMessage?.time
-                    ? dateFormater('MM/DD/HH:mm', item.lastMessage.time)
+                  item?.lastMessage?.timestamp
+                    ? dateFormater('MM/DD/HH:mm', item.lastMessage.timestamp)
                     : ''
                 }}</span>
-                <span class="unReadNum_box" v-if="item.unReadCount >= 1">
+                <span class="unReadNum_box" v-if="item.unreadCount >= 1">
                   <sup
                     class="unReadNum_count"
-                    v-text="item.unReadCount >= 99 ? '99+' : item.unReadCount"
+                    v-text="item.unreadCount >= 99 ? '99+' : item.unreadCount"
                   ></sup>
                 </span>
               </div>
@@ -636,6 +738,17 @@ const onScrollToBottom = (event) => {
     background: #e6686e;
     border-radius: 50%;
   }
+}
+
+.session_global_actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--el-border-color);
+  background: #f7f8fa;
 }
 
 .session_list .session_list_item {

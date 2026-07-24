@@ -4,6 +4,7 @@ import Conversation from './modules/conversation';
 import Contacts from './modules/contacts';
 import Message from './modules/message';
 import Groups from './modules/groups';
+import SdkDiagnostics from './modules/sdkDiagnostics';
 import UsersProfile from './modules/usersProfile';
 import { SOURCE_TYPE } from './modules/usersProfile';
 export default createStore({
@@ -39,8 +40,8 @@ export default createStore({
       const { chatRoomId, members } = payload;
       state.chatroomMembers.set(String(chatRoomId), [...members]);
     },
-    SET_JOINED_CHATROOM_STATUS: (state, { roomId, joined }) => {
-      const key = roomId == null || roomId === '' ? '' : String(roomId);
+    SET_JOINED_CHATROOM_STATUS: (state, { chatRoomId, joined }) => {
+      const key = chatRoomId == null || chatRoomId === '' ? '' : String(chatRoomId);
       if (!key) return;
       const nextJoinedChatroomIds = new Set(state.joinedChatroomIds);
       if (joined) {
@@ -69,7 +70,12 @@ export default createStore({
       });
       const user = users[0];
       if (!user) {
-        throw new Error(`SDK 5.0 returned no user profile for ${userId}`);
+        console.warn('[getMyUserInfo] SDK 5.0 returned no user profile', {
+          userId,
+          users,
+        });
+        commit('SET_LOGIN_USER_INFO', { hxId: userId });
+        return null;
       }
       const data = { ...user, hxId: userId };
       commit('SET_LOGIN_USER_INFO', data);
@@ -84,6 +90,7 @@ export default createStore({
         },
         { root: true },
       );
+      return data;
     },
     //修改登陆用户的用户属性
     updateMyUserInfo: async ({ commit }, params) => {
@@ -121,6 +128,7 @@ export default createStore({
     Contacts,
     Message,
     Groups,
+    SdkDiagnostics,
     UsersProfile,
   },
 });

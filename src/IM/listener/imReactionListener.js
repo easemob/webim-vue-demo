@@ -2,10 +2,14 @@ import { requireManager } from '../index';
 import store from '@/store';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
+const CHAT_REACTION_LISTENER_ID = 'REACTION';
+
 export const imReactionListener = () => {
   const mountReactionEventListener = () => {
-    requireManager('chatManager').addEventHandler(
-      'REACTION',
+    const manager = requireManager('chatManager');
+    manager.removeEventHandler(CHAT_REACTION_LISTENER_ID);
+    manager.addEventHandler(
+      CHAT_REACTION_LISTENER_ID,
       wrapImEventHandler({
         onReactionChanged: async (reactionMsg) => {
             console.log('[Reaction] onReactionChange received', {

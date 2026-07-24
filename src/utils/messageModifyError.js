@@ -1,31 +1,18 @@
-function unwrapModifyMessageError(error) {
-  if (error && typeof error === 'object' && error.error) {
-    return error.error;
-  }
-  return error;
-}
-
 function getModifyMessageErrorText(error) {
-  const rawError = unwrapModifyMessageError(error);
-  if (rawError instanceof Error) {
-    return rawError.message || '';
+  if (error instanceof Error) {
+    return error.message || '';
   }
-  if (typeof rawError?.message === 'string') {
-    return rawError.message;
+  if (typeof error?.message === 'string') {
+    return error.message;
   }
-  if (typeof rawError === 'string') {
-    return rawError;
+  if (typeof error === 'string') {
+    return error;
   }
   return '';
 }
 
 function resolveModifyMessageErrorMessage(error) {
-  const rawError = unwrapModifyMessageError(error);
   const rawMessage = getModifyMessageErrorText(error);
-
-  if (rawError?.type === 50) {
-    return '该消息可编辑次数已达上限';
-  }
 
   if (rawMessage.includes('The message modify function is not activated')) {
     return '聊天室消息编辑当前不可用，请先确认该环境/AppKey已开通消息编辑能力';
@@ -39,7 +26,6 @@ function resolveModifyMessageErrorMessage(error) {
 }
 
 module.exports = {
-  unwrapModifyMessageError,
   getModifyMessageErrorText,
   resolveModifyMessageErrorMessage,
 };

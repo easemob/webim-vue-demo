@@ -16,7 +16,7 @@ import {
 /* 组件 */
 import CollectAudio from '../suit/audio.vue';
 import PreviewSendImg from '../suit/previewSendImg.vue';
-import MsgQuote from '../suit/msgQuote.vue';
+import QuoteMessage from '../suit/quoteMessage.vue';
 import emojiContainer from '../suit/emojiContainer.vue';
 import TextMessage from './components/TextMessage';
 import SendExtMessage from './components/TextMessage/SendExtMessage.vue';
@@ -115,16 +115,16 @@ const handleEditTextMessage = (content) => {
   textMessageComp.value?.onEditMessage(content);
 };
 /* 消息引用 */
-const messageQuoteRef = ref(null);
+const quoteRef = ref(null);
 //暴露给messagelist组件用来设置引用消息内容
 const handleQuoteMessage = (message) => {
-  messageQuoteRef.value && messageQuoteRef.value.setQuoteContent(message);
+  quoteRef.value?.setQuoteContent(message);
 };
 const getMessageQuoteContent = (cb) => {
-  cb(messageQuoteRef.value?.quote);
+  cb(quoteRef.value?.quote);
 };
 const clearQuoteContent = () => {
-  messageQuoteRef.value?.clearQuoteContent();
+  quoteRef.value?.clearQuoteContent();
 };
 /* 图片消息相关 */
 //选择图片
@@ -653,7 +653,7 @@ defineExpose({
     :isChatThread="isChatThread"
     :deliverOnlineOnlyOptions="deliverOnlineOnlyOptions"
   />
-  <MsgQuote ref="messageQuoteRef" />
+  <QuoteMessage ref="quoteRef" />
   <PreviewSendImg
     ref="previewSendImg"
     :conversationId="routeQueryData.conversationId"

@@ -140,6 +140,14 @@
       width: 130px;
     }
   }
+
+  .group_summary_raw {
+    max-height: 120px;
+    overflow: auto;
+    margin: 6px 0 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
 }
 .group_list_handle_box {
   margin-top: 10px;

@@ -21,7 +21,7 @@ assert.match(
   'WebSDK 5.0 edit events must use messageId, conversationId, conversationType, and message.',
 );
 assert.match(editHandler, /const key = conversationId;/);
-assert.match(editHandler, /chatType: conversationType,/);
+assert.match(editHandler, /conversationType,/);
 assert.doesNotMatch(
   editHandler,
   /message\.(mid|id|to|from|chatType|editMessageId)|setMessageKey\(resolvedMessage\)|localMessage\?\./,
@@ -34,8 +34,8 @@ assert.match(
 );
 assert.match(
   messageStore,
-  /if \(updatedContent !== undefined\) \{\s*res\.msg = updatedContent;/s,
-  'The current-page edit path must update the rendered text with body.content.',
+  /if \(updatedContent !== undefined\) \{\s*res\.body = \{ \.\.\.res\.body, content: updatedContent \};/s,
+  'The current-page edit path must retain the updated SDK 5.0 text in body.content.',
 );
 assert.match(
   messageStore,
@@ -46,6 +46,11 @@ assert.doesNotMatch(
   messageStore,
   /case CHANGE_MESSAGE_BODAY_TYPE\.MODIFY:[\s\S]*?_.assign\(res, payload\?\.message\)/,
   'The current-page edit path must not overwrite the demo render type with the SDK 5.0 message type.',
+);
+assert.doesNotMatch(
+  messageStore,
+  /case CHANGE_MESSAGE_BODAY_TYPE\.MODIFY:[\s\S]*?res\.msg\b/,
+  'The current-page edit path must not recreate a V4 msg field.',
 );
 
 console.log('sdk5 edit event contract: PASS');

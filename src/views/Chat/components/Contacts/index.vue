@@ -42,10 +42,10 @@ const toInformDetails = () => {
   router.push('/chat/contacts/informdetails');
 };
 //跳转至 contactInfo
-const toContacts = ({ id, chatType }) => {
+const toContacts = ({ conversationId, conversationType }) => {
   router.push({
     path: '/chat/contacts/contactInfos',
-    query: { id: id, chatType: chatType },
+    query: { conversationId, conversationType },
   });
 };
 
@@ -75,7 +75,7 @@ const loadMore = async () => {
   if (activeName.value === CONTACTS_TYPE.GROUP) {
     loadingStatus.value = true;
     try {
-      store.dispatch('fetchJoinedGroupListFromServer');
+      await store.dispatch('fetchJoinedGroupListFromServer');
     } catch (error) {
       console.error('[Contacts] fetchJoinedGroupListFromServer failed', error);
     } finally {

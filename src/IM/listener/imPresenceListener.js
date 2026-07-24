@@ -2,6 +2,8 @@ import { getCurrentUserId, requireManager } from '../index';
 import store from '@/store';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
+const PRESENCE_EVENT_HANDLER_ID = 'presenceStatusChange';
+
 /**
  * 在线状态：用户 A subscribePresence 用户 B 后，B 的状态变更会通过 onPresenceStatusChange 通知 A。
  * @see https://doc.easemob.com/document/web/presence.html
@@ -37,8 +39,10 @@ export const imPresenceListener = () => {
     );
   };
   const mountPresenceEventListener = () => {
-    requireManager('presenceManager').addEventHandler(
-      'presenceStatusChange',
+    const manager = requireManager('presenceManager');
+    manager.removeEventHandler(PRESENCE_EVENT_HANDLER_ID);
+    manager.addEventHandler(
+      PRESENCE_EVENT_HANDLER_ID,
       wrapImEventHandler({
         onPresenceStatusChange: (status) => {
           if (Array.isArray(status)) {

@@ -15,15 +15,8 @@ const props = defineProps({
   },
 });
 const { memberRole, groupId } = toRefs(props);
-//获取加入的群组列表
-const getJoinedGroupList = computed(() => store.getters.getJoinedGroupList);
 const getGroupDetailFromGroupList = computed(() => {
-  const group = getJoinedGroupList.value.filter((groupItem) => {
-    if (groupItem.groupId === groupId.value) {
-      return groupItem;
-    }
-  });
-  return group[0];
+  return store.getters.getGroupDetailMap.get(groupId.value) || {};
 });
 const introduceRef = ref(null);
 const isEdit = ref(false);
@@ -40,8 +33,7 @@ const editGroupsDesc = async (type, oldGroupDesc) => {
     if (groupDescValue.value === oldGroupDesc) return (isEdit.value = false);
     const params = {
       groupId: groupId.value,
-      modifyType: 1,
-      content: groupDescValue.value,
+      description: groupDescValue.value,
     };
     try {
       await store.dispatch('modifyGroupInfo', params);
@@ -53,7 +45,7 @@ const editGroupsDesc = async (type, oldGroupDesc) => {
       isEdit.value = false;
     } catch (error) {
       ElMessage({
-        message: '群组详情修改失败~',
+        message: error.message,
         type: 'error',
         center: true,
       });

@@ -4,6 +4,7 @@ import store from '@/store';
 import { ElMessageBox } from 'element-plus';
 import { Search, Minus, Plus } from '@element-plus/icons-vue';
 import { useGetUserMapInfo } from '@/hooks';
+
 const props = defineProps({
   groupId: {
     type: String,
@@ -13,124 +14,110 @@ const props = defineProps({
 });
 const { groupId } = toRefs(props);
 
-//群组黑名单
 const groupBlacklist = computed(() => {
-  return store.getters.getGroupDetailMap.get(groupId.value)?.blacklist;
+  return store.getters.getGroupBlocklistMap.get(groupId.value) || [];
 });
-//群组成员
 const getGroupMembersList = computed(() => {
-  return store.getters.getGroupMembersMap.get(groupId.value);
+  return store.getters.getGroupMembersMap.get(groupId.value) || [];
 });
 const { getUserDisplayNameById, getUserDisplayAvatarById } =
   useGetUserMapInfo();
+
 onMounted(async () => {
-  if (!getGroupMembersList.value) {
-    await store.dispatch('fetchGroupsMemberFromServer', { groupId: groupId.value, chatType: 'groupChat' });
+  try {
+    await Promise.all([
+      store.dispatch('fetchGroupsMemberFromServer', { groupId: groupId.value }),
+      store.dispatch('fetchGroupsBlackListFromServer', groupId.value),
+    ]);
+  } catch (error) {
+    console.error('[SDK 5.0 Group] group blocklist panel load failed', {
+      groupId: groupId.value,
+      error,
+    });
   }
 });
 
-let tobeAddedBlackList = ref([]);
-const handleAddBlackList = (memberId) => {
+const isInBlackList = (memberId) =>
+  groupBlacklist.value.some((entry) => entry.user.userId === memberId);
+
+const handleBlackListMember = (memberId) => {
   ElMessageBox.alert('确定要操作该成员？', '成员变更', {
     confirmButtonText: '确认',
     callback: async (action) => {
-      if (action === 'confirm') {
-        if (isInBlackList.value(memberId)) {
-          tobeAddedBlackList.value = tobeAddedBlackList.value.filter(
-            (item) => item !== memberId,
-          );
-          //存在黑名单中移除
-          await store.dispatch('removeTheMemberFromBlackList', {
-            groupId: groupId.value,
-            userIds: [memberId],
-          });
-        } else {
-          await store.dispatch('addMemberToBlackList', {
-            groupId: groupId.value,
-            userIds: [memberId],
-          });
-        }
+      if (action !== 'confirm') return;
+      if (isInBlackList(memberId)) {
+        await store.dispatch('removeTheMemberFromBlackList', {
+          groupId: groupId.value,
+          userIds: [memberId],
+        });
+        return;
       }
+      await store.dispatch('addMemberToBlackList', {
+        groupId: groupId.value,
+        userIds: [memberId],
+      });
     },
   });
 };
-const isInBlackList = computed(() => {
-  return (memberId) => {
-    return (
-      groupBlacklist.value.includes(memberId) ||
-      tobeAddedBlackList.value.includes(memberId)
-    );
-  };
+
+const searchInputValue = ref('');
+const searchResult = computed(() => {
+  const keyword = searchInputValue.value;
+  if (!keyword) return getGroupMembersList.value;
+  return getGroupMembersList.value.filter((member) =>
+    member.user.userId.includes(keyword),
+  );
 });
-const inBlackMemberList = computed(() => {
-  return groupBlacklist.value.concat(tobeAddedBlackList.value);
-});
-//搜索群成员列表逻辑
-const serachInputValue = ref('');
-const searchResultValue = ref([]);
-const searchUsers = () => {
-  searchResultValue.value = getGroupMembersList.value.filter((item) => {
-    return item?.userId?.includes(serachInputValue.value);
-  });
-};
 </script>
+
 <template>
   <div class="group_black_list_container">
     <div class="group_member_list_container">
       <el-scrollbar>
         <div class="search_input_container">
           <el-input
+            v-model="searchInputValue"
             style="height: 36px"
-            v-model="serachInputValue"
             placeholder="搜索"
-            @input="searchUsers"
             :prefix-icon="Search"
-          >
-          </el-input>
+          />
         </div>
-        <div
-          v-for="{ userId } in !serachInputValue
-            ? getGroupMembersList
-            : searchResultValue"
-          :key="userId"
-        >
-          <template v-if="userId">
-            <div class="friend_user_list">
-              <div class="friend_user_list_left">
-                <el-avatar :src="getUserDisplayAvatarById(userId)"></el-avatar>
-                <b class="friend_list_username">{{
-                  getUserDisplayNameById(userId)
-                }}</b>
-              </div>
-              <el-button
-                type="primary"
-                :icon="Plus"
-                circle
-                size="small"
-                @click="handleAddBlackList(userId)"
-              />
+        <div v-for="member in searchResult" :key="member.user.userId">
+          <div class="friend_user_list">
+            <div class="friend_user_list_left">
+              <el-avatar :src="getUserDisplayAvatarById(member.user.userId)" />
+              <b class="friend_list_username">
+                {{ getUserDisplayNameById(member.user.userId) }}
+              </b>
             </div>
-            <el-divider style="margin: 12px 0" />
-          </template>
+            <el-button
+              type="primary"
+              :icon="Plus"
+              circle
+              size="small"
+              @click="handleBlackListMember(member.user.userId)"
+            />
+          </div>
+          <el-divider style="margin: 12px 0" />
         </div>
       </el-scrollbar>
     </div>
     <div class="inside_black_list_container" v-if="groupBlacklist.length">
       <el-scrollbar>
-        <div v-for="member in inBlackMemberList" :key="member">
+        <div v-for="entry in groupBlacklist" :key="entry.user.userId">
           <div class="friend_user_list">
             <div class="friend_user_list_left">
-              <el-avatar :src="getUserDisplayAvatarById(member)"></el-avatar>
-              <b class="friend_list_username">{{
-                getUserDisplayNameById(member)
-              }}</b>
+              <el-avatar :src="getUserDisplayAvatarById(entry.user.userId)" />
+              <b class="friend_list_username">
+                {{ getUserDisplayNameById(entry.user.userId) }}
+              </b>
             </div>
             <el-button
               type="danger"
               :icon="Minus"
               circle
               size="small"
-              @click="handleAddBlackList(member)"
+              @click="handleBlackListMember(entry.user.userId)"
             />
           </div>
           <el-divider style="margin: 12px 0" />
@@ -149,7 +136,6 @@ const searchUsers = () => {
 }
 .group_member_list_container,
 .inside_black_list_container {
-  // flex: 1;
   width: 50%;
   text-align: center;
   max-height: 466px;
@@ -185,26 +171,6 @@ const searchUsers = () => {
       font-size: 14px;
       line-height: 20px;
       color: #333333;
-    }
-  }
-
-  .checked_btn {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    margin: 0 10px;
-
-    .checked_icon {
-      font-size: 20px;
-      color: #0091ff;
-    }
-
-    .unChecked_icon {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid #979797;
-      border-radius: 50%;
     }
   }
 }

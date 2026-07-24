@@ -3,8 +3,8 @@ import { ref, toRefs, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { CONVERSATION_TYPE, MESSAGE_TYPE } from '@/IM/constant';
-import { CUSTOM_MSG_EVENT_TYPE, SESSION_MESSAGE_TYPE } from '@/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
+import { CUSTOM_MSG_EVENT_TYPE } from '@/constant';
 import dateFormater from '@/utils/dateFormater';
 
 const props = defineProps({
@@ -48,30 +48,6 @@ const getThreadName = (thread) =>
 const getThreadMemberName = (member) =>
   member?.memberId || '';
 
-const normalizeThreadDetailResponse = (response) =>
-  response || null;
-
-const normalizeThreadMembersResponse = (response) => {
-  const entities = response?.items || [];
-  return {
-    list: Array.isArray(entities) ? entities : [],
-    cursor: response?.cursor || '',
-  };
-};
-
-const normalizeThreadListResponse = (response) => {
-  const entities = response?.items || [];
-  return {
-    list: Array.isArray(entities) ? entities : [],
-    cursor: response?.cursor || '',
-  };
-};
-
-const normalizeThreadLatestMessageResponse = (response) => {
-  const entities = response?.items || [];
-  return Array.isArray(entities) ? entities : [];
-};
-
 const getThreadLatestMessage = (thread) => {
   const threadId = getThreadId(thread);
   if (!threadId) return null;
@@ -87,16 +63,28 @@ const isEmptyObject = (value) =>
 const getLatestMessageText = (message) => {
   if (!message || isEmptyObject(message)) return '暂无最新消息';
   if (message.isRecall) return '撤回了一条消息';
-  if (SESSION_MESSAGE_TYPE[message.type]) return SESSION_MESSAGE_TYPE[message.type];
-  if (message.type === MESSAGE_TYPE.CUSTOM) {
-    return CUSTOM_MSG_EVENT_TYPE[message.body?.event] || '[自定义消息]';
+  switch (message.type) {
+    case 'image':
+      return '[图片]';
+    case 'file':
+      return '[文件]';
+    case 'voice':
+      return '[语音]';
+    case 'location':
+      return '[位置]';
+    case 'video':
+      return '[视频]';
+    case 'custom':
+      return CUSTOM_MSG_EVENT_TYPE[message.body?.event] || '[自定义消息]';
+    case 'cmd':
+      return '[透传消息]';
+    default:
+      return message.body?.content || '暂无最新消息';
   }
-  if (message.type === MESSAGE_TYPE.COMMAND) return '[透传消息]';
-  return message.msg || message.payload?.text || '暂无最新消息';
 };
 
 const getLatestMessageTime = (message) => {
-  const timestamp = message?.time || message?.timestamp;
+  const timestamp = message?.timestamp;
   return timestamp ? dateFormater('MM/DD/HH:mm', timestamp) : '';
 };
 
@@ -108,7 +96,7 @@ const loadThreadLatestMessages = async (threadList) => {
     const response = await store.dispatch('fetchMessageThreadLastMessages', {
       chatThreadIds: threadIds,
     });
-    const latestMessages = normalizeThreadLatestMessageResponse(response);
+    const latestMessages = response.items;
     const nextMap = { ...latestMessageMap.value };
     latestMessages.forEach((item) => {
       const threadId = getThreadId(item);
@@ -145,11 +133,10 @@ const loadThreads = async (loadMore = false) => {
         pageSize,
       },
     );
-    const result = normalizeThreadListResponse(response);
-    threads.value = loadMore ? [...threads.value, ...result.list] : result.list;
-    cursor.value = result.cursor;
-    hasMore.value = !!result.cursor;
-    await loadThreadLatestMessages(result.list);
+    threads.value = loadMore ? [...threads.value, ...response.items] : response.items;
+    cursor.value = response.cursor;
+    hasMore.value = Boolean(response.cursor);
+    await loadThreadLatestMessages(response.items);
   } catch (error) {
     loadError.value = error?.message || '获取群组子区列表失败';
     console.error('[Thread] getChatThreads UI failed', {
@@ -179,7 +166,7 @@ const loadThreadDetail = async (thread) => {
     const response = await store.dispatch('fetchMessageThreadDetail', {
       chatThreadId,
     });
-    threadDetail.value = normalizeThreadDetailResponse(response);
+    threadDetail.value = response;
     ElMessage.success('子区详情已刷新');
   } catch (error) {
     console.error('[Thread] getChatThreadDetail UI failed', {
@@ -187,6 +174,28 @@ const loadThreadDetail = async (thread) => {
       error,
     });
     ElMessage.error(error?.message || '获取子区详情失败');
+  } finally {
+    actionLoading.value = false;
+  }
+};
+
+const refreshThreadDetail = async (thread) => {
+  const chatThreadId = getThreadId(thread);
+  if (!chatThreadId) return;
+  selectedThread.value = thread;
+  actionLoading.value = true;
+  try {
+    const response = await store.dispatch('refreshMessageThreadDetail', {
+      chatThreadId,
+    });
+    threadDetail.value = response;
+    ElMessage.success('子区详情已通过 refresh 刷新');
+  } catch (error) {
+    console.error('[Thread] refreshChatThreadDetail UI failed', {
+      chatThreadId,
+      error,
+    });
+    ElMessage.error(error?.message || '刷新子区详情失败');
   } finally {
     actionLoading.value = false;
   }
@@ -203,12 +212,11 @@ const loadThreadMembers = async (thread, loadMore = false) => {
       cursor: loadMore ? membersCursor.value : '',
       pageSize,
     });
-    const result = normalizeThreadMembersResponse(response);
     threadMembers.value = loadMore
-      ? [...threadMembers.value, ...result.list]
-      : result.list;
-    membersCursor.value = result.cursor;
-    membersHasMore.value = !!result.cursor;
+      ? [...threadMembers.value, ...response.items]
+      : response.items;
+    membersCursor.value = response.cursor;
+    membersHasMore.value = Boolean(response.cursor);
   } catch (error) {
     console.error('[Thread] getChatThreadMembers UI failed', {
       chatThreadId,
@@ -313,7 +321,7 @@ const removeMessageThreadMember = async (thread, member) => {
   try {
     await store.dispatch('removeMessageThreadMember', {
       chatThreadId,
-      username,
+      memberId: username,
     });
     ElMessage.success(`${username} 已移出成员`);
     await loadThreadMembers(thread, false);
@@ -441,6 +449,9 @@ defineExpose({
             <div class="thread_secondary_actions">
               <el-button link size="small" :loading="actionLoading" @click="loadThreadDetail(thread)">
                 详情
+              </el-button>
+              <el-button link size="small" :loading="actionLoading" @click="refreshThreadDetail(thread)">
+                refresh
               </el-button>
               <el-button link size="small" :loading="actionLoading" @click="loadThreadMembers(thread)">
                 成员

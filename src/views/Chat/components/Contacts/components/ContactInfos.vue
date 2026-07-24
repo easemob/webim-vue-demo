@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import { getCurrentUserId, requireManager } from '@/IM';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { useStore } from 'vuex';
 import router from '@/router';
 import { useRoute } from 'vue-router';
@@ -22,24 +22,24 @@ const {
   getGroupAvatarByGroupId,
 } = useGetUserMapInfo();
 const getContactsName = computed(() => {
-  const id = route.query.id;
-  const chatType = route.query.chatType;
-  if (chatType === CHAT_TYPE.SINGLE) {
-    return store.getters['UsersProfile/getDisplayContactsNickname'](id);
+  const conversationId = route.query.conversationId;
+  const conversationType = route.query.conversationType;
+  if (conversationType === CONVERSATION_TYPE.SINGLE) {
+    return store.getters['UsersProfile/getDisplayContactsNickname'](conversationId);
   }
-  if (chatType === CHAT_TYPE.GROUP) {
-    return getGroupNameByGroupId(id);
+  if (conversationType === CONVERSATION_TYPE.GROUP) {
+    return getGroupNameByGroupId(conversationId);
   }
 });
 const getContactsAvatar = computed(() => {
-  const id = route.query.id;
-  const chatType = route.query.chatType;
-  if (chatType === CHAT_TYPE.SINGLE) {
-    return getContactsAvatarById(id);
+  const conversationId = route.query.conversationId;
+  const conversationType = route.query.conversationType;
+  if (conversationType === CONVERSATION_TYPE.SINGLE) {
+    return getContactsAvatarById(conversationId);
   }
   //群组暂使用默认群头像
-  if (chatType === CHAT_TYPE.GROUP) {
-    return getGroupAvatarByGroupId(id);
+  if (conversationType === CONVERSATION_TYPE.GROUP) {
+    return getGroupAvatarByGroupId(conversationId);
   }
 });
 /* 单人黑名单状态的处理 */
@@ -52,16 +52,16 @@ const contactManager = () => requireManager('contactManager');
 //判断单聊联系人是否在黑名单
 const isInBlackList = computed(() => {
   const result = Array.from(store.state.Contacts.friendBlackList).includes(
-    route.query.id,
+    route.query.conversationId,
   );
   return result;
 });
 const currentPresenceStatus = computed(() => {
-  return store.getters.getContactsUsersPresenceMap.get(route.query.id) ?? {};
+  return store.getters.getContactsUsersPresenceMap.get(route.query.conversationId) ?? {};
 });
 const hasSubscribedPresence = computed(() => {
-  if (!route.query.id) return false;
-  return store.getters.getContactsUsersPresenceMap.has(route.query.id);
+  if (!route.query.conversationId) return false;
+  return store.getters.getContactsUsersPresenceMap.has(route.query.conversationId);
 });
 //首次onMounted进行黑名单状态的初始赋值
 onMounted(() => {
@@ -69,16 +69,16 @@ onMounted(() => {
 });
 //监听route变化重新赋值switch状态
 watch(
-  () => route.query.id,
+  () => route.query.conversationId,
   () => {
-    if (route.query.chatType === CHAT_TYPE.SINGLE) {
+    if (route.query.conversationType === CONVERSATION_TYPE.SINGLE) {
       blackStatus.value = isInBlackList.value;
     }
   },
 );
 //执行加入或移出黑名单
 const changeBlackStatus = async () => {
-  const targetId = route.query.id;
+  const targetId = route.query.conversationId;
   if (!targetId) {
     ElMessage.error('加入黑名单失败：缺少目标用户 ID');
     return false;
@@ -121,8 +121,8 @@ const changeBlackStatus = async () => {
 
 /* 单人删除好友 */
 const delTheFriend = async () => {
-  if (!route.query.id) return;
-  const targetId = route.query.id;
+  if (!route.query.conversationId) return;
+  const targetId = route.query.conversationId;
   try {
     await contactManager().deleteContact({ userId: targetId });
     store.commit('DELETE_CONTACTS_FROM_MAP', targetId);
@@ -137,18 +137,21 @@ const toChatMessage = () => {
   router.push({
     path: '/chat/contacts/message',
     query: {
-      conversationId: route.query.id,
-      conversationType: route.query.chatType,
+      conversationId: route.query.conversationId,
+      conversationType: route.query.conversationType,
     },
   });
 };
 
 const refreshCurrentPresence = async () => {
-  if (!route.query.id || route.query.chatType !== CHAT_TYPE.SINGLE) return;
+  if (
+    !route.query.conversationId ||
+    route.query.conversationType !== CONVERSATION_TYPE.SINGLE
+  ) return;
   isLoadingPresence.value = true;
   try {
     const result = await store.dispatch('fetchPresenceStatusByUsers', [
-      route.query.id,
+      route.query.conversationId,
     ]);
     ElMessage.success(
       result.length > 0 ? '在线状态已刷新' : '未查询到该用户在线状态',
@@ -161,12 +164,15 @@ const refreshCurrentPresence = async () => {
 };
 
 const subscribeCurrentPresence = async () => {
-  if (!route.query.id || route.query.chatType !== CHAT_TYPE.SINGLE) return;
+  if (
+    !route.query.conversationId ||
+    route.query.conversationType !== CONVERSATION_TYPE.SINGLE
+  ) return;
   isSubscribingPresence.value = true;
   try {
-    await store.dispatch('subFriendsPresence', [route.query.id]);
+    await store.dispatch('subFriendsPresence', [route.query.conversationId]);
     await store.dispatch('fetchSubscribedPresenceList', {
-      pageNum: 0,
+      pageNum: 1,
       pageSize: 50,
     });
     ElMessage.success('已订阅该用户在线状态');
@@ -178,12 +184,15 @@ const subscribeCurrentPresence = async () => {
 };
 
 const unsubscribeCurrentPresence = async () => {
-  if (!route.query.id || route.query.chatType !== CHAT_TYPE.SINGLE) return;
+  if (
+    !route.query.conversationId ||
+    route.query.conversationType !== CONVERSATION_TYPE.SINGLE
+  ) return;
   isUnsubscribingPresence.value = true;
   try {
-    await store.dispatch('unsubFriendsPresence', route.query.id);
+    await store.dispatch('unsubFriendsPresence', route.query.conversationId);
     await store.dispatch('fetchSubscribedPresenceList', {
-      pageNum: 0,
+      pageNum: 1,
       pageSize: 50,
     });
     ElMessage.success('已取消订阅该用户在线状态');
@@ -219,18 +228,18 @@ const unsubscribeCurrentPresence = async () => {
           <div class="contacts_id">
             <p>
               {{
-                $route.query.chatType === CHAT_TYPE.GROUP
+                $route.query.conversationType === CONVERSATION_TYPE.GROUP
                   ? '群组ID：'
                   : '好友ID：'
-              }}{{ $route.query.id }}
+              }}{{ $route.query.conversationId }}
             </p>
           </div>
           <div class="func_box">
             <div
               class="single_func"
-              v-if="$route.query.chatType === CHAT_TYPE.SINGLE"
+              v-if="$route.query.conversationType === CONVERSATION_TYPE.SINGLE"
             >
-              <ContactsRemark :userId="$route.query.id">
+              <ContactsRemark :userId="$route.query.conversationId">
                 <el-divider />
               </ContactsRemark>
               <div class="presence_status_box">
@@ -284,24 +293,19 @@ const unsubscribeCurrentPresence = async () => {
         </div>
         <div class="contaactInfo_btn">
           <el-button
-            v-if="$route.query.chatType === CHAT_TYPE.SINGLE"
+            v-if="$route.query.conversationType === CONVERSATION_TYPE.SINGLE"
             type="primary"
             size="large"
             @click="toChatMessage"
             >发起会话
           </el-button>
           <el-button
-            v-if="$route.query.chatType === CHAT_TYPE.GROUP"
+            v-if="$route.query.conversationType === CONVERSATION_TYPE.GROUP"
             type="primary"
             size="large"
             @click="toChatMessage"
             >进入群聊
           </el-button>
-          <!-- todo 待调整为新的获取群组列表接口，直接可以获取当前登陆id所在群组的权限然后添加上该功能 -->
-          <!--   <el-button v-if="$route.query.chatType === CHAT_TYPE.GROUP" type="danger" size="large">解散群组
-                        </el-button>
-                        <el-button v-if="$route.query.chatType === CHAT_TYPE.GROUP" type="danger" size="large">退出群组
-                        </el-button> -->
         </div>
       </div>
     </el-main>

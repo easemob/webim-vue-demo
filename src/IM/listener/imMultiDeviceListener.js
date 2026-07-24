@@ -2,6 +2,8 @@ import { requireManager } from '../index';
 import store from '@/store';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
+const CHAT_MULTI_DEVICE_LISTENER_ID = 'multiDeviceEvent';
+
 export const imMultiDeviceListener = () => {
   const onDispatchMultiDeviceEvent = (event) => {
     if (!event || typeof event !== 'object') {
@@ -45,8 +47,10 @@ export const imMultiDeviceListener = () => {
   };
 
   const mountMultiDeviceEventListener = () => {
-    requireManager('chatManager').addEventHandler(
-      'multiDeviceEvent',
+    const manager = requireManager('chatManager');
+    manager.removeEventHandler(CHAT_MULTI_DEVICE_LISTENER_ID);
+    manager.addEventHandler(
+      CHAT_MULTI_DEVICE_LISTENER_ID,
       wrapImEventHandler({
         onMultiDeviceConversation: (event) => {
           onDispatchMultiDeviceEvent(event);

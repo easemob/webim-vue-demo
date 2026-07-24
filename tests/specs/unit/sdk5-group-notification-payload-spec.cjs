@@ -7,8 +7,8 @@ const listener = fs.readFileSync(
   path.join(root, 'src/IM/listener/imGroupListener.js'),
   'utf8',
 );
-const createInform = fs.readFileSync(
-  path.join(root, 'src/utils/handleSomeData/createInform.js'),
+const conversation = fs.readFileSync(
+  path.join(root, 'src/store/modules/conversation.js'),
   'utf8',
 );
 const details = fs.readFileSync(
@@ -16,11 +16,10 @@ const details = fs.readFileSync(
   'utf8',
 );
 
-assert.match(listener, /sdk5EventName: eventName,/);
-assert.match(listener, /sdk5Payload: payload,/);
-assert.match(createInform, /sdk5EventName: informContnet\.sdk5EventName,/);
-assert.match(createInform, /sdk5Payload: informContnet\.sdk5Payload,/);
-assert.match(details, /item\.sdk5EventName/);
-assert.match(details, /JSON\.stringify\(item\.sdk5Payload, null, 2\)/);
+assert.match(listener, /store\.dispatch\('createNewInform', \{ eventName, payload \}\)/);
+assert.match(conversation, /sdkEventName:\s*eventName/);
+assert.match(conversation, /sdkPayload:\s*payload/);
+assert.match(details, /item\.sdkEventName/);
+assert.match(details, /JSON\.stringify\(item\.sdkPayload, null, 2\)/);
 
 console.log('sdk5 group notification payload: PASS');

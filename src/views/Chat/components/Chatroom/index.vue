@@ -12,6 +12,7 @@ import {
   isImAuthFailedReason,
   redirectToLoginClearImSession,
 } from '@/utils/imAuthRedirect';
+import { getSdk5ErrorMessage } from '@/utils/sdk5ErrorInfo';
 
 /** SDK IDs may be numbers or strings; normalize them for pending-operation state. */
 function normalizeChatroomId(id) {
@@ -39,6 +40,15 @@ const checkLoginStatus = () => {
   return true;
 };
 
+const logChatroomSdkEvent = (eventName, payload) => {
+  console.log('[SDK 5.0 ChatRoom event]', {
+    eventName,
+    chatRoomId: payload?.chatRoomId,
+    currentUserId: getCurrentUserId(),
+    payload,
+  });
+};
+
 // 设置聊天室事件监听器，只记录真实 SDK 事件
 const setupChatroomEventHandler = () => {
   if (chatroomEventHandler) {
@@ -46,37 +56,81 @@ const setupChatroomEventHandler = () => {
   }
 
   chatroomEventHandler = chatRoomManager().addEventHandler('CHATROOM', {
-    onChatRoomDestroyed: () => ElMessage.warning('聊天室已解散'),
-    onRemovedFromChatRoom: () => ElMessage.warning('你已被移出聊天室'),
-    onMembersJoined: () => {},
-    onMembersExited: () => {},
+    onChatRoomDestroyed: (payload) => {
+      logChatroomSdkEvent('onChatRoomDestroyed', payload);
+      ElMessage.warning('聊天室已解散');
+    },
+    onRemovedFromChatRoom: (payload) => {
+      logChatroomSdkEvent('onRemovedFromChatRoom', payload);
+      ElMessage.warning('你已被移出聊天室');
+    },
+    onMembersJoined: (payload) => {
+      logChatroomSdkEvent('onMembersJoined', payload);
+    },
+    onMembersExited: (payload) => {
+      logChatroomSdkEvent('onMembersExited', payload);
+    },
     onAllMemberMuteStateChanged: (payload) => {
+      logChatroomSdkEvent('onAllMemberMuteStateChanged', payload);
       ElMessage[payload.isMuted ? 'warning' : 'success'](
         payload.isMuted ? '聊天室已开启全员禁言' : '聊天室已解除全员禁言',
       );
     },
-    onAllowListAdded: () => ElMessage.success('你已被添加到聊天室白名单'),
-    onAllowListRemoved: () => ElMessage.warning('你已被移出聊天室白名单'),
-    onAnnouncementChanged: () => ElMessage.info('聊天室公告已更新'),
-    onMuteListAdded: () => ElMessage.warning('你已被禁言'),
-    onMuteListRemoved: () => ElMessage.success('你已被解除禁言'),
-    onAdminAdded: () => ElMessage.success('你已被设置为管理员'),
-    onAdminRemoved: () => ElMessage.warning('你已被移除管理员'),
-    onOwnerChanged: () => ElMessage.info('聊天室所有者已变更'),
-    onChatRoomInfoChanged: () => ElMessage.info('聊天室信息已更新'),
-    onAttributesUpdate: () => ElMessage.info('聊天室自定义属性已更新'),
-    onAttributesRemoved: () => ElMessage.info('聊天室自定义属性已删除'),
+    onAllowListAdded: (payload) => {
+      logChatroomSdkEvent('onAllowListAdded', payload);
+      ElMessage.success('你已被添加到聊天室白名单');
+    },
+    onAllowListRemoved: (payload) => {
+      logChatroomSdkEvent('onAllowListRemoved', payload);
+      ElMessage.warning('你已被移出聊天室白名单');
+    },
+    onAnnouncementChanged: (payload) => {
+      logChatroomSdkEvent('onAnnouncementChanged', payload);
+      ElMessage.info('聊天室公告已更新');
+    },
+    onMuteListAdded: (payload) => {
+      logChatroomSdkEvent('onMuteListAdded', payload);
+      ElMessage.warning('你已被禁言');
+    },
+    onMuteListRemoved: (payload) => {
+      logChatroomSdkEvent('onMuteListRemoved', payload);
+      ElMessage.success('你已被解除禁言');
+    },
+    onAdminAdded: (payload) => {
+      logChatroomSdkEvent('onAdminAdded', payload);
+      ElMessage.success('你已被设置为管理员');
+    },
+    onAdminRemoved: (payload) => {
+      logChatroomSdkEvent('onAdminRemoved', payload);
+      ElMessage.warning('你已被移除管理员');
+    },
+    onOwnerChanged: (payload) => {
+      logChatroomSdkEvent('onOwnerChanged', payload);
+      ElMessage.info('聊天室所有者已变更');
+    },
+    onChatRoomInfoChanged: (payload) => {
+      logChatroomSdkEvent('onChatRoomInfoChanged', payload);
+      ElMessage.info('聊天室信息已更新');
+    },
+    onAttributesUpdate: (payload) => {
+      logChatroomSdkEvent('onAttributesUpdate', payload);
+      ElMessage.info('聊天室自定义属性已更新');
+    },
+    onAttributesRemoved: (payload) => {
+      logChatroomSdkEvent('onAttributesRemoved', payload);
+      ElMessage.info('聊天室自定义属性已删除');
+    },
   });
 };
 
-const isJoiningRoom = (roomId) => {
-  const key = normalizeChatroomId(roomId);
+const isJoiningRoom = (chatRoomId) => {
+  const key = normalizeChatroomId(chatRoomId);
   if (!key) return false;
   return joiningRoomIds.value.has(key);
 };
 
-const setJoiningRoom = (roomId, joining) => {
-  const key = normalizeChatroomId(roomId);
+const setJoiningRoom = (chatRoomId, joining) => {
+  const key = normalizeChatroomId(chatRoomId);
   if (!key) return;
   const nextJoiningRoomIds = new Set(joiningRoomIds.value);
   if (joining) {
@@ -87,14 +141,14 @@ const setJoiningRoom = (roomId, joining) => {
   joiningRoomIds.value = nextJoiningRoomIds;
 };
 
-const isJoinedRoom = (roomId) => {
-  const key = normalizeChatroomId(roomId);
+const isJoinedRoom = (chatRoomId) => {
+  const key = normalizeChatroomId(chatRoomId);
   if (!key) return false;
   return store.state.joinedChatroomIds.has(key);
 };
 
-const setJoinedRoom = (roomId, joined) => {
-  store.commit('SET_JOINED_CHATROOM_STATUS', { roomId, joined });
+const setJoinedRoom = (chatRoomId, joined) => {
+  store.commit('SET_JOINED_CHATROOM_STATUS', { chatRoomId, joined });
 };
 
 const getAllChatroomMemberCount = (item) => {
@@ -142,14 +196,18 @@ const getChatrooms = async () => {
       chatRoomListParams,
       `\n当前用户:`,
       getCurrentUserId(),
-      `\n错误类型:`,
-      error.type,
+      `\n错误码:`,
+      error.code,
       `\n错误消息:`,
       error.message,
       `\n完整错误信息:`,
       error,
     );
-    ElMessage.error(error?.message || '获取聊天室列表失败');
+    if (isImAuthFailedReason(error)) {
+      redirectToLoginClearImSession();
+      return;
+    }
+    ElMessage.error(getSdk5ErrorMessage(error, '获取聊天室列表失败'));
   } finally {
     loading.value = false;
   }
@@ -159,14 +217,14 @@ const refreshChatroomListsFromServer = async () => {
   await getChatrooms();
 };
 
-const joinChatroom = async (roomId) => {
+const joinChatroom = async (chatRoomId) => {
   if (!checkLoginStatus()) return;
-  if (isJoiningRoom(roomId)) {
+  if (isJoiningRoom(chatRoomId)) {
     console.warn(
       `[ChatroomUI] 忽略重复加入请求:`,
       `\n调用方法: joinChatRoom`,
       `\n目标聊天室ID:`,
-      roomId,
+      chatRoomId,
       `\n当前用户:`,
       getCurrentUserId(),
     );
@@ -174,11 +232,11 @@ const joinChatroom = async (roomId) => {
   }
   const JOIN_CHAT_ROOM_METHOD = 'joinChatRoom';
   const joinChatRoomParams = {
-    chatRoomId: roomId,
+    chatRoomId,
     ext: joinRoomExt.value,
     leaveOtherRooms: false,
   };
-  setJoiningRoom(roomId, true);
+  setJoiningRoom(chatRoomId, true);
   try {
     console.log(
       `开始加入聊天室:`,
@@ -188,7 +246,7 @@ const joinChatroom = async (roomId) => {
       `\n当前用户:`,
       getCurrentUserId(),
       `\n目标聊天室ID:`,
-      roomId,
+      chatRoomId,
     );
     const res = await chatRoomManager().joinChatRoom(joinChatRoomParams);
 
@@ -198,10 +256,10 @@ const joinChatroom = async (roomId) => {
       joinChatRoomParams,
       res,
       {
-        from: getCurrentUserId(),
+        currentUserId: getCurrentUserId(),
       },
     );
-    setJoinedRoom(roomId, true);
+    setJoinedRoom(chatRoomId, true);
     ElMessage.success('加入聊天室成功');
     console.log(`加入聊天室成功:`, {
       method: JOIN_CHAT_ROOM_METHOD,
@@ -209,7 +267,7 @@ const joinChatroom = async (roomId) => {
       response: res,
       currentUser: getCurrentUserId(),
     });
-    toChatroomMessage(roomId);
+    toChatroomMessage(chatRoomId);
   } catch (error) {
     console.error(
       `加入聊天室失败:`,
@@ -217,15 +275,15 @@ const joinChatroom = async (roomId) => {
       `\n方法入参:`,
       joinChatRoomParams,
       `\n目标聊天室ID:`,
-      roomId,
+      chatRoomId,
       `\n当前用户:`,
       getCurrentUserId(),
       `\n完整错误信息:`,
       error,
-      `\n错误类型:`,
-      error.type,
-      `\n错误数据:`,
-      error.data,
+      `\n错误码:`,
+      error.code,
+      `\n错误详情:`,
+      error.details,
       `\n错误消息:`,
       error.message,
     );
@@ -235,29 +293,29 @@ const joinChatroom = async (roomId) => {
       return;
     }
 
-    const joinChatroomErrorMessage = `加入聊天室${roomId}失败：${error?.message || '未知错误'}`;
+    const joinChatroomErrorMessage = `加入聊天室${chatRoomId}失败：${getSdk5ErrorMessage(error, '未知错误')}`;
     ElMessage.error(joinChatroomErrorMessage);
   } finally {
-    setJoiningRoom(roomId, false);
+    setJoiningRoom(chatRoomId, false);
   }
 };
 
-const toChatroomMessage = (roomId) => {
+const toChatroomMessage = (chatRoomId) => {
   router.push({
     path: '/chat/chatroom/message',
     query: {
-      conversationId: roomId,
+      conversationId: chatRoomId,
       conversationType: CONVERSATION_TYPE.CHATROOM,
     },
   });
 };
 
-const toChatroomDetails = async (roomId) => {
+const toChatroomDetails = async (chatRoomId) => {
   await getChatrooms();
   router.push({
     path: '/chat/chatroom/details',
     query: {
-      roomId,
+      chatRoomId,
       refreshAt: Date.now(),
     },
   });
@@ -328,7 +386,7 @@ onUnmounted(() => {
                 </div>
                 <div class="item_main">
                   <div class="name">{{ item.name }}</div>
-                  <div class="desc">SDK 5.0 列表未返回聊天室描述</div>
+                  <div class="desc">聊天室ID：{{ item.chatRoomId }}</div>
                   <div class="info">
                     <span>成员: {{ getAllChatroomMemberCount(item) ?? '--' }}</span>
                   </div>

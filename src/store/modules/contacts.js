@@ -8,6 +8,18 @@ const contactManager = () => requireManager('contactManager');
 const presenceManager = () => requireManager('presenceManager');
 const userInfoManager = () => requireManager('userInfoManager');
 
+const normalizePositiveInteger = (value, fallback) => {
+  const numberValue = Number(value);
+  return Number.isInteger(numberValue) && numberValue >= 1
+    ? numberValue
+    : fallback;
+};
+
+const normalizeSubscribedPresenceListOption = (option = {}) => ({
+  pageNum: normalizePositiveInteger(option?.pageNum, 1),
+  pageSize: normalizePositiveInteger(option?.pageSize, 50),
+});
+
 const Contacts = {
   state: {
     contactsWithRemarkMap: new Map(),
@@ -145,8 +157,7 @@ const Contacts = {
       await dispatch('fetchAllContactsListWithRemarkFromServer');
     },
     //新增联系人
-    onAddNewContact: async ({ dispatch, commit }, params) => {
-      const { from: userId } = params;
+    onAddNewContact: async ({ dispatch, commit }, { userId }) => {
       const newContactParams = {
         userId,
         remark: '',
@@ -156,9 +167,8 @@ const Contacts = {
       dispatch('subFriendsPresence', [userId]);
     },
     //好友关系解除
-    onDeleteContact: async ({ dispatch, commit }, params) => {
+    onDeleteContact: async ({ dispatch, commit }, { userId }) => {
       //取消订阅好友状态。
-      const { from: userId } = params;
       dispatch('unsubFriendsPresence', userId);
       //从本地好友列表中删除此好友
       commit('DELETE_CONTACTS_FROM_MAP', userId);
@@ -167,9 +177,15 @@ const Contacts = {
     fetchBlackList: async ({ commit }) => {
       try {
         const users = await contactManager().getBlocklist();
+        console.log('[Blocklist] SDK getBlocklist response', {
+          userIds: users.map((user) => user.userId),
+          users,
+        });
         commit('SET_BLACK_LIST', users.map((item) => item.userId));
+        return users;
       } catch (error) {
-        console.error('获取黑名单列表失败', error);
+        console.error('[Blocklist] SDK getBlocklist failed', { error });
+        throw error;
       }
     },
     //获取联系人用户属性
@@ -208,11 +224,20 @@ const Contacts = {
     },
     //订阅好友的在线状态
     subFriendsPresence: async ({ commit }, users) => {
+      const currentUserId = getCurrentUserId();
       const validUserIds = Array.isArray(users)
         ? users
             .filter((userId) => typeof userId === 'string' && userId.trim())
             .map((userId) => userId.trim())
+            .filter((userId) => userId !== currentUserId)
         : [];
+      if (validUserIds.length === 0) {
+        console.log('[环信 Presence] subscribePresence 跳过空目标', {
+          currentUser: currentUserId,
+          rawUsers: users,
+        });
+        return [];
+      }
       const requestTask = [];
       const usersArr = _.chunk(validUserIds, 100); //分拆users 订阅好友状态一次不能超过100个
       try {
@@ -235,12 +260,19 @@ const Contacts = {
           commit('SET_CONTACTS_PRESENCE_TO_MAP', list);
         }
         console.log('[环信 Presence] subscribePresence 已请求', {
+          currentUser: currentUserId,
           userIds: validUserIds,
+          requestBatches: usersArr,
           snapshotCount: list.length,
           snapshot: list,
         });
       } catch (error) {
-        console.error('[环信 Presence] subscribePresence 失败', error);
+        console.error('[环信 Presence] subscribePresence 失败', {
+          currentUser: currentUserId,
+          validUserIds,
+          requestBatches: usersArr,
+          error,
+        });
       }
     },
     //取消订阅
@@ -255,14 +287,25 @@ const Contacts = {
     //查询已订阅用户列表
     fetchSubscribedPresenceList: async (
       { commit },
-      option = { pageNum: 0, pageSize: 50 },
+      option = { pageNum: 1, pageSize: 50 },
     ) => {
+      const requestOption = normalizeSubscribedPresenceListOption(option);
       try {
-        const list = await presenceManager().getSubscribedPresenceList(option);
+        console.log('[环信 Presence] getSubscribedPresenceList 请求', {
+          currentUser: getCurrentUserId(),
+          requestOption,
+          rawOption: option,
+        });
+        const list = await presenceManager().getSubscribedPresenceList(requestOption);
         commit('SET_SUBSCRIBED_PRESENCE_LIST', list);
         return list;
       } catch (error) {
-        console.error('[环信 Presence] getSubscribedPresenceList 失败', error);
+        console.error('[环信 Presence] getSubscribedPresenceList 失败', {
+          currentUser: getCurrentUserId(),
+          requestOption,
+          rawOption: option,
+          error,
+        });
         throw error;
       }
     },
@@ -313,11 +356,10 @@ const Contacts = {
   },
   getters: {
     //返回排序后的好友列表
-    //legacy
     sortedFriendList: (state) => {
       return sortPinyinFriendItem(state.friendList);
     },
-    //获取基础好友列表 //legacy
+    //获取基础好友列表
     getFriendList: (state) => {
       return state.friendList;
     },

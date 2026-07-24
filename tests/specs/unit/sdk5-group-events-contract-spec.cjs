@@ -8,8 +8,7 @@ const listenerPath = path.resolve(
 );
 const source = fs.readFileSync(listenerPath, 'utf8');
 
-// SDK 5.0 dispatches named callbacks with groupId and typed user fields; it
-// does not dispatch the v4 onGroupEvent({ operation, id, from }) aggregate.
+// SDK 5.0 dispatches named callbacks with their original public payloads.
 for (const eventName of [
   'onInvitationReceived',
   'onRequestToJoinReceived',
@@ -34,32 +33,32 @@ for (const eventName of [
   'onSharedFileDeleted',
   'onGroupInfoChanged',
   'onGroupDestroyed',
+  'onGroupDisabledChanged',
+  'onGroupMemberAttributeChanged',
+  'onUserGroupNamecardUpdated',
 ]) {
   assert.match(source, new RegExp(`${eventName}:\\s*\\(payload\\)`));
 }
 
 assert.match(
   source,
-  /const normalizeSdk5GroupEvent = \(eventName, payload\) =>/,
-  'SDK 5.0 group callback payloads must be adapted at the listener boundary.',
-);
-assert.match(source, /id: payload\.groupId/);
-assert.match(source, /members: normalizeSdk5UserIds\(payload\.members\)/);
-assert.match(
-  source,
-  /case GROUP_OPERATION_TYPE\.MEMBERS_PRESENCE:[\s\S]*?fetchGroupsMemberFromServer[\s\S]*?chatType: 'groupChat'/,
+  /onMembersJoined:[\s\S]*?refreshGroupMembers\(payload\.groupId\)/,
   'SDK 5.0 member-join events must refresh the real group-member snapshot.',
 );
 assert.match(
   source,
-  /case GROUP_OPERATION_TYPE\.MEMBERS_ABSENCE:[\s\S]*?fetchGroupsMemberFromServer[\s\S]*?chatType: 'groupChat'/,
+  /onMembersExited:[\s\S]*?refreshGroupMembers\(payload\.groupId\)/,
   'SDK 5.0 member-exit events must refresh the real group-member snapshot.',
 );
-assert.match(source, /from: payload\.inviter\?\.userId/);
-assert.match(source, /from: payload\.applicant\?\.userId/);
-assert.match(source, /to: payload\.administrator\?\.userId/);
-assert.match(source, /from: payload\.oldOwner\?\.userId/);
-assert.match(source, /to: payload\.newOwner\?\.userId/);
+assert.doesNotMatch(source, /\bchatType\b/);
+assert.match(source, /store\.dispatch\('createNewInform', \{ eventName, payload \}\)/);
+assert.match(
+  source,
+  /console\.log\('\[SDK 5\.0 Group Event\] received', \{[\s\S]*?eventName,[\s\S]*?groupId: payload\?\.groupId,[\s\S]*?currentUserId: getCurrentUserId\(\),[\s\S]*?rawEvent: payload,/,
+  'Every real group event log must include the named event, raw payload, group ID, and current user.',
+);
+assert.doesNotMatch(source, /normalizeSdk5GroupEvent|GROUP_OPERATION_TYPE/);
+assert.doesNotMatch(source, /\b(?:id|from|to|operation)\s*:/);
 assert.doesNotMatch(source, /\bonGroupEvent\s*:/);
 
 console.log('sdk5 group event contract: PASS');

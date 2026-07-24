@@ -1,7 +1,7 @@
 <script setup>
 import { useStore } from 'vuex';
 // import router from '@/router'
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { useSordedContactsWithPinyin, useGetUserMapInfo } from '@/hooks';
 /* store */
 const store = useStore();
@@ -35,8 +35,8 @@ const { getContactsNickNameById, getContactsAvatarById } = useGetUserMapInfo();
             :key="userId"
             @click="
               $emit('toContacts', {
-                id: userId,
-                chatType: CHAT_TYPE.SINGLE,
+                conversationId: userId,
+                conversationType: CONVERSATION_TYPE.SINGLE,
               })
             "
           >

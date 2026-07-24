@@ -6,6 +6,9 @@ import GroupMembers from './GroupMembers.vue';
 import GroupBlackList from './GroupBlackList.vue';
 import GroupMuteList from './GroupMuteList.vue';
 import GroupSharedFiles from './GroupSharedFiles.vue';
+import GroupAllowList from './GroupAllowList.vue';
+import GroupConfigsOwner from './GroupConfigsOwner.vue';
+import GroupAdmins from './GroupAdmins.vue';
 const props = defineProps({
   modalType: {
     type: String,
@@ -55,6 +58,11 @@ const diffModal = {
     title: '群组黑名单',
     components: GroupBlackList,
   },
+  groupAllowlist: {
+    width: '840px',
+    title: '群组白名单',
+    components: GroupAllowList,
+  },
   groupMutelist: {
     width: '840px',
     title: '群组禁言名单',
@@ -64,6 +72,16 @@ const diffModal = {
     width: '860px',
     title: '群共享文件',
     components: GroupSharedFiles,
+  },
+  groupConfigsOwner: {
+    width: '640px',
+    title: '群配置与群主',
+    components: GroupConfigsOwner,
+  },
+  groupAdmins: {
+    width: '840px',
+    title: '群组管理员',
+    components: GroupAdmins,
   },
 };
 

@@ -9,7 +9,7 @@ const messageStore = fs.readFileSync(
 
 assert.match(
   messageStore,
-  /getReactionList\(\{\s*messageId,\s*conversationType: chatType,\s*groupId,/s,
+  /getReactionList\(\{\s*messageId,\s*conversationType,\s*groupId,/s,
   'WebSDK 5.0 group reaction queries must forward groupId, not a legacy conversationId field.',
 );
 assert.doesNotMatch(

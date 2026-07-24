@@ -3,10 +3,14 @@ import store from '@/store';
 import { MESSAGE_STATUS_TYPE } from '@/constant';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
+const CHAT_READ_ACK_LISTENER_ID = 'aboutReadAckMessage';
+
 export const imReadAckListener = () => {
   const mountReadAckEventListener = () => {
-    requireManager('chatManager').addEventHandler(
-      'aboutReadAckMessage',
+    const manager = requireManager('chatManager');
+    manager.removeEventHandler(CHAT_READ_ACK_LISTENER_ID);
+    manager.addEventHandler(
+      CHAT_READ_ACK_LISTENER_ID,
       wrapImEventHandler({
         onMessageReceipts: (receipts) => {
           updateMessageReadStatus(receipts);

@@ -11,12 +11,20 @@ const conversationList = read(
 );
 
 assert.match(messageView, /conversationId:\s*'',/);
-assert.match(messageView, /conversationType:\s*CHAT_TYPE\.SINGLE,/);
+assert.match(messageView, /conversationType:\s*CONVERSATION_TYPE\.SINGLE,/);
 assert.match(
   messageView,
   /getHistoryMessage',[\s\S]*conversationId:\s*routeQueryData\.value\.conversationId,[\s\S]*conversationType:\s*routeQueryData\.value\.conversationType/,
 );
 assert.doesNotMatch(messageView, /\.\.\.routeQueryData\.value/);
+assert.match(
+  messageView,
+  /const canClearConversationUnreadCount = \(conversationType\) =>\s*\[\s*CONVERSATION_TYPE\.SINGLE,\s*CONVERSATION_TYPE\.GROUP,\s*\]\.includes\(conversationType\);/s,
+);
+assert.match(
+  messageView,
+  /if \(!canClearConversationUnreadCount\(conversationType\)\) return;[\s\S]*store\.dispatch\('clearConversationUnreadCount'/,
+);
 
 assert.match(conversationList, /const \{ conversationId, unreadCount, customField, conversationType \}/);
 assert.match(

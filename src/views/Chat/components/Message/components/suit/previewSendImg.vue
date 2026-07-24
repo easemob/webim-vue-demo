@@ -65,14 +65,7 @@ const sendImagesMessage = () => {
     height: 0,
     onFileUploadError: (error) => {
       console.error('图片上传失败:', error);
-      if (
-        error?.type === 413 ||
-        error?.data?.error === 'Request Entity Too Large'
-      ) {
-        ElMessage.error('图片大小超过服务器限制');
-      } else {
-        notifySdkSendError(error);
-      }
+      notifySdkSendError(error);
       emit('onLoadending');
     },
     onFileUploadProgress: (e) => {

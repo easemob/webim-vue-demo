@@ -11,6 +11,7 @@ for (const source of [
   read('src/IM/listener/imReadAckListener.js'),
   read('src/utils/handleSomeData/setMessageKey.js'),
   read('src/utils/messageThread.js'),
+  read('src/store/modules/usersProfile.js'),
 ]) {
   assert.doesNotMatch(source, /\.(mid|chatType|msg|to|from)\b/);
   assert.doesNotMatch(source, /\b(mid|chatType|msg|to|from):/);
@@ -19,11 +20,14 @@ for (const source of [
 const listener = read('src/IM/listener/imReciveMessageListener.js');
 const key = read('src/utils/handleSomeData/setMessageKey.js');
 const readAckListener = read('src/IM/listener/imReadAckListener.js');
+const usersProfile = read('src/store/modules/usersProfile.js');
 assert.match(listener, /message\.conversationId/);
 assert.match(listener, /message\.conversationType/);
 assert.match(listener, /message\.sender\?\.userId/);
 assert.match(key, /conversation\.conversationId/);
 assert.doesNotMatch(readAckListener, /\bid:\s*messageId/);
 assert.match(readAckListener, /messageId,/);
+assert.match(usersProfile, /message\.sender\?\.userId/);
+assert.match(usersProfile, /message\.timestamp/);
 
 console.log('sdk5 message core model contract: PASS');

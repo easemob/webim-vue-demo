@@ -24,8 +24,7 @@ const managerClasses = [
 ];
 
 function toConversationLocator(input) {
-  const conversationId = input?.conversationId || input?.id;
-  const conversationType = input?.conversationType || input?.type;
+  const { conversationId, conversationType } = input || {};
   if (!conversationId) throw new Error('conversationId is required');
   if (!conversationType) throw new Error('conversationType is required');
   return { conversationId, conversationType };

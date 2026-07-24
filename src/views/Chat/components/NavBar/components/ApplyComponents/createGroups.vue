@@ -4,11 +4,11 @@ import { useStore } from 'vuex';
 import _ from 'lodash';
 import { ElNotification } from 'element-plus';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
-import { getCurrentUserId, requireManager } from '@/IM';
+import { requireManager } from '@/IM';
 import { CONVERSATION_TYPE } from '@/IM/constant';
 import { Search, CircleCheckFilled } from '@element-plus/icons-vue';
 import { useGetUserMapInfo } from '@/hooks';
-import { buildCreateGroupPayload } from '@/utils/groupDocAdapters';
+import { getSdk5ErrorMessage } from '@/utils/sdk5ErrorInfo';
 /* 路由 */
 import router from '@/router';
 const emit = defineEmits(['closeDialogVisible']);
@@ -58,16 +58,16 @@ const searchFriend = () => {
 /* 创建群组form */
 //创建群组群组所用参数
 const groupCreateForm = reactive({
-  groupname: '',
+  name: '',
   avatar: '',
-  desc: '',
+  description: '',
   ext: '',
-  members: [],
+  memberIds: [],
   public: true,
-  approval: true,
-  allowinvites: true,
+  joinApprovalRequired: true,
+  allowInvites: true,
   inviteNeedConfirm: true,
-  maxusers: 200,
+  maxMembers: 200,
 });
 //监听关闭初始化form内容
 watch(dialogVisible, (newVal) => {
@@ -77,35 +77,31 @@ watch(dialogVisible, (newVal) => {
 });
 const sourceForm = () => {
   return {
-    groupname: '',
+    name: '',
     avatar: '',
-    desc: '',
+    description: '',
     ext: '',
-    members: [],
+    memberIds: [],
     public: true,
-    approval: true,
-    allowinvites: true,
+    joinApprovalRequired: true,
+    allowInvites: true,
     inviteNeedConfirm: true,
-    maxusers: 200,
+    maxMembers: 200,
   };
 };
 //创建群组
 const createNewGroups = async () => {
-  groupCreateForm.members = checkedContactList.value;
-  if (groupCreateForm.groupname === '')
+  groupCreateForm.memberIds = checkedContactList.value;
+  if (groupCreateForm.name === '')
     return ElNotification.error('请设置群组名称！');
   try {
-    const payload = buildCreateGroupPayload(groupCreateForm);
-    const { groupId } = await requireManager('groupManager').createGroup(payload);
-    await store.dispatch('fetchJoinedGroupListFromServer', {
-      startPageNum: 0,
-      reset: true,
-    });
+    const { groupId } = await requireManager('groupManager').createGroup(groupCreateForm);
+    await store.dispatch('fetchJoinedGroupListFromServer');
     // SDK 5.0 joined-group list is a local cache; make the server detail authoritative for this new group.
     await store.dispatch('addCreatedGroupToJoinedList', groupId);
     ElNotification({
       title: '群组操作',
-      message: `${groupCreateForm.groupname}创建成功！`,
+      message: `${groupCreateForm.name}创建成功！`,
       type: 'success',
     });
     router.push({
@@ -115,20 +111,9 @@ const createNewGroups = async () => {
         conversationType: CONVERSATION_TYPE.GROUP,
       },
     });
-    store.dispatch('createInformMessage', {
-      from: getCurrentUserId(),
-      to: groupId,
-      chatType: CHAT_TYPE.GROUP,
-      msg: `您的群组，【${groupCreateForm.groupname}】创建成功,聊两句吧！`,
-    });
     resetTheModalStatus();
   } catch (error) {
-    if (error && error.type && error.message) {
-      const errorDesc = JSON.parse(error.message);
-      handleSDKErrorNotifi(error.type, errorDesc.error_description);
-    } else {
-      handleSDKErrorNotifi(null, '未知错误');
-    }
+    handleSDKErrorNotifi(error?.code, getSdk5ErrorMessage(error, '创建群组失败'), error);
   }
 };
 
@@ -206,7 +191,7 @@ const resetTheModalStatus = () => {
         <el-form-item label="群名称">
           <el-input
             class="create_groups"
-            v-model="groupCreateForm.groupname"
+            v-model="groupCreateForm.name"
             size="large"
             placeholder="群组名称..."
           />
@@ -214,7 +199,7 @@ const resetTheModalStatus = () => {
         <el-form-item label="群详情">
           <el-input
             class="create_groups"
-            v-model="groupCreateForm.desc"
+            v-model="groupCreateForm.description"
             maxlength="300"
             placeholder="群组描述..."
             show-word-limit
@@ -243,7 +228,7 @@ const resetTheModalStatus = () => {
         <el-form-item label="群人数">
           <el-input
             class="create_groups"
-            v-model="groupCreateForm.maxusers"
+            v-model="groupCreateForm.maxMembers"
             type="number"
             min="200"
             max="1000"
@@ -262,7 +247,7 @@ const resetTheModalStatus = () => {
         </el-form-item>
         <el-form-item label="需要审批">
           <el-switch
-            v-model="groupCreateForm.approval"
+            v-model="groupCreateForm.joinApprovalRequired"
             inactive-color="#DCDFE5"
             inline-prompt
             active-text="是"
@@ -272,7 +257,7 @@ const resetTheModalStatus = () => {
         <el-form-item v-if="!groupCreateForm.public" label="成员邀请他人入群">
           <el-switch
             :disabled="groupCreateForm.public"
-            v-model="groupCreateForm.allowinvites"
+            v-model="groupCreateForm.allowInvites"
             inactive-color="#DCDFE5"
             active-text="允许群成员邀请"
             inactive-text="仅限群主"

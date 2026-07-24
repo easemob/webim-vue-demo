@@ -4,6 +4,8 @@ import { getClient, getCurrentUserId } from '../index';
 import { usePlayRing } from '@/hooks';
 import { safeSync } from '@/utils/safeCall';
 
+const CHAT_CLIENT_EVENT_HANDLER_ID = 'connection';
+
 // SDK 5.0 在 onConnected 事件后才完成 login() Promise 的会话提交。
 // REST Manager 初始化必须由 await login() 成功后的调用方触发，不能在这里抢跑。
 export const fetchLoginUsersInitData = () => {
@@ -44,19 +46,16 @@ const fetchTheLoginUserBlickList = () =>
 
 const fetchGroupList = () =>
   Promise.allSettled([
-    Promise.resolve(
-      store.dispatch('fetchJoinedGroupListFromServer', {
-        startPageNum: 0,
-        reset: true,
-      }),
-    ),
+    Promise.resolve(store.dispatch('fetchJoinedGroupListFromServer')),
     Promise.resolve(store.dispatch('fetchJoinedGroupCountFromServer')),
   ]).catch((err) => console.error('[fetchGroupList]', err));
 
 export const imConnectListener = () => {
   const mountConnectEventListener = () => {
     const { isOpenPlayRing, clickRing } = usePlayRing();
-    getClient().addEventHandler('connection', {
+    const manager = getClient();
+    manager.removeEventHandler(CHAT_CLIENT_EVENT_HANDLER_ID);
+    manager.addEventHandler(CHAT_CLIENT_EVENT_HANDLER_ID, {
       onConnected: () => {
         safeSync('connection.onConnected', () => {
           store.commit('CHANGE_LOGIN_STATUS', true);
@@ -83,7 +82,34 @@ export const imConnectListener = () => {
       },
       onConnectError: (error) => {
         safeSync('connection.onError', () => {
-          handleSDKErrorNotifi(error?.type, error?.message, error);
+          handleSDKErrorNotifi(error?.code, error?.message, error);
+        });
+      },
+      onSyncDataStart: (payload) => {
+        safeSync('connection.onSyncDataStart', () => {
+          if (payload?.dataType !== 'group') return;
+          console.log('[connection.onSyncDataStart] SDK 5.0 group sync started', {
+            currentUser: getCurrentUserId(),
+            payload,
+          });
+        });
+      },
+      onSyncDataFinished: (payload) => {
+        safeSync('connection.onSyncDataFinished', () => {
+          if (payload?.dataType !== 'group') return;
+          console.log('[connection.onSyncDataFinished] SDK 5.0 group sync finished', {
+            currentUser: getCurrentUserId(),
+            payload,
+          });
+          if (payload?.status === 'success') {
+            fetchGroupList();
+            return;
+          }
+          console.error('[connection.onSyncDataFinished] SDK 5.0 group sync failed', {
+            currentUser: getCurrentUserId(),
+            payload,
+            error: payload?.error,
+          });
         });
       },
     });

@@ -2,64 +2,59 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const source = fs.readFileSync(
-  path.resolve(__dirname, '../../../src/store/modules/groups.js'),
-  'utf8',
+function read(relativePath) {
+  return fs.readFileSync(path.resolve(__dirname, '../../..', relativePath), 'utf8');
+}
+
+const source = read('src/store/modules/groups.js');
+const createGroups = read(
+  'src/views/Chat/components/NavBar/components/ApplyComponents/createGroups.vue',
 );
-const groupAdapter = fs.readFileSync(
-  path.resolve(__dirname, '../../../src/utils/groupDocAdapters.js'),
-  'utf8',
+const groupDetails = read('src/views/Chat/components/AboutGroups/GroupsDetails/index.vue');
+const groupBlackList = read(
+  'src/views/Chat/components/AboutGroups/GroupsManagement/GroupBlackList.vue',
 );
-const createGroups = fs.readFileSync(
-  path.resolve(
-    __dirname,
-    '../../../src/views/Chat/components/NavBar/components/ApplyComponents/createGroups.vue',
-  ),
-  'utf8',
+const groupMuteList = read(
+  'src/views/Chat/components/AboutGroups/GroupsManagement/GroupMuteList.vue',
 );
-const groupDetails = fs.readFileSync(
-  path.resolve(
-    __dirname,
-    '../../../src/views/Chat/components/AboutGroups/GroupsDetails/index.vue',
-  ),
-  'utf8',
+const groupAnnouncement = read(
+  'src/views/Chat/components/AboutGroups/GroupsManagement/GroupAnnoun.vue',
 );
-const joinedGroups = fs.readFileSync(
-  path.resolve(
-    __dirname,
-    '../../../src/views/Chat/components/Contacts/components/JoinedGroupsItem.vue',
-  ),
-  'utf8',
+const groupMembers = read(
+  'src/views/Chat/components/AboutGroups/GroupsManagement/GroupMembers.vue',
 );
-const groupMembers = fs.readFileSync(
-  path.resolve(
-    __dirname,
-    '../../../src/views/Chat/components/AboutGroups/GroupsManagement/GroupMembers.vue',
-  ),
-  'utf8',
+const groupSharedFiles = read(
+  'src/views/Chat/components/AboutGroups/GroupsManagement/GroupSharedFiles.vue',
 );
-const groupMuteList = fs.readFileSync(
-  path.resolve(
-    __dirname,
-    '../../../src/views/Chat/components/AboutGroups/GroupsManagement/GroupMuteList.vue',
-  ),
-  'utf8',
+const joinedGroups = read('src/views/Chat/components/Contacts/components/JoinedGroupsItem.vue');
+const groupHeader = read(
+  'src/views/Chat/components/Message/components/ChatContainerHeader/index.vue',
 );
-const groupHeader = fs.readFileSync(
-  path.resolve(
-    __dirname,
-    '../../../src/views/Chat/components/Message/components/ChatContainerHeader/index.vue',
-  ),
-  'utf8',
-);
-const searchInput = fs.readFileSync(
-  path.resolve(__dirname, '../../../src/components/SearchInput/index.vue'),
-  'utf8',
-);
+const searchInput = read('src/components/SearchInput/index.vue');
 
 assert.match(source, /requireManager\('groupManager'\)/);
 assert.match(source, /groupManager\(\)/);
 assert.doesNotMatch(source, /\bEMClient\b/);
+assert.doesNotMatch(
+  source,
+  /\b(?:groupsInfos|pagingParams|SET_JOINED_GROUP|RESET_JOINED_GROUP_LIST|UPDATE_GROUP_SHIELD_STATUS|shieldgroup|UPDATE_CACHE_GROUP_INFO|blockGroupMessage|unblockGroupMessage|fetchInTheGroupInfoFromServer|fetchGroupMemberAttributesFromServer|SET_GROUP_MEMBERS_INFO)\b/,
+  'The SDK 5.0 group store must not retain unused legacy cache or unsupported-operation state.',
+);
+assert.match(
+  source,
+  /joinedGroups:\s*\[\]/,
+  'Joined groups must be stored as raw SDK 5.0 summaries, without a local paging envelope.',
+);
+assert.match(
+  source,
+  /SET_JOINED_GROUPS:\s*\(state, groups\)\s*=>\s*\{\s*state\.joinedGroups = groups;/s,
+  'The joined-group snapshot must be replaced with the raw SDK 5.0 GroupManager result.',
+);
+assert.match(
+  source,
+  /groupManager\(\)\.getJoinedGroupList\(\)[\s\S]*?commit\('SET_JOINED_GROUPS', groups\)/,
+  'Joined groups must be refreshed from the SDK 5.0 manager snapshot.',
+);
 assert.match(
   source,
   /state\.groupDetails\.set\(groupDetail\.groupId, groupDetail\)/,
@@ -67,54 +62,79 @@ assert.match(
 );
 assert.match(
   source,
-  /groupItem\.memberCount = members\.length/,
-  'SDK 5.0 joined-group member counts must use memberCount.',
+  /SET_GROUP_MEMBERS:\s*\(state, \{ groupId, members \}\)\s*=>\s*\{\s*state\.groupMembers\.set\(groupId, members\);/s,
+  'Group members must remain raw SDK 5.0 GroupMemberEntry objects.',
 );
-assert.match(
-  source,
-  /groupItem\.memberCount = params/,
-  'SDK 5.0 group count updates must use memberCount.',
-);
-assert.match(
-  source,
-  /groupItem\.name = params/,
-  'SDK 5.0 joined groups expose name, not the v4 groupName field.',
-);
-assert.match(
-  source,
-  /groupItem\.avatarUrl = params/,
-  'SDK 5.0 group avatars expose avatarUrl.',
-);
-assert.match(
-  groupAdapter,
-  /name: 'name'/,
-  'SDK 5.0 updateGroupInfo accepts name, not groupName.',
-);
-assert.match(
-  groupAdapter,
-  /userId: item\.user\?\.userId,\s*role: item\.role,\s*joinedAt: item\.joinedAt,/s,
-  'SDK 5.0 group members must normalize GroupMemberEntry.user.userId and joinedAt.',
-);
-assert.match(
-  groupAdapter,
-  /name: form\.groupname\?\.trim\(\),\s*description: form\.desc\?\.trim\(\) \|\| '',\s*public: Boolean\(form\.public\),\s*joinApprovalRequired: Boolean\(form\.approval\),\s*allowInvites: Boolean\(form\.allowinvites\),\s*inviteNeedConfirm: Boolean\(form\.inviteNeedConfirm\),\s*maxMembers:/s,
-  'SDK 5.0 createGroup must receive its complete public CreateGroupParams contract.',
-);
-assert.match(
-  groupAdapter,
-  /if \(Array\.isArray\(form\.members\) && form\.members\.length > 0\) \{\s*payload\.memberIds = form\.members;\s*\}/s,
-  'SDK 5.0 optional memberIds must be omitted when no initial members are selected.',
-);
-assert.match(groupAdapter, /payload\.ext = String\(form\.ext\);/);
 assert.doesNotMatch(
-  groupAdapter,
-  /\b(groupName|isPublic|needApprovalToJoin|allowMemberToInvite|maxMemberCount|extension)\s*:/,
-  'The create-group adapter must not keep v4/createGroupVNext parameter names.',
+  source,
+  /normalizeFetchedGroupMembers|normalizeGroupSharedFileList|memberCount = members\.length/,
+  'The group store must not translate SDK 5.0 responses or infer member counts locally.',
+);
+assert.match(
+  source,
+  /groupBlocklists:\s*new Map\(\)/,
+  'Blocklists must be kept separately from GroupDetail.',
+);
+assert.match(
+  source,
+  /groupMuteLists:\s*new Map\(\)/,
+  'Mute lists must be kept separately from GroupDetail.',
+);
+assert.match(
+  source,
+  /groupAnnouncements:\s*new Map\(\)/,
+  'Announcements must be kept separately from GroupDetail.',
+);
+assert.match(
+  source,
+  /state\.groupBlocklists\.set\(groupId, blocklist\)/,
+  'Blocklist entries must be stored without converting entry.user.userId.',
+);
+assert.match(
+  source,
+  /state\.groupMuteLists\.set\(groupId, muteList\)/,
+  'Mute entries must be stored without converting entry.user.userId.',
+);
+assert.match(
+  source,
+  /state\.groupAnnouncements\.set\(groupId, announcement\)/,
+  'The raw GroupAnnouncement must be stored separately from GroupDetail.',
+);
+assert.match(
+  source,
+  /state\.groupSharedFiles\.set\(groupId, result\.items\)/,
+  'Shared-file entries must be the raw GroupSharedFileListResult.items array.',
+);
+assert.doesNotMatch(
+  source,
+  /groupDetails\.get\(groupId\)\.(?:blacklist|mutelist|announcement|groupMemberInfo)/,
+  'GroupDetail must not be extended with non-GroupDetail SDK responses.',
+);
+assert.match(
+  source,
+  /await groupManager\(\)\.getGroup\(groupId\)\.updateInfo\([\s\S]*?const groupDetail = await groupManager\(\)\.getGroup\(groupId\)\.refresh\(\);[\s\S]*?commit\('SET_GROUP_DETAILS', \{ groupDetails: \[groupDetail\] \}\);/,
+  'Group profile mutations must refresh the real SDK 5.0 GroupDetail instead of patching local display fields.',
+);
+
+assert.match(
+  createGroups,
+  /const groupCreateForm = reactive\(\{\s*name: '',\s*avatar: '',\s*description: '',\s*ext: '',\s*memberIds: \[\],\s*public: true,\s*joinApprovalRequired: true,\s*allowInvites: true,\s*inviteNeedConfirm: true,\s*maxMembers: 200,/s,
+  'The group-create form must store the SDK 5.0 CreateGroupParams names directly.',
 );
 assert.match(
   createGroups,
-  /buildCreateGroupPayload\(groupCreateForm\)/,
-  'The UI must call the SDK 5.0 create-group adapter.',
+  /const \{ groupId \} = await requireManager\('groupManager'\)\.createGroup\(groupCreateForm\);/,
+  'The group-create page must pass native CreateGroupParams directly to SDK 5.0 without an adapter.',
+);
+assert.doesNotMatch(
+  createGroups,
+  /groupDocAdapters|buildCreateGroupPayload|\b(?:groupname|desc|maxusers|allowinvites|approval|members)\b/,
+  'The group-create page must not retain a V4-shaped form model or parameter mapping.',
+);
+assert.match(
+  source,
+  /const DEFAULT_GROUP_MEMBERS_PAGE_SIZE = 50;/,
+  'The group-member page size must remain local to the SDK 5.0 group store after removing the obsolete adapter module.',
 );
 assert.match(
   createGroups,
@@ -123,87 +143,62 @@ assert.match(
 );
 assert.match(
   source,
-  /addCreatedGroupToJoinedList: async \(\{ commit \}, groupId\) => \{[\s\S]*?groupManager\(\)\.getGroupInfo\(\{ groupId \}\)[\s\S]*?commit\('UPSERT_JOINED_GROUP', groupDetail\)/,
-  'Created groups must be populated from the SDK 5.0 getGroupInfo result, not a fabricated legacy object.',
+  /addCreatedGroupToJoinedList: async \(\{ commit \}, groupId\) => \{[\s\S]*?groupManager\(\)\.getGroup\(groupId\)\.getDetail\(\)[\s\S]*?commit\('UPSERT_JOINED_GROUP', groupDetail\)/,
+  'Created groups must be populated from the SDK 5.0 Group.getDetail result, not a fabricated object.',
 );
-assert.match(
-  source,
-  /UPSERT_JOINED_GROUP: \(state, group\) => \{/,
-  'The store must upsert the created SDK 5.0 group into the joined-group list.',
-);
-assert.doesNotMatch(createGroups, /buildCreateGroupVNextPayload/);
+assert.match(source, /UPSERT_JOINED_GROUP: \(state, group\) => \{/);
+
 assert.match(
   source,
   /groupManager\(\)\.getGroup\(groupId\)\.getMembers\(\{\s*cursor,\s*pageSize: DEFAULT_GROUP_MEMBERS_PAGE_SIZE,\s*\}\)/s,
   'Group directed-message recipients must be loaded through the SDK 5.0 public Group.getMembers API.',
 );
-assert.match(
+assert.match(source, /groupManager\(\)\.getGroup\(groupId\)\.getBlocklist\(\)/);
+assert.doesNotMatch(
   source,
-  /groupManager\(\)\.getGroup\(groupId\)\.getBlocklist\(\)/,
-  'Group blocklists must be loaded through the SDK 5.0 public Group.getBlocklist API.',
+  /groupManager\(\)\.(?:getGroupInfo|getGroupMembersAttributes|setGroupMemberAttributes|getGroupAnnouncement|updateGroupInfo|updateGroupAnnouncement|getGroupSharedFileList|uploadGroupSharedFile|downloadGroupSharedFile|deleteGroupSharedFile|removeGroupMembers|blockGroupMembers|unblockGroupMembers|muteGroupMembers|unmuteGroupMembers|leaveGroup|destroyGroup)\(/,
+  'The SDK 5.0 store must not call GroupManager internal forwarding methods.',
 );
-assert.match(
-  source,
-  /const normalizedBlacklist = \(blacklist \|\| \[\]\)\.map\(\(entry\) => entry\?\.user\?\.userId\)\.filter\(Boolean\);/,
-  'SDK 5.0 group blocklist entries must render the real entry.user.userId instead of the entry object.',
-);
-assert.match(groupDetails, /getGroupDetailFromGroupList\.name/);
-assert.match(groupDetails, /\.memberCount/);
-assert.match(groupDetails, /\.avatarUrl/);
-assert.match(groupDetails, /\.maxMembers/);
+for (const publicGroupMethod of [
+  'getDetail',
+  'refresh',
+  'getAnnouncement',
+  'updateInfo',
+  'updateAnnouncement',
+  'getSharedFileList',
+  'uploadSharedFile',
+  'downloadSharedFile',
+  'deleteSharedFile',
+  'removeMembers',
+  'blockMembers',
+  'unblockMembers',
+  'muteMembers',
+  'unmuteMembers',
+  'leave',
+  'destroy',
+]) {
+  assert.match(
+    source,
+    new RegExp(`getGroup\\(groupId\\)\\s*\\.\\s*${publicGroupMethod}\\(`),
+    `The SDK 5.0 Group facade must call ${publicGroupMethod}.`,
+  );
+}
+
+assert.match(groupBlackList, /getGroupBlocklistMap\.get\(groupId\.value\) \|\| \[\]/);
+assert.match(groupBlackList, /entry\.user\.userId/);
+assert.match(groupMuteList, /getGroupMuteListMap\.get\(groupId\.value\) \|\| \[\]/);
+assert.match(groupMuteList, /member\.user\.userId/);
+assert.match(groupAnnouncement, /getGroupAnnouncementMap\.get\(groupId\.value\)\?\.announcement/);
+assert.match(groupSharedFiles, /getGroupSharedFilesMap\.get\(groupId\.value\) \|\| \[\]/);
+assert.match(groupMembers, /member\.user\.userId/);
+assert.match(groupDetails, /getGroupBlocklistMap\.get\(groupId\.value\)/);
+assert.match(groupDetails, /getGroupMuteListMap\.get\(groupId\.value\)/);
+assert.match(groupDetails, /getGroupAnnouncementMap\.get\(groupId\.value\)\?\.announcement/);
 assert.match(joinedGroups, /groupItem\.memberCount/);
 assert.doesNotMatch(joinedGroups, /groupItem\.affiliationsCount/);
-assert.match(groupMembers, /groupDetail\.maxMembers/);
-assert.doesNotMatch(groupMembers, /groupDetail\.maxusers/);
-assert.match(
-  groupMembers,
-  /item\?\.userId \|\| ''/,
-  'SDK 5.0 group member rows must render the normalized userId.',
-);
-assert.match(
-  groupMembers,
-  /groupDetail\.value\.allowInvites/,
-  'SDK 5.0 group detail exposes allowInvites, not allowinvites.',
-);
-assert.doesNotMatch(groupMembers, /groupDetail\.value\.allowinvites/);
-assert.match(
-  source,
-  /inviteUsersToGroup\(\{\s*groupId,\s*userIds/s,
-  'SDK 5.0 inviteUsersToGroup requires userIds.',
-);
-assert.doesNotMatch(source, /inviteUsersToGroup\(\{[^}]*\busers:/s);
-assert.match(
-  source,
-  /群组邀请失败：\$\{error\?\.message/s,
-  'Group invite failures must surface the SDK 5.0/server error message.',
-);
-assert.match(
-  source,
-  /userId: item\.user\.userId,\s*muteExpire: item\.muteExpire/s,
-  'SDK 5.0 group mute list entries expose user.userId and muteExpire.',
-);
-assert.match(
-  groupMuteList,
-  /return store\.getters\.getGroupDetailMap\.get\(groupId\.value\)\?\.mutelist \|\| \[\]/,
-  'Group mute list view must not crash before SDK data is loaded.',
-);
-assert.match(groupMuteList, /member\.userId/);
-assert.match(groupMuteList, /member\.muteExpire/);
-assert.doesNotMatch(groupMuteList, /member\.user\)/);
-assert.doesNotMatch(groupMuteList, /member\.expire/);
 assert.match(groupHeader, /groupDetail\?\.memberCount/);
 assert.doesNotMatch(groupHeader, /groupDetail\?\.affiliationsCount/);
 assert.match(searchInput, /o\.name && o\.name\.includes\(inputValue\.value\)/);
 assert.doesNotMatch(searchInput, /o\.groupName && o\.groupName\.includes\(inputValue\.value\)/);
-assert.match(
-  groupDetails,
-  /modifyType:\s*2/,
-  'Group avatar edits must call SDK 5.0 updateGroupInfo with its avatar parameter and expose its real result.',
-);
-assert.match(
-  groupDetails,
-  /message:\s*error\?\.message \|\| `\$\{fieldConfig\.label\}修改失败`/,
-  'Group update failures must surface the original SDK/server message.',
-);
 
 console.log('sdk5 groups store contract: PASS');

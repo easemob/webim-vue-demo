@@ -83,14 +83,7 @@ const sendFileMessage = async (commonFile) => {
     fileSize: commonFile.size,
     onFileUploadError: (error) => {
       console.error('文件上传失败:', error);
-      if (
-        error?.type === 413 ||
-        error?.data?.error === 'Request Entity Too Large'
-      ) {
-        ElMessage.error('文件大小超过服务器限制');
-      } else {
-        notifySdkSendError(error);
-      }
+      notifySdkSendError(error);
       emit('onLoadending');
     },
     onFileUploadProgress: (e) => {

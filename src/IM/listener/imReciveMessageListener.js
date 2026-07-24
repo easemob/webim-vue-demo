@@ -3,6 +3,7 @@ import { CHANGE_MESSAGE_BODAY_TYPE } from '@/constant';
 import store from '@/store';
 import { safeSync, wrapImEventHandler } from '@/utils/safeCall';
 
+const CHAT_MESSAGE_LISTENER_ID = 'messageListen';
 const messageIdOf = (message) => message?.msgServerId || message?.msgLocalId || '';
 
 export const imReviceMessageListener = () => {
@@ -155,8 +156,10 @@ export const imReviceMessageListener = () => {
   };
   const mountReviceMessageEventListener = () => {
     /* message 相关监听 */
-    requireManager('chatManager').addEventHandler(
-      'messageListen',
+    const manager = requireManager('chatManager');
+    manager.removeEventHandler(CHAT_MESSAGE_LISTENER_ID);
+    manager.addEventHandler(
+      CHAT_MESSAGE_LISTENER_ID,
       wrapImEventHandler({
         // 全局消息监听器，接收所有类型的消息
         onMessage: function (message) {

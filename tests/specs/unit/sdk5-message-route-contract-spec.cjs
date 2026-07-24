@@ -13,6 +13,11 @@ const messageRouteSources = [
   'src/views/Chat/components/Message/components/MessageThreadListDrawer.vue',
   'src/views/Chat/components/Message/components/ChatContainerHeader/index.vue',
   'src/views/Chat/components/Chatroom/ChatroomDetails.vue',
+  'src/views/Chat/components/Contacts/index.vue',
+  'src/views/Chat/components/Contacts/components/ContactsItem.vue',
+  'src/views/Chat/components/Contacts/components/JoinedGroupsItem.vue',
+  'src/views/Chat/components/InformDetails/index.vue',
+  'src/components/SearchInput/index.vue',
 ];
 
 for (const relativePath of messageRouteSources) {
@@ -33,6 +38,13 @@ for (const relativePath of messageRouteSources) {
     `${relativePath} must not pass V4 route query fields to a message view`,
   );
 }
+
+const contactInfoView = read(
+  'src/views/Chat/components/Contacts/components/ContactInfos.vue',
+);
+assert.match(contactInfoView, /route\.query\.conversationId/);
+assert.match(contactInfoView, /route\.query\.conversationType/);
+assert.doesNotMatch(contactInfoView, /route\.query\.(?:id|chatType)\b/);
 
 const messageView = read('src/views/Chat/components/Message/index.vue');
 assert.match(messageView, /const \{ conversationId, conversationType, parentConversationId, threadName \} = data;/);

@@ -20,6 +20,7 @@ import BenzAMRRecorder from 'benz-amr-recorder';
 import fileSizeFormat from '@/utils/fileSizeFormat';
 import dateFormat from '@/utils/dateFormater';
 import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
+import { getSdk5ErrorMessage } from '@/utils/sdk5ErrorInfo';
 import {
   getStreamStatusDetailText,
   getStreamStatusText,
@@ -30,7 +31,6 @@ import router from '@/router';
 import paseLink from '@/utils/paseLink';
 /* 默认头像 */
 import defaultAvatar from '@/assets/images/avatar/theme2x.png';
-import ReportMessage from '../suit/reportMessage.vue';
 import messageReadedIcon from '@/assets/messages/read@3x.png';
 /* components */
 import ModifyMessage from '../suit/modifyMessage.vue';
@@ -56,7 +56,7 @@ const { routeQueryData } = toRefs(props);
 const emit = defineEmits([
   'scrollMessageList',
   'reEditMessage',
-  'messageQuote',
+  'quoteMessage',
 ]);
 const REACTION_PRESETS = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 const activeCombineMessageId = ref('');
@@ -119,7 +119,7 @@ const hasConversationRecallPermission = computed(() => {
 });
 
 const INTERNAL_EXT_KEYS = [
-  'msgQuote',
+  'quote',
   'ease_chat_uikit_user_info',
   'ease_chat_uikit_directed_message',
   'ease_chat_uikit_receiver_list',
@@ -134,6 +134,312 @@ const getDisplayableExt = (ext) => {
     return result;
   }, {});
   return Object.keys(displayable).length ? displayable : null;
+};
+
+const translationLanguages = ref([]);
+const translationLanguagesLoading = ref(false);
+const translateDialogVisible = ref(false);
+const translateTargetMessage = ref(null);
+const selectedTranslationLanguage = ref('');
+const translatingMessageId = ref('');
+const translationResultMap = ref({});
+const translationErrorMap = ref({});
+const voiceToTextLoadingMap = ref({});
+const voiceToTextResultMap = ref({});
+const voiceToTextErrorMap = ref({});
+const attachmentDownloadLoadingMap = ref({});
+const attachmentDownloadDialogVisible = ref(false);
+const message_attachment_download_result = ref(null);
+const attachmentObjectUrl = ref('');
+const group_message_read_users_dialog = ref(false);
+const groupMessageReadUsersLoading = ref(false);
+const groupMessageReadUsersTarget = ref(null);
+const groupMessageReadUsersResult = ref(null);
+const groupMessageReadUsersError = ref('');
+const group_message_read_receipts_dialog = ref(false);
+const groupMessageReadReceiptsLoading = ref(false);
+const groupMessageReadReceiptsTarget = ref(null);
+const groupMessageReadReceiptsResult = ref(null);
+const groupMessageReadReceiptsError = ref('');
+const ATTACHMENT_MESSAGE_TYPES = ['image', 'video', 'file', 'voice'];
+
+const getTranslationLanguageLabel = (language) => {
+  if (!language) return '';
+  const name = language.name || '';
+  const nativeName = language.nativeName || '';
+  if (name && nativeName && name !== nativeName) {
+    return `${language.code} - ${name} / ${nativeName}`;
+  }
+  return `${language.code} - ${name || nativeName || language.code}`;
+};
+
+const getMessageTranslationResult = (message) => {
+  const messageId = messageIdOf(message);
+  return messageId ? translationResultMap.value[messageId] : null;
+};
+
+const getMessageTranslationError = (message) => {
+  const messageId = messageIdOf(message);
+  return messageId ? translationErrorMap.value[messageId] : '';
+};
+
+const loadSupportedTranslationLanguages = async () => {
+  if (translationLanguages.value.length > 0 || translationLanguagesLoading.value) {
+    return translationLanguages.value;
+  }
+  translationLanguagesLoading.value = true;
+  try {
+    const languages = await store.dispatch('fetchSupportedTranslationLanguages');
+    translationLanguages.value = Array.isArray(languages) ? languages : [];
+    if (!selectedTranslationLanguage.value && translationLanguages.value[0]?.code) {
+      selectedTranslationLanguage.value = translationLanguages.value[0].code;
+    }
+    return translationLanguages.value;
+  } catch (error) {
+    console.error('[Message Translate] 获取支持语言失败', {
+      error,
+    });
+    handleSDKErrorNotifi(error?.code, getSdk5ErrorMessage(error, '获取翻译语言列表失败'), error);
+    throw error;
+  } finally {
+    translationLanguagesLoading.value = false;
+  }
+};
+
+const openTranslateMessageDialog = async (msgBody) => {
+  if (msgBody?.type !== 'text') return;
+  translateTargetMessage.value = msgBody;
+  translateDialogVisible.value = true;
+  try {
+    await loadSupportedTranslationLanguages();
+  } catch (error) {
+    // 真实 SDK / 服务端错误已经在 loadSupportedTranslationLanguages 中输出并提示。
+  }
+};
+
+const submitTranslateMessage = async () => {
+  const message = translateTargetMessage.value;
+  const targetLanguage = selectedTranslationLanguage.value;
+  const messageId = messageIdOf(message);
+  if (!message || !messageId || !targetLanguage) {
+    ElMessage({
+      type: 'warning',
+      center: true,
+      message: '请选择 SDK 返回的目标语言后再翻译',
+    });
+    return;
+  }
+  translatingMessageId.value = messageId;
+  translationErrorMap.value = {
+    ...translationErrorMap.value,
+    [messageId]: '',
+  };
+  try {
+    const result = await store.dispatch('translateTextMessage', {
+      message,
+      targetLanguages: [targetLanguage],
+    });
+    translationResultMap.value = {
+      ...translationResultMap.value,
+      [messageId]: result,
+    };
+    translateDialogVisible.value = false;
+    ElMessage({
+      type: 'success',
+      center: true,
+      message: '消息翻译完成',
+    });
+  } catch (error) {
+    const errorMessage = getSdk5ErrorMessage(error, '消息翻译失败');
+    translationErrorMap.value = {
+      ...translationErrorMap.value,
+      [messageId]: errorMessage,
+    };
+    handleSDKErrorNotifi(error?.code, errorMessage, error);
+  } finally {
+    translatingMessageId.value = '';
+  }
+};
+
+const getVoiceToTextResult = (message) => {
+  const messageId = messageIdOf(message);
+  return messageId ? voiceToTextResultMap.value[messageId] : null;
+};
+
+const getVoiceToTextError = (message) => {
+  const messageId = messageIdOf(message);
+  return messageId ? voiceToTextErrorMap.value[messageId] : '';
+};
+
+const isVoiceToTextLoading = (message) => {
+  const messageId = messageIdOf(message);
+  return !!(messageId && voiceToTextLoadingMap.value[messageId]);
+};
+
+const setVoiceToTextLoading = (messageId, loading) => {
+  voiceToTextLoadingMap.value = {
+    ...voiceToTextLoadingMap.value,
+    [messageId]: loading,
+  };
+};
+
+const convertVoiceMessageToText = async (msgBody) => {
+  if (msgBody?.type !== 'voice') return;
+  const messageId = messageIdOf(msgBody);
+  if (!messageId || isVoiceToTextLoading(msgBody)) return;
+  setVoiceToTextLoading(messageId, true);
+  voiceToTextErrorMap.value = {
+    ...voiceToTextErrorMap.value,
+    [messageId]: '',
+  };
+  try {
+    const result = await store.dispatch('voiceMessageToText', {
+      message: msgBody,
+    });
+    voiceToTextResultMap.value = {
+      ...voiceToTextResultMap.value,
+      [messageId]: result,
+    };
+    ElMessage({
+      type: 'success',
+      center: true,
+      message: '语音转文字完成',
+    });
+  } catch (error) {
+    const errorMessage = getSdk5ErrorMessage(error, '语音转文字失败');
+    voiceToTextErrorMap.value = {
+      ...voiceToTextErrorMap.value,
+      [messageId]: errorMessage,
+    };
+    handleSDKErrorNotifi(error?.code, errorMessage, error);
+  } finally {
+    setVoiceToTextLoading(messageId, false);
+  }
+};
+
+const canDownloadAttachment = (msgBody) =>
+  !!msgBody && ATTACHMENT_MESSAGE_TYPES.includes(msgBody.type);
+
+const isAttachmentDownloadLoading = (message) => {
+  const messageId = messageIdOf(message);
+  return !!(messageId && attachmentDownloadLoadingMap.value[messageId]);
+};
+
+const setAttachmentDownloadLoading = (messageId, loading) => {
+  attachmentDownloadLoadingMap.value = {
+    ...attachmentDownloadLoadingMap.value,
+    [messageId]: loading,
+  };
+};
+
+const revokeAttachmentObjectUrl = () => {
+  if (attachmentObjectUrl.value) {
+    URL.revokeObjectURL(attachmentObjectUrl.value);
+    attachmentObjectUrl.value = '';
+  }
+};
+
+const createAttachmentDownloadUrl = (result) => {
+  revokeAttachmentObjectUrl();
+  if (!result?.data) return '';
+  const blob = new Blob([result.data], {
+    type: result.mimeType || 'application/octet-stream',
+  });
+  attachmentObjectUrl.value = URL.createObjectURL(blob);
+  return attachmentObjectUrl.value;
+};
+
+const downloadMessageAttachment = async (msgBody) => {
+  if (!canDownloadAttachment(msgBody)) return;
+  const messageId = messageIdOf(msgBody);
+  if (!messageId || isAttachmentDownloadLoading(msgBody)) return;
+  setAttachmentDownloadLoading(messageId, true);
+  try {
+    const result = await store.dispatch('downloadMessageAttachment', {
+      message: msgBody,
+    });
+    const browserDownloadUrl = createAttachmentDownloadUrl(result);
+    message_attachment_download_result.value = {
+      messageId,
+      conversationId: msgBody.conversationId,
+      conversationType: msgBody.conversationType,
+      messageType: msgBody.type,
+      filename: result?.filename,
+      mimeType: result?.mimeType,
+      size: result?.size,
+      dataByteLength: result?.data?.byteLength || result?.data?.length || 0,
+      downloadUrl: result?.downloadUrl,
+      browserDownloadUrl,
+    };
+    attachmentDownloadDialogVisible.value = true;
+    ElMessage({
+      type: 'success',
+      center: true,
+      message: 'SDK 附件下载完成',
+    });
+  } catch (error) {
+    handleSDKErrorNotifi(error?.code, getSdk5ErrorMessage(error, '附件下载失败'), error);
+  } finally {
+    setAttachmentDownloadLoading(messageId, false);
+  }
+};
+
+const canQueryGroupMessageRead = (msgBody) =>
+  msgBody?.conversationType === CONVERSATION_TYPE.GROUP && !!msgBody?.msgServerId;
+
+const openGroupReadUsersDialog = async (msgBody) => {
+  if (!canQueryGroupMessageRead(msgBody)) {
+    ElMessage.warning('群消息已读用户查询需要群聊消息和 SDK 5.0 msgServerId');
+    return;
+  }
+  groupMessageReadUsersTarget.value = msgBody;
+  groupMessageReadUsersResult.value = null;
+  groupMessageReadUsersError.value = '';
+  group_message_read_users_dialog.value = true;
+  groupMessageReadUsersLoading.value = true;
+  try {
+    groupMessageReadUsersResult.value = await store.dispatch(
+      'getGroupMessageReadUsers',
+      {
+        groupId: msgBody.conversationId,
+        messageId: msgBody.msgServerId,
+        cursor: '',
+        pageSize: 100,
+      },
+    );
+  } catch (error) {
+    groupMessageReadUsersError.value = getSdk5ErrorMessage(error, '群消息已读用户查询失败');
+    handleSDKErrorNotifi(error?.code, groupMessageReadUsersError.value, error);
+  } finally {
+    groupMessageReadUsersLoading.value = false;
+  }
+};
+
+const openGroupReadReceiptsDialog = async (msgBody) => {
+  if (!canQueryGroupMessageRead(msgBody)) {
+    ElMessage.warning('群消息回执详情查询需要群聊消息和 SDK 5.0 msgServerId');
+    return;
+  }
+  groupMessageReadReceiptsTarget.value = msgBody;
+  groupMessageReadReceiptsResult.value = null;
+  groupMessageReadReceiptsError.value = '';
+  group_message_read_receipts_dialog.value = true;
+  groupMessageReadReceiptsLoading.value = true;
+  try {
+    groupMessageReadReceiptsResult.value = await store.dispatch(
+      'getGroupMessageReadReceipts',
+      {
+        groupId: msgBody.conversationId,
+        messageIds: [msgBody.msgServerId],
+      },
+    );
+  } catch (error) {
+    groupMessageReadReceiptsError.value =
+      getSdk5ErrorMessage(error, '群消息回执详情查询失败');
+    handleSDKErrorNotifi(error?.code, groupMessageReadReceiptsError.value, error);
+  } finally {
+    groupMessageReadReceiptsLoading.value = false;
+  }
 };
 
 // 组件挂载状态标志
@@ -368,13 +674,14 @@ onUnmounted(() => {
   audioInstances.value = [];
 
   // 清理引用消息定时器
-  if (quoteMsgTimer.value) {
-    clearTimeout(quoteMsgTimer.value);
-    quoteMsgTimer.value = null;
+  if (quoteTimer.value) {
+    clearTimeout(quoteTimer.value);
+    quoteTimer.value = null;
   }
 
   // 清理时间显示缓存
   timeShowCache.value.clear();
+  revokeAttachmentObjectUrl();
 
   // 清理当前会话ID和消息ID集合
   currentSessionId.value = '';
@@ -407,25 +714,32 @@ const copyTextMessages = (content) => {
 };
 
 //引用消息
-const clickQuoteMsgId = ref('');
-const quoteMsgTimer = ref(null);
-const clickQuoteMessage = (msgQuote) => {
-  const { msgID } = msgQuote;
+const highlightedQuoteMessageId = ref('');
+const quoteTimer = ref(null);
+const clickQuoteMessage = (quote) => {
+  const quotedMessageId = quote?.msgServerId || quote?.msgLocalId;
+  if (!quotedMessageId) {
+    console.error('[Message Quote] quoted SDK 5.0 message has no ID', quote);
+    ElMessage.error('引用消息缺少 SDK 5.0 消息 ID');
+    return;
+  }
   nextTick(() => {
     const messageQuery = document.querySelectorAll('.messageList_box');
     const filterQuoteMsg =
       messageQuery.length &&
-      [...messageQuery].filter((node) => msgID === node.dataset.messageId);
+      [...messageQuery].filter(
+        (node) => quotedMessageId === node.dataset.messageId,
+      );
     if (filterQuoteMsg.length) {
       filterQuoteMsg[0].scrollIntoView();
-      clickQuoteMsgId.value = msgID;
+      highlightedQuoteMessageId.value = quotedMessageId;
       // 清理之前的定时器
-      if (quoteMsgTimer.value) {
-        clearTimeout(quoteMsgTimer.value);
+      if (quoteTimer.value) {
+        clearTimeout(quoteTimer.value);
       }
       // 设置新的定时器
-      quoteMsgTimer.value = setTimeout(() => {
-        clickQuoteMsgId.value = '';
+      quoteTimer.value = setTimeout(() => {
+        highlightedQuoteMessageId.value = '';
       }, 1000);
     } else {
       ElMessage({
@@ -447,7 +761,7 @@ const recallMessage = async (message) => {
   try {
     await store.dispatch('recallMessage', options);
   } catch (error) {
-    handleSDKErrorNotifi(error.type, error.message);
+    handleSDKErrorNotifi(error.code, error.message, error);
   }
 };
 //编辑消息
@@ -492,12 +806,6 @@ const deleteMessage = async (msgBody) => {
       });
     }
   }
-};
-// 消息举报
-const reportMessage = ref(null);
-//举报消息
-const informOnMessage = (msgBody) => {
-  reportMessage.value.alertReportMsgModal(msgBody);
 };
 // 消息置顶
 const pinMessage = async (msgBody) => {
@@ -552,10 +860,15 @@ const reEdit = (content) => {
   }
 };
 //调用父组件引用消息
-const onMsgQuote = (msg) => {
+const onQuoteMessage = (message) => {
   if (isMounted.value) {
-    emit('messageQuote', msg);
+    emit('quoteMessage', message);
   }
+};
+const getQuotePreview = (quote) => {
+  if (!quote) return '';
+  if (quote.type === 'text') return quote.body?.content || '';
+  return JSON.stringify(quote.body);
 };
 const reactionLoadingMap = ref({});
 const messageListConversationKey = computed(() => routeQueryData.value.conversationId || '');
@@ -574,8 +887,8 @@ const describeThreadError = (error) => {
   if (!error) return null;
   return {
     message: error.message || '',
-    type: error.type || '',
-    code: error.code || error.status || '',
+    code: error.code || '',
+    details: error.details,
     name: error.name || '',
   };
 };
@@ -639,7 +952,7 @@ const createMessageThread = async (msgBody) => {
       errorSummary: describeThreadError(error),
       error,
     });
-    handleSDKErrorNotifi(error?.type, error?.message || '消息话题创建失败');
+    handleSDKErrorNotifi(error?.code, getSdk5ErrorMessage(error, '消息话题创建失败'), error);
   } finally {
     createMessageThreadLoading.value = false;
   }
@@ -678,7 +991,7 @@ const addReactionToMessage = async (msgBody, reaction) => {
     });
   } catch (error) {
     console.error('[Reaction] addMessageReaction 失败', error);
-    handleSDKErrorNotifi(error?.type, error?.message || 'Reaction 添加失败');
+    handleSDKErrorNotifi(error?.code, getSdk5ErrorMessage(error, 'Reaction 添加失败'), error);
   } finally {
     setReactionLoading(messageIdOf(msgBody), reaction, false);
   }
@@ -699,7 +1012,7 @@ const removeReactionFromMessage = async (msgBody, reaction) => {
     });
   } catch (error) {
     console.error('[Reaction] deleteMessageReaction 失败', error);
-    handleSDKErrorNotifi(error?.type, error?.message || 'Reaction 删除失败');
+    handleSDKErrorNotifi(error?.code, getSdk5ErrorMessage(error, 'Reaction 删除失败'), error);
   } finally {
     setReactionLoading(messageIdOf(msgBody), reaction, false);
   }
@@ -744,8 +1057,9 @@ const loadReactionDetail = async (msgBody, reaction) => {
   } catch (error) {
     reactionDetailUsers.value = [];
     handleSDKErrorNotifi(
-      error?.type,
-      error?.message || 'Reaction 详情获取失败',
+      error?.code,
+      getSdk5ErrorMessage(error, 'Reaction 详情获取失败'),
+      error,
     );
   } finally {
     reactionDetailLoading.value = false;
@@ -812,7 +1126,7 @@ const getReactionUserAvatar = (user) => {
                 isMyself(msgBody)
                   ? 'message_box_content_mine'
                   : 'message_box_content_other',
-                clickQuoteMsgId === messageIdOf(msgBody) && 'quote_msg_avtive',
+                highlightedQuoteMessageId === messageIdOf(msgBody) && 'quote_msg_avtive',
               ]"
               trigger="contextmenu"
               placement="bottom-end"
@@ -847,6 +1161,53 @@ const getReactionUserAvatar = (user) => {
                 >
                   ext: {{ JSON.stringify(getDisplayableExt(msgBody.ext)) }}
                 </p>
+                <div
+                  v-if="
+                    msgBody.type === 'text' &&
+                    getMessageTranslationResult(msgBody)
+                  "
+                  class="message_translation_result"
+                >
+                  <div class="message_translation_title">
+                    SDK 5.0 翻译结果
+                    <span
+                      v-if="getMessageTranslationResult(msgBody).detectedLanguage"
+                    >
+                      ｜源语言：{{
+                        getMessageTranslationResult(msgBody).detectedLanguage.language
+                      }}
+                      ({{
+                        getMessageTranslationResult(msgBody).detectedLanguage.score
+                      }})
+                    </span>
+                  </div>
+                  <div
+                    v-for="translation in getMessageTranslationResult(msgBody).translations"
+                    :key="`${messageIdOf(msgBody)}_${translation['to']}`"
+                    class="message_translation_item"
+                  >
+                    <span class="message_translation_lang">{{ translation['to'] }}</span>
+                    <span>{{ translation.text }}</span>
+                  </div>
+                  <div
+                    v-if="
+                      !getMessageTranslationResult(msgBody).translations ||
+                      getMessageTranslationResult(msgBody).translations.length === 0
+                    "
+                    class="message_translation_empty"
+                  >
+                    SDK 返回 translations 为空
+                  </div>
+                </div>
+                <div
+                  v-if="
+                    msgBody.type === 'text' &&
+                    getMessageTranslationError(msgBody)
+                  "
+                  class="message_translation_error"
+                >
+                  翻译失败：{{ getMessageTranslationError(msgBody) }}
+                </div>
                 <div
                   v-if="isStreamMessage(msgBody)"
                   class="message_stream_hint"
@@ -902,6 +1263,27 @@ const getReactionUserAvatar = (user) => {
                     ]"
                     style="background-size: 100% 100%"
                   ></div>
+                </div>
+                <div
+                  v-if="
+                    msgBody.type === 'voice' &&
+                    getVoiceToTextResult(msgBody)
+                  "
+                  class="message_voice_to_text_result"
+                >
+                  <div class="message_voice_to_text_title">
+                    SDK 5.0 语音转文字结果
+                  </div>
+                  {{ getVoiceToTextResult(msgBody).text }}
+                </div>
+                <div
+                  v-if="
+                    msgBody.type === 'voice' &&
+                    getVoiceToTextError(msgBody)
+                  "
+                  class="message_voice_to_text_error"
+                >
+                  语音转文字失败：{{ getVoiceToTextError(msgBody) }}
                 </div>
                 <div
                   v-if="msgBody.type === 'location'"
@@ -1048,6 +1430,20 @@ const getReactionUserAvatar = (user) => {
                     复制
                   </el-dropdown-item>
                   <el-dropdown-item
+                    v-if="msgBody.type === 'text'"
+                    :disabled="translatingMessageId === messageIdOf(msgBody)"
+                    @click="openTranslateMessageDialog(msgBody)"
+                  >
+                    翻译
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="msgBody.type === 'voice'"
+                    :disabled="isVoiceToTextLoading(msgBody)"
+                    @click="convertVoiceMessageToText(msgBody)"
+                  >
+                    转文字
+                  </el-dropdown-item>
+                  <el-dropdown-item
                     v-if="canRecallMessage(msgBody)"
                     @click="recallMessage(msgBody)"
                   >
@@ -1061,7 +1457,7 @@ const getReactionUserAvatar = (user) => {
                   >
                     编辑
                   </el-dropdown-item>
-                  <el-dropdown-item @click="onMsgQuote(msgBody)">
+                  <el-dropdown-item @click="onQuoteMessage(msgBody)">
                     引用
                   </el-dropdown-item>
                   <el-dropdown-item
@@ -1077,6 +1473,25 @@ const getReactionUserAvatar = (user) => {
                   >
                     表情回复详情
                   </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="canDownloadAttachment(msgBody)"
+                    :disabled="isAttachmentDownloadLoading(msgBody)"
+                    @click="downloadMessageAttachment(msgBody)"
+                  >
+                    SDK附件下载
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="canQueryGroupMessageRead(msgBody)"
+                    @click="openGroupReadUsersDialog(msgBody)"
+                  >
+                    群已读用户
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="canQueryGroupMessageRead(msgBody)"
+                    @click="openGroupReadReceiptsDialog(msgBody)"
+                  >
+                    群回执详情
+                  </el-dropdown-item>
                   <el-dropdown-item @click="pinMessage(msgBody)">
                     置顶
                   </el-dropdown-item>
@@ -1086,24 +1501,18 @@ const getReactionUserAvatar = (user) => {
                   <el-dropdown-item @click="deleteMessage(msgBody)">
                     删除
                   </el-dropdown-item>
-                  <el-dropdown-item
-                    v-if="!isMyself(msgBody)"
-                    @click="informOnMessage(msgBody)"
-                  >
-                    举报
-                  </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
             <!-- 引用消息展示框 -->
             <div
               class="message_quote_box"
-              v-if="msgBody?.ext?.msgQuote"
-              @click="clickQuoteMessage(msgBody.ext.msgQuote)"
+              v-if="msgBody?.ext?.quote"
+              @click="clickQuoteMessage(msgBody.ext.quote)"
             >
               <p>
-                {{ msgBody?.ext?.msgQuote?.msgSender }}：{{
-                  msgBody?.ext?.msgQuote?.msgPreview
+                {{ msgBody?.ext?.quote?.sender?.userId }}：{{
+                  getQuotePreview(msgBody?.ext?.quote)
                 }}
               </p>
             </div>
@@ -1212,8 +1621,54 @@ const getReactionUserAvatar = (user) => {
       </template>
     </div>
     </div>
-    <ReportMessage ref="reportMessage" />
     <ModifyMessage ref="modifyMessageRef" />
+    <el-dialog
+      v-model="translateDialogVisible"
+      width="420px"
+      title="消息翻译"
+      :destroy-on-close="false"
+    >
+      <div class="message_translate_dialog">
+        <div class="message_translate_source">
+          {{ translateTargetMessage?.body?.content || '' }}
+        </div>
+        <el-select
+          v-model="selectedTranslationLanguage"
+          class="message_translate_select"
+          placeholder="选择 SDK 返回的目标语言"
+          filterable
+          :loading="translationLanguagesLoading"
+        >
+          <el-option
+            v-for="language in translationLanguages"
+            :key="language.code"
+            :label="getTranslationLanguageLabel(language)"
+            :value="language.code"
+          />
+        </el-select>
+        <div
+          v-if="!translationLanguagesLoading && translationLanguages.length === 0"
+          class="message_translation_empty"
+        >
+          SDK 返回的翻译语言列表为空
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="translateDialogVisible = false">取消</el-button>
+        <el-button
+          type="primary"
+          :loading="
+            translatingMessageId === messageIdOf(translateTargetMessage)
+          "
+          :disabled="
+            !selectedTranslationLanguage || translationLanguages.length === 0
+          "
+          @click="submitTranslateMessage"
+        >
+          调用 SDK 翻译
+        </el-button>
+      </template>
+    </el-dialog>
     <el-dialog
       v-model="reactionDetailDialogVisible"
       width="420px"
@@ -1265,6 +1720,126 @@ const getReactionUserAvatar = (user) => {
           </div>
         </div>
       </template>
+    </el-dialog>
+    <el-dialog
+      v-model="attachmentDownloadDialogVisible"
+      width="520px"
+      title="SDK 5.0 附件下载结果"
+      class="message_attachment_download_result"
+      :destroy-on-close="false"
+    >
+      <template v-if="message_attachment_download_result">
+        <div class="sdk5_result_dialog">
+          <p>
+            消息 ID：{{ message_attachment_download_result.messageId }}
+          </p>
+          <p>
+            文件名：{{ message_attachment_download_result.filename || 'SDK 未返回' }}
+          </p>
+          <p>
+            MIME：{{ message_attachment_download_result.mimeType || 'SDK 未返回' }}
+          </p>
+          <p>
+            大小：
+            {{
+              message_attachment_download_result.size !== undefined
+                ? fileSizeFormat(message_attachment_download_result.size)
+                : 'SDK 未返回'
+            }}
+          </p>
+          <p>
+            二进制长度：{{ message_attachment_download_result.dataByteLength }}
+          </p>
+          <el-link
+            v-if="message_attachment_download_result.browserDownloadUrl"
+            type="primary"
+            :href="message_attachment_download_result.browserDownloadUrl"
+            :download="message_attachment_download_result.filename || 'attachment'"
+          >
+            下载 SDK 返回二进制
+          </el-link>
+          <pre>{{
+            JSON.stringify(message_attachment_download_result, null, 2)
+          }}</pre>
+        </div>
+      </template>
+    </el-dialog>
+    <el-dialog
+      v-model="group_message_read_users_dialog"
+      width="520px"
+      title="群消息已读用户"
+      class="group_message_read_users_dialog"
+      :destroy-on-close="false"
+    >
+      <div v-loading="groupMessageReadUsersLoading" class="sdk5_result_dialog">
+        <p>
+          群组 ID：{{ groupMessageReadUsersTarget?.conversationId || '-' }}
+        </p>
+        <p>
+          消息 ID：{{ groupMessageReadUsersTarget?.msgServerId || '-' }}
+        </p>
+        <template v-if="groupMessageReadUsersError">
+          <p class="message_voice_to_text_error">
+            {{ groupMessageReadUsersError }}
+          </p>
+        </template>
+        <template v-else-if="groupMessageReadUsersResult">
+          <p>已读总数：{{ groupMessageReadUsersResult.count }}</p>
+          <div
+            v-for="user in groupMessageReadUsersResult.users || []"
+            :key="user.userId"
+            class="sdk5_user_row"
+          >
+            <span>{{ user.userId }}</span>
+            <span v-if="user.timestamp">
+              {{ dateFormat('MM/DD/HH:mm', user.timestamp) }}
+            </span>
+          </div>
+          <el-empty
+            v-if="!(groupMessageReadUsersResult.users || []).length"
+            :image-size="60"
+            description="SDK 返回 users 为空"
+          />
+          <pre>{{ JSON.stringify(groupMessageReadUsersResult, null, 2) }}</pre>
+        </template>
+      </div>
+    </el-dialog>
+    <el-dialog
+      v-model="group_message_read_receipts_dialog"
+      width="520px"
+      title="群消息回执详情"
+      class="group_message_read_receipts_dialog"
+      :destroy-on-close="false"
+    >
+      <div v-loading="groupMessageReadReceiptsLoading" class="sdk5_result_dialog">
+        <p>
+          群组 ID：{{ groupMessageReadReceiptsTarget?.conversationId || '-' }}
+        </p>
+        <p>
+          消息 ID：{{ groupMessageReadReceiptsTarget?.msgServerId || '-' }}
+        </p>
+        <template v-if="groupMessageReadReceiptsError">
+          <p class="message_voice_to_text_error">
+            {{ groupMessageReadReceiptsError }}
+          </p>
+        </template>
+        <template v-else-if="groupMessageReadReceiptsResult">
+          <div
+            v-for="receipt in groupMessageReadReceiptsResult"
+            :key="receipt.messageId"
+            class="sdk5_user_row"
+          >
+            <span>{{ receipt.messageId }}</span>
+            <span>{{ receipt.count }}人已读</span>
+          </div>
+          <el-empty
+            v-if="!groupMessageReadReceiptsResult.length"
+            :image-size="60"
+            description="SDK 返回回执详情为空"
+          />
+          <pre>{{ JSON.stringify(groupMessageReadReceiptsResult, null, 2) }}</pre>
+        </template>
+      </div>
     </el-dialog>
   </div>
 </template>

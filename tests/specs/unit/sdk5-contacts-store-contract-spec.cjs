@@ -46,34 +46,34 @@ assert.match(
 
 // Friend requests are notification-driven only: the invited user receives the
 // SDK callback and it is forwarded to the notification store without polling.
-assert.match(contactListenerSource, /onContactInvited:\s*\(data\)\s*=>/);
+assert.match(contactListenerSource, /onContactInvited:\s*\(payload\)\s*=>/);
 assert.match(
   contactListenerSource,
-  /\[SDK5 Contact\] onContactInvited received/,
+  /\[SDK 5\.0 Contact Event\] received/,
   'Friend-invitation diagnostics must log the real SDK 5.0 inbound event payload.',
 );
 assert.match(
   contactListenerSource,
-  /onDispatchContactEvent\(\s*CONTACT_OPERATION_CUSTOM_TYPE\.CONTACT_INVITED,\s*data,\s*\)/s,
+  /store\.dispatch\('createNewInform', \{ eventName, payload \}\)/,
 );
 assert.match(
   contactListenerSource,
-  /case CONTACT_OPERATION_CUSTOM_TYPE\.CONTACT_INVITED:\s*\{\s*submitInformData\(INFORM_FROM\.FRIEND, data\);/s,
+  /onContactInvited:\s*\(payload\)\s*=>[\s\S]*?submitInformData\('onContactInvited', payload\)/s,
 );
 assert.match(
   contactListenerSource,
-  /case CONTACT_OPERATION_CUSTOM_TYPE\.CONTACT_ADDED:\s*\{\s*submitInformData\(INFORM_FROM\.FRIEND, data\);\s*store\.dispatch\('syncContactsFromSdkSnapshot'\);/s,
+  /onContactAdded:\s*\(payload\)\s*=>[\s\S]*?submitInformData\('onContactAdded', payload\)[\s\S]*?syncContactsFromSdkSnapshot/s,
   'A confirmed SDK contact-added event must refresh from its real contact snapshot.',
 );
 assert.match(
   contactListenerSource,
-  /case CONTACT_OPERATION_CUSTOM_TYPE\.CONTACT_AGREED:\s*\{\s*submitInformData\(INFORM_FROM\.FRIEND, data\);\s*Promise\.resolve\(store\.dispatch\('syncContactsFromSdkSnapshot'\)\)/s,
+  /onContactAgreed:\s*\(payload\)\s*=>[\s\S]*?submitInformData\('onContactAgreed', payload\)[\s\S]*?syncContactsFromSdkSnapshot/s,
   'A confirmed SDK contact-agreed event must refresh from its real contact snapshot.',
 );
 assert.doesNotMatch(
   contactListenerSource,
-  /data\.type\s*=/,
-  'SDK 5.0 ContactRosterEventPayload is read-only and must not be rewritten by the Demo.',
+  /payload\.(?:from|to)|\bfrom\s*:\s*payload|\bto\s*:\s*payload/,
+  'The Demo must not map the original SDK 5.0 contact payload into V4 fields.',
 );
 assert.match(
   source,

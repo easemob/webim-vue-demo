@@ -7,6 +7,11 @@ import { getCurrentUserId, requireManager } from '@/IM';
 import { CONVERSATION_TYPE } from '@/IM/constant';
 import { DEFAULT_EASEMOB_REST_URL } from '@/IM/config';
 import { logChatroomActionResult } from '@/utils/chatroomActionLog';
+import {
+  getSdk5ErrorInfo,
+  getSdk5ErrorMessage,
+  isSdk5AuthenticationError,
+} from '@/utils/sdk5ErrorInfo';
 
 const route = useRoute();
 const router = useRouter();
@@ -18,6 +23,7 @@ const admins = ref([]);
 const isCurrentUserJoined = ref(false);
 const membershipLoading = ref(false);
 const chatRoomManager = () => requireManager('chatRoomManager');
+const chatRoom = () => chatRoomManager().getChatRoom(route.query.chatRoomId);
 const isOwner = computed(() => {
   return chatroomDetails.value.owner?.userId === getCurrentUserId();
 });
@@ -46,7 +52,7 @@ const refreshCurrentUserChatroomMembership = (detail) => {
   try {
     isCurrentUserJoined.value = detail?.permissionType != null && detail.permissionType !== 'none';
     console.log('[ChatroomDetails] current user membership read from SDK 5.0 detail', {
-      roomId: normalizeChatroomId(route.query.roomId),
+      chatRoomId: normalizeChatroomId(route.query.chatRoomId),
       currentUser: getCurrentUserId(),
       permissionType: detail?.permissionType,
       isCurrentUserJoined: isCurrentUserJoined.value,
@@ -64,13 +70,13 @@ const showJoinedOnlyTip = () => {
 const getChatroomDetails = async () => {
   if (!checkLoginStatus()) return;
 
-  const roomId = route.query.roomId;
-  if (!roomId) {
+  const chatRoomId = route.query.chatRoomId;
+  if (!chatRoomId) {
     ElMessage.error('聊天室ID不存在');
     return;
   }
   const GET_CHAT_ROOM_DETAILS_METHOD = 'getChatRoomDetails';
-  const chatRoomDetailParams = { chatRoomId: roomId };
+  const chatRoomDetailParams = { chatRoomId };
   loading.value = true;
   try {
     console.log(
@@ -81,9 +87,9 @@ const getChatroomDetails = async () => {
       `\n当前用户:`,
       getCurrentUserId(),
       `\n聊天室ID:`,
-      roomId,
+      chatRoomId,
     );
-    const res = await chatRoomManager().getChatRoomInfo({ chatRoomId: roomId });
+    const res = await chatRoomManager().getChatRoom(chatRoomId).getInfo();
     console.log(
       `获取聊天室详情成功:`,
       `\n调用方法: ${GET_CHAT_ROOM_DETAILS_METHOD}`,
@@ -93,7 +99,7 @@ const getChatroomDetails = async () => {
       res,
     );
     // 检查返回数据结构，可能是数组中的第一个元素
-    chatroomDetails.value = res || {};
+    chatroomDetails.value = res;
 
     try {
       refreshCurrentUserChatroomMembership(res);
@@ -106,13 +112,13 @@ const getChatroomDetails = async () => {
         announcement.value = '';
         attributes.value = {};
         console.info('[ChatroomDetails] 未加入聊天室，跳过成员态接口查询', {
-          roomId,
+          chatRoomId,
           currentUser: getCurrentUserId(),
         });
       }
     } catch (error) {
       console.error('获取聊天室成员状态或属性失败，已保留服务端错误:', error);
-      ElMessage.error(error?.message || '获取聊天室成员状态或属性失败');
+      ElMessage.error(getSdk5ErrorMessage(error, '获取聊天室成员状态或属性失败'));
     }
   } catch (error) {
     ElMessage.error('获取聊天室详情失败');
@@ -122,15 +128,68 @@ const getChatroomDetails = async () => {
       `\n方法入参:`,
       chatRoomDetailParams,
       `\n聊天室ID:`,
-      roomId,
+      chatRoomId,
       `\n错误详情:`,
       error,
     );
-    if (error.type === 52 || error.message?.includes('authenticate')) {
+    if (isSdk5AuthenticationError(error)) {
       ElMessage.error('认证失败，请重新登录');
     } else {
       ElMessage.error('获取聊天室详情失败');
     }
+  } finally {
+    loading.value = false;
+  }
+};
+
+const refreshChatroomDetails = async () => {
+  if (!checkLoginStatus()) return;
+
+  const chatRoomId = route.query.chatRoomId;
+  if (!chatRoomId) {
+    ElMessage.error('聊天室ID不存在');
+    return;
+  }
+  const REFRESH_CHAT_ROOM_DETAILS_METHOD = 'ChatRoom.refresh';
+  const chatRoomDetailParams = { chatRoomId };
+  loading.value = true;
+  try {
+    console.log('[SDK 5.0 ChatRoom] refresh start', {
+      method: REFRESH_CHAT_ROOM_DETAILS_METHOD,
+      params: chatRoomDetailParams,
+      currentUser: getCurrentUserId(),
+    });
+    const res = await chatRoom().refresh();
+    console.log('[SDK 5.0 ChatRoom] refresh success', {
+      method: REFRESH_CHAT_ROOM_DETAILS_METHOD,
+      params: chatRoomDetailParams,
+      result: res,
+    });
+    chatroomDetails.value = res;
+    refreshCurrentUserChatroomMembership(res);
+    if (canUseJoinedChatroomActions.value) {
+      await getChatRoomAdmin();
+      await getChatRoomAnnouncement();
+      await getChatRoomAttributes();
+    } else {
+      admins.value = [];
+      announcement.value = '';
+      attributes.value = {};
+      console.info('[ChatroomDetails] 未加入聊天室，跳过成员态接口查询', {
+        chatRoomId,
+        currentUser: getCurrentUserId(),
+      });
+    }
+    return res;
+  } catch (error) {
+    console.error('[SDK 5.0 ChatRoom] refresh failed', {
+      method: REFRESH_CHAT_ROOM_DETAILS_METHOD,
+      params: chatRoomDetailParams,
+      currentUser: getCurrentUserId(),
+      error,
+    });
+    ElMessage.error(getSdk5ErrorMessage(error, '刷新聊天室详情失败'));
+    throw error;
   } finally {
     loading.value = false;
   }
@@ -143,14 +202,14 @@ const leaveChatroom = async () => {
     return;
   }
   const LEAVE_CHAT_ROOM_METHOD = 'leaveChatRoom';
-  const targetRoomId = route.query.roomId;
-  const leaveChatRoomParams = { roomId: targetRoomId };
+  const targetChatRoomId = route.query.chatRoomId;
+  const leaveChatRoomParams = { chatRoomId: targetChatRoomId };
   try {
     console.log(
       `开始执行退出聊天室操作:`,
       `\n调用方法: ${LEAVE_CHAT_ROOM_METHOD}`,
       `\n目标聊天室ID:`,
-      targetRoomId,
+      targetChatRoomId,
       `\n当前操作用户:`,
       getCurrentUserId(),
     );
@@ -159,18 +218,18 @@ const leaveChatroom = async () => {
       cancelButtonText: '取消',
       type: 'warning',
     });
-    const res = await chatRoomManager().leaveChatRoom({ chatRoomId: targetRoomId });
+    const res = await chatRoomManager().getChatRoom(targetChatRoomId).leaveChatRoom();
     logChatroomActionResult(
       'ChatroomDetails',
       LEAVE_CHAT_ROOM_METHOD,
       leaveChatRoomParams,
       res,
       {
-        from: getCurrentUserId(),
+        currentUserId: getCurrentUserId(),
       },
     );
     store.commit('SET_JOINED_CHATROOM_STATUS', {
-      roomId: targetRoomId,
+      chatRoomId: targetChatRoomId,
       joined: false,
     });
     console.log(
@@ -181,7 +240,7 @@ const leaveChatroom = async () => {
       `\n接口返回结果:`,
       res,
       `\n已退出聊天室ID:`,
-      targetRoomId,
+      targetChatRoomId,
       `\n跳转页面: /chat/chatroom`,
     );
     ElMessage.success('退出聊天室成功');
@@ -194,11 +253,11 @@ const leaveChatroom = async () => {
         `\n方法入参:`,
         leaveChatRoomParams,
         `\n目标聊天室ID:`,
-        targetRoomId,
+        targetChatRoomId,
         `\n当前用户:`,
         getCurrentUserId(),
-        `\n错误类型:`,
-        error.type,
+        `\n错误码:`,
+        error.code,
         `\n错误消息:`,
         error.message,
         `\n完整错误信息:`,
@@ -206,7 +265,7 @@ const leaveChatroom = async () => {
       );
       ElMessage.error('退出聊天室失败');
       console.error('退出聊天室失败', error);
-      if (error.type === 52 || error.message?.includes('authenticate')) {
+      if (isSdk5AuthenticationError(error)) {
         ElMessage.error('认证失败，请重新登录');
       } else {
         ElMessage.error('退出聊天室失败');
@@ -218,13 +277,13 @@ const leaveChatroom = async () => {
 const destroyChatroom = async () => {
   if (!checkLoginStatus()) return;
   const DESTROY_CHAT_ROOM_METHOD = 'destroyChatRoom';
-  const roomId = route.query.roomId;
-  const destroyChatRoomParams = { chatRoomId: roomId };
+  const chatRoomId = route.query.chatRoomId;
+  const destroyChatRoomParams = { chatRoomId };
   try {
     console.log(
       `开始执行解散聊天室操作:`,
       `\n目标聊天室ID:`,
-      roomId,
+      chatRoomId,
       `\n当前操作用户:`,
       getCurrentUserId(),
     );
@@ -243,7 +302,7 @@ const destroyChatroom = async () => {
       `\n方法入参:`,
       destroyChatRoomParams,
       `\n聊天室ID:`,
-      roomId,
+      chatRoomId,
     );
     throw new Error('SDK 5.0 current package does not expose destroyChatRoom; no fallback is configured.');
   } catch (error) {
@@ -254,13 +313,13 @@ const destroyChatroom = async () => {
       `\n方法入参:`,
       destroyChatRoomParams,
       `\n聊天室ID:`,
-      roomId,
+      chatRoomId,
       `\n错误详情:`,
       error,
     );
     if (error !== 'cancel') {
       console.error('解散聊天室失败', error);
-      if (error.type === 52 || error.message?.includes('authenticate')) {
+      if (isSdk5AuthenticationError(error)) {
         ElMessage.error('认证失败，请重新登录');
       } else {
         ElMessage.error('解散聊天室失败');
@@ -271,16 +330,16 @@ const destroyChatroom = async () => {
 
 const showEditDialog = ref(false);
 const editForm = ref({
-  chatRoomName: '',
+  name: '',
   description: '',
-  maxusers: 200,
+  maxMembers: 200,
 });
 
 const openEditDialog = () => {
   editForm.value = {
-    chatRoomName: chatroomDetails.value.name || '',
+    name: chatroomDetails.value.name || '',
     description: chatroomDetails.value.description || '',
-    maxusers: chatroomDetails.value.maxMembers || 200,
+    maxMembers: chatroomDetails.value.maxMembers || 200,
   };
   showEditDialog.value = true;
 };
@@ -293,27 +352,16 @@ const modifyChatRoom = async () => {
   }
 
   try {
-    const options = {
-      chatRoomId: route.query.roomId,
-      name: editForm.value.chatRoomName,
-      description: editForm.value.description,
-      maxMembers: editForm.value.maxusers,
-    };
-    await chatRoomManager().updateChatRoomInfo(options);
+    await chatRoom().updateInfo(editForm.value);
     ElMessage.success('修改聊天室信息成功');
     showEditDialog.value = false;
-    getChatroomDetails();
+    await refreshChatroomDetails();
   } catch (error) {
     console.error('修改聊天室信息失败', error);
-    if (error.type === 52 || error.message?.includes('authenticate')) {
+    if (isSdk5AuthenticationError(error)) {
       ElMessage.error('认证失败，请重新登录');
-    } else if (
-      error.type === 17 ||
-      error.data?.includes('group_authorization')
-    ) {
-      ElMessage.error('只有聊天室所有者或管理员可以修改聊天室信息');
     } else {
-      ElMessage.error('修改聊天室信息失败');
+      ElMessage.error(getSdk5ErrorMessage(error, '修改聊天室信息失败'));
     }
   }
 };
@@ -328,17 +376,12 @@ const getChatRoomAnnouncement = async () => {
   if (!checkLoginStatus()) return;
 
   try {
-    const res = await chatRoomManager().getAnnouncement({ chatRoomId: route.query.roomId });
+    const res = await chatRoom().getAnnouncement();
     console.log('获取聊天室公告成功:', res);
-    // 处理不同的数据结构，可能是直接的字符串或包含 announcement 字段的对象
-    if (res.data && typeof res.data === 'object') {
-      announcement.value = res.data.announcement || '';
-    } else {
-      announcement.value = res.data || '';
-    }
+    announcement.value = res.announcement || '';
   } catch (error) {
     console.error('获取聊天室公告失败', error);
-    if (error.type === 52 || error.message?.includes('authenticate')) {
+    if (isSdk5AuthenticationError(error)) {
       ElMessage.error('认证失败，请重新登录');
     }
   }
@@ -357,8 +400,7 @@ const updateChatRoomAnnouncement = async () => {
   }
 
   try {
-    await chatRoomManager().updateAnnouncement({
-      chatRoomId: route.query.roomId,
+    await chatRoom().updateAnnouncement({
       announcement: announcementForm.value.announcement,
     });
     ElMessage.success('更新聊天室公告成功');
@@ -366,24 +408,19 @@ const updateChatRoomAnnouncement = async () => {
     getChatRoomAnnouncement();
   } catch (error) {
     console.error('更新聊天室公告失败', error);
-    if (error.type === 52 || error.message?.includes('authenticate')) {
+    if (isSdk5AuthenticationError(error)) {
       ElMessage.error('认证失败，请重新登录');
-    } else if (
-      error.type === 17 ||
-      error.data?.includes('group_authorization')
-    ) {
-      ElMessage.error('只有聊天室所有者或管理员可以更新聊天室公告');
     } else {
-      ElMessage.error('更新聊天室公告失败');
+      ElMessage.error(getSdk5ErrorMessage(error, '更新聊天室公告失败'));
     }
   }
 };
 
 const getChatRoomAdmin = async () => {
   if (!checkLoginStatus()) return;
-  if (!route.query.roomId) return;
+  if (!route.query.chatRoomId) return;
   try {
-    const res = await chatRoomManager().getAdminList({ chatRoomId: route.query.roomId });
+    const res = await chatRoom().getAdminList();
     admins.value = res;
   } catch (error) {
     console.error('获取聊天室管理员失败', error);
@@ -417,10 +454,7 @@ const batchAttributeForm = ref({
 
 const normalizeErrorLog = (error) => ({
   name: error?.name,
-  type: error?.type,
-  code: error?.code,
-  message: error?.message || String(error),
-  data: error?.data,
+  ...getSdk5ErrorInfo(error),
   stack: error?.stack,
   rawError: error,
 });
@@ -434,7 +468,7 @@ const confirmChatRoomAttributeMutation = (action, result, expectedKeys) => {
   if (missingKeys.length === 0) return true;
 
   console.error(`[ChatroomAttributeError] ${action} 未被 SDK 确认`, {
-    chatRoomId: route.query.roomId,
+    chatRoomId: route.query.chatRoomId,
     currentUser: getCurrentUserId(),
     expectedKeys,
     appliedKeys,
@@ -471,27 +505,25 @@ const normalizeChatRoomAttributesInput = (attributes) => {
 const getChatRoomAttributes = async () => {
   if (!checkLoginStatus()) return;
 
-  const roomId = route.query.roomId;
-  if (!roomId) {
+  const chatRoomId = route.query.chatRoomId;
+  if (!chatRoomId) {
     console.error('聊天室ID不存在，无法获取自定义属性');
     return;
   }
 
   try {
-    const requestParams = { chatRoomId: roomId };
+    const requestParams = { chatRoomId };
 
-    const res = await chatRoomManager().getAttributes(requestParams);
+    const res = await chatRoom().getAttributes();
     console.log('获取聊天室自定义属性成功:', res);
     attributes.value = res.attributes;
     return res;
   } catch (error) {
     console.error('获取聊天室自定义属性失败:', error);
 
-    if (error.type === 52 || error.message?.includes('authenticate')) {
+    if (isSdk5AuthenticationError(error)) {
       ElMessage.error('认证失败，请重新登录');
-    } else if (error.type === 702) {
-      console.error('获取聊天室自定义属性失败: 聊天室不存在或无权限');
-    } else if (error.message?.includes('CORS') || error.message?.includes('Access-Control-Allow-Origin')) {
+    } else if (getSdk5ErrorMessage(error).includes('CORS') || getSdk5ErrorMessage(error).includes('Access-Control-Allow-Origin')) {
       // 处理CORS错误
       console.error('CORS错误: 浏览器阻止了跨域请求，请检查服务器的CORS配置');
     }
@@ -531,13 +563,13 @@ const setChatRoomAttribute = async () => {
 
   try {
     const params = {
-      chatRoomId: route.query.roomId,
+      chatRoomId: route.query.chatRoomId,
       attributeKey: attributeForm.value.attributeKey.trim(),
       attributeValue: String(attributeForm.value.attributeValue),
       autoDelete: attributeForm.value.autoDelete,
       isForced: attributeForm.value.isForced,
     };
-    const res = await chatRoomManager().setAttributes({ chatRoomId: params.chatRoomId, attributes: { [params.attributeKey]: params.attributeValue }, autoDelete: params.autoDelete, isForced: params.isForced });
+    const res = await chatRoom().setAttributes({ attributes: { [params.attributeKey]: params.attributeValue }, autoDelete: params.autoDelete, isForced: params.isForced });
     console.log(
       `设置聊天室属性成功:`,
       `\n事件：设置单个聊天室属性`,
@@ -554,10 +586,10 @@ const setChatRoomAttribute = async () => {
     getChatRoomAttributes();
   } catch (error) {
     console.error('设置聊天室属性失败', normalizeErrorLog(error));
-    if (error.type === 52 || error.message?.includes('authenticate')) {
+    if (isSdk5AuthenticationError(error)) {
       ElMessage.error('认证失败，请重新登录');
     } else {
-      ElMessage.error(error.message || '设置聊天室属性失败');
+      ElMessage.error(getSdk5ErrorMessage(error, '设置聊天室属性失败'));
     }
   }
 };
@@ -599,12 +631,16 @@ const setChatRoomAttributes = async () => {
     }
 
     const params = {
-      chatRoomId: route.query.roomId,
+      chatRoomId: route.query.chatRoomId,
       attributes: attributesObj,
       autoDelete: batchAttributeForm.value.autoDelete,
       isForced: batchAttributeForm.value.isForced,
     };
-    const res = await chatRoomManager().setAttributes(params);
+    const res = await chatRoom().setAttributes({
+      attributes: params.attributes,
+      autoDelete: params.autoDelete,
+      isForced: params.isForced,
+    });
     console.log(
       `批量设置聊天室属性成功:`,
       `\n事件：批量设置聊天室属性`,
@@ -621,12 +657,12 @@ const setChatRoomAttributes = async () => {
     getChatRoomAttributes();
   } catch (error) {
     console.error('批量设置聊天室属性失败', normalizeErrorLog(error));
-    if (error.type === 52 || error.message?.includes('authenticate')) {
+    if (isSdk5AuthenticationError(error)) {
       ElMessage.error('认证失败，请重新登录');
     } else if (error instanceof SyntaxError) {
       ElMessage.error('属性格式错误，请输入有效的JSON格式');
     } else {
-      ElMessage.error(error.message || '批量设置聊天室属性失败');
+      ElMessage.error(getSdk5ErrorMessage(error, '批量设置聊天室属性失败'));
     }
   }
 };
@@ -645,11 +681,11 @@ const removeChatRoomAttribute = async (key) => {
       type: 'warning',
     });
     const params = {
-      chatRoomId: route.query.roomId,
+      chatRoomId: route.query.chatRoomId,
       attributeKey: key,
       isForced: false,
     };
-    const res = await chatRoomManager().removeAttributes({ chatRoomId: params.chatRoomId, keys: [params.attributeKey], isForced: params.isForced });
+    const res = await chatRoom().removeAttributes({ keys: [params.attributeKey], isForced: params.isForced });
     console.log(
       `删除聊天室属性成功:`,
       `\n事件：删除聊天室属性`,
@@ -666,12 +702,12 @@ const removeChatRoomAttribute = async (key) => {
   } catch (error) {
     if (error !== 'cancel') {
       console.error('删除聊天室属性失败', normalizeErrorLog(error));
-      if (error.message?.includes('authenticate')) {
+      if (isSdk5AuthenticationError(error)) {
         ElMessage.error('认证失败，请重新登录');
-      } else if (error.message?.includes('not part of you') || error.message?.includes('permission')) {
+      } else if (getSdk5ErrorMessage(error).includes('not part of you') || getSdk5ErrorMessage(error).includes('permission')) {
         ElMessage.error('没有权限删除该属性');
       } else {
-        ElMessage.error(error.message || '删除聊天室属性失败');
+        ElMessage.error(getSdk5ErrorMessage(error, '删除聊天室属性失败'));
       }
     }
   }
@@ -700,11 +736,11 @@ const removeChatRoomAttributes = async () => {
       },
     );
     const params = {
-      chatRoomId: route.query.roomId,
+      chatRoomId: route.query.chatRoomId,
       attributeKeys,
       isForced: false,
     };
-    const res = await chatRoomManager().removeAttributes({ chatRoomId: params.chatRoomId, keys: params.attributeKeys, isForced: params.isForced });
+    const res = await chatRoom().removeAttributes({ keys: params.attributeKeys, isForced: params.isForced });
     console.log(
       `批量删除聊天室属性成功:`,
       `\n事件：批量删除聊天室属性`,
@@ -721,15 +757,15 @@ const removeChatRoomAttributes = async () => {
   } catch (error) {
     if (error !== 'cancel') {
       console.error('批量删除聊天室属性失败', normalizeErrorLog(error));
-      if (error.message?.includes('authenticate')) {
+      if (isSdk5AuthenticationError(error)) {
         ElMessage.error('认证失败，请重新登录');
       } else if (
-        error.message?.includes('not part of you') ||
-        error.message?.includes('permission')
+        getSdk5ErrorMessage(error).includes('not part of you') ||
+        getSdk5ErrorMessage(error).includes('permission')
       ) {
         ElMessage.error('没有权限删除这些属性');
       } else {
-        ElMessage.error(error.message || '批量删除聊天室属性失败');
+        ElMessage.error(getSdk5ErrorMessage(error, '批量删除聊天室属性失败'));
       }
     }
   }
@@ -766,7 +802,7 @@ onUnmounted(() => {
 watch(
   () => route.fullPath,
   () => {
-    if (route.query.roomId) {
+    if (route.query.chatRoomId) {
       getChatroomDetails();
       registerChatroomDetailEventHandler();
     }
@@ -835,7 +871,7 @@ watch(
               router.push({
                 path: '/chat/chatroom/message',
                 query: {
-                  conversationId: route.query.roomId,
+                  conversationId: route.query.chatRoomId,
                   conversationType: CONVERSATION_TYPE.CHATROOM,
                 },
               })
@@ -850,11 +886,14 @@ watch(
             () =>
               router.push({
                 path: '/chat/chatroom/member-management',
-                query: { roomId: route.query.roomId },
+                query: { chatRoomId: route.query.chatRoomId },
               })
           "
         >
           成员管理
+        </el-button>
+        <el-button type="primary" plain @click="refreshChatroomDetails">
+          刷新聊天室详情
         </el-button>
         <el-button v-if="hasChatroomInfoPermission" @click="openEditDialog">
           修改聊天室信息
@@ -919,7 +958,7 @@ watch(
       <el-form :model="editForm" label-width="100px">
         <el-form-item label="聊天室名称">
           <el-input
-            v-model="editForm.chatRoomName"
+            v-model="editForm.name"
             placeholder="请输入聊天室名称"
           />
         </el-form-item>
@@ -931,7 +970,7 @@ watch(
           />
         </el-form-item>
         <el-form-item label="最大成员数">
-          <el-input-number v-model="editForm.maxusers" :min="1" :max="5000" />
+          <el-input-number v-model="editForm.maxMembers" :min="1" :max="5000" />
         </el-form-item>
       </el-form>
       <template #footer>

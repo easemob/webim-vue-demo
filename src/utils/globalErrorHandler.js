@@ -5,6 +5,7 @@ import {
   redirectToLoginClearImSession,
 } from './imAuthRedirect';
 import { notifyRuntimeError } from './runtimeErrorNotifier';
+import { getSdk5ErrorInfo } from './sdk5ErrorInfo';
 
 /** 环信 miniCore 等对 undefined/null 取字段时的典型报错（Chrome / Firefox 文案略有差异） */
 function isNullishPropertyTypeErrorText(text) {
@@ -33,45 +34,13 @@ function isResizeObserverNoise(text) {
   );
 }
 
-function parseJsonMessage(message) {
-  if (!message || typeof message !== 'string') return null;
-  const trimmed = message.trim();
-  if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) return null;
-  try {
-    return JSON.parse(trimmed);
-  } catch {
-    return null;
-  }
-}
-
-function isMiniCoreSendRuntimeFailure(reason) {
-  const stack = reason?.stack || '';
-  const message = reason?.message || '';
-  const parsedMessage = parseJsonMessage(message);
-  const type = parsedMessage?.type ?? reason?.type;
-  const rawMessage = parsedMessage?.message || reason?.message || '';
-  const fromMiniCoreSend =
-    typeof stack === 'string' &&
-    stack.includes('miniCore.send') &&
-    stack.includes('src/IM/miniCore/index.js');
-
+function isSdkContentSubTypeRuntimeFailure(error) {
+  const { message } = getSdk5ErrorInfo(error);
+  const stack = error?.stack || '';
   return (
-    fromMiniCoreSend &&
-    (type === 510 ||
-      type === 512 ||
-      rawMessage.includes('websocket disconnected') ||
-      rawMessage.includes('send message timeout'))
-  );
-}
-
-function isSdkSubTypeRuntimeFailure(reason) {
-  const message = reason?.message || '';
-  const stack = reason?.stack || '';
-  return (
-    reason instanceof Error &&
     isNullishPropertyTypeErrorText(message) &&
     message.includes('subType') &&
-    (isEasemobSdkStack(reason) ||
+    (isEasemobSdkStack(error) ||
       stack.includes('__webpack_modules__.8579') ||
       stack.includes('/js/307.') ||
       stack.includes('/js/chunk-vendors'))
@@ -171,59 +140,25 @@ window.onerror = function (message, source, lineno, colno, error) {
 window.addEventListener(
   'unhandledrejection',
   function (event) {
-    const reason = event.reason;
+    const error = event.reason;
 
-    if (reason instanceof Error && isMiniCoreSendRuntimeFailure(reason)) {
-      console.error('[IM send failure]', reason);
-      if (reason.stack) console.error(reason.stack);
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      return;
-    }
-
-    if (isSdkSubTypeRuntimeFailure(reason)) {
+    if (isSdkContentSubTypeRuntimeFailure(error)) {
       console.error(
         '[IM SDK] 捕获到消息内容 subType 空引用异常，可能是 SDK 收到空 contents 或异常消息体:',
-        reason,
+        error,
       );
-      if (reason.stack) console.error(reason.stack);
-      notifyRuntimeError(reason);
+      if (error?.stack) console.error(error.stack);
+      notifyRuntimeError(error);
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
       return;
     }
 
-    if (reason && typeof reason === 'object' && !(reason instanceof Error)) {
-      if (isImAuthFailedReason(reason)) {
-        console.warn(
-          '[IM] WebSocket 鉴权失败（type=2 / Auth failed）：已清除本地登录缓存并返回登录页；请核对 AppKey、REST、wss 是否同一应用。',
-          reason,
-        );
-        redirectToLoginClearImSession();
-      } else {
-        try {
-          console.warn(
-            '[unhandledrejection] 非 Error 对象:',
-            JSON.stringify(reason),
-            reason,
-          );
-        } catch {
-          console.warn('[unhandledrejection] 非 Error 对象:', reason);
-        }
-      }
-      notifyRuntimeError(reason);
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      return;
-    }
-
-    if (reason instanceof Error && isImAuthFailedReason(reason)) {
+    if (isImAuthFailedReason(error)) {
       console.warn(
-        '[IM] 鉴权失败，已清除本地登录缓存并返回登录页。',
-        reason,
+        '[IM] SDK 5.0 鉴权失败，已清除本地登录缓存并返回登录页。',
+        error,
       );
       redirectToLoginClearImSession();
       event.preventDefault();
@@ -232,63 +167,21 @@ window.addEventListener(
       return;
     }
 
-    if (reason instanceof Error && String(reason.message) === '[object Object]') {
-      console.warn(
-        '[unhandledrejection] 捕获到 Error（message 为 [object Object]），详情见控制台:',
-        reason,
-      );
-      notifyRuntimeError(reason);
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      return;
-    }
-
-    const isNetworkError =
-      reason &&
-      (reason.message?.includes('Network Error') ||
-        reason.message?.includes('network error') ||
-        reason.message?.includes('timeout') ||
-        reason.message?.includes('Connection refused') ||
-        reason.message?.includes('Failed to fetch') ||
-        reason.code === 'ECONNABORTED');
-
-    if (isNetworkError) {
-      console.error(
-        '[unhandledrejection] 网络类错误:',
-        reason,
-      );
-      notifyRuntimeError(reason);
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      return;
-    }
-
-    const isSDKError = reason && isEasemobSdkStack(reason);
+    const isSDKError = error && isEasemobSdkStack(error);
+    const { message } = getSdk5ErrorInfo(error);
     const isTypeError =
-      reason &&
-      reason.message &&
-      isNullishPropertyTypeErrorText(reason.message);
+      message && isNullishPropertyTypeErrorText(message);
 
     if (isSDKError && isTypeError) {
       console.error(
         '\n=== 全局捕获到 SDK 空引用 TypeError ===',
       );
-      console.error('错误原因:', reason);
+      console.error('错误原因:', error);
 
-      if (
-        typeof reason === 'object' &&
-        reason !== null &&
-        !(reason instanceof Error)
-      ) {
-        console.error('错误对象内容:', JSON.stringify(reason, null, 2));
-      }
+      if (error?.stack) {
+        console.error('完整错误栈:', error.stack);
 
-      if (reason.stack) {
-        console.error('完整错误栈:', reason.stack);
-
-        const stackLines = reason.stack.split('\n');
+        const stackLines = error.stack.split('\n');
         const appCallStack = stackLines.filter(
           (line) =>
             line.includes('src/') ||
@@ -302,7 +195,7 @@ window.addEventListener(
       }
 
       console.error('=========================\n');
-      notifyRuntimeError(reason);
+      notifyRuntimeError(error);
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();

@@ -1,16 +1,11 @@
 <script setup>
 import { onBeforeUnmount } from 'vue';
-import { useStore } from 'vuex';
 import { ElMessage } from 'element-plus';
-import { getCurrentUserId } from '@/IM';
-import { CHAT_TYPE } from '@/IM/constant';
 import NavBar from '@/views/Chat/components/NavBar';
 
 // /* CallKit */
 // import EaseCallKit from '@/components/EaseCallKit'
 import { useCallKitEvent } from '@/components/EaseCallKit/hooks';
-/* store */
-const store = useStore();
 /**
  * 此处为Callkit中对外暴露的其内部对外抛出的事件通知，
  * 可通过引入useChannelEvent，订阅其通知处理一些UI层面的提示。
@@ -25,7 +20,7 @@ SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
   /* 
 事件对外抛出包含有对应的事件type，type/code 可以自行判断处理，ext字段内有对外传出的事件中文描述，可自行选择是否使用。
 */
-  const { type, ext, callType, eventHxId } = param;
+  const { type, ext } = param;
   if (
     type.code === CALLKIT_EVENT_CODE.CALLEE_REFUSE ||
     type.code === CALLKIT_EVENT_CODE.CALLEE_BUSY ||
@@ -36,13 +31,6 @@ SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
       message: ext.message,
       center: true,
     });
-    const params = {
-      from: getCurrentUserId(),
-      to: eventHxId,
-      chatType: callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
-      msg: ext.message,
-    };
-    store.dispatch('createInformMessage', { ...params });
   } else if (
     type.code === CALLKIT_EVENT_CODE.NOT_HAVE_MICROPHONE ||
     type.code === CALLKIT_EVENT_CODE.NOT_HAVE_CAMERA
@@ -52,14 +40,12 @@ SUB_CHANNEL_EVENT(EVENT_NAME, (param) => {
       message: ext.message,
       center: true,
     });
-  } else if (eventHxId) {
-    const params = {
-      from: getCurrentUserId(),
-      to: eventHxId,
-      chatType: callType === 2 ? CHAT_TYPE.GROUP : CHAT_TYPE.SINGLE,
-      msg: ext.message,
-    };
-    store.dispatch('createInformMessage', { ...params });
+  } else if (ext?.message) {
+    ElMessage({
+      type: 'info',
+      message: ext.message,
+      center: true,
+    });
   }
 });
 

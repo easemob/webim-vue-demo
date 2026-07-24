@@ -23,16 +23,16 @@ const normalized = normalizePresence({
   publisher: 'sdk5-user',
   statusList: { web: 1, android: 0 },
   ext: 'busy',
-  latestTime: 1720000000000,
-  expiryTime: 1722592000000,
+  latestTime:1720000000000,
+  expiryTime:1722592000000,
 });
 
 assert.deepEqual(
   JSON.parse(JSON.stringify(normalized)),
   {
     uid: 'sdk5-user',
-    expiry: 1722592000000,
-    lastTime: 1720000000000,
+    expiry:1722592000000,
+    lastTime:1720000000000,
     statusDetails: [
       { device: 'web', status: 1 },
       { device: 'android', status: 0 },

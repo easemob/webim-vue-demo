@@ -17,6 +17,11 @@ import ChatContainerHeader from './components/ChatContainerHeader';
 import SingleChatDetails from './components/SingleChatDetails.vue';
 import MessageThreadListDrawer from './components/MessageThreadListDrawer.vue';
 import MessageSearchDrawer from './components/MessageSearchDrawer.vue';
+import {
+  setCurrentConversation,
+  resetCurrentConversation,
+  getCurrentConversation as getSdkCurrentConversation,
+} from '@/IM/sdk5/chat';
 /* store */
 const store = useStore();
 const contactManager = () => requireManager('contactManager');
@@ -36,11 +41,54 @@ const removingBlackListUserId = ref('');
 const friendBlackList = computed(() => store.state.Contacts.friendBlackList || []);
 const threadListDrawer = ref(false);
 const messageSearchDrawer = ref(false);
+const pinnedMessageListDrawer = ref(false);
+const pinnedMessageListLoading = ref(false);
+const pinnedMessageListResult = ref(null);
+const pinnedMessageListError = ref('');
 const showThreadListDrawer = () => {
   threadListDrawer.value = true;
 };
 const showMessageSearchDrawer = () => {
   messageSearchDrawer.value = true;
+};
+const pinnedMessageItems = computed(() => pinnedMessageListResult.value?.items || []);
+const getPinnedMessagePreview = (item) => {
+  const message = item?.message || {};
+  const body = message.body || {};
+  if (message.type === 'text') return body.content || '';
+  if (message.type === 'image') return '[图片]';
+  if (message.type === 'video') return '[视频]';
+  if (message.type === 'voice') return '[语音]';
+  if (message.type === 'file') return `[文件] ${body.filename || ''}`;
+  if (message.type === 'location') return `[位置] ${body.address || ''}`;
+  if (message.type === 'custom') return `[自定义] ${body.event || ''}`;
+  if (message.type === 'cmd') return `[透传] ${body.action || ''}`;
+  if (message.type === 'combine') return `[合并] ${body.title || ''}`;
+  return `[${message.type || '未知消息'}]`;
+};
+const fetchPinnedMessageList = async () => {
+  const { conversationId, conversationType } = routeQueryData.value || {};
+  if (!conversationId || !conversationType) return;
+  pinnedMessageListDrawer.value = true;
+  pinnedMessageListLoading.value = true;
+  pinnedMessageListError.value = '';
+  try {
+    pinnedMessageListResult.value = await store.dispatch('getPinnedMessageList', {
+      conversationId,
+      conversationType,
+    });
+  } catch (error) {
+    pinnedMessageListResult.value = null;
+    pinnedMessageListError.value = error?.message || '置顶消息列表获取失败';
+    console.error('[Pinned Message] getPinnedMessageList UI failed', {
+      conversationId,
+      conversationType,
+      error,
+    });
+    ElMessage.error(pinnedMessageListError.value);
+  } finally {
+    pinnedMessageListLoading.value = false;
+  }
 };
 const isMessageSearchVisible = computed(() => {
   return (
@@ -55,10 +103,22 @@ const isMessageSearchVisible = computed(() => {
     )
   );
 });
-const refreshFriendBlackList = async () => {
+const refreshFriendBlackList = async (context = 'manual') => {
   blackListLoading.value = true;
   try {
-    await store.dispatch('fetchBlackList');
+    const users = await store.dispatch('fetchBlackList');
+    console.log('[Blocklist] getBlocklist response', {
+      context,
+      userIds: users.map((user) => user.userId),
+      users,
+    });
+    return users;
+  } catch (error) {
+    console.error('[Blocklist] getBlocklist failed', {
+      context,
+      error,
+    });
+    throw error;
   } finally {
     blackListLoading.value = false;
   }
@@ -67,10 +127,54 @@ const openFriendBlackList = async () => {
   blackListDialogVisible.value = true;
   await refreshFriendBlackList();
 };
+const normalizeSdk5UserId = (userId) =>
+  typeof userId === 'string' ? userId.trim() : '';
+const isKnownContactUserId = (userId) => {
+  const normalizedUserId = normalizeSdk5UserId(userId);
+  if (!normalizedUserId || normalizedUserId === getCurrentUserId()) return false;
+  return (
+    store.getters.getContactsWithRemarkMap?.has?.(normalizedUserId) ||
+    store.getters.getContactsUserInfosMap?.has?.(normalizedUserId) ||
+    [...store.state.Contacts.friendBlackList].includes(normalizedUserId)
+  );
+};
+const getPeerUserIdFromSdk5Message = (message) => {
+  if (!message) return '';
+  const senderUserId = normalizeSdk5UserId(message.sender?.userId);
+  if (senderUserId && senderUserId !== getCurrentUserId()) {
+    return senderUserId;
+  }
+  return '';
+};
+const showSingleChatTargetUserIdMissingReason = (action) => {
+  const message =
+    singleChatTargetUserIdMissingReason.value ||
+    '当前单聊会话缺少 SDK 5.0 用户 ID，不能调用联系人能力';
+  const latestMessage = messageData.value[messageData.value.length - 1] || null;
+  console.error('[SingleChatDetails] SDK 5.0 target userId missing', {
+    action,
+    currentUser: getCurrentUserId(),
+    conversationId: routeQueryData.value.conversationId,
+    conversationType: routeQueryData.value.conversationType,
+    conversationLastMessage: getCurrentConversationFromStore()?.lastMessage || null,
+    latestMessage,
+  });
+  ElMessage({
+    type: 'error',
+    center: true,
+    message,
+  });
+};
+const getRequiredSingleChatContactUserId = (action) => {
+  const targetId = singleChatTargetUserId.value;
+  if (targetId) return targetId;
+  showSingleChatTargetUserIdMissingReason(action);
+  return '';
+};
 //删除好友
 const delTheFriend = async () => {
-  if (routeQueryData.value?.conversationId) {
-    const targetId = routeQueryData.value.conversationId;
+  const targetId = getRequiredSingleChatContactUserId('deleteContact');
+  if (targetId) {
     try {
       await contactManager().deleteContact({ userId: targetId });
       store.commit('DELETE_CONTACTS_FROM_MAP', targetId);
@@ -89,8 +193,8 @@ const delTheFriend = async () => {
 const remarkDialogVisible = ref(false);
 const friendRemark = ref('');
 const setFriendRemark = async () => {
-  if (routeQueryData.value?.conversationId && friendRemark.value.trim()) {
-    const targetId = routeQueryData.value.conversationId;
+  const targetId = getRequiredSingleChatContactUserId('setRemark');
+  if (targetId && friendRemark.value.trim()) {
     const remark = friendRemark.value.trim();
     
     // 检查备注长度
@@ -122,22 +226,41 @@ const setFriendRemark = async () => {
 };
 //检查用户是否在黑名单中
 const isInBlackList = computed(() => {
-  const targetId = routeQueryData.value?.conversationId;
+  const targetId = singleChatTargetUserId.value;
   if (!targetId) return false;
   return [...store.state.Contacts.friendBlackList].includes(targetId);
 });
 
 //加入好友到黑名单
 const addFriendToBlackList = async () => {
-  if (routeQueryData.value?.conversationId) {
-    const targetId = routeQueryData.value.conversationId;
+  const targetId = getRequiredSingleChatContactUserId('addUsersToBlocklist');
+  if (targetId) {
     try {
+      const sdkParams = {
+        userIds: [targetId],
+      };
+      console.log('[Blocklist] addUsersToBlocklist request', {
+        currentUser: getCurrentUserId(),
+        conversationId: routeQueryData.value.conversationId,
+        targetId,
+        sdkParams,
+      });
       const result = await contactManager().addUsersToBlocklist({
         userIds: [targetId],
+      });
+      console.log('[Blocklist] addUsersToBlocklist response', {
+        currentUser: getCurrentUserId(),
+        conversationId: routeQueryData.value.conversationId,
+        targetId,
+        sdkParams,
+        succeededUserIds: result.succeeded.map((user) => user.userId),
+        failedUserIds: result.failed.map((user) => user.userId),
+        result,
       });
       if (!result.succeeded.some((user) => user.userId === targetId)) {
         console.error('[Blocklist] addUsersToBlocklist did not confirm target', {
           currentUser: getCurrentUserId(),
+          conversationId: routeQueryData.value.conversationId,
           targetId,
           result,
         });
@@ -148,11 +271,36 @@ const addFriendToBlackList = async () => {
         });
         return;
       }
-      await refreshFriendBlackList();
+      const users = await refreshFriendBlackList('addUsersToBlocklist verification');
+      const verified = users.some((user) => user.userId === targetId);
+      console.log('[Blocklist] addUsersToBlocklist verification', {
+        currentUser: getCurrentUserId(),
+        conversationId: routeQueryData.value.conversationId,
+        targetId,
+        verified,
+        userIds: users.map((user) => user.userId),
+        users,
+      });
+      if (!verified) {
+        console.error('[Blocklist] addUsersToBlocklist verification did not confirm target', {
+          currentUser: getCurrentUserId(),
+          conversationId: routeQueryData.value.conversationId,
+          targetId,
+          result,
+          users,
+        });
+        ElMessage({
+          type: 'error',
+          center: true,
+          message: '添加到黑名单失败：SDK 刷新结果未确认目标用户',
+        });
+        return;
+      }
       ElMessage({ type: 'success', center: true, message: '已成功将该用户添加到黑名单' });
     } catch (error) {
       console.error('[Blocklist] addUsersToBlocklist failed', {
         currentUser: getCurrentUserId(),
+        conversationId: routeQueryData.value.conversationId,
         targetId,
         error,
       });
@@ -167,8 +315,8 @@ const addFriendToBlackList = async () => {
 
 //从黑名单中移除用户
 const removeFriendFromBlackList = async () => {
-  if (routeQueryData.value?.conversationId) {
-    const targetId = routeQueryData.value.conversationId;
+  const targetId = getRequiredSingleChatContactUserId('removeUserFromBlocklist');
+  if (targetId) {
     try {
       await contactManager().removeUserFromBlocklist({
         userIds: [targetId]
@@ -176,8 +324,13 @@ const removeFriendFromBlackList = async () => {
       ElMessage({ type: 'success', center: true, message: '已成功将该用户从黑名单中移除' });
       await refreshFriendBlackList();
     } catch (error) {
-      ElMessage({ type: 'error', center: true, message: '从黑名单中移除失败，请稍后重试' });
-      console.error('从黑名单中移除失败:', error);
+      ElMessage({ type: 'error', center: true, message: error?.message || '从黑名单中移除失败' });
+      console.error('[Blocklist] removeUserFromBlocklist failed', {
+        currentUser: getCurrentUserId(),
+        conversationId: routeQueryData.value.conversationId,
+        targetId,
+        error,
+      });
     }
   }
 };
@@ -227,7 +380,7 @@ const randomTips = computed(() => {
   return _.toString(_.sampleSize(SWINDLER_GO_DIE, 1));
 });
 
-const getCurrentConversation = () => {
+const getCurrentConversationFromStore = () => {
   const { conversationId, conversationType } = routeQueryData.value;
   if (!conversationId) return null;
   const list = store.state.Conversation.conversationFromMethod
@@ -240,11 +393,95 @@ const getCurrentConversation = () => {
   ) || null;
 };
 
+const sdkCurrentConversation = ref(null);
+const sdkCurrentConversationError = ref('');
+
+const readSdkCurrentConversation = (context) => {
+  try {
+    const current = getSdkCurrentConversation();
+    sdkCurrentConversation.value = current;
+    return current;
+  } catch (error) {
+    sdkCurrentConversation.value = null;
+    sdkCurrentConversationError.value =
+      error?.message || 'getCurrentConversation failed';
+    console.error('[Current Conversation] getCurrentConversation failed', {
+      context,
+      error,
+    });
+    return null;
+  }
+};
+
+const clearSdkCurrentConversation = (reason) => {
+  if (!loginState.value) return;
+  try {
+    resetCurrentConversation();
+    const current = readSdkCurrentConversation('reset-current-conversation');
+    sdkCurrentConversationError.value = '';
+    console.log('[Current Conversation] resetCurrentConversation success', {
+      reason,
+      sdkCurrentConversation: current,
+    });
+  } catch (error) {
+    sdkCurrentConversationError.value =
+      error?.message || 'resetCurrentConversation failed';
+    console.error('[Current Conversation] resetCurrentConversation failed', {
+      reason,
+      error,
+    });
+    readSdkCurrentConversation('reset-current-conversation-failed');
+  }
+};
+
+const syncSdkCurrentConversation = (reason) => {
+  if (!loginState.value) return;
+  const { conversationId, conversationType, isChatThread } =
+    routeQueryData.value || {};
+  if (!conversationId || !conversationType || isChatThread) {
+    clearSdkCurrentConversation(
+      isChatThread ? 'chat-thread-not-current-conversation' : reason,
+    );
+    return;
+  }
+
+  const params = {
+    conversationId,
+    conversationType,
+  };
+  try {
+    setCurrentConversation(params);
+    const current = readSdkCurrentConversation('set-current-conversation');
+    sdkCurrentConversationError.value = '';
+    console.log('[Current Conversation] setCurrentConversation success', {
+      reason,
+      request: params,
+      sdkCurrentConversation: current,
+    });
+  } catch (error) {
+    sdkCurrentConversationError.value =
+      error?.message || 'setCurrentConversation failed';
+    console.error('[Current Conversation] setCurrentConversation failed', {
+      reason,
+      request: params,
+      error,
+    });
+    readSdkCurrentConversation('set-current-conversation-failed');
+  }
+};
+
+const canClearConversationUnreadCount = (conversationType) =>
+  [
+    CONVERSATION_TYPE.SINGLE,
+    CONVERSATION_TYPE.GROUP,
+  ].includes(conversationType);
+
 const markConversationReadIfNeeded = (options = {}) => {
   const { conversationId, conversationType } = routeQueryData.value;
   if (!conversationId || !conversationType) return;
+  if (!canClearConversationUnreadCount(conversationType)) return;
 
-  const conversation = getCurrentConversation();
+  const conversation = getCurrentConversationFromStore();
   if (!options.force && (!conversation || conversation.unreadCount <= 0)) {
     return;
   }
@@ -272,6 +509,7 @@ onMounted(() => {
 
 // 离开该路由销毁路由监听。
 onBeforeRouteLeave(() => {
+  clearSdkCurrentConversation('route-leave');
   stopWatchRoute();
 });
 const closeWarningTips = () => store.commit('CLOSE_WARNING_TIPS');
@@ -307,7 +545,7 @@ const stopWatchRoute = watch(
 );
 
 watch(
-  () => getCurrentConversation()?.unreadCount || 0,
+  () => getCurrentConversationFromStore()?.unreadCount || 0,
   (unreadCount) => {
     if (unreadCount > 0) {
       markConversationReadIfNeeded();
@@ -378,6 +616,38 @@ const messageData = computed(() => {
   }
   return [];
 });
+const singleChatTargetUserId = computed(() => {
+  if (routeQueryData.value.conversationType !== CONVERSATION_TYPE.SINGLE) {
+    return '';
+  }
+  const conversationId = normalizeSdk5UserId(routeQueryData.value.conversationId);
+  if (isKnownContactUserId(conversationId)) {
+    return conversationId;
+  }
+  const peerFromConversation = getPeerUserIdFromSdk5Message(
+    getCurrentConversationFromStore()?.lastMessage,
+  );
+  if (peerFromConversation) {
+    return peerFromConversation;
+  }
+  const messages = [...messageData.value].reverse();
+  for (const message of messages) {
+    const peerUserId = getPeerUserIdFromSdk5Message(message);
+    if (peerUserId) {
+      return peerUserId;
+    }
+  }
+  return '';
+});
+const singleChatTargetUserIdMissingReason = computed(() => {
+  if (routeQueryData.value.conversationType !== CONVERSATION_TYPE.SINGLE) {
+    return '';
+  }
+  if (singleChatTargetUserId.value) {
+    return '';
+  }
+  return '当前 SDK 5.0 单聊会话只提供了 conversationId，未提供可用于 ContactManager 的用户 ID，已停止调用联系人黑名单/备注/删除接口';
+});
 
 // 监听路由变化，当切换到新的聊天会话时获取历史消息
 watch(
@@ -388,6 +658,19 @@ watch(
       newRouteQuery.conversationId &&
       newRouteQuery.conversationType
     ) {
+      const isConversationChanged =
+        !oldRouteQuery ||
+        newRouteQuery.conversationId !== oldRouteQuery.conversationId ||
+        newRouteQuery.conversationType !== oldRouteQuery.conversationType ||
+        newRouteQuery.isChatThread !== oldRouteQuery.isChatThread;
+
+      if (isConversationChanged) {
+        if (oldRouteQuery?.conversationId) {
+          clearSdkCurrentConversation('conversation-switch');
+        }
+        syncSdkCurrentConversation('conversation-enter');
+      }
+
       // 只有当会话ID变化或者是首次加载时才获取历史消息
       // 首次加载时oldRouteQuery是undefined，需要特殊处理
       if (
@@ -470,7 +753,8 @@ const inputBoxComp = ref(null);
 const reEditMessage = (content) =>
   inputBoxComp.value?.handleEditTextMessage(content);
 //消息引用
-const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
+const onQuoteMessage = (message) =>
+  inputBoxComp.value?.handleQuoteMessage(message);
 </script>
 <template>
   <el-container v-if="loginState" class="app_container">
@@ -492,6 +776,19 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
               <el-icon>
                 <Search />
               </el-icon>
+            </div>
+          </el-tooltip>
+          <el-tooltip
+            content="置顶消息列表"
+            placement="top"
+            :show-after="200"
+          >
+            <div
+              class="more pinned_message_list_trigger"
+              aria-label="置顶消息列表"
+              @click="fetchPinnedMessageList"
+            >
+              置顶
             </div>
           </el-tooltip>
           <div
@@ -555,6 +852,23 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
         </el-icon>
       </span>
     </div>
+    <div
+      v-if="routeQueryData.conversationId"
+      class="sdk_current_conversation_context"
+      :class="{ 'is-error': sdkCurrentConversationError }"
+    >
+      <span class="sdk_current_conversation_label">SDK 当前会话：</span>
+      <template v-if="sdkCurrentConversation">
+        <span>{{ sdkCurrentConversation.conversationType }}</span>
+        <span>/</span>
+        <span>{{ sdkCurrentConversation.conversationId }}</span>
+      </template>
+      <template v-else>
+        <span>
+          {{ sdkCurrentConversationError || 'SDK 返回 null' }}
+        </span>
+      </template>
+    </div>
     <!-- 消息内容区域 -->
     <el-main class="chat_message_main">
       <el-scrollbar class="main_container" ref="messageContainer">
@@ -582,7 +896,7 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
             :messageData="messageData"
             @scrollMessageList="scrollMessageList"
             @reEditMessage="reEditMessage"
-            @messageQuote="messageQuote"
+            @quoteMessage="onQuoteMessage"
           />
         </div>
       </el-scrollbar>
@@ -610,7 +924,9 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
       />
       <SingleChatDetails
         v-else-if="routeQueryData.conversationType === CONVERSATION_TYPE.SINGLE"
-        :user-id="routeQueryData.conversationId"
+        :user-id="singleChatTargetUserId"
+        :conversation-id="routeQueryData.conversationId"
+        :contact-unavailable-reason="singleChatTargetUserIdMissingReason"
         :is-in-black-list="isInBlackList"
         @setRemark="remarkDialogVisible = true"
         @addBlackList="addFriendToBlackList"
@@ -618,6 +934,7 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
         @openBlackList="openFriendBlackList"
         @clearMessages="clearCurrentConversationMessages"
         @deleteContact="delTheFriend"
+        @contactActionUnavailable="showSingleChatTargetUserIdMissingReason"
       />
     </el-drawer>
     <MessageThreadListDrawer
@@ -628,6 +945,54 @@ const messageQuote = (msg) => inputBoxComp.value?.handleQuoteMessage(msg);
       v-model="messageSearchDrawer"
       :route-query-data="routeQueryData"
     />
+    <el-drawer
+      v-model="pinnedMessageListDrawer"
+      title="置顶消息列表"
+      size="360px"
+      direction="rtl"
+      :destroy-on-close="false"
+    >
+      <div class="pinned_message_list_drawer" v-loading="pinnedMessageListLoading">
+        <div class="pinned_message_list_header">
+          <span>
+            {{ routeQueryData.conversationType }} / {{ routeQueryData.conversationId }}
+          </span>
+          <el-button
+            link
+            type="primary"
+            :loading="pinnedMessageListLoading"
+            @click="fetchPinnedMessageList"
+          >
+            刷新
+          </el-button>
+        </div>
+        <p v-if="pinnedMessageListError" class="pinned_message_list_error">
+          {{ pinnedMessageListError }}
+        </p>
+        <template v-else-if="pinnedMessageItems.length > 0">
+          <div
+            v-for="item in pinnedMessageItems"
+            :key="item.messageId"
+            class="pinned_message_item"
+          >
+            <div class="pinned_message_item_title">
+              {{ getPinnedMessagePreview(item) }}
+            </div>
+            <div class="pinned_message_item_meta">
+              <span>messageId: {{ item.messageId }}</span>
+              <span>operatorId: {{ item.operatorId || 'SDK 未返回' }}</span>
+              <span>pinnedAt: {{ item.pinnedAt }}</span>
+            </div>
+            <pre>{{ JSON.stringify(item, null, 2) }}</pre>
+          </div>
+        </template>
+        <el-empty
+          v-else
+          :image-size="80"
+          description="SDK 返回置顶消息为空"
+        />
+      </div>
+    </el-drawer>
     
     <!-- 设置好友备注对话框 -->
     <el-dialog

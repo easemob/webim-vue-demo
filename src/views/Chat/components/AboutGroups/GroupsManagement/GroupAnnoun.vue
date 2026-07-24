@@ -16,7 +16,7 @@ const props = defineProps({
 });
 const { memberRole, groupId } = toRefs(props);
 const getGroupAnnouncement = computed(() => {
-  return store.getters.getGroupDetailMap.get(groupId.value)?.announcement;
+  return store.getters.getGroupAnnouncementMap.get(groupId.value)?.announcement;
 });
 const announcementRef = ref(null);
 const isEdit = ref(false);
@@ -47,7 +47,7 @@ const editAnnouncment = async (type, oldAnnouncment) => {
       isEdit.value = false;
     } catch (error) {
       ElMessage({
-        message: '群组详情修改失败，请稍后重试~',
+        message: error.message,
         type: 'error',
         center: true,
       });

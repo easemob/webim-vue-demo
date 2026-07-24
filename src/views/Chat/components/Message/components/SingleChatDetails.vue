@@ -14,7 +14,15 @@ import {
 const props = defineProps({
   userId: {
     type: String,
+    default: '',
+  },
+  conversationId: {
+    type: String,
     required: true,
+  },
+  contactUnavailableReason: {
+    type: String,
+    default: '',
   },
   isInBlackList: {
     type: Boolean,
@@ -29,24 +37,71 @@ const emit = defineEmits([
   'openBlackList',
   'clearMessages',
   'deleteContact',
+  'contactActionUnavailable',
 ]);
 
 const { getContactsNickNameById, getUserDisplayAvatarById } = useGetUserMapInfo();
 const displayName = computed(() => getContactsNickNameById(props.userId));
 const avatarUrl = computed(() => getUserDisplayAvatarById(props.userId));
+const canUseContactUserActions = computed(() => Boolean(props.userId));
+const emitContactAction = (eventName) => {
+  if (!canUseContactUserActions.value) {
+    emit('contactActionUnavailable', eventName);
+    return;
+  }
+  emit(eventName);
+};
+const triggerBlocklistAction = (nextValue, source) => {
+  if (!canUseContactUserActions.value) {
+    emit('contactActionUnavailable', 'blocklist');
+    return;
+  }
+  const eventName = nextValue ? 'addBlackList' : 'removeBlackList';
+  console.log('[Blocklist UI] toggle requested', {
+    source,
+    conversationId: props.conversationId,
+    userId: props.userId,
+    currentValue: props.isInBlackList,
+    requestedValue: nextValue,
+    eventName,
+  });
+  emit(eventName);
+};
+const onBlocklistRowClick = () =>
+  triggerBlocklistAction(!props.isInBlackList, 'row-click');
+const onBlocklistSwitchChange = (nextValue) =>
+  triggerBlocklistAction(nextValue, 'switch-change');
 </script>
 
 <template>
   <div class="single_chat_details">
     <div class="single_chat_profile">
       <el-avatar class="single_chat_avatar" :src="avatarUrl" shape="square">
-        {{ displayName || userId }}
+        {{ displayName || userId || '未知用户' }}
       </el-avatar>
-      <div class="single_chat_user_id">用户ID: {{ userId }}</div>
+      <div class="single_chat_user_id">
+        会话ID: {{ conversationId }}
+      </div>
+      <div
+        class="single_chat_user_id"
+        :class="{ unresolved: !userId }"
+      >
+        用户ID: {{ userId || 'SDK 5.0 未返回' }}
+      </div>
+      <div
+        v-if="!userId && contactUnavailableReason"
+        class="single_chat_unavailable_reason"
+      >
+        {{ contactUnavailableReason }}
+      </div>
     </div>
 
     <div class="single_chat_action_list">
-      <div class="single_chat_action_item" @click="emit('setRemark')">
+      <div
+        class="single_chat_action_item"
+        :class="{ disabled: !canUseContactUserActions }"
+        @click="emitContactAction('setRemark')"
+      >
         <el-icon class="single_chat_action_icon"><User /></el-icon>
         <span class="single_chat_action_label">备注</span>
         <el-icon class="single_chat_action_more"><EditPen /></el-icon>
@@ -56,21 +111,25 @@ const avatarUrl = computed(() => getUserDisplayAvatarById(props.userId));
         <ConversationDndSwitch
           class="single_chat_dnd_switch"
           label="消息免打扰"
-          :conversation-id="userId"
+          :conversation-id="conversationId"
           conversation-type="singleChat"
         />
       </div>
       <div
         class="single_chat_action_item"
-        @click="
-          isInBlackList ? emit('removeBlackList') : emit('addBlackList')
-        "
+        :class="{ disabled: !canUseContactUserActions }"
+        @click="onBlocklistRowClick"
       >
         <el-icon class="single_chat_action_icon"><UserFilled /></el-icon>
         <span class="single_chat_action_label">{{
           isInBlackList ? '移出黑名单' : '加入黑名单'
         }}</span>
-        <el-switch :model-value="isInBlackList" />
+        <el-switch
+          :model-value="isInBlackList"
+          :disabled="!canUseContactUserActions"
+          @click.stop
+          @update:model-value="onBlocklistSwitchChange"
+        />
       </div>
       <div class="single_chat_action_item" @click="emit('openBlackList')">
         <el-icon class="single_chat_action_icon"><List /></el-icon>
@@ -83,7 +142,8 @@ const avatarUrl = computed(() => getUserDisplayAvatarById(props.userId));
       </div>
       <div
         class="single_chat_action_item danger"
-        @click="emit('deleteContact')"
+        :class="{ disabled: !canUseContactUserActions }"
+        @click="emitContactAction('deleteContact')"
       >
         <el-icon class="single_chat_action_icon"><UserFilled /></el-icon>
         <span class="single_chat_action_label">删除联系人</span>
@@ -121,6 +181,24 @@ const avatarUrl = computed(() => getUserDisplayAvatarById(props.userId));
   color: #9aa1aa;
 }
 
+.single_chat_user_id + .single_chat_user_id {
+  margin-top: 6px;
+}
+
+.single_chat_user_id.unresolved {
+  color: #f56c6c;
+}
+
+.single_chat_unavailable_reason {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: #fff1f0;
+  color: #d93026;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .single_chat_action_list {
   background: #fff;
 }
@@ -132,6 +210,16 @@ const avatarUrl = computed(() => getUserDisplayAvatarById(props.userId));
   padding: 0 24px;
   cursor: pointer;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.single_chat_action_item.disabled {
+  cursor: not-allowed;
+  color: #b8bec8;
+}
+
+.single_chat_action_item.disabled .single_chat_action_icon,
+.single_chat_action_item.disabled .single_chat_action_more {
+  color: #b8bec8;
 }
 
 .single_chat_action_icon {

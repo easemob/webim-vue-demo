@@ -14,5 +14,15 @@ assert.doesNotMatch(
   'The navigation menu must not expose an unsupported SDK 5.0 chatroom-creation action.',
 );
 assert.doesNotMatch(navBar, /创建聊天室/);
+assert.equal(
+  fs.existsSync(
+    path.join(
+      root,
+      'src/views/Chat/components/NavBar/components/ApplyComponents/createChatroom.vue',
+    ),
+  ),
+  false,
+  'Unsupported SDK 5.0 chatroom creation must not leave a dormant component.',
+);
 
 console.log('navbar create-chatroom entry: PASS');

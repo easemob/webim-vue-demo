@@ -1,7 +1,6 @@
 <script setup>
 import { ref, toRefs } from 'vue';
 import CreateGroups from './createGroups.vue';
-import CreateChatroom from './createChatroom.vue';
 import ApplyJoinGroups from './applyJoinGroups';
 import AddFriends from './addFriends.vue';
 const props = defineProps({
@@ -14,14 +13,12 @@ const { modalType } = toRefs(props);
 //Title展示
 const modalTitle = {
   createNewGroups: '创建群聊',
-  createNewChatroom: '创建聊天室',
   applyJoinGroups: '申请入群',
   addNewFriend: '添加好友',
 };
 //匹配不同的modalType展示对应的组件
 const showComponent = {
   createNewGroups: CreateGroups,
-  createNewChatroom: CreateChatroom,
   applyJoinGroups: ApplyJoinGroups,
   addNewFriend: AddFriends,
 };

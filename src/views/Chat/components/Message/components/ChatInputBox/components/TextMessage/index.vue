@@ -1,11 +1,11 @@
 <script setup>
-import { ref, toRefs, computed, onMounted, onUpdated } from 'vue';
+import { ref, toRefs, computed, onMounted, onUpdated, watch } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 import { MENTION_ALL } from '@/constant';
 import { CONVERSATION_TYPE } from '@/IM/constant';
-import { createMessage, sendMessage } from '@/IM/sdk5/chat';
-import { getCurrentUserId } from '@/IM';
-import { useGetUserMapInfo, useUserInfoExt } from '@/hooks';
+import { createMessage, sendMessage, sendMessageByClient } from '@/IM/sdk5/chat';
+import { getCurrentUserId, requireManager } from '@/IM';
+import { useUserInfoExt } from '@/hooks';
 import store from '@/store';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 //vue at
@@ -58,31 +58,91 @@ onUpdated(() => {
  * 文本消息相关
  * 包含 @、emoji、引用功能
  */
-const { getUserDisplayNameById } = useGetUserMapInfo();
 //AT 逻辑
-const atGroupId = computed(
+const mentionConversationId = computed(
   () => parentConversationId.value || conversationId.value,
 );
+const atMemberEntries = ref([]);
 const atMembersList = computed(() => {
-  const members = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }];
-  //TODO text部分应为获取群组成员的自定义属性，待后续增加可设置自定在群组当中的自定义属性。
-  if (atGroupId.value) {
-    const sourceMembers =
-      store.getters.getGroupMembersMap.get(atGroupId.value) ||
-      store.dispatch('fetchGroupsMemberFromServer', { groupId: atGroupId.value }) ||
-      [];
-    sourceMembers.length &&
-      sourceMembers.forEach((item) => {
-        if (item.owner !== getCurrentUserId() && item.member !== getCurrentUserId()) {
-          members.push({
-            text: getUserDisplayNameById(item.owner || item.member, atGroupId.value),
-            value: item.owner || item.member,
-          });
-        }
-      });
-  }
-  return members;
+  const candidates = [{ text: MENTION_ALL.TEXT, value: MENTION_ALL.VALUE }];
+
+  atMemberEntries.value.forEach((member) => {
+    const userId = member.user?.userId;
+    if (!userId || userId === getCurrentUserId()) return;
+    candidates.push({
+      text: userId,
+      value: userId,
+    });
+  });
+
+  return candidates;
 });
+
+const fetchChatRoomMentionMembers = async (chatRoomId) => {
+  const members = [];
+  let cursor = '';
+
+  do {
+    const result = await requireManager('chatRoomManager')
+      .getChatRoom(chatRoomId)
+      .getMembers({
+        cursor,
+        pageSize: 50,
+      });
+    members.push(...result.items);
+    cursor = result.cursor;
+  } while (cursor);
+
+  return members;
+};
+
+const refreshMentionMembers = async () => {
+  const mentionConversationIdSnapshot = mentionConversationId.value;
+  const mentionConversationTypeSnapshot = conversationType.value;
+
+  if (
+    !mentionConversationIdSnapshot ||
+    (mentionConversationTypeSnapshot !== CONVERSATION_TYPE.GROUP &&
+      mentionConversationTypeSnapshot !== CONVERSATION_TYPE.CHATROOM)
+  ) {
+    atMemberEntries.value = [];
+    return;
+  }
+
+  try {
+    let members;
+    if (mentionConversationTypeSnapshot === CONVERSATION_TYPE.GROUP) {
+      members = await store.dispatch('fetchGroupsMemberFromServer', {
+        groupId: mentionConversationIdSnapshot,
+      });
+    }
+    if (mentionConversationTypeSnapshot === CONVERSATION_TYPE.CHATROOM) {
+      members = await fetchChatRoomMentionMembers(mentionConversationIdSnapshot);
+    }
+
+    if (
+      mentionConversationIdSnapshot === mentionConversationId.value &&
+      mentionConversationTypeSnapshot === conversationType.value
+    ) {
+      atMemberEntries.value = members;
+    }
+  } catch (error) {
+    if (mentionConversationTypeSnapshot === CONVERSATION_TYPE.CHATROOM) {
+      console.error('[SDK 5.0 ChatRoom] getMembers failed', {
+        chatRoomId: mentionConversationIdSnapshot,
+        currentUser: getCurrentUserId(),
+        error,
+      });
+    }
+    ElMessage.error(error.message);
+  }
+};
+
+watch(
+  () => [conversationType.value, mentionConversationId.value],
+  refreshMentionMembers,
+  { immediate: true },
+);
 
 const isAtAll = ref(false);
 const atMembers = ref([]);
@@ -129,11 +189,6 @@ onClickOutside(emojisBox, () => {
 const onAddOneEmoji = (emoji) => {
   textContent.value = textContent.value + emoji;
 };
-//消息引用
-const messageQuoteRef = ref(null);
-const handleQuoteMessage = (msgBody) => {
-  messageQuoteRef.value && messageQuoteRef.value.setQuoteContent(msgBody);
-};
 //监听键盘按下事件，如果为enter键则发送文本内容,shift+enter则换行。
 const onTextInputKeyDown = (event) => {
   if (event.keyCode === 13 && !event.shiftKey) {
@@ -176,9 +231,9 @@ const sendTextMessage = _.debounce(async () => {
   //在消息体内携带该用户的昵称头像信息
   setUserInfoExt(msgOptions);
   //引用消息处理
-  const callback = (data) => {
-    if (Object.values(data).some((item) => item !== '')) {
-      msgOptions.ext.msgQuote = Object.assign({}, { ...data });
+  const callback = (quote) => {
+    if (quote) {
+      msgOptions.ext.quote = quote;
       emit('clearQuoteContent');
     }
   };
@@ -193,6 +248,69 @@ const sendTextMessage = _.debounce(async () => {
     await store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
     console.error('发送文本消息失败', error);
+    notifySdkSendError(error);
+  } finally {
+    isAtAll.value = false;
+    atMembers.value = [];
+  }
+}, 50);
+
+const sendTextMessageByClient = _.debounce(async () => {
+  if (textContent.value.match(/^\s*$/)) return;
+  if (!conversationId.value) {
+    console.error('[Message Send] ChatClient.sendMessage failed', {
+      conversationId: conversationId.value,
+      conversationType: conversationType.value,
+      error: new Error('缺少目标ID'),
+    });
+    ElMessage.error('发送文本消息失败: 请先选择聊天对象');
+    return;
+  }
+  checkAtMembers(textContent.value);
+  const msgOptions = {
+    conversationId: conversationId.value,
+    conversationType: conversationType.value,
+    ...(isChatThread.value ? { isChatThread: true } : {}),
+    ...(conversationType.value === CONVERSATION_TYPE.GROUP
+      ? { needReadReceipt: true }
+      : {}),
+    content: textContent.value,
+    ext: {
+      em_at_list: isAtAll.value
+        ? MENTION_ALL.VALUE
+        : _.map(atMembers.value, 'value'),
+    },
+  };
+  setUserInfoExt(msgOptions);
+  emit('getMessageQuoteContent', (quote) => {
+    if (quote) {
+      msgOptions.ext.quote = quote;
+      emit('clearQuoteContent');
+    }
+  });
+
+  let messageToSend;
+  try {
+    messageToSend = createMessage('text', msgOptions);
+    const message = await sendMessageByClient(messageToSend, {
+      ...deliverOnlineOnlyOptions.value,
+      needReadReceipt: conversationType.value === CONVERSATION_TYPE.GROUP,
+    });
+    console.log('[Message Send] ChatClient.sendMessage success', {
+      messageId: message.msgServerId || message.msgLocalId,
+      conversationId: message.conversationId,
+      conversationType: message.conversationType,
+      rawMessage: message,
+    });
+    await store.dispatch('senedShowTypeMessage', message);
+    textContent.value = '';
+  } catch (error) {
+    console.error('[Message Send] ChatClient.sendMessage failed', {
+      conversationId: conversationId.value,
+      conversationType: conversationType.value,
+      rawMessage: messageToSend,
+      error,
+    });
     notifySdkSendError(error);
   } finally {
     isAtAll.value = false;
@@ -216,7 +334,6 @@ const onEditMessage = (content) => {
 defineExpose({
   onAddOneEmoji,
   onEditMessage,
-  handleQuoteMessage,
 });
 </script>
 <template>
@@ -257,6 +374,11 @@ defineExpose({
     @click="sendTextMessage"
     >发送</el-button
   >
+  <el-button
+    :class="[textContent === '' ? 'no_content_client_send_btn' : 'chat_client_send_btn']"
+    type="primary"
+    @click="sendTextMessageByClient">SDK5 Client.sendMessage</el-button
+  >
 </template>
 
 <style lang="scss" scoped>
@@ -286,5 +408,20 @@ defineExpose({
   bottom: 20px;
   right: 20px;
   width: 80px;
+}
+
+.no_content_client_send_btn {
+  position: absolute;
+  bottom: 20px;
+  right: 120px;
+  width: 160px;
+  opacity: 0.5;
+}
+
+.chat_client_send_btn {
+  position: absolute;
+  bottom: 20px;
+  right: 120px;
+  width: 160px;
 }
 </style>

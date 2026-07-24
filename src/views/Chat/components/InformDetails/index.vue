@@ -2,164 +2,119 @@
 import { computed } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
-import { getCurrentUserId, requireManager } from '@/IM';
-import { CHAT_TYPE } from '@/IM/constant';
+import { requireManager } from '@/IM';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import dateFormater from '@/utils/dateFormater';
-import { INFORM_FROM } from '@/constant';
 import { ElMessageBox, ElMessage } from 'element-plus';
 import { Delete } from '@element-plus/icons-vue';
+
 const store = useStore();
 const router = useRouter();
 const contactManager = () => requireManager('contactManager');
 const groupManager = () => requireManager('groupManager');
-
 const informList = computed(() => store.state.Conversation.informDetail);
 
-//清除inform的未读
 const clearUnread = (inform, index) => {
-  if (inform.untreated) {
-    store.commit('CLEAR_UNTREATED_STATUS', index);
-  }
+  if (inform.untreated) store.commit('CLEAR_UNTREATED_STATUS', index);
 };
-//清空所有通知
+
 const clearAllInform = () => {
   ElMessageBox.confirm('确认清除所有系统通知?', '清除系统通知', {
     confirmButtonText: '确认',
     cancelButtonText: '取消',
     type: 'warning',
   })
-    .then(() => {
-      store.commit('CLEAR_INFORM_LIST');
-    })
-    .catch(() => {
-      return;
-    });
+    .then(() => store.commit('CLEAR_INFORM_LIST'))
+    .catch(() => {});
 };
 
-//处理申请
-const handleClickBtn = ({ informData, index, type }) => {
-  const loginUserId = getCurrentUserId();
-  const { fromType, from } = informData;
-  //好友申请操作相关
-  if (fromType === INFORM_FROM.FRIEND) {
-    const handleFriendApply = {
-      agree: async () => {
-        await contactManager().acceptContactInvite({ userId: from });
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 1 });
-      },
-      refuse: async () => {
-        await contactManager().declineContactInvite({ userId: from });
-        //拒绝并更改当前通知卡片按钮状态
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 });
-      },
-    };
-    handleFriendApply[type]();
-  }
+const eventTitle = (eventName) => eventName || 'SDK 5.0 系统通知';
 
-  //邀请群组操作相关
-  if (
-    fromType === INFORM_FROM.GROUP &&
-    informData.operation === 'inviteToJoin'
-  ) {
-    const handleGroupInvite = {
-      agree: async () => {
-        try {
-          await groupManager().acceptInvitation({
-            groupId: informData.groupId,
-          });
-          store.commit('UPDATE_INFORM_BTNSTATUS', {
-            index,
-            btnStatus: 1,
-          });
-          await store.dispatch('fetchJoinedGroupListFromServer', {
-            startPageNum: 0,
-            reset: true,
-          });
-          //同意之后跳转至对应的群组详情
-          router.push({
-            path: '/chat/contacts/contactInfos',
-            query: {
-              id: informData.groupId,
-              chatType: CHAT_TYPE.GROUP,
-            },
-          });
-        } catch (error) {
-          ElMessage({
-            type: 'error',
-            center: true,
-            message: '加入失败请稍后重试！',
-          });
-          return;
-        }
-      },
-      refuse: async () => {
-        await groupManager().rejectInvitation({
-          groupId: informData.groupId,
+const eventUserId = (payload) => payload?.userInfo?.userId || '';
+
+const canHandleEvent = (informData) =>
+  ['onContactInvited', 'onInvitationReceived', 'onRequestToJoinReceived'].includes(
+    informData.sdkEventName,
+  );
+
+const updateOperationStatus = (index, operationStatus) => {
+  store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: operationStatus });
+};
+
+const handleClickBtn = async ({ informData, index, type }) => {
+  const payload = informData.sdkPayload;
+  try {
+    if (informData.sdkEventName === 'onContactInvited') {
+      const userId = eventUserId(payload);
+      if (!userId) throw new Error('SDK 5.0 onContactInvited 未下发 userInfo.userId');
+      if (type === 'agree') {
+        await contactManager().acceptContactInvite({ userId });
+      } else {
+        await contactManager().declineContactInvite({ userId });
+      }
+      updateOperationStatus(index, type === 'agree' ? 1 : 2);
+      return;
+    }
+
+    const groupId = payload?.groupId;
+    if (!groupId) throw new Error(`${informData.sdkEventName} 未下发 groupId`);
+    if (informData.sdkEventName === 'onInvitationReceived') {
+      if (type === 'agree') {
+        await groupManager().acceptInvitation({ groupId });
+        updateOperationStatus(index, 1);
+        await store.dispatch('fetchJoinedGroupListFromServer');
+        router.push({
+          path: '/chat/contacts/contactInfos',
+          query: {
+            conversationId: groupId,
+            conversationType: CONVERSATION_TYPE.GROUP,
+          },
         });
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 });
-      },
-    };
-    handleGroupInvite[type]();
-  }
-  //其他用户申请加入群组操作
-  if (
-    fromType === INFORM_FROM.GROUP &&
-    informData.operation === 'requestToJoin'
-  ) {
-    const handleGroupInvite = {
-      agree: async () => {
-        try {
-          await groupManager().acceptGroupJoinRequest({
-            userId: from,
-            groupId: informData.groupId,
-          });
-          store.commit('UPDATE_INFORM_BTNSTATUS', {
-            index,
-            btnStatus: 1,
-          });
-        } catch (error) {
-          ElMessage({
-            type: 'error',
-            center: true,
-            message: '同意失败请稍后重试！',
-          });
-          return;
-        }
-      },
-      refuse: async () => {
-        await groupManager().rejectGroupJoinRequest({
-          userId: from,
-          groupId: informData.groupId,
-          reason: '不好意思，不同意你的入群申请！',
-        });
-        store.commit('UPDATE_INFORM_BTNSTATUS', { index, btnStatus: 2 });
-      },
-    };
-    handleGroupInvite[type]();
+      } else {
+        await groupManager().rejectInvitation({ groupId });
+        updateOperationStatus(index, 2);
+      }
+      return;
+    }
+
+    const userId = payload?.applicant?.userId;
+    if (!userId) {
+      throw new Error('SDK 5.0 onRequestToJoinReceived 未下发 applicant.userId');
+    }
+    if (type === 'agree') {
+      await groupManager().acceptGroupJoinRequest({ userId, groupId });
+      updateOperationStatus(index, 1);
+    } else {
+      await groupManager().rejectGroupJoinRequest({ userId, groupId });
+      updateOperationStatus(index, 2);
+    }
+  } catch (error) {
+    console.error('[SDK 5.0 System Notification] action failed', {
+      eventName: informData.sdkEventName,
+      payload,
+      error,
+    });
+    ElMessage({
+      type: 'error',
+      center: true,
+      message: error?.message || 'SDK 5.0 操作失败',
+    });
   }
 };
 </script>
+
 <template>
   <el-container class="app_container" v-if="informList.length > 0">
     <div class="inforom_details_box">
       <div class="inforom_details_box_header">
-        <div v-if="informList.length > 0" class="clear_inforom">
-          <!-- <el-popconfirm title="清空当前所有通知?" @confirm="clearAllInform">
-            <template #reference>
-             
-            </template>
-          </el-popconfirm> -->
-          <el-icon @click="clearAllInform">
-            <Delete />
-          </el-icon>
+        <div class="clear_inforom">
+          <el-icon @click="clearAllInform"><Delete /></el-icon>
         </div>
       </div>
       <el-scrollbar tag="div">
-        <div v-for="(item, index) in informList" :key="item.time">
+        <div v-for="(item, index) in informList" :key="item.receivedAt">
           <div class="inforom_details_time">
-            <span class="time">
-              {{ dateFormater('MM-DD HH:mm', item.time) }}</span
-            >
+            <span class="time">{{ dateFormater('MM-DD HH:mm', item.receivedAt) }}</span>
           </div>
           <el-card
             class="inforom_details_card"
@@ -167,25 +122,13 @@ const handleClickBtn = ({ informData, index, type }) => {
             shadow="never"
           >
             <template #header>
-              <div class="card-header">
-                <span
-                  >{{
-                    item.fromType === INFORM_FROM.GROUP && item.sdk5EventName
-                      ? item.sdk5EventName
-                      : item.title
-                  }}</span
-                >
-              </div>
+              <div class="card-header"><span>{{ eventTitle(item.sdkEventName) }}</span></div>
             </template>
             <span v-if="item.untreated" class="badge"></span>
             <div class="card-main">
-              <pre
-                v-if="item.fromType === INFORM_FROM.GROUP && item.sdk5EventName"
-                class="text item sdk5-payload"
-              >{{ JSON.stringify(item.sdk5Payload, null, 2) }}</pre>
-              <div v-else class="text item">{{ item.from }}：{{ item.desc }}</div>
+              <pre class="text item sdk5-payload">{{ JSON.stringify(item.sdkPayload, null, 2) }}</pre>
               <el-dropdown
-                v-if="item.isOpearationBtn && item.operationStatus < 1"
+                v-if="canHandleEvent(item) && item.operationStatus < 1"
                 trigger="click"
                 split-button
                 type="primary"
@@ -194,33 +137,13 @@ const handleClickBtn = ({ informData, index, type }) => {
                 是否同意
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item
-                      :command="{
-                        informData: item,
-                        index,
-                        type: 'agree',
-                      }"
-                      >同意</el-dropdown-item
-                    >
-                    <el-dropdown-item
-                      :command="{
-                        informData: item,
-                        index,
-                        type: 'refuse',
-                      }"
-                      >拒绝</el-dropdown-item
-                    >
+                    <el-dropdown-item :command="{ informData: item, index, type: 'agree' }">同意</el-dropdown-item>
+                    <el-dropdown-item :command="{ informData: item, index, type: 'refuse' }">拒绝</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
               <div v-if="item.operationStatus">
-                <span>{{
-                  item.operationStatus === 1
-                    ? '已同意'
-                    : item.operationStatus === 2
-                    ? '已拒绝'
-                    : ''
-                }}</span>
+                <span>{{ item.operationStatus === 1 ? '已同意' : '已拒绝' }}</span>
               </div>
             </div>
           </el-card>
@@ -228,7 +151,7 @@ const handleClickBtn = ({ informData, index, type }) => {
       </el-scrollbar>
     </div>
   </el-container>
-  <el-empty style="height: 100%" v-else description="暂无新的系统通知" />
+  <el-empty v-else style="height: 100%" description="暂无新的系统通知" />
 </template>
 
 <style lang="scss" scoped>
@@ -273,7 +196,6 @@ const handleClickBtn = ({ informData, index, type }) => {
         font-size: 7px;
         border-radius: 20px;
         background: #fff;
-        // box-shadow: var(--el-box-shadow-light);
       }
     }
 
@@ -282,7 +204,6 @@ const handleClickBtn = ({ informData, index, type }) => {
       margin: 35px auto;
       width: 85%;
       min-height: 150px;
-      // height: 150px;
       cursor: pointer;
       transition: all 0.1s;
 
@@ -314,14 +235,9 @@ const handleClickBtn = ({ informData, index, type }) => {
           font-size: 16px;
           line-height: 22px;
           letter-spacing: 0.6px;
-
           color: #999999;
           max-width: 80%;
           word-break: break-all;
-          white-space: wrap;
-        }
-
-        .sdk5-payload {
           white-space: pre-wrap;
         }
       }

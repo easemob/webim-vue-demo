@@ -9,7 +9,7 @@ function normalizeIds(values = []) {
 
 function getMemberUserId(member) {
   if (!member || typeof member !== 'object') return '';
-  return String(member.user?.userId || member.userId || '').trim();
+  return String(member.user?.userId || '').trim();
 }
 
 function getDefaultDirectedReceivers(options = {}) {

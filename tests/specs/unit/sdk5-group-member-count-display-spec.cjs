@@ -10,8 +10,13 @@ const groupDetails = fs.readFileSync(
 
 assert.match(
   groupDetails,
-  /const memberCountDisplay = computed\(\(\) => \{[\s\S]*?currentGroupDetail\.value\.memberCount[\s\S]*?getGroupDetailFromGroupList\.value\.memberCount[\s\S]*?\}\);/,
-  'Member count must consume the refreshed SDK 5.0 GroupDetail before the joined-group list snapshot.',
+  /const memberCountDisplay = computed\(\(\) => \{\s*return groupDetail\.value\.memberCount \?\? '-';\s*\}\);/s,
+  'Member count must be the exact SDK 5.0 GroupDetail.memberCount value.',
+);
+assert.doesNotMatch(
+  groupDetails,
+  /\b(?:currentGroupDetail|getGroupDetailFromGroupList)\b/,
+  'The view must not retain a second detail model or derive member counts from an older joined-group snapshot.',
 );
 assert.match(groupDetails, /\$\{\s*memberCountDisplay\s*\}\/\$\{maxUsersDisplay\}/s);
 

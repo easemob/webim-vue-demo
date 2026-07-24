@@ -1,4 +1,4 @@
-const { requireManager } = require('./client');
+const { requireManager, getClient } = require('./client');
 
 const builders = {
   text: 'createTextMessage',
@@ -29,4 +29,33 @@ async function sendMessage(message, options = {}) {
   return requireManager('chatManager').sendMessage(message, options);
 }
 
-module.exports = { createMessage, sendMessage };
+async function sendMessageByClient(message, options = {}) {
+  return getClient().sendMessage(message, options);
+}
+
+function setCurrentConversation(params) {
+  if (!params?.conversationId || !params?.conversationType) {
+    throw new Error('SDK 5.0 current conversation requires conversationId and conversationType');
+  }
+  requireManager('chatManager').setCurrentConversation({
+    conversationId: params.conversationId,
+    conversationType: params.conversationType,
+  });
+}
+
+function resetCurrentConversation() {
+  requireManager('chatManager').resetCurrentConversation();
+}
+
+function getCurrentConversation() {
+  return requireManager('chatManager').getCurrentConversation();
+}
+
+module.exports = {
+  createMessage,
+  sendMessage,
+  sendMessageByClient,
+  setCurrentConversation,
+  resetCurrentConversation,
+  getCurrentConversation,
+};

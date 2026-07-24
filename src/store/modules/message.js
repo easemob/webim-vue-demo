@@ -3,15 +3,17 @@ import _ from 'lodash';
 import {
   MESSAGE_STATUS_TYPE,
   CHANGE_MESSAGE_BODAY_TYPE,
-  CHAT_TYPE,
   MAX_MESSAGE_LIST_COUNT,
 } from '@/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { isDirectedMessage } from '@/utils/directedMessage';
 import eventEmitter from '@/utils/eventEmitter';
 import { shouldTriggerIncomingMessageEffects } from '@/utils/streamMessageSupport';
 
 const chatManager = () => requireManager('chatManager');
 const chatThreadManager = () => requireManager('chatThreadManager');
+const getChatThreadEntity = (chatThreadId) =>
+  chatThreadManager().getChatThread(chatThreadId);
 const messageIdOf = (message) => message?.msgServerId || message?.msgLocalId || '';
 
 const updateMessageReactionByKey = (state, listKey, messageId, reactions) => {
@@ -93,8 +95,8 @@ const describeThreadError = (error) => {
   if (!error) return null;
   return {
     message: error.message || '',
-    type: error.type || '',
-    code: error.code || error.status || '',
+    code: error.code || '',
+    details: error.details,
     name: error.name || '',
   };
 };
@@ -219,13 +221,13 @@ const Message = {
        */
       if (
         !state.messageIdsCollection[listKey] &&
-        message.conversationType === CHAT_TYPE.SINGLE
+        message.conversationType === CONVERSATION_TYPE.SINGLE
       ) {
         state.messageIdsCollection[listKey] = new Map();
       }
       if (
         message.sender?.userId === getCurrentUserId() &&
-        message.conversationType === CHAT_TYPE.SINGLE
+        message.conversationType === CONVERSATION_TYPE.SINGLE
       ) {
         state.messageIdsCollection[listKey].set(messageId, {
           [MESSAGE_STATUS_TYPE.READ_STATUS]: false,
@@ -302,6 +304,10 @@ const Message = {
     //清除某条会话消息
     CLEAR_SOMEONE_MESSAGE: (state, payload) => {
       state.messageList[payload] = [];
+    },
+    CLEAR_ALL_MESSAGES: (state) => {
+      state.messageList = {};
+      state.messageIdsCollection = {};
     },
     //修改本地原消息【撤回、删除、编辑】
     CHANGE_MESSAGE_BODAY: (state, payload) => {
@@ -442,8 +448,8 @@ const Message = {
         );
         if (message) {
           if (
-            conversationType === CHAT_TYPE.SINGLE ||
-            conversationType === CHAT_TYPE.GROUP
+            conversationType === CONVERSATION_TYPE.SINGLE ||
+            conversationType === CONVERSATION_TYPE.GROUP
           ) {
             chatManager()
               .sendMessageReadReceipts({
@@ -616,27 +622,11 @@ const Message = {
               pageSize: options.pageSize,
               searchDirection,
               error,
-              errorType: error.type,
+              errorCode: error.code,
+              errorDetails: error.details,
               errorMessage: error.message,
               errorStack: error.stack,
             });
-
-            // 处理INVALID_TOKEN错误
-            if (
-              error.type === 28 || // 错误类型28对应INVALID_TOKEN
-              error.message?.includes('INVALID_TOKEN') ||
-              error.message?.includes('Invalid token')
-            ) {
-              console.error('[History Message] 令牌无效，跳转到登录页面', {
-                conversationId,
-                conversationType,
-                error,
-              });
-              // 清除本地存储的登录信息
-              localStorage.removeItem('EASEIM_loginUser');
-              // 跳转到登录页面
-              window.location.href = '/login';
-            }
 
             reject(error);
           });
@@ -810,6 +800,205 @@ const Message = {
             reject(error);
           });
       });
+    },
+    fetchSupportedTranslationLanguages: async () => {
+      try {
+        const languages = await chatManager().getSupportedTranslationLanguages();
+        console.log('[Message Translate] getSupportedTranslationLanguages success', {
+          languages,
+        });
+        return languages;
+      } catch (error) {
+        console.error('[Message Translate] getSupportedTranslationLanguages failed', {
+          error,
+        });
+        throw error;
+      }
+    },
+    translateTextMessage: async (_, params) => {
+      const { message, targetLanguages } = params || {};
+      if (!message || message.type !== 'text') {
+        throw new Error('translateTextMessage 只支持 SDK 5.0 文本消息');
+      }
+      if (!Array.isArray(targetLanguages) || targetLanguages.length === 0) {
+        throw new Error('translateTextMessage 缺少 targetLanguages');
+      }
+      try {
+        const result = await chatManager().translateMessage({
+          message,
+          targetLanguages,
+        });
+        console.log('[Message Translate] translateMessage success', {
+          messageId: messageIdOf(message),
+          conversationId: message.conversationId,
+          conversationType: message.conversationType,
+          targetLanguages,
+          result,
+        });
+        return result;
+      } catch (error) {
+        console.error('[Message Translate] translateMessage failed', {
+          messageId: messageIdOf(message),
+          conversationId: message.conversationId,
+          conversationType: message.conversationType,
+          targetLanguages,
+          error,
+        });
+        throw error;
+      }
+    },
+    voiceMessageToText: async (_, params) => {
+      const { message, voiceParams } = params || {};
+      if (!message || message.type !== 'voice') {
+        throw new Error('voiceMessageToText 只支持 SDK 5.0 语音消息');
+      }
+      try {
+        const result = await chatManager().voiceMessageToText(
+          message.body,
+          voiceParams,
+        );
+        console.log('[Voice To Text] voiceMessageToText success', {
+          messageId: messageIdOf(message),
+          conversationId: message.conversationId,
+          conversationType: message.conversationType,
+          voiceBody: message.body,
+          voiceParams,
+          result,
+        });
+        return result;
+      } catch (error) {
+        console.error('[Voice To Text] voiceMessageToText failed', {
+          messageId: messageIdOf(message),
+          conversationId: message.conversationId,
+          conversationType: message.conversationType,
+          voiceBody: message.body,
+          voiceParams,
+          error,
+        });
+        throw error;
+      }
+    },
+    downloadMessageAttachment: async (_, params) => {
+      const { message } = params || {};
+      if (!message) {
+        throw new Error('downloadMessageAttachment 缺少 SDK 5.0 message');
+      }
+      try {
+        const result = await chatManager().downloadAttachment({ message });
+        console.log('[Attachment] downloadAttachment success', {
+          messageId: messageIdOf(message),
+          conversationId: message.conversationId,
+          conversationType: message.conversationType,
+          messageType: message.type,
+          filename: result?.filename,
+          mimeType: result?.mimeType,
+          size: result?.size,
+          downloadUrl: result?.downloadUrl,
+          result,
+        });
+        return result;
+      } catch (error) {
+        console.error('[Attachment] downloadAttachment failed', {
+          messageId: messageIdOf(message),
+          conversationId: message.conversationId,
+          conversationType: message.conversationType,
+          messageType: message.type,
+          message,
+          error,
+        });
+        throw error;
+      }
+    },
+    getPinnedMessageList: async (_, params) => {
+      const { conversationId, conversationType } = params || {};
+      if (!conversationId || !conversationType) {
+        throw new Error('getPinnedMessageList 缺少 conversationId 或 conversationType');
+      }
+      try {
+        const result = await chatManager().getPinnedMessageList({
+          conversationId,
+          conversationType,
+        });
+        console.log('[Pinned Message] getPinnedMessageList success', {
+          conversationId,
+          conversationType,
+          count: result?.items?.length || 0,
+          result,
+        });
+        return result;
+      } catch (error) {
+        console.error('[Pinned Message] getPinnedMessageList failed', {
+          conversationId,
+          conversationType,
+          error,
+        });
+        throw error;
+      }
+    },
+    getGroupMessageReadUsers: async (_, params) => {
+      const {
+        groupId,
+        messageId,
+        cursor = '',
+        pageSize = 20,
+      } = params || {};
+      if (!groupId || !messageId) {
+        throw new Error('getGroupMessageReadUsers 缺少 groupId 或 messageId');
+      }
+      const options = {
+        groupId,
+        messageId,
+        cursor,
+        pageSize,
+      };
+      try {
+        const result = await chatManager().getGroupMessageReadUsers({
+          groupId,
+          messageId,
+          cursor,
+          pageSize,
+        });
+        console.log('[Group Message Read] getGroupMessageReadUsers success', {
+          options,
+          count: result?.count,
+          userCount: result?.users?.length || 0,
+          result,
+        });
+        return result;
+      } catch (error) {
+        console.error('[Group Message Read] getGroupMessageReadUsers failed', {
+          options,
+          error,
+        });
+        throw error;
+      }
+    },
+    getGroupMessageReadReceipts: async (_, params) => {
+      const { groupId, messageIds } = params || {};
+      if (!groupId || !Array.isArray(messageIds) || messageIds.length === 0) {
+        throw new Error('getGroupMessageReadReceipts 缺少 groupId 或 messageIds');
+      }
+      const options = {
+        groupId,
+        messageIds,
+      };
+      try {
+        const result = await chatManager().getGroupMessageReadReceipts({
+          groupId,
+          messageIds,
+        });
+        console.log('[Group Message Read] getGroupMessageReadReceipts success', {
+          options,
+          result,
+        });
+        return result;
+      } catch (error) {
+        console.error('[Group Message Read] getGroupMessageReadReceipts failed', {
+          options,
+          error,
+        });
+        throw error;
+      }
     },
     fetchMessageReactionList: async ({ commit }, params) => {
       const { messageId, conversationType, groupId, key } = params || {};
@@ -1017,8 +1206,8 @@ const Message = {
       if (!chatThreadId) {
         throw new Error('joinMessageThread 缺少 chatThreadId');
       }
-      return callThreadApi('joinChatThread', { chatThreadId }, () =>
-        chatThreadManager().joinChatThread({ chatThreadId }),
+      return callThreadApi('ChatThread.join', { chatThreadId }, () =>
+        getChatThreadEntity(chatThreadId).join(),
       );
     },
     leaveMessageThread: async (_, params) => {
@@ -1026,8 +1215,8 @@ const Message = {
       if (!chatThreadId) {
         throw new Error('leaveMessageThread 缺少 chatThreadId');
       }
-      return callThreadApi('leaveChatThread', { chatThreadId }, () =>
-        chatThreadManager().leaveChatThread({ chatThreadId }),
+      return callThreadApi('ChatThread.leave', { chatThreadId }, () =>
+        getChatThreadEntity(chatThreadId).leave(),
       );
     },
     destroyMessageThread: async (_, params) => {
@@ -1035,8 +1224,8 @@ const Message = {
       if (!chatThreadId) {
         throw new Error('destroyMessageThread 缺少 chatThreadId');
       }
-      return callThreadApi('destroyChatThread', { chatThreadId }, () =>
-        chatThreadManager().destroyChatThread({ chatThreadId }),
+      return callThreadApi('ChatThread.destroy', { chatThreadId }, () =>
+        getChatThreadEntity(chatThreadId).destroy(),
       );
     },
     renameMessageThread: async (_, params) => {
@@ -1044,8 +1233,8 @@ const Message = {
       if (!chatThreadId || !name) {
         throw new Error('renameMessageThread 缺少参数');
       }
-      return callThreadApi('changeChatThreadName', { chatThreadId, name }, () =>
-        chatThreadManager().updateChatThreadName({ chatThreadId, name }),
+      return callThreadApi('ChatThread.updateName', { chatThreadId, name }, () =>
+        getChatThreadEntity(chatThreadId).updateName({ name }),
       );
     },
     fetchMessageThreadDetail: async (_, params) => {
@@ -1053,8 +1242,17 @@ const Message = {
       if (!chatThreadId) {
         throw new Error('fetchMessageThreadDetail 缺少 chatThreadId');
       }
-      return callThreadApi('getChatThreadDetail', { chatThreadId }, () =>
-        chatThreadManager().getChatThreadInfo({ chatThreadId }),
+      return callThreadApi('ChatThread.getInfo', { chatThreadId }, () =>
+        getChatThreadEntity(chatThreadId).getInfo(),
+      );
+    },
+    refreshMessageThreadDetail: async (_, params) => {
+      const { chatThreadId } = params || {};
+      if (!chatThreadId) {
+        throw new Error('refreshMessageThreadDetail 缺少 chatThreadId');
+      }
+      return callThreadApi('ChatThread.refresh', { chatThreadId }, () =>
+        getChatThreadEntity(chatThreadId).refresh(),
       );
     },
     fetchMessageThreadMembers: async (_, params) => {
@@ -1067,23 +1265,25 @@ const Message = {
         cursor,
         pageSize,
       };
-      return callThreadApi('getChatThreadMembers', options, () =>
-        chatThreadManager().getChatThreadMemberList(options),
+      return callThreadApi('ChatThread.getMemberList', options, () =>
+        getChatThreadEntity(chatThreadId).getMemberList({
+          cursor,
+          pageSize,
+        }),
       );
     },
     removeMessageThreadMember: async (_, params) => {
-      const { chatThreadId, username } = params || {};
-      if (!chatThreadId || !username) {
+      const { chatThreadId, memberId } = params || {};
+      if (!chatThreadId || !memberId) {
         throw new Error('removeMessageThreadMember 缺少参数');
       }
       const options = {
         chatThreadId,
-        username,
+        memberId,
       };
-      return callThreadApi('removeChatThreadMember', options, () =>
-        chatThreadManager().removeChatThreadMember({
-          chatThreadId,
-          memberId: username,
+      return callThreadApi('ChatThread.removeMember', options, () =>
+        getChatThreadEntity(chatThreadId).removeMember({
+          memberId,
         }),
       );
     },

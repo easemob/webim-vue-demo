@@ -15,15 +15,24 @@ test('message search entry exists in the current demo surface', () => {
   assert.match(messageView, /MessageSearchDrawer/);
   assert.match(messageView, /服务端消息搜索/);
   assert.match(messageView, /messageSearchDrawer/);
-  assert.match(messageView, /CHAT_TYPE\.SINGLE[\s\S]*CHAT_TYPE\.GROUP[\s\S]*CHAT_TYPE\.CHATROOM/);
+  assert.match(
+    messageView,
+    /CONVERSATION_TYPE\.SINGLE[\s\S]*CONVERSATION_TYPE\.GROUP[\s\S]*CONVERSATION_TYPE\.CHATROOM/,
+  );
+  assert.doesNotMatch(messageView, /\bCHAT_TYPE\b/);
   assert.match(messageView, /!routeQueryData\.value\.isChatThread/);
 });
 
-test('conversation search does not assume every SDK 5 message has a text msg field', () => {
+test('conversation search reads the SDK 5 last-message body and timestamp', () => {
   const content = read('src/components/SearchInput/index.vue');
 
-  assert.match(content, /String\(o\.lastMessage\?\.msg \?\? ''\)\.includes\(inputValue\.value\)/);
-  assert.doesNotMatch(content, /o\.lastMessage\?\.msg\.indexOf\(inputValue\.value\)/);
+  assert.match(
+    content,
+    /String\(getLastMessageSearchText\(o\.lastMessage\)\)\.includes\(inputValue\.value\)/,
+  );
+  assert.match(content, /message\?\.body/);
+  assert.match(content, /lastMessage\?\.timestamp/);
+  assert.doesNotMatch(content, /lastMessage\?\.(?:msg|time)\b|const \{ type, msg \}/);
 });
 
 test('message search uses a date range picker for optional time filtering', () => {
@@ -110,25 +119,23 @@ test('message search does not intercept keyword count or length before server', 
   assert.doesNotMatch(content, /maxlength="200"/);
 });
 
-test('message search surfaces service-not-enabled failures without fake success', () => {
+test('message search surfaces the SDK error without fake success or local rewording', () => {
   const content = read('src/views/Chat/components/Message/components/MessageSearchDrawer.vue');
 
-  assert.match(content, /服务端消息搜索功能未开通，请联系环信商务开通后再试/);
-  assert.match(content, /isSearchServiceNotEnabledError/);
-  assert.match(content, /searchErrorType\.value = isSearchServiceNotEnabled \? 'warning' : 'error'/);
+  assert.match(content, /const errorTip = getSearchErrorTip\(error\);/);
+  assert.match(content, /searchErrorType\.value = 'error';/);
   assert.match(content, /console\.error\('\[Message Search\] searchMessages failed'/);
-  assert.match(content, /ElMessage\[isSearchServiceNotEnabled \? 'warning' : 'error'\]\(errorTip\)/);
+  assert.match(content, /ElMessage\.error\(errorTip\)/);
+  assert.doesNotMatch(content, /服务端消息搜索功能未开通/);
   assert.doesNotMatch(content, /retry|模拟成功|mock success|fake success|fallback/i);
 });
 
-test('message search displays nested server validation errors directly', () => {
+test('message search retains the SDK runtime error text directly', () => {
   const content = read('src/views/Chat/components/Message/components/MessageSearchDrawer.vue');
 
-  assert.match(content, /parseSearchServerErrorData/);
-  assert.match(content, /getSearchServerDetailErrorText/);
-  assert.match(content, /details/);
-  assert.match(content, /detail\?\.error/);
-  assert.match(content, /getSearchServerDetailErrorText\(parsedServerErrorData\)/);
+  assert.match(content, /const getSearchErrorTip = \(error\) => getErrorMessageText\(error\);/);
+  assert.match(content, /return error\.message \|\| stringifyJson\(error\);/);
+  assert.doesNotMatch(content, /parseSearchServerErrorData|getSearchServerDetailErrorText/);
   assert.doesNotMatch(content, /getErrorMessageText\(error\) \|\| '服务端消息搜索失败'/);
   assert.doesNotMatch(content, /ElMessage\.error\('服务端消息搜索失败'\)/);
 });

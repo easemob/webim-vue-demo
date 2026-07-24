@@ -1,10 +1,7 @@
 import _ from 'lodash';
-import {
-  createInform,
-  checkLastMsgIsHasMention,
-} from '@/utils/handleSomeData/index';
+import { checkLastMsgIsHasMention } from '@/utils/handleSomeData/index';
 import { getCurrentUserId, requireManager } from '@/IM';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import {
   buildConversationDndDurationParams,
   buildConversationPushQueryParams,
@@ -111,6 +108,21 @@ const Conversation = {
           }
         });
     },
+    CLEAR_ALL_CONVERSATION_UNREAD_COUNT: (state) => {
+      [
+        state.conversationListFromLocal,
+        state.conversationListFromServer,
+      ].forEach((list) => {
+        list?.forEach((conversationItem) => {
+          conversationItem.unreadCount = 0;
+        });
+      });
+    },
+    CLEAR_ALL_CONVERSATIONS: (state) => {
+      state.conversationListFromLocal = [];
+      state.conversationListFromServer = [];
+      state.conversationListFromServerCursor = '';
+    },
     //清除会话@状态
     CLEAR_CONVERSATION_ITEM_MENTION_STATUS: (state, conversationId) => {
       state.conversationListFromLocal.map((conversationItem) => {
@@ -157,9 +169,9 @@ const Conversation = {
           (c) => c.conversationId === pinnedItem.conversationId,
         );
         if (existingConversation) {
-          existingConversation.isPinned = pinnedItem.isPinned ?? true;
-          existingConversation.pinnedTimestamp = existingConversation.isPinned
-            ? pinnedItem.pinnedTimestamp || Date.now()
+          existingConversation.isPinned = pinnedItem.isPinned;
+          existingConversation.pinnedTimestamp = pinnedItem.isPinned
+            ? pinnedItem.pinnedTimestamp
             : 0;
         }
       });
@@ -185,10 +197,15 @@ const Conversation = {
     },
   },
   actions: {
-    //添加新系统通知
-    createNewInform: ({ commit }, params) => {
-      const { fromType, informContent } = params;
-      commit('UPDATE_INFORM_LIST', createInform(fromType, informContent));
+    // System notifications retain the original SDK 5.0 event name and payload.
+    createNewInform: ({ commit }, { eventName, payload }) => {
+      commit('UPDATE_INFORM_LIST', {
+        sdkEventName: eventName,
+        sdkPayload: payload,
+        receivedAt: Date.now(),
+        untreated: 1,
+        operationStatus: 0,
+      });
     },
     //从本地加载会话列表数据
     getConversationListFromLocal: async ({ dispatch, commit }) => {
@@ -219,7 +236,7 @@ const Conversation = {
         commit('SET_CONVERSATION_LIST_FROM_SERVER_PAGE_CURSOR', '');
         
         const userIds = _.chain(allConversations)
-          .filter({ conversationType: CHAT_TYPE.SINGLE })
+          .filter({ conversationType: CONVERSATION_TYPE.SINGLE })
           .map('conversationId')
           .value();
         dispatch('fetchContactsUserInfos', userIds);
@@ -227,6 +244,40 @@ const Conversation = {
         dispatch('callGroupDetailWithConversationId', allConversations);
       } catch (error) {
         console.error('获取会话列表失败', error);
+      }
+    },
+    refreshConversationListFromServer: async ({ commit, dispatch }, params = {}) => {
+      const refreshParams = {
+        includeEmpty: params.includeEmpty !== false,
+      };
+      try {
+        const conversations = await chatManager().refreshSessionList(refreshParams);
+        commit('GET_CONVERSATION_LIST_FROM_SERVER', {
+          isInit: true,
+          conversationListData: conversations,
+        });
+        commit('SET_CONVERSATION_LIST_FROM_SERVER_PAGE_CURSOR', '');
+
+        const userIds = _.chain(conversations)
+          .filter({ conversationType: CONVERSATION_TYPE.SINGLE })
+          .map('conversationId')
+          .value();
+        dispatch('fetchContactsUserInfos', userIds);
+        dispatch('callGroupDetailWithConversationId', conversations);
+        console.log('[Conversation] refreshSessionList success', {
+          refreshParams,
+          count: conversations.length,
+          currentUser: getCurrentUserId(),
+          conversations,
+        });
+        return conversations;
+      } catch (error) {
+        console.error('[Conversation] refreshSessionList failed', {
+          refreshParams,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        throw error;
       }
     },
     //获取服务端置顶会话列表
@@ -273,11 +324,13 @@ const Conversation = {
             (item) =>
               item.conversationId === conversationId &&
               item.conversationType === conversationType,
-          );
+        );
         if (!conversation) {
-          console.error('[Conversation] SDK 5.0 cache has no conversation snapshot', {
+          console.warn('[Conversation] SDK 5.0 cache has no conversation snapshot', {
             conversationId,
             conversationType,
+            currentUser: getCurrentUserId(),
+            impact: 'non-blocking local conversation refresh skipped',
           });
           return;
         }
@@ -288,7 +341,7 @@ const Conversation = {
           },
         });
       } catch (error) {
-        console.error('[Conversation] getLocalConversation failed', {
+        console.error('[Conversation] getConversationList SDK 5.0 snapshot failed', {
           conversationId,
           conversationType,
           error,
@@ -436,6 +489,37 @@ const Conversation = {
         });
       }
     },
+    clearAllConversationUnreadMessageCount: async ({ commit }) => {
+      try {
+        await chatManager().clearAllConversationUnreadMessageCount();
+        commit('CLEAR_ALL_CONVERSATION_UNREAD_COUNT');
+        console.log('[Conversation] clearAllConversationUnreadMessageCount success', {
+          currentUser: getCurrentUserId(),
+        });
+      } catch (error) {
+        console.error('[Conversation] clearAllConversationUnreadMessageCount failed', {
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        throw error;
+      }
+    },
+    clearAllMessagesAndConversations: async ({ commit }) => {
+      try {
+        await chatManager().clearAllMessagesAndConversations();
+        commit('CLEAR_ALL_CONVERSATIONS');
+        commit('CLEAR_ALL_MESSAGES');
+        console.log('[Conversation] clearAllMessagesAndConversations success', {
+          currentUser: getCurrentUserId(),
+        });
+      } catch (error) {
+        console.error('[Conversation] clearAllMessagesAndConversations failed', {
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        throw error;
+      }
+    },
     //清除会话@提及状态
     clearConversationMention: async ({ state, commit }, params) => {
       const { conversationId, conversationType, customField } = params;
@@ -447,10 +531,9 @@ const Conversation = {
       { dispatch },
       conversationList,
     ) => {
-      // 仅群聊会话可调用 getGroupInfo（/chatgroups）。聊天室应使用 getChatRoomDetails 等接口，混用会触发 400：
-      // Illegal arguments: chatType is not required: group
+      // 仅群聊会话可调用 SDK 5.0 `Group.getDetail()`。聊天室应使用自己的公开 ChatRoom 详情 API，混用会触发 400：
       const groupConversationIds = _.chain(conversationList)
-        .filter((item) => item.conversationType === CHAT_TYPE.GROUP)
+        .filter((item) => item.conversationType === CONVERSATION_TYPE.GROUP)
         .map('conversationId')
         .value();
       try {

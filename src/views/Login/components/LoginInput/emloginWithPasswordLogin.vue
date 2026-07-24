@@ -6,7 +6,11 @@ import { fetchLoginUsersInitData } from '@/IM/listener';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { usePlayRing } from '@/hooks';
-import { redirectToLoginClearImSession } from '@/utils/imAuthRedirect';
+import {
+  isImAuthFailedReason,
+  redirectToLoginClearImSession,
+} from '@/utils/imAuthRedirect';
+import { getSdk5ErrorMessage } from '@/utils/sdk5ErrorInfo';
 const store = useStore();
 const router = useRouter();
 const loginValue = reactive({
@@ -55,17 +59,9 @@ const loginIM = async () => {
   } catch (error) {
     console.error('[Login] token login failed', error);
 
-    if (error.type === 28 || error.message === 'INVALID_TOKEN' || error.message?.includes('Invalid token')) {
+    if (isImAuthFailedReason(error)) {
       ElMessage({
-        title: '登录过期',
-        message: '登录令牌无效或已过期，请重新登录',
-        type: 'error',
-        center: true,
-      });
-      redirectToLoginClearImSession();
-    } else if (error.type === 2 || error.message?.includes('Auth failed')) {
-      ElMessage({
-        message: '认证失败，请检查环信 ID 和 Token',
+        message: getSdk5ErrorMessage(error, '认证失败，请检查环信 ID 和 Token'),
         type: 'error',
         center: true,
       });
@@ -73,7 +69,7 @@ const loginIM = async () => {
     } else {
       // 显示实际的登录错误信息
       ElMessage({
-        message: `${error?.data?.message || error?.message || '登录失败'}`,
+        message: getSdk5ErrorMessage(error, '登录失败'),
         type: 'error',
         center: true,
       });

@@ -1,872 +1,777 @@
 import { ElMessage } from 'element-plus';
-import {
-  CHAT_TYPE,
-  GROUP_OPERATION_TYPE,
-  GROUP_ROLE_TYPE,
-} from '@/IM/constant';
 import { getCurrentUserId, requireManager } from '@/IM';
-import {
-  DEFAULT_GROUP_MEMBERS_PAGE_SIZE,
-  buildModifyGroupPayload,
-  normalizeFetchedGroupMembers,
-  getNextJoinedGroupsPage,
-  normalizeGroupSharedFileList,
-} from '@/utils/groupDocAdapters';
+
+const DEFAULT_GROUP_MEMBERS_PAGE_SIZE = 50;
+
 const groupManager = () => requireManager('groupManager');
+
 const Groups = {
   state: {
-    groupsInfos: {}, //计划废弃
-    joinedGroup: {
-      pagingParams: {
-        pageNum: 0,
-        pageSize: 20,
-      },
-      joinedGroupList: [],
-      joinedGroupListTotal: 0,
-      publicPagingCursor: '',
-      publicGroupList: [],
-      publicGroupListTotal: 0,
-      joinedGroupCount: 0,
-    },
-    groupDetails: new Map(), //key:groupId value:groupDetail
-    groupMembers: new Map(), //key:groupId value:groupMemberList
-    groupSharedFiles: new Map(), //key:groupId value:sharedFileList
+    joinedGroups: [],
+    groupSummaries: new Map(),
+    groupDetails: new Map(),
+    groupMembers: new Map(),
+    groupAdmins: new Map(),
+    groupBlocklists: new Map(),
+    groupMuteLists: new Map(),
+    groupMuteListMembership: new Map(),
+    groupAnnouncements: new Map(),
+    groupSharedFiles: new Map(),
+    groupMemberAttributes: new Map(),
+    groupAllowlists: new Map(),
+    groupAllowlistMembership: new Map(),
   },
   mutations: {
-    SET_JOINED_GROUP: (state, payload) => {
-      const { total, entities: joinedGroupList } = payload;
-      state.joinedGroup.pagingParams.pageNum++;
-      state.joinedGroup.joinedGroupListTotal = total;
-      state.joinedGroup.joinedGroupList = _.unionBy(
-        [...joinedGroupList],
-        [...state.joinedGroup.joinedGroupList],
-        (g) => g.groupId,
-      );
-      state.joinedGroup.joinedGroupCount = total;
+    SET_JOINED_GROUPS: (state, groups) => {
+      state.joinedGroups = groups;
     },
     UPSERT_JOINED_GROUP: (state, group) => {
-      const existingIndex = state.joinedGroup.joinedGroupList.findIndex(
-        (item) => item.groupId === group.groupId,
+      state.joinedGroups = [
+        group,
+        ...state.joinedGroups.filter((item) => item.groupId !== group.groupId),
+      ];
+    },
+    REMOVE_GROUP: (state, groupId) => {
+      state.joinedGroups = state.joinedGroups.filter(
+        (group) => group.groupId !== groupId,
       );
-      if (existingIndex >= 0) {
-        state.joinedGroup.joinedGroupList.splice(existingIndex, 1, {
-          ...state.joinedGroup.joinedGroupList[existingIndex],
-          ...group,
-        });
-      } else {
-        state.joinedGroup.joinedGroupList.unshift(group);
-        state.joinedGroup.joinedGroupListTotal += 1;
-        state.joinedGroup.joinedGroupCount += 1;
-      }
+      state.groupSummaries.delete(groupId);
+      state.groupDetails.delete(groupId);
+      state.groupMembers.delete(groupId);
+      state.groupAdmins.delete(groupId);
+      state.groupBlocklists.delete(groupId);
+      state.groupMuteLists.delete(groupId);
+      state.groupMuteListMembership.delete(groupId);
+      state.groupAnnouncements.delete(groupId);
+      state.groupSharedFiles.delete(groupId);
+      state.groupMemberAttributes.delete(groupId);
+      state.groupAllowlists.delete(groupId);
+      state.groupAllowlistMembership.delete(groupId);
     },
-    RESET_JOINED_GROUP_LIST: (state, payload = {}) => {
-      const { pageNum = 0 } = payload;
-      state.joinedGroup.pagingParams.pageNum = pageNum;
-      state.joinedGroup.joinedGroupList = [];
-      state.joinedGroup.joinedGroupListTotal = 0;
-    },
-    SET_JOINED_GROUP_COUNT: (state, total) => {
-      state.joinedGroup.joinedGroupCount = Number(total || 0);
-    },
-    SET_PUBLIC_GROUPS: (state, payload) => {
-      const { cursor = '', entities = [], isInit = false } = payload;
-      state.joinedGroup.publicPagingCursor = cursor;
-      state.joinedGroup.publicGroupList = isInit
-        ? [...entities]
-        : _.unionBy(
-            [...state.joinedGroup.publicGroupList],
-            [...entities],
-            (group) => group.groupid,
-          );
-      state.joinedGroup.publicGroupListTotal =
-        state.joinedGroup.publicGroupList.length;
-    },
-    UPDATE_GROUP_SHIELD_STATUS: (state, payload) => {
-      const { groupId, shieldgroup } = payload;
-      state.joinedGroup.joinedGroupList.forEach((groupItem) => {
-        if (groupItem.groupId === groupId) {
-          groupItem.shieldgroup = Boolean(shieldgroup);
-        }
+    SET_GROUP_DETAILS: (state, { groupDetails }) => {
+      groupDetails.forEach((groupDetail) => {
+        state.groupDetails.set(groupDetail.groupId, groupDetail);
       });
-      if (!state.groupDetails.has(groupId)) {
-        state.groupDetails.set(groupId, { shieldgroup: Boolean(shieldgroup) });
-      } else {
-        state.groupDetails.get(groupId).shieldgroup = Boolean(shieldgroup);
-      }
     },
-    SET_GROUP_DETAILS: (state, payload) => {
-      const { groupDetailsList } = payload;
-      groupDetailsList.length > 0 &&
-        groupDetailsList.forEach((groupDetail) => {
-          state.groupDetails.set(groupDetail.groupId, groupDetail);
-        });
+    SET_GROUP_SUMMARY: (state, { groupId, summary }) => {
+      state.groupSummaries.set(groupId, summary);
     },
-    SET_GROUPS_MEMBERS: (state, payload) => {
-      const { groupId, members } = payload;
-      state.groupMembers.set(groupId, [...members]);
-      //同步更新群组列表里面的群人数
-      if (state.joinedGroup.joinedGroupList.length) {
-        state.joinedGroup.joinedGroupList.forEach((groupItem) => {
-          if (groupItem.groupId === groupId) {
-            groupItem.memberCount = members.length;
-          }
-        });
-      }
+    SET_GROUP_MEMBERS: (state, { groupId, members }) => {
+      state.groupMembers.set(groupId, members);
     },
-    SET_GROUPS_BLIACK_LIST: (state, payload) => {
-      const { groupId, blacklist } = payload;
-      const normalizedBlacklist = (blacklist || []).map((entry) => entry?.user?.userId).filter(Boolean);
-      if (!state.groupDetails.has(groupId)) {
-        state.groupDetails.set(groupId, { blacklist: normalizedBlacklist });
-      }
-      state.groupDetails.get(groupId).blacklist = normalizedBlacklist;
+    SET_GROUP_ADMINS: (state, { groupId, admins }) => {
+      state.groupAdmins.set(groupId, admins);
     },
-    SET_GROUPS_MUTE_LIST: (state, payload) => {
-      const { groupId, mutelist } = payload;
-      const normalizedMutelist = (mutelist || []).map((item) => ({
-        userId: item.user.userId,
-        muteExpire: item.muteExpire,
-        muteDuration: item.muteDuration,
-      }));
-      if (!state.groupDetails.has(groupId)) {
-        state.groupDetails.set(groupId, { mutelist: normalizedMutelist });
-      }
-      state.groupDetails.get(groupId).mutelist = normalizedMutelist;
+    SET_GROUP_BLOCKLIST: (state, { groupId, blocklist }) => {
+      state.groupBlocklists.set(groupId, blocklist);
     },
-    SET_GROUPS_ANNOUN: (state, payload) => {
-      const { groupId, announcement } = payload;
-      if (!state.groupDetails.has(groupId)) {
-        state.groupDetails.set(groupId, { announcement: announcement });
-      }
-      state.groupDetails.get(groupId).announcement = announcement;
+    SET_GROUP_MUTE_LIST: (state, { groupId, muteList }) => {
+      state.groupMuteLists.set(groupId, muteList);
     },
-    SET_GROUP_SHARED_FILES: (state, payload) => {
-      const { groupId, files } = payload;
-      state.groupSharedFiles.set(groupId, [...files]);
+    SET_GROUP_MUTE_LIST_MEMBERSHIP: (state, { groupId, inMuteList }) => {
+      state.groupMuteListMembership.set(groupId, inMuteList);
     },
-    //设置用户在群组中的群组属性
-    SET_GROUP_MEMBERS_INFO: (state, payload) => {
-      const { groupId, inGroupInfo } = payload;
-      let groupMemberInfo = {};
-      inGroupInfo.length > 0 &&
-        inGroupInfo.forEach(
-          (item) => (groupMemberInfo = Object.assign(groupMemberInfo, item)),
-        );
-      if (!state.groupDetails.has(groupId)) {
-        state.groupDetails.set(groupId, { groupMemberInfo });
-      }
-      state.groupDetails.get(groupId).groupMemberInfo = groupMemberInfo;
+    SET_GROUP_ANNOUNCEMENT: (state, { groupId, announcement }) => {
+      state.groupAnnouncements.set(groupId, announcement);
     },
-    //更新本地缓存群组信息
-    UPDATE_CACHE_GROUP_INFO: (state, payload) => {
-      const { groupId, type, params } = payload;
-      //更新群组列表内数据
-      if (type === 'name') {
-        state.joinedGroup.joinedGroupList.length > 0 &&
-          state.joinedGroup.joinedGroupList.forEach((groupItem) => {
-            if (groupItem.groupId === groupId) {
-              groupItem.name = params;
-            }
-          });
-        state.groupDetails.has(groupId) &&
-          (state.groupDetails.get(groupId).name = params);
-      }
-      //更新群组详情内的数据
-      if (type === 'groupDescription') {
-        state.joinedGroup.joinedGroupList.length > 0 &&
-          state.joinedGroup.joinedGroupList.forEach((groupItem) => {
-            if (groupItem.groupId === groupId) {
-              groupItem.description = params;
-            }
-          });
-        state.groupDetails.has(groupId) &&
-          (state.groupDetails.get(groupId).description = params);
-      }
-      if (type === 'groupAvatar') {
-        state.joinedGroup.joinedGroupList.length > 0 &&
-          state.joinedGroup.joinedGroupList.forEach((groupItem) => {
-            if (groupItem.groupId === groupId) {
-              groupItem.avatarUrl = params;
-            }
-          });
-        state.groupDetails.has(groupId) &&
-          (state.groupDetails.get(groupId).avatarUrl = params);
-      }
-      if (type === 'groupExt') {
-        state.joinedGroup.joinedGroupList.length > 0 &&
-          state.joinedGroup.joinedGroupList.forEach((groupItem) => {
-            if (groupItem.groupId === groupId) {
-              groupItem.ext = params;
-            }
-          });
-        if (state.groupDetails.has(groupId)) {
-          state.groupDetails.get(groupId).ext = params;
-        }
-      }
-      //更新群成员数
-      if (type === 'groupMemberCount') {
-        state.joinedGroup.joinedGroupList.length > 0 &&
-          state.joinedGroup.joinedGroupList.forEach((groupItem) => {
-            if (groupItem.groupId === groupId) {
-              groupItem.memberCount = params;
-            }
-          });
-        state.groupDetails.has(groupId) &&
-          (state.groupDetails.get(groupId).memberCount = params);
-      }
+    SET_GROUP_SHARED_FILES: (state, { groupId, result }) => {
+      state.groupSharedFiles.set(groupId, result.items);
     },
-    //更新本地缓存群组成员
-    UPDATE_GROUP_MEMBERS: (state, payload) => {
-      const { groupId, member, type } = payload;
-      switch (type) {
-        case GROUP_OPERATION_TYPE.MEMBER_PRESENCE:
-          {
-            state.groupMembers.has(groupId) &&
-              state.groupMembers.get(groupId).push({ member });
-          }
-          break;
-        case GROUP_OPERATION_TYPE.MEMBER_ABSENCE:
-          {
-            if (
-              state.groupMembers.has(groupId) &&
-              state.groupMembers.get(groupId).length > 0
-            ) {
-              const _index = state.groupMembers
-                .get(groupId)
-                .findIndex(
-                  (item) =>
-                    item.userId === member,
-                );
-              if (_index > -1) {
-                state.groupMembers.get(groupId).splice(_index, 1);
-              }
-            }
-          }
-          break;
-        default:
-          break;
-      }
+    SET_GROUP_MEMBER_ATTRIBUTES: (state, { groupId, attributes }) => {
+      state.groupMemberAttributes.set(groupId, {
+        ...(state.groupMemberAttributes.get(groupId) || {}),
+        ...(attributes || {}),
+      });
     },
-    //更新群组管理员
-    UPDATE_GORUPS_ADMIN: (state, payload) => {
-      const { type, groupId, userId } = payload;
-      state.joinedGroup.joinedGroupList.length > 0 &&
-        state.joinedGroup.joinedGroupList.forEach((groupItem) => {
-          if (groupItem.groupId === groupId && userId === getCurrentUserId()) {
-            if (type === GROUP_OPERATION_TYPE.SET_ADMIN) {
-              groupItem.role = GROUP_ROLE_TYPE.ADMIN;
-            } else if (type === GROUP_OPERATION_TYPE.REMOVE_ADMIN) {
-              groupItem.role = GROUP_ROLE_TYPE.MEMBER;
-            }
-          }
-        });
-      if (type === GROUP_OPERATION_TYPE.SET_ADMIN) {
-        if (state.groupDetails.has(groupId)) {
-          const adminlist = state.groupDetails.get(groupId).adminlist || [];
-          if (!adminlist.includes(userId)) {
-            state.groupDetails.get(groupId).adminlist = [...adminlist, userId];
-          }
-        }
-      } else if (type === GROUP_OPERATION_TYPE.REMOVE_ADMIN) {
-        if (
-          state.groupDetails.has(groupId) &&
-          state.groupDetails.get(groupId).adminlist?.length > 0
-        ) {
-          const _index = state.groupDetails
-            .get(groupId)
-            .adminlist.findIndex((item) => item === userId);
-          state.groupDetails.get(groupId).adminlist.splice(_index, 1);
-        }
-      }
+    SET_GROUP_ALLOWLIST: (state, { groupId, allowlist }) => {
+      state.groupAllowlists.set(groupId, allowlist);
     },
-    //删除缓存群组列表
-    DELETE_JOINED_GROUP_LIST: (state, payload) => {
-      const { groupId } = payload;
-      if (state.joinedGroup.joinedGroupList.length > 0) {
-        const _index = state.joinedGroup.joinedGroupList.findIndex(
-          (item) => item.groupId === groupId,
-        );
-        if (_index > -1) {
-          state.joinedGroup.joinedGroupList.splice(_index, 1);
-          state.joinedGroup.joinedGroupListTotal = Math.max(
-            state.joinedGroup.joinedGroupListTotal - 1,
-            0,
-          );
-          state.joinedGroup.joinedGroupCount = Math.max(
-            state.joinedGroup.joinedGroupCount - 1,
-            0,
-          );
-        }
-      }
+    SET_GROUP_ALLOWLIST_MEMBERSHIP: (state, { groupId, inAllowlist }) => {
+      state.groupAllowlistMembership.set(groupId, inAllowlist);
     },
   },
   actions: {
     addCreatedGroupToJoinedList: async ({ commit }, groupId) => {
-      const groupDetail = await groupManager().getGroupInfo({ groupId });
+      const groupDetail = await groupManager().getGroup(groupId).getDetail();
       commit('UPSERT_JOINED_GROUP', groupDetail);
-      commit('SET_GROUP_DETAILS', { groupDetailsList: [groupDetail] });
+      commit('SET_GROUP_DETAILS', { groupDetails: [groupDetail] });
+      console.log('[SDK 5.0 Group] getDetail after create', {
+        groupId,
+        currentUser: getCurrentUserId(),
+        groupDetail,
+      });
+      return groupDetail;
     },
-    //从服务端获取加入的群组列表
-    fetchJoinedGroupListFromServer: async (
-      { state, dispatch, commit },
-      params = {},
-    ) => {
-      const {
-        pagingParams: { pageSize },
-      } = state.joinedGroup;
-      const { startPageNum, reset = false } = params;
+    readJoinedGroupSnapshot: async ({ dispatch, commit }) => {
       try {
-        const shouldReset = reset || startPageNum === 0;
-        if (shouldReset) {
-          commit('RESET_JOINED_GROUP_LIST', {
-            pageNum: startPageNum !== undefined ? startPageNum : 0,
-          });
+        const groups = groupManager().getJoinedGroupList();
+        commit('SET_JOINED_GROUPS', groups);
+        console.log('[SDK 5.0 Group] getJoinedGroupList success', {
+          currentUser: getCurrentUserId(),
+          groups,
+        });
+        if (groups.length > 0) {
+          await dispatch(
+            'fetchGroupDetailFromServer',
+            groups.map((group) => group.groupId),
+          );
         }
-        const nextPageNum =
-          startPageNum !== undefined
-            ? startPageNum
-            : getNextJoinedGroupsPage(state.joinedGroup);
-        const entities = groupManager().getJoinedGroupList();
-        const total = entities.length;
-        commit('SET_JOINED_GROUP_COUNT', total);
-        if (entities?.length === 0) return;
-        commit('SET_JOINED_GROUP', { total, entities });
-        const groupIds = _.map(entities, 'groupId');
-        if (groupIds?.length === 0) return;
-        dispatch('fetchGroupDetailFromServer', groupIds).catch(() => {});
+        return groups;
       } catch (error) {
-        console.error('加入的群组列表获取失败', error);
+        console.error('[SDK 5.0 Group] getJoinedGroupList failed', {
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        throw error;
       }
     },
-    //从服务端获取群组详情
+    fetchJoinedGroupListFromServer: async ({ dispatch }) => {
+      return dispatch('readJoinedGroupSnapshot');
+    },
+    readGroupSummarySnapshot: async ({ commit }, groupId) => {
+      try {
+        const summary = groupManager().getGroup(groupId).getSummary();
+        commit('SET_GROUP_SUMMARY', { groupId, summary });
+        console.log('[SDK 5.0 Group] getSummary success', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          summary,
+        });
+        return summary;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] getSummary failed', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        throw error;
+      }
+    },
     fetchGroupDetailFromServer: async ({ commit }, groupIds = []) => {
-      let groupDetails = [];
-      async function fetchDetailsForGroupIds(groupIdArray) {
-        try {
-          const results = await Promise.all(
-            groupIdArray.map((groupId) => groupManager().getGroupInfo({ groupId })),
-          );
-          groupDetails = groupDetails.concat(results);
-          commit('SET_GROUP_DETAILS', {
-            groupDetailsList: groupDetails,
-          });
-        } catch (error) {
-          console.error('[Group Details] fetchGroupDetailFromServer failed', {
-            groupIds: groupIdArray,
-            currentUser: getCurrentUserId(),
-            error,
-          });
-          throw error;
-        }
+      const fulfilledGroupDetails = [];
+      const failedGroupDetails = [];
+
+      for (const groupIdsChunk of _.chunk(groupIds, 20)) {
+        const results = await Promise.allSettled(
+          groupIdsChunk.map(async (groupId) => ({
+            groupId,
+            groupDetail: await groupManager().getGroup(groupId).getDetail(),
+          })),
+        );
+
+        results.forEach((result, index) => {
+          const groupId = groupIdsChunk[index];
+          if (result.status === 'fulfilled') {
+            fulfilledGroupDetails.push(result.value.groupDetail);
+            return;
+          }
+          failedGroupDetails.push({ groupId, error: result.reason });
+        });
       }
 
-      if (groupIds.length > 1) {
-        const groupIdsArr = _.chunk([...groupIds], 20);
-        for (const groupIdsChunk of groupIdsArr) {
-          await fetchDetailsForGroupIds(groupIdsChunk);
-        }
-      } else {
-        await fetchDetailsForGroupIds(groupIds);
+      if (fulfilledGroupDetails.length > 0) {
+        commit('SET_GROUP_DETAILS', { groupDetails: fulfilledGroupDetails });
       }
-    },
-    //获取群组成员
-    fetchGroupsMemberFromServer: async (
-      { dispatch, commit },
-      { groupId, chatType },
-    ) => {
-      if (!getCurrentUserId()) {
-        console.error('[Group Members] 用户未登录，无法获取群组成员', {
-          groupId,
-          chatType,
+      if (failedGroupDetails.length > 0) {
+        console.error('[SDK 5.0 Group] getDetail partial failed', {
+          groupIds,
+          failedGroupDetails,
+          currentUser: getCurrentUserId(),
         });
-        return;
       }
-      // 仅群聊调用 getGroupInfo；与 CHAT_TYPE.GROUP（'groupChat'）对齐
-      if (chatType !== CHAT_TYPE.GROUP) {
+      return { fulfilledGroupDetails, failedGroupDetails };
+    },
+    fetchGroupsMemberFromServer: async ({ commit }, { groupId }) => {
+      if (!getCurrentUserId()) {
+        console.error('[SDK 5.0 Group] getMembers skipped without login', { groupId });
         return;
       }
       try {
         let cursor = '';
-        let members = [];
+        const members = [];
         do {
           const result = await groupManager().getGroup(groupId).getMembers({
             cursor,
             pageSize: DEFAULT_GROUP_MEMBERS_PAGE_SIZE,
           });
-          const fetchedMembers = normalizeFetchedGroupMembers(
-            result?.items || [],
-          );
-          members = members.concat(fetchedMembers);
-          cursor = result?.cursor || '';
+          members.push(...result.items);
+          cursor = result.cursor;
         } while (cursor);
-        commit('SET_GROUPS_MEMBERS', {
+        commit('SET_GROUP_MEMBERS', { groupId, members });
+        console.log('[SDK 5.0 Group] getMembers success', {
           groupId,
+          currentUser: getCurrentUserId(),
           members,
         });
+        return members;
       } catch (error) {
-        console.error('[Group Members] getGroupMembers failed', {
+        console.error('[SDK 5.0 Group] getMembers failed', {
           groupId,
-          chatType,
-          error,
-        });
-      }
-    },
-    fetchPublicGroupListFromServer: async ({ state, commit }, params = {}) => {
-      const { limit = 20, cursor, reset = false } = params;
-      try {
-        const nextCursor =
-          cursor !== undefined
-            ? cursor
-            : reset
-            ? ''
-            : state.joinedGroup.publicPagingCursor;
-        const result = await groupManager().getPublicGroupList({
-          pageSize: limit,
-          cursor: nextCursor,
-        });
-        commit('SET_PUBLIC_GROUPS', {
-          cursor: result?.cursor || '',
-          entities: result?.items || [],
-          isInit: reset || nextCursor === '',
-        });
-        return result || {};
-      } catch (error) {
-        console.error('公开群列表获取失败', error);
-        throw error;
-      }
-    },
-    fetchJoinedGroupCountFromServer: async ({ commit }) => {
-      try {
-        const total = groupManager().getJoinedGroupList().length;
-        commit('SET_JOINED_GROUP_COUNT', total);
-        return total;
-      } catch (error) {
-        console.error('群组数量获取失败', error);
-        throw error;
-      }
-    },
-    //获取登录用户在某群内的群组属性
-    fetchInTheGroupInfoFromServer: async ({ dispatch, commit }, groupId) => {
-      try {
-        let options = {
-          groupId: groupId,
-          userId: getCurrentUserId(),
-        };
-        const data = await groupManager().getGroupMembersAttributes(options);
-        commit('SET_GROUP_MEMBERS_INFO', {
-          groupId: groupId,
-          inGroupInfo: [{ [getCurrentUserId()]: { nickName: data.nickName } }],
-        });
-      } catch (error) {
-        console.error('>>>>>群组属性获取失败', error);
-      }
-    },
-    //批量获取群成员群内群组属性
-    fetchGroupMemberAttributesFromServer: async (
-      { dispatch, commit },
-      params,
-    ) => {
-      const { groupId, members } = params;
-      const membersList = _.chunk(members, 10);
-
-      const queue = [];
-      while (membersList.length) {
-        const list = membersList.shift();
-        const result = await groupManager().getGroupMembersAttributes({
-            groupId,
-            userIds: _.flatten(_.map(list, _.values)),
-          });
-        queue.push(result);
-      }
-
-      if (queue.length > 0) {
-        const groupUsersInfo = _.compact(queue);
-        // 处理嵌套数据结构并提交到用户信息模块
-        _.forEach(groupUsersInfo, (userObj) => {
-          _.forEach(userObj, (info, userId) => {
-            if (info?.nickName) {
-              commit('UsersProfile/UPDATE_USER_PROFILE', {
-                userId,
-                sourceType: 'group',
-                groupId: params.groupId,
-                profile: { nickName: info.nickName },
-              });
-            }
-          });
-        });
-      }
-    },
-    //设置登录用户在某群的群组属性
-    setInTheGroupInfo: async ({ commit }, params) => {
-      const { groupId, nickName } = params;
-      try {
-        await groupManager().setGroupMemberAttributes({
-          groupId: groupId,
-          userId: getCurrentUserId(),
-          memberAttributes: {
-            nickName,
-          },
-        });
-        //通知用户信息管理模块更新群内用户属性。
-        commit('UsersProfile/UPDATE_USER_PROFILE', {
-          userId: getCurrentUserId(),
-          sourceType: 'group',
-          groupId: params.groupId,
-          profile: { nickName: nickName },
-        });
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    //获取群公告
-    fetchAnnounmentFromServer: async ({ dispatch, commit }, groupId) => {
-      const option = {
-        groupId: groupId,
-      };
-      try {
-        const data = await groupManager().getGroupAnnouncement(option);
-        commit('SET_GROUPS_ANNOUN', {
-          groupId: groupId,
-          announcement: data.announcement,
-        });
-      } catch (error) {
-        console.error('>>>>>群组公告获取失败', error);
-      }
-    },
-    //群黑名单
-    fetchGroupsBlackListFromServer: async ({ commit }, groupId) => {
-      try {
-        const data = await groupManager().getGroup(groupId).getBlocklist();
-        commit('SET_GROUPS_BLIACK_LIST', {
-          groupId: groupId,
-          blacklist: data,
-        });
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    //群禁言列表
-    fetchGroupsMuteListFromServer: async ({ dispatch, commit }, params) => {
-      try {
-        const data = await groupManager().getGroupMuteList({
-          groupId: params,
-        });
-        commit('SET_GROUPS_MUTE_LIST', {
-          groupId: params,
-          mutelist: data,
-        });
-      } catch (error) {
-        let errorMsg = '获取禁言列表失败，请稍后重试';
-        if (error?.data) {
-          const errorData =
-            typeof error.data === 'string'
-              ? error.data
-              : JSON.stringify(error.data);
-          if (
-            errorData.includes('group_authorization') ||
-            errorData.includes('group owner permission')
-          ) {
-            errorMsg = '没有权限获取禁言列表，只有聊天室所有者才能执行此操作';
-          }
-        }
-        ElMessage.error(errorMsg);
-      }
-    },
-    // 修改群名、群描述、群头像或者群扩展信息
-    modifyGroupInfo: async ({ dispatch, commit }, params) => {
-      const { groupId, modifyType, content } = params;
-      const modifyMap = {
-        0: { field: 'name', cacheType: 'name' },
-        1: { field: 'description', cacheType: 'groupDescription' },
-        2: { field: 'avatar', cacheType: 'groupAvatar' },
-        3: { field: 'ext', cacheType: 'groupExt' },
-      };
-      const config = modifyMap[modifyType];
-      if (!config) {
-        throw new Error(`Unsupported group modify type: ${modifyType}`);
-      }
-      const option = buildModifyGroupPayload({
-        groupId,
-        [config.field]: content,
-      });
-      await groupManager().updateGroupInfo(option);
-      commit('UPDATE_CACHE_GROUP_INFO', {
-        groupId,
-        type: config.cacheType,
-        params: content,
-      });
-      dispatch('fetchGroupDetailFromServer', [groupId]);
-    },
-    // 设置/修改群组公告
-    modifyGroupAnnouncement: async ({ dispatch }, params) => {
-      //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
-      const { groupId, announcement } = params;
-      try {
-        await groupManager().updateGroupAnnouncement({ ...params });
-        dispatch('fetchAnnounmentFromServer', groupId);
-      } catch (error) {
-        console.error('群公告修改失败', error);
-        throw error;
-      }
-    },
-    fetchGroupSharedFilesFromServer: async ({ commit }, params) => {
-      const option =
-        typeof params === 'string'
-          ? { groupId: params }
-          : { pageNum: 1, pageSize: 20, ...params };
-      try {
-        const result = await groupManager().getGroupSharedFileList(option);
-        const files = normalizeGroupSharedFileList(result);
-        commit('SET_GROUP_SHARED_FILES', {
-          groupId: option.groupId,
-          files,
-        });
-        return files;
-      } catch (error) {
-        console.error('群共享文件列表获取失败', {
-          groupId: option.groupId,
           currentUser: getCurrentUserId(),
           error,
         });
         throw error;
       }
     },
-    uploadGroupSharedFile: async ({ dispatch }, params) => {
-      const { groupId, file, onFileUploadProgress } = params;
-      await groupManager().uploadGroupSharedFile({
-        groupId,
-        file,
-        onFileUploadProgress,
-      });
-      await dispatch('fetchGroupSharedFilesFromServer', { groupId });
-    },
-    downloadGroupSharedFile: async (_, params) => {
-      const { groupId, fileId, secret } = params;
-      let downloaded;
-      await groupManager().downloadGroupSharedFile({
-        groupId,
-        fileId,
-        secret,
-        onFileDownloadComplete: (data) => {
-          downloaded = data;
-        },
-      });
-      return downloaded;
-    },
-    deleteGroupSharedFile: async ({ dispatch }, params) => {
-      const { groupId, fileId } = params;
+    fetchGroupAdminsFromServer: async ({ commit }, groupId) => {
       try {
-        const result = await groupManager().deleteGroupSharedFile({
+        const admins = await groupManager().getGroup(groupId).getAdmins();
+        commit('SET_GROUP_ADMINS', { groupId, admins });
+        console.log('[SDK 5.0 Group] getAdmins success', {
           groupId,
-          fileId,
+          currentUser: getCurrentUserId(),
+          admins,
         });
-        await dispatch('fetchGroupSharedFilesFromServer', { groupId });
+        return admins;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] getAdmins failed', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    fetchGroupMembersAttributesFromServer: async (
+      { commit },
+      { groupId, userIds, keys },
+    ) => {
+      try {
+        const result = await groupManager().getGroup(groupId).getMembersAttributes({
+          userIds,
+          keys,
+        });
+        commit('SET_GROUP_MEMBER_ATTRIBUTES', {
+          groupId,
+          attributes: result.items,
+        });
+        console.log('[SDK 5.0 Group] getMembersAttributes success', {
+          groupId,
+          userIds,
+          keys,
+          result,
+        });
         return result;
       } catch (error) {
-        console.error('群共享文件删除失败', {
+        console.error('[SDK 5.0 Group] getMembersAttributes failed', {
           groupId,
-          fileId,
+          userIds,
+          keys,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    setGroupMemberAttributes: async (
+      { dispatch },
+      { groupId, userId, memberAttributes },
+    ) => {
+      try {
+        await groupManager().getGroup(groupId).setMemberAttributes({
+          userId,
+          memberAttributes,
+        });
+        ElMessage.success('群成员属性设置成功');
+        console.log('[SDK 5.0 Group] setMemberAttributes success', {
+          groupId,
+          userId,
+          memberAttributes,
+        });
+        return await dispatch('fetchGroupMembersAttributesFromServer', {
+          groupId,
+          userIds: [userId],
+          keys: Object.keys(memberAttributes),
+        });
+      } catch (error) {
+        console.error('[SDK 5.0 Group] setMemberAttributes failed', {
+          groupId,
+          userId,
+          memberAttributes,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    fetchJoinedGroupCountFromServer: async ({ dispatch }) => {
+      const groups = await dispatch('readJoinedGroupSnapshot');
+      return groups.length;
+    },
+    fetchAnnounmentFromServer: async ({ commit }, groupId) => {
+      try {
+        const announcement = await groupManager()
+          .getGroup(groupId)
+          .getAnnouncement();
+        commit('SET_GROUP_ANNOUNCEMENT', { groupId, announcement });
+        console.log('[SDK 5.0 Group] getAnnouncement success', {
+          groupId,
+          announcement,
+        });
+        return announcement;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] getAnnouncement failed', { groupId, error });
+        throw error;
+      }
+    },
+    fetchGroupsBlackListFromServer: async ({ commit }, groupId) => {
+      try {
+        const blocklist = await groupManager().getGroup(groupId).getBlocklist();
+        commit('SET_GROUP_BLOCKLIST', { groupId, blocklist });
+        console.log('[SDK 5.0 Group] getBlocklist success', { groupId, blocklist });
+        return blocklist;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] getBlocklist failed', { groupId, error });
+        throw error;
+      }
+    },
+    fetchGroupsAllowListFromServer: async ({ commit }, groupId) => {
+      try {
+        const allowlist = await groupManager().getGroup(groupId).getAllowlist();
+        commit('SET_GROUP_ALLOWLIST', { groupId, allowlist });
+        console.log('[SDK 5.0 Group] getAllowlist success', {
+          groupId,
+          allowlist,
+        });
+        return allowlist;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] getAllowlist failed', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    checkCurrentUserInGroupAllowList: async ({ commit }, groupId) => {
+      try {
+        const inAllowlist = await groupManager()
+          .getGroup(groupId)
+          .checkIfInAllowList();
+        commit('SET_GROUP_ALLOWLIST_MEMBERSHIP', { groupId, inAllowlist });
+        console.log('[SDK 5.0 Group] checkIfInAllowList success', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          inAllowlist,
+        });
+        return inAllowlist;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] checkIfInAllowList failed', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    fetchGroupsMuteListFromServer: async ({ commit }, groupId) => {
+      try {
+        const muteList = await groupManager().getGroup(groupId).getMuteList();
+        commit('SET_GROUP_MUTE_LIST', { groupId, muteList });
+        console.log('[SDK 5.0 Group] getMuteList success', { groupId, muteList });
+        return muteList;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] getMuteList failed', { groupId, error });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    checkCurrentUserInGroupMuteList: async ({ commit }, groupId) => {
+      try {
+        const inMuteList = await groupManager().getGroup(groupId).checkIfInMuteList();
+        commit('SET_GROUP_MUTE_LIST_MEMBERSHIP', { groupId, inMuteList });
+        console.log('[SDK 5.0 Group] checkIfInMuteList success', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          inMuteList,
+        });
+        return inMuteList;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] checkIfInMuteList failed', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    modifyGroupInfo: async ({ commit }, { groupId, ...groupInfo }) => {
+      await groupManager().getGroup(groupId).updateInfo(groupInfo);
+      const groupDetail = await groupManager().getGroup(groupId).refresh();
+      commit('SET_GROUP_DETAILS', { groupDetails: [groupDetail] });
+      commit('UPSERT_JOINED_GROUP', groupDetail);
+      console.log('[SDK 5.0 Group] updateInfo refresh success', {
+        groupId,
+        groupInfo,
+        groupDetail,
+      });
+      return groupDetail;
+    },
+    updateGroupConfigs: async ({ commit }, { groupId, configs }) => {
+      try {
+        await groupManager().getGroup(groupId).updateConfigs(configs);
+        const groupDetail = await groupManager().getGroup(groupId).refresh();
+        commit('SET_GROUP_DETAILS', { groupDetails: [groupDetail] });
+        commit('UPSERT_JOINED_GROUP', groupDetail);
+        console.log('[SDK 5.0 Group] updateConfigs refresh success', {
+          groupId,
+          configs,
+          groupDetail,
+        });
+        return groupDetail;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] updateConfigs failed', {
+          groupId,
+          configs,
           currentUser: getCurrentUserId(),
           error,
         });
         throw error;
       }
     },
-    blockGroupMessage: async ({ commit }, groupId) => {
-      throw new Error('SDK 5.0 current package does not expose group message blocking; no fallback is configured.');
+    changeGroupOwner: async ({ commit }, { groupId, newOwner }) => {
+      try {
+        await groupManager().getGroup(groupId).changeOwner({ newOwner });
+        const groupDetail = await groupManager().getGroup(groupId).refresh();
+        commit('SET_GROUP_DETAILS', { groupDetails: [groupDetail] });
+        commit('UPSERT_JOINED_GROUP', groupDetail);
+        console.log('[SDK 5.0 Group] changeOwner refresh success', {
+          groupId,
+          newOwner,
+          groupDetail,
+        });
+        return groupDetail;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] changeOwner failed', {
+          groupId,
+          newOwner,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        throw error;
+      }
     },
-    unblockGroupMessage: async ({ commit }, groupId) => {
-      throw new Error('SDK 5.0 current package does not expose group message blocking; no fallback is configured.');
+    modifyGroupAnnouncement: async ({ dispatch }, { groupId, announcement }) => {
+      try {
+        await groupManager().getGroup(groupId).updateAnnouncement({ announcement });
+        return await dispatch('fetchAnnounmentFromServer', groupId);
+      } catch (error) {
+        console.error('[SDK 5.0 Group] updateAnnouncement failed', {
+          groupId,
+          announcement,
+          error,
+        });
+        throw error;
+      }
     },
-    //邀请群成员
-    inviteUserJoinTheGroup: async ({ dispatch }, params) => {
-      //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
-      const { users, groupId } = params;
-      const userIds = (Array.isArray(users) ? users : [users])
-        .map((userId) => String(userId || '').trim())
-        .filter(Boolean);
+    fetchGroupSharedFilesFromServer: async ({ commit }, { groupId, pageNum = 1, pageSize = 20 }) => {
+      try {
+        const result = await groupManager()
+          .getGroup(groupId)
+          .getSharedFileList({ pageNum, pageSize });
+        commit('SET_GROUP_SHARED_FILES', { groupId, result });
+        console.log('[SDK 5.0 Group] getSharedFileList success', { groupId, result });
+        return result;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] getSharedFileList failed', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        throw error;
+      }
+    },
+    uploadGroupSharedFile: async ({ dispatch }, { groupId, file, onFileUploadProgress }) => {
+      try {
+        await groupManager().getGroup(groupId).uploadSharedFile({
+          file,
+          onFileUploadProgress,
+        });
+        return await dispatch('fetchGroupSharedFilesFromServer', { groupId });
+      } catch (error) {
+        console.error('[SDK 5.0 Group] uploadSharedFile failed', { groupId, error });
+        throw error;
+      }
+    },
+    downloadGroupSharedFile: async (_, { groupId, fileId }) => {
+      let blob;
+      await groupManager().getGroup(groupId).downloadSharedFile({
+        fileId,
+        onFileDownloadComplete: (data) => {
+          blob = data;
+        },
+      });
+      console.log('[SDK 5.0 Group] downloadSharedFile completed', { groupId, fileId, blob });
+      return blob;
+    },
+    deleteGroupSharedFile: async ({ dispatch }, { groupId, fileId }) => {
+      try {
+        await groupManager().getGroup(groupId).deleteSharedFile({ fileId });
+        return await dispatch('fetchGroupSharedFilesFromServer', { groupId });
+      } catch (error) {
+        console.error('[SDK 5.0 Group] deleteSharedFile failed', {
+          groupId,
+          fileId,
+          error,
+        });
+        throw error;
+      }
+    },
+    inviteUserJoinTheGroup: async (_, { groupId, userIds }) => {
       try {
         await groupManager().inviteUsersToGroup({ groupId, userIds });
-        ElMessage({
-          message: '群组邀请成功送出~',
-          type: 'success',
-        });
+        ElMessage.success('群组邀请成功送出~');
       } catch (error) {
-        console.error('[Group Invite] inviteUsersToGroup failed', {
+        console.error('[SDK 5.0 Group] inviteUsersToGroup failed', {
           groupId,
           userIds,
           currentUser: getCurrentUserId(),
           error,
         });
-        ElMessage({
-          message: `群组邀请失败：${error?.message || 'unknown error'}`,
-          type: 'error',
-        });
+        ElMessage.error(error.message);
+        throw error;
       }
     },
-    //移出群成员
-    removeTheGroupMember: async ({ dispatch }, params) => {
-      //SDK入参属性名是确定的此示例直接将属性名改为了SDK所识别的参数如果修改，具体请看文档。
-      const { username, groupId } = params;
+    removeTheGroupMember: async ({ dispatch }, { groupId, userIds }) => {
       try {
-        await groupManager().removeGroupMembers({ userIds: [username], groupId });
-        ElMessage({
-          message: `已将${username}移出群组!`,
-          type: 'success',
-        });
-        //更新群成员
-        dispatch('fetchGroupsMemberFromServer', {
-          groupId,
-          chatType: 'groupChat',
-        });
+        await groupManager().getGroup(groupId).removeMembers({ userIds });
+        await dispatch('fetchGroupsMemberFromServer', { groupId });
+        ElMessage.success('群成员已移除');
       } catch (error) {
-        ElMessage({
-          message: '该群成员移出失败，请稍后重试！',
-          type: 'error',
-        });
-      }
-    },
-    //添加用户到黑名单
-    addMemberToBlackList: async ({ dispatch }, params) => {
-      const { groupId, userIds } = params;
-      try {
-        await groupManager().blockGroupMembers({ groupId, userIds });
-        ElMessage({
-          message: '黑名单添加成功~',
-          type: 'success',
-        });
-        //重新获取黑名单列表
-        dispatch('fetchGroupsBlackListFromServer', groupId);
-        //重新获取成员列表
-        dispatch('fetchGroupsMemberFromServer', {
-          groupId,
-          chatType: 'groupChat',
-        });
-      } catch (error) {
-        ElMessage({
-          message: '黑名单添加失败，请稍后重试~',
-          type: 'error',
-        });
-      }
-    },
-    //从黑名单中移出
-    removeTheMemberFromBlackList: async ({ dispatch }, params) => {
-      const { groupId, userIds } = params;
-      try {
-        await groupManager().unblockGroupMembers({ groupId, userIds });
-        ElMessage({
-          message: '黑名单移除成功~',
-          type: 'success',
-        });
-        //重新获取黑名单列表
-        dispatch('fetchGroupsBlackListFromServer', groupId);
-      } catch (error) {
-        console.error('[Group Blocklist] unblockGroupMembers failed', {
+        console.error('[SDK 5.0 Group] removeMembers failed', {
           groupId,
           userIds,
           error,
         });
-        ElMessage({
-          message: '黑名单移除失败，请稍后重试~',
-          type: 'error',
-        });
+        ElMessage.error(error.message);
+        throw error;
       }
     },
-    //添加用户到禁言列表
-    addMemberToMuteList: async ({ dispatch }, params) => {
-      const { groupId, username } = params;
-      const targetUsername = Array.isArray(username) ? username[0] : username;
-
+    addGroupAdmin: async ({ dispatch }, { groupId, userId }) => {
       try {
-        await groupManager().muteGroupMembers({
-          groupId,
-          userIds: [targetUsername],
-          muteDuration: 886400,
-        });
-        ElMessage({
-          message: '禁言成功~',
-          type: 'success',
-        });
-        setTimeout(() => {
-          dispatch('fetchGroupsMuteListFromServer', groupId);
-        }, 800);
+        await groupManager().getGroup(groupId).addAdmin({ userId });
+        const [admins] = await Promise.all([
+          dispatch('fetchGroupAdminsFromServer', groupId),
+          dispatch('fetchGroupsMemberFromServer', { groupId }),
+        ]);
+        ElMessage.success('群管理员添加成功~');
+        return admins;
       } catch (error) {
-        console.error('[Group Mutelist] muteGroupMember failed', {
+        console.error('[SDK 5.0 Group] addAdmin failed', {
           groupId,
-          username: targetUsername,
+          userId,
+          currentUser: getCurrentUserId(),
           error,
         });
-        ElMessage({
-          message: '禁言失败，请稍后重试~',
-          type: 'error',
-        });
+        ElMessage.error(error.message);
+        throw error;
       }
-
-      // let option = {
-      //   groupId: 'groupId',
-      //   username: 'user',
-      //   muteDuration: 886400000, // 禁言时长，单位为毫秒。
-      // };
     },
-    //从禁言列表中移出
-    removeTheMemberFromMuteList: async ({ dispatch }, params) => {
-      const { groupId, username } = params;
-      const targetUsername = Array.isArray(username) ? username[0] : username;
+    removeGroupAdmin: async ({ dispatch }, { groupId, userId }) => {
       try {
-        await groupManager().unmuteGroupMembers({
-          groupId,
-          userIds: [targetUsername],
-        });
-        ElMessage({
-          message: '移除禁言成功~',
-          type: 'success',
-        });
-        setTimeout(() => {
-          dispatch('fetchGroupsMuteListFromServer', groupId);
-        }, 800);
+        await groupManager().getGroup(groupId).removeAdmin({ userId });
+        const [admins] = await Promise.all([
+          dispatch('fetchGroupAdminsFromServer', groupId),
+          dispatch('fetchGroupsMemberFromServer', { groupId }),
+        ]);
+        ElMessage.success('群管理员移除成功~');
+        return admins;
       } catch (error) {
-        console.error('[Group Mutelist] unmuteGroupMember failed', {
+        console.error('[SDK 5.0 Group] removeAdmin failed', {
           groupId,
-          username: targetUsername,
+          userId,
+          currentUser: getCurrentUserId(),
           error,
         });
-        ElMessage({
-          message: '移除禁言失败，请稍后重试~',
-          type: 'error',
-        });
+        ElMessage.error(error.message);
+        throw error;
       }
     },
-    //退出群组
-    leaveIntheGroup: async ({ commit }, params) => {
-      if (!params.groupId) return;
-      const { groupId } = params;
-      await groupManager().leaveGroup({ groupId });
-      commit('DELETE_JOINED_GROUP_LIST', { groupId });
+    addMemberToBlackList: async ({ dispatch }, { groupId, userIds }) => {
+      try {
+        await groupManager().getGroup(groupId).blockMembers({ userIds });
+        await Promise.all([
+          dispatch('fetchGroupsBlackListFromServer', groupId),
+          dispatch('fetchGroupsMemberFromServer', { groupId }),
+        ]);
+        ElMessage.success('黑名单添加成功~');
+      } catch (error) {
+        console.error('[SDK 5.0 Group] blockMembers failed', { groupId, userIds, error });
+        ElMessage.error(error.message);
+        throw error;
+      }
     },
-    //解散群组
-    destroyInTheGroup: async ({ commit }, params) => {
-      if (!params.groupId) return;
-      const { groupId } = params;
-      await groupManager().destroyGroup({ groupId });
-      commit('DELETE_JOINED_GROUP_LIST', { groupId });
+    removeTheMemberFromBlackList: async ({ dispatch }, { groupId, userIds }) => {
+      try {
+        await groupManager().getGroup(groupId).unblockMembers({ userIds });
+        await dispatch('fetchGroupsBlackListFromServer', groupId);
+        ElMessage.success('黑名单移除成功~');
+      } catch (error) {
+        console.error('[SDK 5.0 Group] unblockMembers failed', { groupId, userIds, error });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    addMemberToAllowList: async ({ dispatch }, { groupId, userIds }) => {
+      try {
+        await groupManager().getGroup(groupId).addUsersToAllowlist({ userIds });
+        await Promise.all([
+          dispatch('fetchGroupsAllowListFromServer', groupId),
+          dispatch('checkCurrentUserInGroupAllowList', groupId),
+        ]);
+        ElMessage.success('白名单添加成功~');
+      } catch (error) {
+        console.error('[SDK 5.0 Group] addUsersToAllowlist failed', {
+          groupId,
+          userIds,
+          error,
+        });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    removeTheMemberFromAllowList: async ({ dispatch }, { groupId, userIds }) => {
+      try {
+        await groupManager().getGroup(groupId).removeUsersFromAllowlist({ userIds });
+        await Promise.all([
+          dispatch('fetchGroupsAllowListFromServer', groupId),
+          dispatch('checkCurrentUserInGroupAllowList', groupId),
+        ]);
+        ElMessage.success('白名单移除成功~');
+      } catch (error) {
+        console.error('[SDK 5.0 Group] removeUsersFromAllowlist failed', {
+          groupId,
+          userIds,
+          error,
+        });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    addMemberToMuteList: async ({ dispatch }, { groupId, userIds, muteDuration }) => {
+      try {
+        await groupManager()
+          .getGroup(groupId)
+          .muteMembers({ userIds, muteDuration });
+        await Promise.all([
+          dispatch('fetchGroupsMuteListFromServer', groupId),
+          dispatch('checkCurrentUserInGroupMuteList', groupId),
+        ]);
+        ElMessage.success('禁言成功~');
+      } catch (error) {
+        console.error('[SDK 5.0 Group] muteMembers failed', {
+          groupId,
+          userIds,
+          muteDuration,
+          error,
+        });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    removeTheMemberFromMuteList: async ({ dispatch }, { groupId, userIds }) => {
+      try {
+        await groupManager().getGroup(groupId).unmuteMembers({ userIds });
+        await Promise.all([
+          dispatch('fetchGroupsMuteListFromServer', groupId),
+          dispatch('checkCurrentUserInGroupMuteList', groupId),
+        ]);
+        ElMessage.success('移除禁言成功~');
+      } catch (error) {
+        console.error('[SDK 5.0 Group] unmuteMembers failed', { groupId, userIds, error });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    muteAllGroupMembers: async ({ commit, dispatch }, groupId) => {
+      try {
+        await groupManager().getGroup(groupId).muteAllMembers();
+        const groupDetail = await groupManager().getGroup(groupId).refresh();
+        commit('SET_GROUP_DETAILS', { groupDetails: [groupDetail] });
+        commit('UPSERT_JOINED_GROUP', groupDetail);
+        await Promise.all([
+          dispatch('fetchGroupsMuteListFromServer', groupId),
+          dispatch('checkCurrentUserInGroupMuteList', groupId),
+        ]);
+        ElMessage.success('群全员禁言已开启');
+        console.log('[SDK 5.0 Group] muteAllMembers refresh success', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          groupDetail,
+        });
+        return groupDetail;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] muteAllMembers failed', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    unmuteAllGroupMembers: async ({ commit, dispatch }, groupId) => {
+      try {
+        await groupManager().getGroup(groupId).unmuteAllMembers();
+        const groupDetail = await groupManager().getGroup(groupId).refresh();
+        commit('SET_GROUP_DETAILS', { groupDetails: [groupDetail] });
+        commit('UPSERT_JOINED_GROUP', groupDetail);
+        await Promise.all([
+          dispatch('fetchGroupsMuteListFromServer', groupId),
+          dispatch('checkCurrentUserInGroupMuteList', groupId),
+        ]);
+        ElMessage.success('群全员禁言已解除');
+        console.log('[SDK 5.0 Group] unmuteAllMembers refresh success', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          groupDetail,
+        });
+        return groupDetail;
+      } catch (error) {
+        console.error('[SDK 5.0 Group] unmuteAllMembers failed', {
+          groupId,
+          currentUser: getCurrentUserId(),
+          error,
+        });
+        ElMessage.error(error.message);
+        throw error;
+      }
+    },
+    leaveIntheGroup: async ({ commit }, { groupId }) => {
+      await groupManager().getGroup(groupId).leave();
+      commit('REMOVE_GROUP', groupId);
+    },
+    destroyInTheGroup: async ({ commit }, { groupId }) => {
+      await groupManager().getGroup(groupId).destroy();
+      commit('REMOVE_GROUP', groupId);
     },
   },
   getters: {
+    getGroupSummaryMap: (state) => state.groupSummaries,
     getGroupDetailMap: (state) => state.groupDetails,
     getGroupMembersMap: (state) => state.groupMembers,
+    getGroupAdminsMap: (state) => state.groupAdmins,
+    getGroupBlocklistMap: (state) => state.groupBlocklists,
+    getGroupMuteListMap: (state) => state.groupMuteLists,
+    getGroupMuteListMembershipMap: (state) => state.groupMuteListMembership,
+    getGroupAnnouncementMap: (state) => state.groupAnnouncements,
     getGroupSharedFilesMap: (state) => state.groupSharedFiles,
-    getJoinedGroupList: (state) => state.joinedGroup.joinedGroupList,
-    getJoinedGroupTotal: (state) => state.joinedGroup.joinedGroupListTotal,
-    getJoinedGroupCount: (state) => state.joinedGroup.joinedGroupCount,
-    getPublicGroupList: (state) => state.joinedGroup.publicGroupList,
-    getPublicGroupCursor: (state) => state.joinedGroup.publicPagingCursor,
-    //获取加入的群组名
+    getGroupMemberAttributesMap: (state) => state.groupMemberAttributes,
+    getGroupAllowlistMap: (state) => state.groupAllowlists,
+    getGroupAllowlistMembershipMap: (state) => state.groupAllowlistMembership,
+    getJoinedGroupList: (state) => state.joinedGroups,
+    getJoinedGroupTotal: (state) => state.joinedGroups.length,
+    getJoinedGroupCount: (state) => state.joinedGroups.length,
     getGroupName: (state) => (groupId) => {
-      const group = state.joinedGroup.joinedGroupList.find(
-        (item) => item.groupId === groupId,
-      );
-      const groupInfo = state.groupDetails.get(groupId) || {};
-      return group?.name || groupInfo?.name || groupId;
+      const detail = state.groupDetails.get(groupId);
+      if (detail) return detail.name;
+      return state.joinedGroups.find((group) => group.groupId === groupId)?.name;
     },
   },
 };

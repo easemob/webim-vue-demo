@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useStore } from 'vuex';
-import { CHAT_TYPE } from '@/IM/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import { useGetUserMapInfo } from '@/hooks';
 const store = useStore();
 const { getGroupAvatarByGroupId, getGroupNameByGroupId } = useGetUserMapInfo();
@@ -17,8 +17,8 @@ const joinedGroupList = computed(() => store.getters.getJoinedGroupList);
         :span="24"
         @click="
           $emit('toContacts', {
-            id: groupItem.groupId,
-            chatType: CHAT_TYPE.GROUP,
+            conversationId: groupItem.groupId,
+            conversationType: CONVERSATION_TYPE.GROUP,
           })
         "
       >

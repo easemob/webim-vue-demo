@@ -2,7 +2,6 @@
 import { ref, toRefs, computed, nextTick, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 /* IMSDK */
-import { getCurrentUserId } from '@/IM';
 import { GROUP_ROLE_TYPE } from '@/IM/constant';
 /* components */
 import GroupsManagement from '../GroupsManagement';
@@ -25,21 +24,17 @@ const emits = defineEmits(['handleDrawer']);
  * 主要包含群名称，群主id，群组desc，群组人数，群组禁言状态是否容许邀请...。
  **/
 const { groupId } = toRefs(props);
-//获取加入的群组列表
-const getJoinedGroupList = computed(() => store.getters.getJoinedGroupList);
-//获取群组详情（展示群组名称等信息）
-const getGroupDetailFromGroupList = computed(() => {
-  const group = getJoinedGroupList.value.filter((groupItem) => {
-    if (groupItem.groupId === groupId.value) {
-      return groupItem;
-    }
-  });
-  return group[0] || {};
+// 获取 SDK 5.0 GroupDetail（展示群组名称等信息）
+const groupDetail = computed(() => {
+  return store.getters.getGroupDetailMap.get(groupId.value) || {};
+});
+const groupSummary = computed(() => {
+  return store.getters.getGroupSummaryMap.get(groupId.value);
 });
 /* 群组展示相关核心数据获取 */
 //权限判断（黑名单以及禁言列表的获取，只有群主管理员）
 const memberRole = computed(() => {
-  const role = getGroupDetailFromGroupList.value?.role;
+  const role = groupDetail.value?.role;
   //判断是否在权限名单内
   if (role === GROUP_ROLE_TYPE.ADMIN || role === GROUP_ROLE_TYPE.OWNER) {
     return true;
@@ -54,7 +49,7 @@ const modalType = ref('');
 const groupModalTitle = ref({ title: '', type: 0 });
 //群公告
 const getGroupAnnouncement = computed(() => {
-  return store.getters.getGroupDetailMap.get(groupId.value)?.announcement;
+  return store.getters.getGroupAnnouncementMap.get(groupId.value)?.announcement;
 });
 //弹出群管理相关modal框
 const alertManagementModal = (type, groupType) => {
@@ -84,8 +79,7 @@ const editGroupName = async (type, oldGroupName) => {
     if (groupName.value === oldGroupName) return (isEdit.value = false);
     const params = {
       groupId: groupId.value,
-      modifyType: 0,
-      content: groupName.value,
+      name: groupName.value,
     };
     try {
       await store.dispatch('modifyGroupInfo', params);
@@ -98,7 +92,7 @@ const editGroupName = async (type, oldGroupName) => {
     } catch (error) {
       console.error(error);
       ElMessage({
-        message: '群组名称修改失败~',
+        message: error.message,
         type: 'error',
         center: true,
       });
@@ -134,8 +128,7 @@ const editGroupField = async (type, oldValue, fieldConfig) => {
   try {
     await store.dispatch('modifyGroupInfo', {
       groupId: groupId.value,
-      modifyType: fieldConfig.modifyType,
-      content: fieldConfig.valueRef.value,
+      [fieldConfig.field]: fieldConfig.valueRef.value,
     });
     ElMessage({
       message: `${fieldConfig.label}修改成功~`,
@@ -155,7 +148,7 @@ const editGroupField = async (type, oldValue, fieldConfig) => {
 };
 const editGroupAvatar = (type, oldValue) =>
   editGroupField(type, oldValue, {
-    modifyType: 2,
+    field: 'avatar',
     label: '群头像',
     valueRef: groupAvatar,
     editRef: isEditGroupAvatar,
@@ -163,62 +156,12 @@ const editGroupAvatar = (type, oldValue) =>
   });
 const editGroupExt = (type, oldValue) =>
   editGroupField(type, oldValue, {
-    modifyType: 3,
+    field: 'ext',
     label: '群扩展信息',
     valueRef: groupExt,
     editRef: isEditGroupExt,
     inputRef: groupExtInput,
   });
-//修改我的群组昵称
-const editMyGroupNickNameInput = ref(null);
-const isEditMyGroupNickname = ref(false);
-const myGroupNickname = ref('');
-const editMyGroupNickName = async (type, oldMyGroupNickname) => {
-  if (type === 'save') {
-    if (myGroupNickname.value === oldMyGroupNickname)
-      return (isEditMyGroupNickname.value = false);
-    const params = {
-      groupId: groupId.value,
-      nickName: myGroupNickname.value,
-    };
-
-    try {
-      await store.dispatch('setInTheGroupInfo', params);
-      ElMessage({
-        message: '本群昵称修改成功~',
-        type: 'success',
-        center: true,
-      });
-    } catch (error) {
-      ElMessage({
-        message: '本群昵称修改失败~',
-        type: 'error',
-        center: true,
-      });
-    } finally {
-      isEditMyGroupNickname.value = false;
-    }
-  }
-  if (type === 'edit') {
-    isEditMyGroupNickname.value = true;
-
-    nextTick(() => {
-      editMyGroupNickNameInput.value.focus();
-      myGroupNickname.value = oldMyGroupNickname;
-    });
-  }
-};
-const inTheGroupNickname = computed(() => {
-  const groupIdValue = groupId.value;
-  const loginUserValue = getCurrentUserId();
-  const groupProfile = store.getters['UsersProfile/getInTheGroupInfo'](
-    loginUserValue,
-    groupIdValue,
-  );
-  const myNickname = groupProfile?.nickName;
-  return myNickname || '';
-});
-
 //退出、解散群组
 const quitThisGroup = async () => {
   try {
@@ -279,30 +222,59 @@ const dissolveThisGroup = async () => {
 
 //群组黑名单人数
 const groupBlacklist = computed(() => {
-  return store.getters.getGroupDetailMap.get(groupId.value)?.blacklist;
+  return store.getters.getGroupBlocklistMap.get(groupId.value);
+});
+const groupAllowlist = computed(() => {
+  return store.getters.getGroupAllowlistMap.get(groupId.value);
+});
+const groupAdmins = computed(() => {
+  return store.getters.getGroupAdminsMap.get(groupId.value);
+});
+const groupAllowlistMembership = computed(() => {
+  return store.getters.getGroupAllowlistMembershipMap.get(groupId.value);
 });
 //群组禁言人数
 const groupMutelist = computed(() => {
-  return store.getters.getGroupDetailMap.get(groupId.value)?.mutelist;
+  return store.getters.getGroupMuteListMap.get(groupId.value);
 });
-const currentGroupDetail = computed(() => {
-  return store.getters.getGroupDetailMap.get(groupId.value) || {};
+const groupMuteListMembership = computed(() => {
+  return store.getters.getGroupMuteListMembershipMap.get(groupId.value);
 });
 const memberCountDisplay = computed(() => {
-  return (
-    currentGroupDetail.value.memberCount ??
-    getGroupDetailFromGroupList.value.memberCount ??
-    '-'
-  );
+  return groupDetail.value.memberCount ?? '-';
 });
 const maxUsersDisplay = computed(() => {
-  return (
-    currentGroupDetail.value.maxMembers ??
-    getGroupDetailFromGroupList.value.maxMembers ??
-    '-'
-  );
+  return groupDetail.value.maxMembers ?? '-';
 });
+const formatGroupSummary = (summary) => {
+  if (summary === undefined) return '未读取';
+  if (summary === null) return 'SDK 返回 null';
+  return JSON.stringify(summary, null, 2);
+};
+const readGroupSummarySnapshot = async () => {
+  try {
+    await store.dispatch('readGroupSummarySnapshot', groupId.value);
+    ElMessage({
+      message: '群轻量摘要读取完成',
+      type: 'success',
+      center: true,
+    });
+  } catch (error) {
+    console.error('[SDK 5.0 Group] getSummary failed in group detail panel', error);
+    ElMessage({
+      message: error?.message || '读取群轻量摘要失败',
+      type: 'error',
+      center: true,
+    });
+  }
+};
 const handleUpdateGroupData = async () => {
+  try {
+    groupSummary.value === undefined &&
+      (await store.dispatch('readGroupSummarySnapshot', groupId.value));
+  } catch (error) {
+    console.error(error);
+  }
   try {
     await store.dispatch('fetchGroupDetailFromServer', [groupId.value]);
   } catch (error) {
@@ -321,21 +293,27 @@ const handleUpdateGroupData = async () => {
     try {
       !groupBlacklist.value &&
         (await store.dispatch('fetchGroupsBlackListFromServer', groupId.value));
+      !groupAllowlist.value &&
+        (await store.dispatch('fetchGroupsAllowListFromServer', groupId.value));
+      !groupAdmins.value &&
+        (await store.dispatch('fetchGroupAdminsFromServer', groupId.value));
+      groupAllowlistMembership.value === undefined &&
+        (await store.dispatch('checkCurrentUserInGroupAllowList', groupId.value));
       !groupMutelist.value &&
         (await store.dispatch('fetchGroupsMuteListFromServer', groupId.value));
+      groupMuteListMembership.value === undefined &&
+        (await store.dispatch('checkCurrentUserInGroupMuteList', groupId.value));
     } catch (error) {
       console.error(error);
     }
   }
-  /* !暂注释此功能调用 */
-  // store.dispatch('fetchInTheGroupInfoFromServer', groupId.value);
 };
 onMounted(() => {
   handleUpdateGroupData();
 });
 </script>
 <template>
-  <div class="app_container" v-if="getGroupDetailFromGroupList">
+  <div class="app_container" v-if="groupDetail">
     <!-- 群名称 -->
     <div class="group_func_card group_name">
       <div class="title">
@@ -343,14 +321,14 @@ onMounted(() => {
         <el-icon
           class="icon"
           v-if="memberRole"
-          @click="editGroupName('edit', getGroupDetailFromGroupList.name)"
+          @click="editGroupName('edit', groupDetail.name)"
         >
           <Edit />
         </el-icon>
       </div>
       <div class="content">
         <div v-if="!isEdit">
-          {{ getGroupDetailFromGroupList.name || '' }}
+          {{ groupDetail.name || '' }}
         </div>
         <el-input
           v-else
@@ -360,9 +338,22 @@ onMounted(() => {
           size="small"
           maxlength="128"
           show-word-limit
-          @blur="editGroupName('save', getGroupDetailFromGroupList.name)"
+          @blur="editGroupName('save', groupDetail.name)"
         >
         </el-input>
+      </div>
+    </div>
+    <el-divider style="margin: 0" />
+    <!-- 群轻量摘要 -->
+    <div class="group_func_card group_summary">
+      <div class="title">
+        群轻量摘要
+        <el-button size="small" link type="primary" @click="readGroupSummarySnapshot">
+          读取群轻量摘要
+        </el-button>
+      </div>
+      <div class="content">
+        <pre class="group_summary_raw">{{ formatGroupSummary(groupSummary) }}</pre>
       </div>
     </div>
     <el-divider style="margin: 0" />
@@ -374,11 +365,7 @@ onMounted(() => {
           class="icon"
           v-if="memberRole"
           @click="
-            editGroupAvatar(
-              'edit',
-              currentGroupDetail.avatarUrl ||
-                getGroupDetailFromGroupList.avatarUrl,
-            )
+            editGroupAvatar('edit', groupDetail.avatarUrl)
           "
         >
           <Edit />
@@ -387,9 +374,7 @@ onMounted(() => {
       <div class="content">
         <div v-if="!isEditGroupAvatar">
           {{
-            currentGroupDetail.avatarUrl ||
-            getGroupDetailFromGroupList.avatarUrl ||
-            '暂无群头像~'
+            groupDetail.avatarUrl || '暂无群头像~'
           }}
         </div>
         <el-input
@@ -400,11 +385,7 @@ onMounted(() => {
           size="small"
           placeholder="请输入群头像 URL"
           @blur="
-            editGroupAvatar(
-              'save',
-              currentGroupDetail.avatarUrl ||
-                getGroupDetailFromGroupList.avatarUrl,
-            )
+            editGroupAvatar('save', groupDetail.avatarUrl)
           "
         />
       </div>
@@ -419,7 +400,7 @@ onMounted(() => {
         </el-icon>
       </div>
       <div class="content">
-        {{ getGroupDetailFromGroupList.description || '暂无群描述~' }}
+        {{ groupDetail.description || '暂无群描述~' }}
       </div>
     </div>
     <el-divider style="margin: 0" />
@@ -430,14 +411,14 @@ onMounted(() => {
         <el-icon
           class="icon"
           v-if="memberRole"
-          @click="editGroupExt('edit', getGroupExtValue(currentGroupDetail))"
+          @click="editGroupExt('edit', getGroupExtValue(groupDetail))"
         >
           <Edit />
         </el-icon>
       </div>
       <div class="content">
         <div v-if="!isEditGroupExt">
-          {{ getGroupExtValue(currentGroupDetail) || '暂无群扩展~' }}
+          {{ getGroupExtValue(groupDetail) || '暂无群扩展~' }}
         </div>
         <el-input
           v-else
@@ -449,29 +430,11 @@ onMounted(() => {
           type="textarea"
           placeholder="请输入群扩展信息"
           resize="none"
-          @blur="editGroupExt('save', getGroupExtValue(currentGroupDetail))"
+          @blur="editGroupExt('save', getGroupExtValue(groupDetail))"
         />
       </div>
     </div>
     <el-divider style="margin: 0" />
-    <!-- 本地群组昵称 -->
-    <!-- !其他端UIKIT暂不支持此设置，因此暂时注释。 -->
-    <!-- <div class="group_func_card group_name">
-      <div class="title">
-        我在本群的昵称
-        <el-icon class="icon" @click="editMyGroupNickName('edit', inTheGroupNickname)">
-          <Edit />
-        </el-icon>
-      </div>
-      <div class="content">
-        <div v-if="!isEditMyGroupNickname">
-          {{ inTheGroupNickname || '暂未设置该群昵称' }}
-        </div>
-        <el-input v-else class="group_name_input" ref="editMyGroupNickNameInput" v-model="myGroupNickname" size="small"
-          maxlength="15" show-word-limit @blur="editMyGroupNickName('save', inTheGroupNickname)" />
-      </div>
-    </div>
-    <el-divider style="margin: 0" /> -->
     <!-- 群公告 -->
     <div class="group_func_card group_announcements">
       <div class="title">
@@ -543,12 +506,83 @@ onMounted(() => {
         </div>
       </div>
       <el-divider style="margin: 0" />
+      <!-- 白名单 -->
+      <div class="group_list_card group_allowlist">
+        <div class="label">群白名单</div>
+        <div class="main">
+          <div class="member_count">
+            {{ groupAllowlist?.length || '暂无' }}
+            / 当前用户：{{
+              groupAllowlistMembership === undefined
+                ? 'SDK 未返回'
+                : groupAllowlistMembership
+            }}
+          </div>
+          <div
+            class="more_list"
+            @click="alertManagementModal('groupAllowlist')"
+          >
+            <ArrowRight />
+          </div>
+        </div>
+      </div>
+      <el-divider style="margin: 0" />
+      <div
+        class="group_list_card group_admins"
+        v-if="groupDetail.role === GROUP_ROLE_TYPE.OWNER"
+      >
+        <div class="label">群组管理员</div>
+        <div class="main">
+          <div class="member_count">
+            {{ groupAdmins?.length || '暂无' }}
+          </div>
+          <div
+            class="more_list"
+            @click="alertManagementModal('groupAdmins')"
+          >
+            <ArrowRight />
+          </div>
+        </div>
+      </div>
+      <el-divider
+        v-if="groupDetail.role === GROUP_ROLE_TYPE.OWNER"
+        style="margin: 0"
+      />
+      <div
+        class="group_list_card group_configs_owner"
+        v-if="groupDetail.role === GROUP_ROLE_TYPE.OWNER"
+      >
+        <div class="label">群配置与群主</div>
+        <div class="main">
+          <div class="member_count">配置 / 转让群主</div>
+          <div
+            class="more_list"
+            @click="alertManagementModal('groupConfigsOwner')"
+          >
+            <ArrowRight />
+          </div>
+        </div>
+      </div>
+      <el-divider
+        v-if="groupDetail.role === GROUP_ROLE_TYPE.OWNER"
+        style="margin: 0"
+      />
       <!-- 禁言名单 -->
       <div class="group_list_card group_mutelist">
         <div class="label">禁言名单</div>
         <div class="main">
           <div class="member_count">
             {{ groupMutelist?.length || '暂无' }}
+            / 全员：{{
+              groupDetail.muteAllMembers === undefined
+                ? 'SDK 未返回'
+                : groupDetail.muteAllMembers
+            }}
+            / 当前用户：{{
+              groupMuteListMembership === undefined
+                ? 'SDK 未返回'
+                : groupMuteListMembership
+            }}
           </div>
           <div class="more_list" @click="alertManagementModal('groupMutelist')">
             <ArrowRight />
@@ -560,7 +594,7 @@ onMounted(() => {
     <!-- 群组操作按钮 -->
     <div class="group_list_handle_box">
       <template
-        v-if="getGroupDetailFromGroupList.role === GROUP_ROLE_TYPE.OWNER"
+        v-if="groupDetail.role === GROUP_ROLE_TYPE.OWNER"
       >
         <el-button
           type="danger"

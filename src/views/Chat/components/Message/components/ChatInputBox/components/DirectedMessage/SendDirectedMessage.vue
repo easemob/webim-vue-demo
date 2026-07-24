@@ -54,7 +54,6 @@ import { useUserInfoExt } from '@/hooks';
 import { notifySdkSendError } from '@/utils/handleSomeData';
 import { normalizeReceiverList } from '@/utils/directedMessage';
 import { getDefaultDirectedReceivers } from '@/utils/directedMessageDefaults';
-import { normalizeChatroomMembers } from '@/utils/chatroomMembers';
 
 const props = defineProps({
   conversationType: {
@@ -114,14 +113,17 @@ const fetchChatroomMembers = async () => {
   let cursor = '';
 
   do {
-    const res = await requireManager('chatRoomManager').getMemberList({
-      chatRoomId: conversationId.value,
+    const res = await requireManager('chatRoomManager')
+      .getChatRoom(conversationId.value)
+      .getMembers({
       cursor,
       pageSize: 50,
     });
-    const pageMembers = Array.isArray(res?.items) ? res.items : [];
-    allMembers.push(...normalizeChatroomMembers(pageMembers));
-    cursor = res?.cursor || '';
+    allMembers.push(...res.items);
+    if (res.hasMore && !res.cursor) {
+      throw new Error('SDK 5.0 ChatRoom.getMembers returned hasMore without cursor');
+    }
+    cursor = res.hasMore ? res.cursor : '';
   } while (cursor);
 
   store.commit('SET_CHATROOM_MEMBERS', {

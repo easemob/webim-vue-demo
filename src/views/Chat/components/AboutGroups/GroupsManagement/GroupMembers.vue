@@ -6,7 +6,7 @@ import { useGetUserMapInfo, useSordedContactsWithPinyin } from '@/hooks';
 /* store */
 import store from '@/store';
 import _ from 'lodash';
-import { ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 /* props */
 const props = defineProps({
   groupId: {
@@ -28,10 +28,8 @@ const loginUserId = computed(() => getCurrentUserId());
 const getGroupMembersList = computed(() => {
   return store.getters.getGroupMembersMap.get(groupId.value);
 });
-onMounted(async () => {
-  if (!getGroupMembersList.value) {
-    store.dispatch('fetchGroupsMemberFromServer', { groupId: groupId.value, chatType: 'groupChat' });
-  }
+const groupMemberAttributes = computed(() => {
+  return store.getters.getGroupMemberAttributesMap.get(groupId.value) || {};
 });
 //群组详情
 const groupDetail = computed(() => {
@@ -48,7 +46,73 @@ const getMemberDisplayName = (userId) => {
   if (!userId) return '';
   return getUserDisplayNameById(userId) || userId;
 };
-const getGroupMemberUserId = (item) => item?.userId || '';
+const getGroupMemberUserId = (member) => member.user.userId;
+const getGroupMemberAttributes = (userId) => groupMemberAttributes.value[userId] || {};
+const getGroupMemberNamecard = (userId) =>
+  getGroupMemberAttributes(userId).groupNamecard || '';
+const memberAttributesLoading = ref(false);
+const memberAttributeDialogVisible = ref(false);
+const editingMemberId = ref('');
+const groupNamecardInput = ref('');
+const fetchGroupMembersAttributes = async () => {
+  const userIds = (getGroupMembersList.value || [])
+    .map(getGroupMemberUserId)
+    .filter(Boolean);
+  if (userIds.length === 0) return;
+  memberAttributesLoading.value = true;
+  try {
+    await store.dispatch('fetchGroupMembersAttributesFromServer', {
+      groupId: groupId.value,
+      userIds,
+      keys: ['groupNamecard'],
+    });
+  } catch (error) {
+    console.error('[SDK 5.0 Group] getMembersAttributes UI failed', {
+      groupId: groupId.value,
+      userIds,
+      error,
+    });
+  } finally {
+    memberAttributesLoading.value = false;
+  }
+};
+onMounted(async () => {
+  if (!getGroupMembersList.value) {
+    await store.dispatch('fetchGroupsMemberFromServer', { groupId: groupId.value });
+  }
+  await fetchGroupMembersAttributes();
+});
+const openGroupNamecardDialog = (member) => {
+  const userId = getGroupMemberUserId(member);
+  if (!userId) return;
+  editingMemberId.value = userId;
+  groupNamecardInput.value = getGroupMemberNamecard(userId);
+  memberAttributeDialogVisible.value = true;
+};
+const submitGroupNamecard = async () => {
+  if (!editingMemberId.value) return;
+  memberAttributesLoading.value = true;
+  try {
+    await store.dispatch('setGroupMemberAttributes', {
+      groupId: groupId.value,
+      userId: editingMemberId.value,
+      memberAttributes: {
+        groupNamecard: groupNamecardInput.value,
+      },
+    });
+    memberAttributeDialogVisible.value = false;
+  } catch (error) {
+    console.error('[SDK 5.0 Group] setMemberAttributes UI failed', {
+      groupId: groupId.value,
+      userId: editingMemberId.value,
+      groupNamecard: groupNamecardInput.value,
+      error,
+    });
+    ElMessage.error(error?.message || '群名片设置失败');
+  } finally {
+    memberAttributesLoading.value = false;
+  }
+};
 const showGroupsMembersName = computed(() => {
   return (item) => {
     const userId = getGroupMemberUserId(item);
@@ -112,7 +176,7 @@ const inviteNewMemberInTheGroup = async (hxId) => {
     callback: async (action) => {
       if (action === 'confirm') {
         await store.dispatch('inviteUserJoinTheGroup', {
-          users: hxId,
+          userIds: [hxId],
           groupId: groupId.value,
         });
       }
@@ -129,7 +193,7 @@ const removeTheMember = async (params) => {
     callback: async (action) => {
       if (action === 'confirm') {
         await store.dispatch('removeTheGroupMember', {
-          username: member,
+          userIds: [member],
           groupId: groupId.value,
         });
       }
@@ -247,6 +311,14 @@ const searchUsers = (keyword) => {
             {{
               `${groupDetail.memberCount ?? '-'}/${groupDetail.maxMembers ?? '-'}`
             }}
+            <el-button
+              link
+              type="primary"
+              :loading="memberAttributesLoading"
+              @click="fetchGroupMembersAttributes"
+            >
+              刷新群名片
+            </el-button>
           </p>
           <div class="now_exit_group_members">
             <div
@@ -258,27 +330,67 @@ const searchUsers = (keyword) => {
                   <el-avatar
                     :src="getContactsAvatarById(getGroupMemberUserId(item))"
                   ></el-avatar>
-                  <b class="friend_list_username">{{
-                    showGroupsMembersName(item)
-                  }}</b>
+                  <div class="group_member_text">
+                    <b class="friend_list_username">{{
+                      showGroupsMembersName(item)
+                    }}</b>
+                    <span class="group_member_namecard">
+                      群名片：{{ getGroupMemberNamecard(getGroupMemberUserId(item)) || 'SDK 未返回' }}
+                    </span>
+                    <pre class="group_member_attributes_raw">{{ JSON.stringify(getGroupMemberAttributes(getGroupMemberUserId(item)), null, 2) }}</pre>
+                  </div>
                 </div>
 
-                <el-button
-                  v-if="
-                    memberRole && getGroupMemberUserId(item) !== loginUserId
-                  "
-                  type="danger"
-                  :icon="Minus"
-                  circle
-                  size="small"
-                  @click="removeTheMember(item)"
-                />
+                <div class="group_member_actions">
+                  <el-button
+                    type="primary"
+                    size="small"
+                    @click="openGroupNamecardDialog(item)"
+                  >
+                    设置群名片
+                  </el-button>
+                  <el-button
+                    v-if="
+                      memberRole && getGroupMemberUserId(item) !== loginUserId
+                    "
+                    type="danger"
+                    :icon="Minus"
+                    circle
+                    size="small"
+                    @click="removeTheMember(item)"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </el-scrollbar>
     </div>
+    <el-dialog
+      v-model="memberAttributeDialogVisible"
+      title="设置群名片"
+      width="360px"
+      :destroy-on-close="true"
+    >
+      <div class="group_member_attribute_dialog">
+        <p>成员：{{ editingMemberId }}</p>
+        <el-input
+          v-model="groupNamecardInput"
+          placeholder="请输入 groupNamecard"
+          clearable
+        />
+      </div>
+      <template #footer>
+        <el-button @click="memberAttributeDialogVisible = false">取消</el-button>
+        <el-button
+          type="primary"
+          :loading="memberAttributesLoading"
+          @click="submitGroupNamecard"
+        >
+          确认
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -343,6 +455,9 @@ const searchUsers = (keyword) => {
 }
 
 .title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   text-align: left;
   height: 40px;
   width: 100%;
@@ -360,10 +475,11 @@ const searchUsers = (keyword) => {
   .friend_user_list_left {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    min-width: 0;
+    flex: 1;
 
     .friend_list_username {
-      margin-left: 10px;
       font-family: 'PingFang SC';
       font-style: normal;
       font-weight: 500;
@@ -371,6 +487,44 @@ const searchUsers = (keyword) => {
       line-height: 20px;
       color: #333333;
     }
+  }
+
+  .group_member_text {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    margin-left: 10px;
+  }
+
+  .group_member_namecard {
+    color: #8a94a6;
+    font-size: 12px;
+    line-height: 16px;
+    word-break: break-all;
+  }
+
+  .group_member_attributes_raw {
+    max-width: 180px;
+    max-height: 54px;
+    margin: 0;
+    padding: 4px 6px;
+    overflow: auto;
+    border-radius: 4px;
+    background: #f7f8fa;
+    color: #607089;
+    font-size: 11px;
+    line-height: 14px;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .group_member_actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
   }
 
   .checked_btn {
@@ -395,5 +549,13 @@ const searchUsers = (keyword) => {
   .circle_close:hover {
     color: #0091ff;
   }
+}
+
+.group_member_attribute_dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #333333;
+  font-size: 14px;
 }
 </style>

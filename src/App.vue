@@ -82,7 +82,7 @@ const { isOpenPlayRing, playRing } = usePlayRing();
 const handleNewMessage = (message) => {
   safeSync('handleNewMessage', () => {
     if (!message || typeof message !== 'object') return;
-    if (message.from !== getCurrentUserId() && isOpenPlayRing.value) {
+    if (message.sender?.userId !== getCurrentUserId() && isOpenPlayRing.value) {
       playRing();
     }
   });

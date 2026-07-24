@@ -191,11 +191,7 @@ async function doSendVideoFile(videoFile) {
     ...(isChatThread.value ? { isChatThread: true } : {}),
     onFileUploadError: (error) => {
       console.error('视频上传失败:', error);
-      if (error?.type === 413 || error?.data?.error === 'Request Entity Too Large') {
-        ElMessage.error('视频大小超过服务器限制');
-      } else {
-        notifySdkSendError(error);
-      }
+      notifySdkSendError(error);
       emit('onLoadending');
     },
     onFileUploadProgress: () => {

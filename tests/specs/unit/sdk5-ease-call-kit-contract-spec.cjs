@@ -8,6 +8,8 @@ const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'u
 const callMessages = read('src/components/EaseCallKit/utils/callMessages.js');
 const component = read('src/components/EaseCallKit/index.vue');
 const channel = read('src/components/EaseCallKit/hooks/useManageChannel.js');
+const app = read('src/App.vue');
+const chatShell = read('src/views/Chat/index.vue');
 
 for (const source of [callMessages, component, channel]) {
   assert.doesNotMatch(
@@ -26,5 +28,10 @@ assert.match(component, /getClientResource\(\)/);
 assert.match(component, /getRTCTokenInfo/);
 assert.match(channel, /getCurrentUserId\(\)/);
 assert.match(channel, /getClientResource\(\)/);
+assert.doesNotMatch(app, /\bcreateInformMessage\b|\bCHAT_TYPE\b|\b(from|to|chatType|msg):/);
+assert.doesNotMatch(
+  chatShell,
+  /\bcreateInformMessage\b|\bCHAT_TYPE\b|\b(from|to|chatType|msg):/,
+);
 
 console.log('sdk5 EaseCallKit contract: PASS');

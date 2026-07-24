@@ -12,7 +12,7 @@ for (const relativePath of [
   'src/views/Chat/components/Message/components/ChatMessageListItem/index.vue',
   'src/views/Chat/components/Message/components/MessageSearchDrawer.vue',
   'src/views/Chat/components/Message/components/suit/modifyMessage.vue',
-  'src/views/Chat/components/Message/components/suit/msgQuote.vue',
+  'src/views/Chat/components/Message/components/suit/quoteMessage.vue',
 ]) {
   const source = read(relativePath);
   assert.doesNotMatch(source, /\.(mid|chatType|msg|to|from)\b/);
@@ -41,5 +41,24 @@ for (const relativePath of [
   assert.doesNotMatch(source, /\b(mid|to|from):/);
   assert.doesNotMatch(source, /\bmsg\b/);
 }
+
+const quoteComposer = read(
+  'src/views/Chat/components/Message/components/suit/quoteMessage.vue',
+);
+assert.match(quoteComposer, /const quote = ref\(null\);/);
+assert.doesNotMatch(quoteComposer, /\bmsgQuote\b/);
+assert.doesNotMatch(quoteComposer, /\bMESSAGE_TYPE\b|\bSESSION_MESSAGE_TYPE\b/);
+
+const textMessage = read(
+  'src/views/Chat/components/Message/components/ChatInputBox/components/TextMessage/index.vue',
+);
+assert.match(textMessage, /msgOptions\.ext\.quote = quote;/);
+assert.doesNotMatch(textMessage, /msgOptions\.ext\.msgQuote/);
+
+const messageList = read(
+  'src/views/Chat/components/Message/components/ChatMessageListItem/index.vue',
+);
+assert.match(messageList, /msgBody\?\.ext\?\.quote/);
+assert.doesNotMatch(messageList, /msgBody\?\.ext\?\.msgQuote/);
 
 console.log('sdk5 message UI model contract: PASS');
