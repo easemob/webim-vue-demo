@@ -13,7 +13,7 @@ const uncovered = read('docs/sdk5-uncovered-capabilities.md');
 
 assert.match(
   chatroomDetails,
-  /const refreshChatroomDetails = async \(\) => \{[\s\S]*const res = await chatRoom\(\)\.refresh\(\);[\s\S]*chatroomDetails\.value = res;[\s\S]*refreshCurrentUserChatroomMembership\(res\);[\s\S]*return res;/,
+  /const refreshChatroomDetails = async \(\) => \{[\s\S]*const res = await chatRoom\(\)\.refresh\(\);[\s\S]*chatroomDetails\.value = res;[\s\S]*return res;/,
   'Chatroom details must expose a real SDK 5.0 ChatRoom.refresh path and consume the raw returned detail.',
 );
 assert.match(

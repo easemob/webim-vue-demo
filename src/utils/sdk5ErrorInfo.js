@@ -28,9 +28,15 @@ export function getSdk5ErrorMessage(error, fallbackMessage = '') {
   return fallbackMessage;
 }
 
+function hasBusinessRejectionReason(details) {
+  const reason = typeof details?.reason === 'string' ? details.reason : '';
+  return reason.toLowerCase().includes('blacklist');
+}
+
 export function isSdk5AuthenticationError(error) {
-  const { message, code } = getSdk5ErrorInfo(error);
-  if ([108, 201, 202, 210].includes(code)) return true;
+  const { message, code, details } = getSdk5ErrorInfo(error);
+  if (hasBusinessRejectionReason(details)) return false;
+  if ([108, 201, 202].includes(code)) return true;
   const normalizedMessage = message.toLowerCase();
   return (
     normalizedMessage.includes('auth') ||

@@ -70,7 +70,7 @@ const casesList = read('cases_list.md');
 const superpowers = read('.codex/prompts/superpowers.md');
 assert.match(
   casesList,
-  /刷新聊天室列表失败时保留 SDK \/ 服务端真实错误；若 SDK 5\.0 返回鉴权失败则清除过期登录态并回到登录页，不重试、不伪造列表/,
+  /刷新聊天室列表失败时保留 SDK \/ 服务端真实错误；若 SDK 5\.0 返回 token 失效、未登录或未授权则清除过期登录态并回到登录页，不重试、不伪造列表/,
 );
 assert.match(
   casesList,
@@ -78,7 +78,7 @@ assert.match(
 );
 assert.match(
   superpowers,
-  /聊天室公开列表调用失败必须保留 SDK \/ 服务端真实错误；SDK 5\.0 鉴权失败时清除过期登录态并回到登录页，不重试、不伪造列表/,
+  /聊天室公开列表调用失败必须保留 SDK \/ 服务端真实错误；仅 token 失效、未登录或未授权才清除过期登录态并回到登录页，权限拒绝（`210`）以及 SDK 映射为 `202` 但 `details\.reason` 明确为黑名单的业务拒绝必须留在当前页展示原始错误，不重试、不伪造列表/,
 );
 assert.match(
   superpowers,
@@ -95,8 +95,13 @@ assert.match(
 
 assert.match(
   chatroomDetails,
+  /const isCurrentUserJoined = computed\(\(\) => \{[\s\S]*?const chatRoomId = normalizeChatroomId\(route\.query\.chatRoomId\);[\s\S]*?store\.state\.joinedChatroomIds\.has\(chatRoomId\)/,
+  'Only a successful SDK 5.0 joinChatRoom call may enable chatroom member actions; owner permissionType is not membership.',
+);
+assert.doesNotMatch(
+  chatroomDetails,
   /detail\?\.permissionType != null && detail\.permissionType !== 'none'/,
-  'SDK 5.0 exposes current membership on ChatRoomDetail.permissionType.',
+  'ChatRoomDetail.permissionType is an authorization field and must not be used as a joined-membership substitute.',
 );
 assert.doesNotMatch(chatroomDetails, /getJoinedChatRooms/);
 assert.doesNotMatch(

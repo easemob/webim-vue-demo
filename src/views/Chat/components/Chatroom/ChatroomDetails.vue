@@ -20,8 +20,6 @@ const store = useStore();
 const chatroomDetails = ref({});
 const loading = ref(false);
 const admins = ref([]);
-const isCurrentUserJoined = ref(false);
-const membershipLoading = ref(false);
 const chatRoomManager = () => requireManager('chatRoomManager');
 const chatRoom = () => chatRoomManager().getChatRoom(route.query.chatRoomId);
 const isOwner = computed(() => {
@@ -30,6 +28,10 @@ const isOwner = computed(() => {
 const isAdmin = computed(() =>
   admins.value.some((admin) => admin.userId === getCurrentUserId()),
 );
+const isCurrentUserJoined = computed(() => {
+  const chatRoomId = normalizeChatroomId(route.query.chatRoomId);
+  return chatRoomId ? store.state.joinedChatroomIds.has(chatRoomId) : false;
+});
 const canUseJoinedChatroomActions = computed(() => isCurrentUserJoined.value);
 const hasAnnouncementPermission = computed(() => isOwner.value || isAdmin.value);
 const hasChatroomInfoPermission = computed(() => isOwner.value || isAdmin.value);
@@ -45,22 +47,6 @@ const checkLoginStatus = () => {
 const normalizeChatroomId = (id) => {
   if (id == null || id === '') return '';
   return String(id);
-};
-
-const refreshCurrentUserChatroomMembership = (detail) => {
-  membershipLoading.value = true;
-  try {
-    isCurrentUserJoined.value = detail?.permissionType != null && detail.permissionType !== 'none';
-    console.log('[ChatroomDetails] current user membership read from SDK 5.0 detail', {
-      chatRoomId: normalizeChatroomId(route.query.chatRoomId),
-      currentUser: getCurrentUserId(),
-      permissionType: detail?.permissionType,
-      isCurrentUserJoined: isCurrentUserJoined.value,
-    });
-    return isCurrentUserJoined.value;
-  } finally {
-    membershipLoading.value = false;
-  }
 };
 
 const showJoinedOnlyTip = () => {
@@ -102,7 +88,6 @@ const getChatroomDetails = async () => {
     chatroomDetails.value = res;
 
     try {
-      refreshCurrentUserChatroomMembership(res);
       if (canUseJoinedChatroomActions.value) {
         await getChatRoomAdmin();
         await getChatRoomAnnouncement();
@@ -166,7 +151,6 @@ const refreshChatroomDetails = async () => {
       result: res,
     });
     chatroomDetails.value = res;
-    refreshCurrentUserChatroomMembership(res);
     if (canUseJoinedChatroomActions.value) {
       await getChatRoomAdmin();
       await getChatRoomAnnouncement();
