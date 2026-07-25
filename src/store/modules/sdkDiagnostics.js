@@ -120,6 +120,38 @@ const SdkDiagnostics = {
         return commitFailure(commit, action, context, error);
       }
     },
+    getSelfIdsOnOtherPlatform: async ({ commit }) => {
+      const action = 'getSelfIdsOnOtherPlatform';
+      try {
+        const client = getClient();
+        const result = await client.getSelfIdsOnOtherPlatform();
+        return commitSuccess(commit, action, {}, result);
+      } catch (error) {
+        return commitFailure(commit, action, {}, error);
+      }
+    },
+    getUserIdsWithRTCUids: async ({ commit }, { rtcUids }) => {
+      const action = 'getUserIdsWithRTCUids';
+      try {
+        const client = getClient();
+        const result = await client.getUserIdsWithRTCUids(rtcUids);
+        return commitSuccess(commit, action, { rtcUids }, result);
+      } catch (error) {
+        return commitFailure(commit, action, { rtcUids }, error);
+      }
+    },
+    voiceFileToText: async ({ commit }, { file, voiceParams }) => {
+      const action = 'voiceFileToText';
+      try {
+        const result = await requireManager('chatManager').voiceFileToText(
+          file,
+          voiceParams,
+        );
+        return commitSuccess(commit, action, { file, voiceParams }, result);
+      } catch (error) {
+        return commitFailure(commit, action, { file, voiceParams }, error);
+      }
+    },
     uploadPushToken: async ({ commit }, { deviceId, deviceToken, notifierName }) => {
       const action = 'uploadPushToken';
       const context = {

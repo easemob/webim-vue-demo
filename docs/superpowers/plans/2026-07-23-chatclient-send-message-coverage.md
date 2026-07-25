@@ -6,11 +6,11 @@
 
 **Architecture:** 消息继续由 `ChatManager.createTextMessage` 创建为 SDK 5.0 原始 `Message`。现有普通发送继续调用 `ChatManager.sendMessage`；新增按钮调用一个只转发到 `getClient().sendMessage` 的封装，成功后才使用 SDK 回包写入既有消息列表，失败时保留原始错误且绝不回退到 Manager。
 
-**Tech Stack:** Vue 3 `<script setup>`、Vuex、Element Plus、Node `assert` 合约测试、`easemob-websdk@5.0.1`。
+**Tech Stack:** Vue 3 `<script setup>`、Vuex、Element Plus、Node `assert` 合约测试、`easemob-websdk 5.0`。
 
 ## Global Constraints
 
-- 只使用 WebSDK 5.0.1 公开 API、字段和事件；禁止 V4 字段、兼容层、双路径或降级逻辑。
+- 只使用 WebSDK 5.0 公开 API、字段和事件；禁止 V4 字段、兼容层、双路径或降级逻辑。
 - `ChatClient.sendMessage` 失败后禁止调用 `ChatManager.sendMessage`、重试或本地伪造成功。
 - 新入口只覆盖当前会话文本消息，不增加图片、文件、语音、视频的 Client 发送入口。
 - 保留 SDK 原始成功回包和错误对象到 Console；UI/Store 只消费 SDK 5.0 原始 `Message`。

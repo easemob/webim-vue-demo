@@ -2,7 +2,7 @@
 
 # webim-vue3-demo
 
-`webim-vue3-demo` 是基于 Vue 3、Vuex、Element Plus 和本地构建 `easemob-websdk 5.0.0` 的环信 Web IM Demo。本项目当前定位是 Web 端真实能力验证工具：页面和控制台应直接暴露 SDK 5.0 / 服务端的真实成功、失败、事件字段和错误信息，不通过客户端模拟成功、自动重试、静默降级或本地兜底来掩盖服务端行为。
+`webim-vue3-demo` 是基于 Vue 3、Vuex、Element Plus 和本地构建 `easemob-websdk 5.0` 的环信 Web IM Demo。本项目当前定位是 Web 端真实能力验证工具：页面和控制台应直接暴露 SDK 5.0 / 服务端的真实成功、失败、事件字段和错误信息，不通过客户端模拟成功、自动重试、静默降级或本地兜底来掩盖服务端行为。
 
 当前 Demo 覆盖单聊、群聊、聊天室、消息话题/群组子区、会话、联系人、群组管理、聊天室管理、消息收发、消息交互、Reaction、在线状态和音视频通话示例等能力。
 消息页还提供服务端消息搜索入口，用于验证 `chatManager.searchMessages` 的真实服务端搜索能力。
@@ -50,7 +50,7 @@ npm run format
 | 路径 | 说明 |
 | --- | --- |
 | [src/](./src) | 项目源代码 |
-| [src/IM/](./src/IM) | WebIM SDK 初始化、配置、监听、miniCore 包装 |
+| [src/IM/](./src/IM) | WebSDK 5.0 客户端直接初始化、配置与监听 |
 | [src/router/](./src/router) | 页面路由 |
 | [src/store/](./src/store) | Vuex 状态管理 |
 | [src/views/Chat/](./src/views/Chat) | 会话、联系人、聊天室、消息主界面 |
@@ -67,7 +67,7 @@ npm run format
 - SDK 调用失败时，页面应保留失败提示，控制台应保留完整错误上下文。
 - 不把失败包装成成功，不做自动重试、模拟成功、静默降级、客户端假数据补齐。
 - SDK 与 REST 行为不一致时，应暴露差异，不合并成一个“成功体验”。
-- `chatType` 等关键字段缺失时应清晰报错，不随意推断为单聊、群聊或聊天室。
+- `conversationId`、`conversationType` 等 SDK 5.0 关键字段缺失时应清晰报错，不随意推断为单聊、群聊或聊天室。
 - 失败不应导致页面不可用；页面应保持可操作并展示正常错误反馈。
 
 ## 核心能力
@@ -142,7 +142,7 @@ npm run format
 
 - 添加好友。
 - 创建群组，支持填写群头像和群扩展信息。
-- 创建聊天室。
+- 创建聊天室：当前 SDK 5.0 未公开该 API，Demo 不提供创建入口。
 - 申请入群。
 
 相关入口：
@@ -223,7 +223,6 @@ npm run format
 - 消息撤回。
 - 文本消息编辑。
 - 删除消息。
-- 消息举报。
 - 消息置顶和取消置顶。
 - 单聊右侧资料面板：好友备注、消息免打扰、加入/移出黑名单、查看黑名单列表并移出用户、清空聊天记录、删除联系人。
 
@@ -233,7 +232,6 @@ npm run format
 - [消息引用](./src/views/Chat/components/Message/components/suit/msgQuote.vue)
 - [图片预览发送](./src/views/Chat/components/Message/components/suit/previewSendImg.vue)
 - [消息编辑](./src/views/Chat/components/Message/components/suit/modifyMessage.vue)
-- [消息举报](./src/views/Chat/components/Message/components/suit/reportMessage.vue)
 - [单聊详情](./src/views/Chat/components/Message/components/SingleChatDetails.vue)
 - [消息状态](./src/store/modules/message.js)
 
@@ -257,13 +255,11 @@ npm run format
 
 本 Demo 用于验证真实 SDK / 服务端行为。撤回消息必须以 SDK 调用结果和 SDK 事件真实字段为准，不做客户端模拟成功或静默兜底。
 
-- 发起撤回时通过 SDK 5.0 `chatManager.recallMessage` 传入真实消息 ID、目标 ID、会话类型。
+- 发起撤回时通过 SDK 5.0 `chatManager.recallMessage({ conversationId, conversationType, messageId })` 传入真实会话定位和消息 ID。
 - SDK 返回失败时保持失败提示和控制台错误，不把消息本地标记为已撤回。
-- 接收撤回事件时优先使用 SDK 事件中的真实字段。
-- 当前 Web SDK 的 `onRecallMessage` 回调体可能只有 `id`、`from`、`to`、`mid`、`ext` 等字段，未必包含 `chatType`。
-- 跨端编辑/非聊天室撤回事件缺少 `chatType` 时，仅可使用本地已存在原消息的真实 `chatType` 更新。
-- 聊天室撤回事件缺少 `chatType` 时，Demo 只输出包含 `messageId`、`from`、`to`、`localMessage`、`rawMessage` 的错误日志，不使用本地原消息补全为 `chatRoom` 后更新本地撤回状态，避免服务端未真实撤回时页面显示“已撤回”。
-- 排查聊天室撤回问题时，建议同时保留 SDK 5.0 `chatManager.recallMessage` 入参、SDK Promise 成功或失败结果、`onRecallMessage` 原始回调、SDK 版本以及服务端对原消息 ID 的撤回状态确认。
+- 接收 `onMessageRecalled` 事件时，直接使用 SDK 5.0 下发的 `messageId`、`conversationId`、`conversationType` 和 `timestamp` 定位消息。
+- 事件缺少上述任一定位字段时，Demo 仅保留原始事件和错误日志，不用其他字段或本地消息补造会话定位。
+- 排查聊天室撤回问题时，建议同时保留 SDK 5.0 `chatManager.recallMessage` 入参、SDK Promise 成功或失败结果、`onMessageRecalled` 原始回调、SDK 版本以及服务端对原消息 ID 的撤回状态确认。
 
 ## 群组能力
 
@@ -315,20 +311,19 @@ npm run format
 
 ### 聊天室列表和成员关系
 
-- 展示所有聊天室列表。
-- 展示已加入聊天室列表。
+- 展示 SDK 5.0 `getChatRoomList` 返回的公开聊天室列表。
 - 刷新聊天室列表。
 - 加入聊天室。
 - 加入请求进行中阻止同一聊天室重复提交，成功或失败仍以真实 SDK / 服务端返回为准。
 - 退出聊天室。
 - 从聊天室详情进入消息页。
+- 当前 SDK 5.0 不提供已加入聊天室列表或聊天室消息免打扰 API，Demo 不提供相应入口。
 
 ### 聊天室详情
 
 - 展示聊天室基础信息。
 - 重复进入详情时重新请求服务端详情。
 - 展示聊天室公告。
-- 设置聊天室消息免打扰。
 - 修改聊天室信息。
 - 更新聊天室公告。
 - 获取聊天室自定义属性。
@@ -371,7 +366,7 @@ npm run format
 SDK 初始化和事件监听是 IM 能力实现的基础：
 
 - [SDK 配置](./src/IM/config/index.js)
-- [SDK 初始化包装](./src/IM/miniCore/index.js)
+- [SDK 5.0 初始化入口](./src/IM/index.js)
 - [SDK 导出入口](./src/IM/index.js)
 - [SDK 常量](./src/IM/constant/)
 - [SDK 事件监听](./src/IM/listener/)
@@ -380,9 +375,8 @@ SDK 初始化和事件监听是 IM 能力实现的基础：
 典型接入流程：
 
 ```javascript
-import { initSDK, login, requireManager } from '@/IM';
+import { login, requireManager } from '@/IM';
 
-initSDK();
 await login({ userId: '', token: '' });
 const chatManager = requireManager('chatManager');
 ```
@@ -398,7 +392,7 @@ const chatManager = requireManager('chatManager');
 
 相关入口：
 
-- [miniCore 包装](./src/IM/miniCore/index.js)
+- [SDK 5.0 初始化入口](./src/IM/index.js)
 - [全局错误处理](./src/utils/globalErrorHandler.js)
 - [SDK 错误提示处理](./src/utils/handleSomeData/handleSDKErrorNotifi.js)
 

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <link rel="icon" href="<%= BASE_URL %>favicon.ico" />
     <title><%= htmlWebpackPlugin.options.title %></title>
-    <!-- 早于 webpack 注入的 dev-client 注册，抑制环信 miniCore 空引用导致的全屏 overlay -->
+    <!-- 早于 webpack 注入的 dev-client 注册，保留 SDK 空引用错误的 Console 上下文。 -->
     <script>
       (function () {
         function nullishPropMsg(m) {

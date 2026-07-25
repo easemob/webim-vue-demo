@@ -1,4 +1,8 @@
-export { imClient } from './miniCore';
+import { sdk5Config } from './initwebsdk';
+import { initializeClient } from './sdk5/client';
+
+initializeClient(sdk5Config);
+
 export {
   getClient,
   getCurrentUserId,
@@ -6,4 +10,4 @@ export {
   logout,
   requireManager,
   toConversationLocator,
-} from './miniCore';
+} from './sdk5/client';

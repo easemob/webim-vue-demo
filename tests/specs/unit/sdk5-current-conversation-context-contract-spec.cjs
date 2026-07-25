@@ -86,7 +86,7 @@ assert.match(
 );
 assert.match(
   coverage,
-  /\| API 覆盖率 \| 93\.6% \| 按当前 `src\/` 已直接调用的公开对外 API 去重数量统计，`189 \/ 202` \|/,
+  /\| API 覆盖率 \| 94\.1% \| 按当前 `src\/` 已直接调用的公开对外 API 去重数量统计，`193 \/ 205` \|/,
   'coverage summary must include the 3 newly covered current conversation APIs',
 );
 assert.match(
@@ -101,7 +101,7 @@ assert.doesNotMatch(
 );
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 189 个，未覆盖 13 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
   'uncovered capabilities summary must use the updated public API counts',
 );
 

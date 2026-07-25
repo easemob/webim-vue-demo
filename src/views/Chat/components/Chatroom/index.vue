@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { ElMessage } from 'element-plus';
 import { getCurrentUserId, requireManager } from '@/IM';
@@ -38,89 +38,6 @@ const checkLoginStatus = () => {
     return false;
   }
   return true;
-};
-
-const logChatroomSdkEvent = (eventName, payload) => {
-  console.log('[SDK 5.0 ChatRoom event]', {
-    eventName,
-    chatRoomId: payload?.chatRoomId,
-    currentUserId: getCurrentUserId(),
-    payload,
-  });
-};
-
-// 设置聊天室事件监听器，只记录真实 SDK 事件
-const setupChatroomEventHandler = () => {
-  if (chatroomEventHandler) {
-    chatRoomManager().removeEventHandler('CHATROOM');
-  }
-
-  chatroomEventHandler = chatRoomManager().addEventHandler('CHATROOM', {
-    onChatRoomDestroyed: (payload) => {
-      logChatroomSdkEvent('onChatRoomDestroyed', payload);
-      ElMessage.warning('聊天室已解散');
-    },
-    onRemovedFromChatRoom: (payload) => {
-      logChatroomSdkEvent('onRemovedFromChatRoom', payload);
-      ElMessage.warning('你已被移出聊天室');
-    },
-    onMembersJoined: (payload) => {
-      logChatroomSdkEvent('onMembersJoined', payload);
-    },
-    onMembersExited: (payload) => {
-      logChatroomSdkEvent('onMembersExited', payload);
-    },
-    onAllMemberMuteStateChanged: (payload) => {
-      logChatroomSdkEvent('onAllMemberMuteStateChanged', payload);
-      ElMessage[payload.isMuted ? 'warning' : 'success'](
-        payload.isMuted ? '聊天室已开启全员禁言' : '聊天室已解除全员禁言',
-      );
-    },
-    onAllowListAdded: (payload) => {
-      logChatroomSdkEvent('onAllowListAdded', payload);
-      ElMessage.success('你已被添加到聊天室白名单');
-    },
-    onAllowListRemoved: (payload) => {
-      logChatroomSdkEvent('onAllowListRemoved', payload);
-      ElMessage.warning('你已被移出聊天室白名单');
-    },
-    onAnnouncementChanged: (payload) => {
-      logChatroomSdkEvent('onAnnouncementChanged', payload);
-      ElMessage.info('聊天室公告已更新');
-    },
-    onMuteListAdded: (payload) => {
-      logChatroomSdkEvent('onMuteListAdded', payload);
-      ElMessage.warning('你已被禁言');
-    },
-    onMuteListRemoved: (payload) => {
-      logChatroomSdkEvent('onMuteListRemoved', payload);
-      ElMessage.success('你已被解除禁言');
-    },
-    onAdminAdded: (payload) => {
-      logChatroomSdkEvent('onAdminAdded', payload);
-      ElMessage.success('你已被设置为管理员');
-    },
-    onAdminRemoved: (payload) => {
-      logChatroomSdkEvent('onAdminRemoved', payload);
-      ElMessage.warning('你已被移除管理员');
-    },
-    onOwnerChanged: (payload) => {
-      logChatroomSdkEvent('onOwnerChanged', payload);
-      ElMessage.info('聊天室所有者已变更');
-    },
-    onChatRoomInfoChanged: (payload) => {
-      logChatroomSdkEvent('onChatRoomInfoChanged', payload);
-      ElMessage.info('聊天室信息已更新');
-    },
-    onAttributesUpdate: (payload) => {
-      logChatroomSdkEvent('onAttributesUpdate', payload);
-      ElMessage.info('聊天室自定义属性已更新');
-    },
-    onAttributesRemoved: (payload) => {
-      logChatroomSdkEvent('onAttributesRemoved', payload);
-      ElMessage.info('聊天室自定义属性已删除');
-    },
-  });
 };
 
 const isJoiningRoom = (chatRoomId) => {
@@ -334,17 +251,8 @@ const networkStatus = computed(() => {
   return store.state.networkStatus;
 });
 
-let chatroomEventHandler = null;
-
 onMounted(() => {
   getChatrooms();
-  setupChatroomEventHandler();
-});
-
-onUnmounted(() => {
-  if (chatroomEventHandler) {
-    chatRoomManager().removeEventHandler('CHATROOM');
-  }
 });
 </script>
 

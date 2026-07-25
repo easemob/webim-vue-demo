@@ -33,7 +33,7 @@ assert.match(groupStore, /state\.groupAdmins\.delete\(groupId\)/);
 assert.match(
   groupStore,
   /SET_GROUP_ADMINS:\s*\(state, \{ groupId, admins \}\)\s*=>\s*\{[\s\S]*state\.groupAdmins\.set\(groupId, admins\);[\s\S]*\}/,
-  'Group admins must be stored as the raw SDK 5.0 UserInfo[] result.',
+  'Group admins must be stored as the raw SDK 5.0 GroupUserInfo[] result.',
 );
 assert.match(
   groupStore,
@@ -83,7 +83,7 @@ assert.doesNotMatch(
 
 assert.match(
   casesList,
-  /查看群管理员列表；调用 SDK 5\.0 `groupManager\.getGroup\(groupId\)\.getAdmins\(\)` 并按 `admin\.userId` 展示/,
+  /查看群管理员列表；调用 SDK 5\.0 `groupManager\.getGroup\(groupId\)\.getAdmins\(\)`，直接展示返回的 `GroupUserInfo\[\]` 的 `admin\.userId`/,
 );
 assert.match(
   casesList,
@@ -97,17 +97,17 @@ assert.match(
   superpowers,
   /群管理员必须只调用 SDK 5\.0 公开 `groupManager\.getGroup\(groupId\)\.getAdmins\(\)`、`addAdmin\(\{ userId \}\)`、`removeAdmin\(\{ userId \}\)`/,
 );
-assert.match(coverage, /\| API 覆盖率 \| 93\.6% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 189 \|/);
-assert.match(coverage, /\| 未覆盖公开对外 API \| 13 \|/);
+assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
-  /\| 群成员与管理员 \| `Group\.getMembers`, `removeMembers`, `getAdmins`, `addAdmin`, `removeAdmin` \| 是 \| 群成员列表、群组定向消息成员来源和移出成员已使用公开 `Group\.getMembers` \/ `removeMembers`；群管理页提供管理员入口，调用 `Group\.getAdmins\(\)` 展示 `UserInfo\[\]`，调用 `Group\.addAdmin\(\{ userId \}\)` 和 `Group\.removeAdmin\(\{ userId \}\)` 操作管理员，成功后重新查询管理员和成员列表。 \| 真实权限和服务端结果以 SDK 返回为准；失败不本地回填。 \|/,
+  /\| 群成员与管理员 \| `Group\.getMembers`, `removeMembers`, `getAdmins`, `addAdmin`, `removeAdmin` \| 是 \| 群成员列表、群组定向消息成员来源和移出成员已使用公开 `Group\.getMembers` \/ `removeMembers`；群管理页提供管理员入口，调用 `Group\.getAdmins\(\)` 展示 `GroupUserInfo\[\]`，调用 `Group\.addAdmin\(\{ userId \}\)` 和 `Group\.removeAdmin\(\{ userId \}\)` 操作管理员，成功后重新查询管理员和成员列表。 \| 真实权限和服务端结果以 SDK 返回为准；失败不本地回填。 \|/,
 );
 assert.doesNotMatch(uncovered, /群管理员/);
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 189 个，未覆盖 13 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
 );
 
 console.log('sdk5 group admins contract: PASS');

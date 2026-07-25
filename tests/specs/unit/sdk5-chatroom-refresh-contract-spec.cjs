@@ -40,9 +40,9 @@ assert.match(
   superpowers,
   /聊天室基础资料刷新必须只调用 SDK 5\.0 公开 `chatRoomManager\.getChatRoom\(chatRoomId\)\.refresh\(\)`，并展示返回的真实 `ChatRoomDetail`/,
 );
-assert.match(coverage, /\| API 覆盖率 \| 93\.6% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 189 \|/);
-assert.match(coverage, /\| 未覆盖公开对外 API \| 13 \|/);
+assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
   /\| 聊天室基础资料 \| `ChatRoom\.getInfo`, `refresh`, `updateInfo`, `leaveChatRoom` \| 是 \| 聊天室详情、刷新聊天室详情、修改聊天室信息、退出聊天室均已通过公开 `ChatRoom\.getInfo` \/ `refresh` \/ `updateInfo` \/ `leaveChatRoom` 接入。 \| 真实权限和服务端结果以 SDK 返回为准；失败不本地回填。 \|/,
@@ -51,7 +51,7 @@ assert.doesNotMatch(coverage, /未覆盖 `ChatRoom\.refresh`/);
 assert.doesNotMatch(uncovered, /ChatRoom\.refresh/);
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 189 个，未覆盖 13 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
 );
 
 console.log('sdk5 chatroom refresh contract: PASS');

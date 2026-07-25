@@ -51,9 +51,9 @@ assert.match(
   /\[Message Send\] ChatClient\.sendMessage failed/,
 );
 
-assert.match(coverage, /\| API 覆盖率 \| 93\.6% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 189 \|/);
-assert.match(coverage, /\| 未覆盖公开对外 API \| 13 \|/);
+assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
   /`@internal` 私有入口不进入覆盖率分母、不作为未覆盖能力/,

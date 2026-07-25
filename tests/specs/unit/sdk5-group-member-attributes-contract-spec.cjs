@@ -83,9 +83,9 @@ assert.match(
   superpowers,
   /群成员属性 \/ 群名片必须只调用 SDK 5\.0 公开 `groupManager\.getGroup\(groupId\)\.setMemberAttributes\(\{ userId, memberAttributes \}\)` 和 `getMembersAttributes\(\{ userIds, keys \}\)`/,
 );
-assert.match(coverage, /\| API 覆盖率 \| 93\.6% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 189 \|/);
-assert.match(coverage, /\| 未覆盖公开对外 API \| 13 \|/);
+assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
   /\| 群成员属性 \/ 群名片 \| `Group\.setMemberAttributes`, `getMembersAttributes` \| 是 \| 群成员管理页调用 `Group\.setMemberAttributes\(\{ userId, memberAttributes: \{ groupNamecard \} \}\)` 设置群名片，并调用 `Group\.getMembersAttributes\(\{ userIds, keys: \['groupNamecard'\] \}\)` 查询；页面展示 SDK 返回的 `items` 与每个成员原始属性 JSON。 \| 真实权限、属性长度、服务开通状态以 SDK \/ 服务端返回为准；失败不本地回填。 \|/,
@@ -93,7 +93,7 @@ assert.match(
 assert.doesNotMatch(uncovered, /\| 群成员属性 \/ 群名片 \|/);
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 189 个，未覆盖 13 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
 );
 
 console.log('sdk5 group member attributes contract: PASS');

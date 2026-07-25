@@ -13,8 +13,18 @@ const reaction = fs.readFileSync(
 
 assert.match(
   readAck,
+  /onMessageReadReceipts:\s*\(receipts\)/,
+  'SDK 5.0 must register the native onMessageReadReceipts event.',
+);
+assert.doesNotMatch(
+  readAck,
+  /\bonMessageReceipts\b/,
+  'SDK 5.0 must not register the removed onMessageReceipts event.',
+);
+assert.match(
+  readAck,
   /conversationType[\s\S]*conversationId[\s\S]*messageIds/,
-  'SDK 5.0 onMessageReceipts must consume its native receipt payload fields.',
+  'SDK 5.0 read receipts must consume their native payload fields.',
 );
 assert.doesNotMatch(
   readAck,

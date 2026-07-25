@@ -19,8 +19,8 @@ assert.doesNotMatch(
 );
 assert.match(
   listener,
-  /console\.log\('\[SDK 5\.0 Group Event\] received', \{\s*eventName,\s*rawEvent: payload,\s*\}\);/s,
-  'The console must expose the SDK 5.0 event name and raw payload.',
+  /console\.log\('\[SDK 5\.0 Group Event\] received', \{[\s\S]*?eventName,[\s\S]*?groupId: payload\?\.groupId,[\s\S]*?currentUserId: getCurrentUserId\(\),[\s\S]*?rawEvent: payload,[\s\S]*?\}\);/,
+  'The console must expose the SDK 5.0 event name, raw payload, groupId, and current user context.',
 );
 assert.doesNotMatch(listener, /GROUP_OPERATION_TYPE|normalizeSdk5UserIds/);
 

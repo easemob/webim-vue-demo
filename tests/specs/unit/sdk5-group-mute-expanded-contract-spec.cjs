@@ -87,9 +87,9 @@ assert.match(
   superpowers,
   /群禁言必须只调用 SDK 5\.0 公开 `groupManager\.getGroup\(groupId\)\.getMuteList\(\)`、`muteMembers\(\{ userIds, muteDuration \}\)`、`unmuteMembers\(\{ userIds \}\)`、`muteAllMembers\(\)`、`unmuteAllMembers\(\)`、`checkIfInMuteList\(\)`/,
 );
-assert.match(coverage, /\| API 覆盖率 \| 93\.6% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 189 \|/);
-assert.match(coverage, /\| 未覆盖公开对外 API \| 13 \|/);
+assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
   /\| 群禁言 \| `Group\.getMuteList`, `muteMembers`, `unmuteMembers`, `muteAllMembers`, `unmuteAllMembers`, `checkIfInMuteList` \| 是 \| 查看禁言、禁言成员、解除禁言、群全员禁言、解除群全员禁言和查询当前用户禁言状态均已通过公开 `Group` facade 接入。 \| 真实权限和服务端结果以 SDK 返回为准；失败不本地回填。 \|/,
@@ -97,7 +97,7 @@ assert.match(
 assert.doesNotMatch(uncovered, /群全员禁言/);
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 189 个，未覆盖 13 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
 );
 
 console.log('sdk5 group mute expanded contract: PASS');

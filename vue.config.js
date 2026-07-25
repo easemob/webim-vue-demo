@@ -34,11 +34,10 @@ module.exports = defineConfig({
             const errorType = parsedMessage?.type ?? error?.type;
             const rawMessage = parsedMessage?.message || msg;
             if (
-              (errorType === 510 ||
-                errorType === 512 ||
-                rawMessage.includes('websocket disconnected') ||
-                rawMessage.includes('send message timeout')) &&
-              stack.includes('src/IM/miniCore/index.js')
+              errorType === 510 ||
+              errorType === 512 ||
+              rawMessage.includes('websocket disconnected') ||
+              rawMessage.includes('send message timeout')
             ) {
               console.error(
                 '[devServer overlay] 已抑制 IM 连接/发送失败全屏覆盖层，真实错误见控制台:',

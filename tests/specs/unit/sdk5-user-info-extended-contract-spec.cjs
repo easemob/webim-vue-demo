@@ -104,9 +104,9 @@ assert.match(
   superpowers,
   /用户资料扩展能力必须只调用 SDK 5\.0 `UserInfoManager\.addEventHandler\(handlerId, handlers\)`、`removeEventHandler\(handlerId\)`、`getUserInfoByAttribute\(\{ userIds, attributes \}\)`、`subscribeUsersInfo\(\{ userIds \}\)`、`unsubscribeUsersInfo\(\{ userIds \}\)`、`getSubscribedUsers\(\)`、`updateOwnInfoByAttribute\(attribute, value\)`/,
 );
-assert.match(coverage, /\| API 覆盖率 \| 93\.6% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 189 \|/);
-assert.match(coverage, /\| 未覆盖公开对外 API \| 13 \|/);
+assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
   /\| 用户资料扩展能力 \| `UserInfoManager\.addEventHandler`, `removeEventHandler`, `getUserInfoByAttribute`, `subscribeUsersInfo`, `unsubscribeUsersInfo`, `getSubscribedUsers`, `updateOwnInfoByAttribute` \| 是 \| 个人设置页注册并移除用户资料事件监听；提供按 SDK 5\.0 `UserInfoAttribute` 属性查询资料、订阅 \/ 取消订阅用户资料变更、查询已订阅用户、按单属性更新当前用户资料入口，并展示 SDK 真实返回与事件日志。 \| 真实订阅通知、字段返回和服务端错误以 SDK \/ 服务端结果为准；不做本地回填或旧字段映射。 \|/,
@@ -114,7 +114,7 @@ assert.match(
 assert.doesNotMatch(uncovered, /用户资料订阅与按属性查询 \/ 更新/);
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 189 个，未覆盖 13 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
 );
 
 console.log('sdk5 user info extended contract: PASS');

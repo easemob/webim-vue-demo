@@ -105,9 +105,9 @@ assert.match(
   superpowers,
   /群白名单必须只调用 SDK 5\.0 公开 `groupManager\.getGroup\(groupId\)\.getAllowlist\(\)`、`addUsersToAllowlist\(\{ userIds \}\)`、`removeUsersFromAllowlist\(\{ userIds \}\)`、`checkIfInAllowList\(\)`/,
 );
-assert.match(coverage, /\| API 覆盖率 \| 93\.6% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 189 \|/);
-assert.match(coverage, /\| 未覆盖公开对外 API \| 13 \|/);
+assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
   /\| 群白名单 \| `Group\.getAllowlist`, `addUsersToAllowlist`, `removeUsersFromAllowlist`, `checkIfInAllowList` \| 是 \| 群管理页提供白名单入口，调用 `Group\.getAllowlist\(\)` 展示 `entry\.user\.userId`，调用 `addUsersToAllowlist\(\{ userIds \}\)` 和 `removeUsersFromAllowlist\(\{ userIds \}\)` 操作成员，并调用 `checkIfInAllowList\(\)` 展示当前用户真实白名单状态。 \| 真实权限和服务端结果以 SDK 返回为准；失败不本地回填。 \|/,
@@ -115,7 +115,7 @@ assert.match(
 assert.doesNotMatch(uncovered, /群组白名单/);
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 189 个，未覆盖 13 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
 );
 
 console.log('sdk5 group allowlist contract: PASS');

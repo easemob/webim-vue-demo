@@ -58,7 +58,7 @@ export function buildConversationDndDurationParams(
     conversationType: type,
     rule: {
       mode: 'DURATION',
-      duration: duration * 60,
+      duration,
     },
   };
 }

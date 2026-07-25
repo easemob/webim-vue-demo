@@ -2,7 +2,7 @@
 
 ## 目标
 
-为 WebSDK 5.0.1 的公开 API `ChatClient.sendMessage(message, options)` 增加一个独立且可见的真实测试入口。该入口只覆盖当前会话的文本消息发送，不改变现有 `ChatManager.sendMessage` 入口，也不把其中任一入口的结果记作另一个 API 的覆盖结果。
+为 WebSDK 5.0 的公开 API `ChatClient.sendMessage(message, options)` 增加一个独立且可见的真实测试入口。该入口只覆盖当前会话的文本消息发送，不改变现有 `ChatManager.sendMessage` 入口，也不把其中任一入口的结果记作另一个 API 的覆盖结果。
 
 ## 范围
 

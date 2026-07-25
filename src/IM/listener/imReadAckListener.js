@@ -12,13 +12,13 @@ export const imReadAckListener = () => {
     manager.addEventHandler(
       CHAT_READ_ACK_LISTENER_ID,
       wrapImEventHandler({
-        onMessageReceipts: (receipts) => {
+        onMessageReadReceipts: (receipts) => {
           updateMessageReadStatus(receipts);
         },
       }),
     );
   };
-  // SDK 5.0 onMessageReceipts 传入回执数组；每项以 conversationId、
+  // SDK 5.0.3 onMessageReadReceipts 传入回执数组；每项以 conversationId、
   // conversationType 和 messageIds 定位已读消息。
   const updateMessageReadStatus = (receipts) => {
     if (!Array.isArray(receipts)) {

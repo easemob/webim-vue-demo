@@ -1,31 +1,9 @@
 const STREAM_STATUS_TEXT_MAP = {
-  START: '生成开始',
-  START_AND_COMPLETE: '单片完成',
-  IN_PROGRESS: '生成中',
-  COMPLETED: '已完成',
-  ERROR: '异常结束',
-};
-
-export const STREAM_MIN_SDK_VERSION = '4.19.1';
-
-const normalizeVersion = (version) =>
-  String(version || '')
-    .split('.')
-    .map((item) => Number.parseInt(item, 10) || 0);
-
-export const isSdkVersionAtLeast = (currentVersion, minimumVersion) => {
-  const current = normalizeVersion(currentVersion);
-  const minimum = normalizeVersion(minimumVersion);
-  const maxLength = Math.max(current.length, minimum.length);
-
-  for (let index = 0; index < maxLength; index += 1) {
-    const currentValue = current[index] || 0;
-    const minimumValue = minimum[index] || 0;
-    if (currentValue > minimumValue) return true;
-    if (currentValue < minimumValue) return false;
-  }
-
-  return true;
+  STREAM_START: '生成开始',
+  STREAM_IN_PROGRESS: '生成中',
+  STREAM_COMPLETED: '已完成',
+  STREAM_FULL: '单片完成',
+  STREAM_ERROR: '异常结束',
 };
 
 export const isStreamMessage = (message) =>
@@ -43,7 +21,7 @@ export const getStreamStatusDetailText = (message) => {
   const errorType = message?.stream?.errorType;
   const finishReason = message?.stream?.finishReason;
 
-  if (status !== 'ERROR') return '';
+  if (status !== 'STREAM_ERROR') return '';
 
   const details = [];
 

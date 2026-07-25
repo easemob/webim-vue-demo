@@ -80,8 +80,8 @@ const onClickVersion = () => {
 
 const resetCounter = () => (clickCount = 0);
 
-//SDK-Version
-const IM_SDK_VERSION = '5.0.0';
+// Installed WebSDK package version displayed for real-capability verification.
+const IM_SDK_VERSION = '5.0.3';
 </script>
 <template>
   <el-container class="app_container">
@@ -132,7 +132,7 @@ const IM_SDK_VERSION = '5.0.0';
     <el-footer>
       <div class="copyright">
         Copyright © easemob Web IM SDK版本号：<span @click="onClickVersion">
-          {{ IM_SDK_VERSION ? IM_SDK_VERSION : '4.x' }}</span
+          {{ IM_SDK_VERSION }}</span
         >
       </div>
     </el-footer>

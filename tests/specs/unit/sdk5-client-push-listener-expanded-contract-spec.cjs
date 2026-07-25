@@ -153,16 +153,16 @@ assert.match(
   /ContactManager、PresenceManager、GroupManager 和 ChatClient 事件监听注册前必须先调用同一 handlerId 的 `removeEventHandler\(handlerId\)`/,
 );
 
-assert.match(coverage, /\| API 覆盖率 \| 93\.6% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 189 \|/);
-assert.match(coverage, /\| 未覆盖公开对外 API \| 13 \|/);
+assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
   /\| 登录、退出和当前用户 \| `ChatClient\.login`, `ChatClient\.logout`, `ChatClient\.getCurrentUserId`, `ChatClient\.getServerUrlsConfig`, `ChatClient\.addEventHandler`, `ChatClient\.removeEventHandler` \| 是 \| Token 登录、退出登录、登录后初始化、当前用户读取、运行环境详情展示、连接事件监听与移除监听均已接入；连接监听注册前调用同 ID `removeEventHandler`。 \| 真实连接事件下发以 SDK 回调为准；不保留重复监听或旧事件兜底。 \|/,
 );
 assert.match(
   coverage,
-  /\| 连接状态、Token 续期与上下文读取 \| `ChatClient\.getConnectionState`, `ChatClient\.getRestContext`, `ChatClient\.renewToken`, `ChatClient\.getCacheManager`, `ChatClient\.getUploadAdapter`, `ChatClient\.getContactSnapshot` \| 是 \| 个人设置页提供 ChatClient 运行诊断和 Token 续期入口；调用 SDK 5\.0 公开方法读取连接状态、REST 上下文、缓存管理器、上传适配器、联系人快照，并由用户输入新 Token 后调用 `renewToken\(token\)`。 \| `getRestContext\(\)` 和 `renewToken\(token\)` 涉及 token，页面 \/ 日志只展示脱敏摘要；SDK 失败按真实错误展示。 \|/,
+  /\| 连接状态、Token 续期与上下文读取 \| `ChatClient\.getConnectionState`, `ChatClient\.getRestContext`, `ChatClient\.renewToken`, `ChatClient\.getCacheManager`, `ChatClient\.getUploadAdapter`, `ChatClient\.getContactSnapshot`, `ChatClient\.getSelfIdsOnOtherPlatform` \| 是 \| 个人设置页提供 ChatClient 运行诊断、Token 续期与其他平台登录 ID 查询入口；调用 SDK 5\.0 公开方法读取连接状态、REST 上下文、缓存管理器、上传适配器、联系人快照、其他设备 `userId\/resource`，并由用户输入新 Token 后调用 `renewToken\(token\)`。 \| `getRestContext\(\)` 和 `renewToken\(token\)` 涉及 token，页面 \/ 日志只展示脱敏摘要；其他平台登录 ID 直接展示 SDK 原始数组；SDK 失败按真实错误展示。 \|/,
 );
 assert.match(
   coverage,
@@ -185,7 +185,7 @@ assert.doesNotMatch(coverage, /推送：未覆盖推送 Token/);
 assert.doesNotMatch(uncovered, /全局消息免打扰|推送语言设置与查询|批量读取会话免打扰设置|PushManager/);
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 189 个，未覆盖 13 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
 );
 
 console.log('sdk5 client push listener expanded contract: PASS');

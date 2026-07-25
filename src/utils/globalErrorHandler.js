@@ -7,7 +7,7 @@ import {
 import { notifyRuntimeError } from './runtimeErrorNotifier';
 import { getSdk5ErrorInfo } from './sdk5ErrorInfo';
 
-/** 环信 miniCore 等对 undefined/null 取字段时的典型报错（Chrome / Firefox 文案略有差异） */
+/** SDK 对 undefined/null 取字段时的典型报错（Chrome / Firefox 文案略有差异） */
 function isNullishPropertyTypeErrorText(text) {
   if (!text || typeof text !== 'string') return false;
   return (

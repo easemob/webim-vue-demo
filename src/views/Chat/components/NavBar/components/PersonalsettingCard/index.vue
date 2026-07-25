@@ -23,6 +23,9 @@ const userInfoUpdateValueInput = ref('');
 const userInfoUpdateValueType = ref('string');
 const sdkDiagnosticsLoading = ref('');
 const chatClientRenewTokenInput = ref('');
+const rtcUidsInput = ref('');
+const voiceFileInput = ref(null);
+const voiceFileFormatInput = ref('');
 const pushDeviceIdInput = ref('');
 const pushDeviceTokenInput = ref('');
 const pushNotifierNameInput = ref('');
@@ -237,6 +240,49 @@ const renewChatClientToken = async () => {
         token: chatClientRenewTokenInput.value,
       }),
     'Token 续期调用完成',
+  );
+};
+
+const parseRtcUids = (value) =>
+  value
+    .split(/[\s,，;；]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map(Number);
+
+const getSelfIdsOnOtherPlatform = async () => {
+  await runSdkDiagnosticsAction(
+    'getSelfIdsOnOtherPlatform',
+    () => store.dispatch('SdkDiagnostics/getSelfIdsOnOtherPlatform'),
+    '其他平台登录 ID 查询完成',
+  );
+};
+
+const getUserIdsWithRTCUids = async () => {
+  const rtcUids = parseRtcUids(rtcUidsInput.value);
+  await runSdkDiagnosticsAction(
+    'getUserIdsWithRTCUids',
+    () => store.dispatch('SdkDiagnostics/getUserIdsWithRTCUids', { rtcUids }),
+    'RTC UID 映射查询完成',
+  );
+};
+
+const selectVoiceFile = (event) => {
+  voiceFileInput.value = event.target?.files?.[0] || null;
+};
+
+const voiceFileToText = async () => {
+  const voiceParams = voiceFileFormatInput.value
+    ? { format: voiceFileFormatInput.value }
+    : undefined;
+  await runSdkDiagnosticsAction(
+    'voiceFileToText',
+    () =>
+      store.dispatch('SdkDiagnostics/voiceFileToText', {
+        file: voiceFileInput.value,
+        voiceParams,
+      }),
+    '本地语音文件转文字调用完成',
   );
 };
 
@@ -590,6 +636,56 @@ defineExpose({
             @click="renewChatClientToken"
           >
             调用 renewToken(token)
+          </el-button>
+        </div>
+        <div class="user_info_control">
+          <div class="user_info_control_title">查询其他平台登录 ID</div>
+          <div class="user_info_hint">
+            直接调用 `ChatClient.getSelfIdsOnOtherPlatform()`，展示 SDK 返回的
+            `userId/resource` 列表。
+          </div>
+          <el-button
+            type="primary"
+            size="small"
+            :loading="sdkDiagnosticsLoading === 'getSelfIdsOnOtherPlatform'"
+            @click="getSelfIdsOnOtherPlatform"
+          >
+            查询其他平台登录 ID
+          </el-button>
+        </div>
+        <div class="user_info_control">
+          <div class="user_info_control_title">RTC UID 映射到 IM 用户</div>
+          <el-input
+            v-model="rtcUidsInput"
+            placeholder="RTC UID，多个用逗号或空格分隔"
+            clearable
+            size="small"
+          />
+          <el-button
+            type="primary"
+            size="small"
+            :loading="sdkDiagnosticsLoading === 'getUserIdsWithRTCUids'"
+            @click="getUserIdsWithRTCUids"
+          >
+            查询 RTC UID 映射
+          </el-button>
+        </div>
+        <div class="user_info_control">
+          <div class="user_info_control_title">本地语音文件转文字</div>
+          <input type="file" accept="audio/*" @change="selectVoiceFile" />
+          <el-input
+            v-model="voiceFileFormatInput"
+            placeholder="可选：SDK VoiceParams.format，例如 amr、mp3、pcm"
+            clearable
+            size="small"
+          />
+          <el-button
+            type="primary"
+            size="small"
+            :loading="sdkDiagnosticsLoading === 'voiceFileToText'"
+            @click="voiceFileToText"
+          >
+            调用 voiceFileToText(file, voiceParams)
           </el-button>
         </div>
       </div>

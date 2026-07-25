@@ -85,9 +85,9 @@ assert.match(
   superpowers,
   /群配置更新和群主转让必须只调用 SDK 5\.0 公开 `groupManager\.getGroup\(groupId\)\.updateConfigs\(\{ public, joinApprovalRequired, allowInvites, inviteNeedConfirm, maxMembers \}\)` 与 `changeOwner\(\{ newOwner \}\)`/,
 );
-assert.match(coverage, /\| API 覆盖率 \| 93\.6% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 189 \|/);
-assert.match(coverage, /\| 未覆盖公开对外 API \| 13 \|/);
+assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
   /\| 群组基础资料、配置和所有权 \| `Group\.updateInfo`, `updateConfigs`, `changeOwner` \| 是 \| 修改群名称、描述、头像、扩展信息已通过公开 `groupManager\.getGroup\(groupId\)\.updateInfo\(\)` 接入；群管理页提供群配置与群主入口，调用 `Group\.updateConfigs\(\{ public, joinApprovalRequired, allowInvites, inviteNeedConfirm, maxMembers \}\)` 更新配置，调用 `Group\.changeOwner\(\{ newOwner \}\)` 转让群主，成功后调用 `refresh\(\)` 并展示 SDK 真实 `GroupDetail`。 \| 真实权限、配置限制和转让结果以 SDK \/ 服务端返回为准；失败不本地回填。 \|/,
@@ -96,7 +96,7 @@ assert.doesNotMatch(uncovered, /群配置更新/);
 assert.doesNotMatch(uncovered, /群主转让/);
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 189 个，未覆盖 13 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
 );
 
 console.log('sdk5 group configs owner contract: PASS');

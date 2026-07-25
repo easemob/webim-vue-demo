@@ -65,9 +65,9 @@ assert.match(
   superpowers,
   /消息事件监听生命周期必须使用 SDK 5\.0 `ChatManager\.addEventHandler\(handlerId, handlers\)` 与 `removeEventHandler\(handlerId\)` 成对处理；注册前先清理同 ID 监听，禁止恢复 SDK 4\.0 聚合事件、旧字段或重复监听兜底/,
 );
-assert.match(coverage, /\| API 覆盖率 \| 93\.6% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 189 \|/);
-assert.match(coverage, /\| 未覆盖公开对外 API \| 13 \|/);
+assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
   /\| 消息事件监听 \| `ChatManager\.addEventHandler`, `ChatManager\.removeEventHandler` \| 是 \| 已监听消息、撤回、编辑、回执、Reaction、多设备等 Chat 事件并按 SDK 5\.0 字段入库 \/ 展示；每个 Chat 监听注册前都会先调用 `removeEventHandler\(handlerId\)` 清理同 ID 监听，再调用 `addEventHandler\(handlerId, handlers\)` 注册。 \| 真实事件下发与字段仍以 SDK \/ 服务端回调为准；不使用旧事件聚合、旧字段映射或重复监听兜底。 \|/,
@@ -75,7 +75,7 @@ assert.match(
 assert.doesNotMatch(coverage, /未覆盖 `ChatManager\.removeEventHandler`/);
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 189 个，未覆盖 13 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
 );
 
 console.log('sdk5 chat event lifecycle contract: PASS');

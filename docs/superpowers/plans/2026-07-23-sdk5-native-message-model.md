@@ -6,7 +6,7 @@
 
 **Architecture:** The message Vuex module indexes messages by `conversationId` and identifies them by `msgServerId` or `msgLocalId`. The message list component renders WebSDK 5.0 `type`, `body`, `sender`, `conversationId`, and `conversationType` directly. `onMessageUpdated` and `onMessageRecalled` update the same stored Message object using their public SDK 5.0 payload fields.
 
-**Tech Stack:** Vue 3, Vuex 4, JavaScript, `easemob-websdk` 5.0.1, Node assert contract tests.
+**Tech Stack:** Vue 3, Vuex 4, JavaScript, `easemob-websdk` 5.0, Node assert contract tests.
 
 ## Global Constraints
 

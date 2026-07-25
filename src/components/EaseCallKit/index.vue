@@ -389,7 +389,7 @@ const getAgoraRtcToken = async (callback) => {
 /* 获取channel信息 */
 const getAgoraChannelDetails = async (callback) => {
   const error = new Error(
-    'WebSDK 5.0.2 does not expose a channel-member query API for EaseCallKit.',
+    'WebSDK 5.0.3 does not expose a channel-member query API for EaseCallKit.',
   );
   console.error('EASEIMCALLKIT_CHANNEL_MEMBERS_UNSUPPORTED', error);
   throw error;

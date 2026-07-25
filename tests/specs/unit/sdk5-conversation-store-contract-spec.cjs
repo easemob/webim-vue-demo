@@ -68,9 +68,9 @@ assert.doesNotMatch(
   conversationList,
   /lastMessage\?\.(?:from|time)\b|const \{ type, msg \}|route\?\.query\?\.id\b/,
 );
-assert.match(coverage, /\| API 覆盖率 \| 93\.6% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 189 \|/);
-assert.match(coverage, /\| 未覆盖公开对外 API \| 13 \|/);
+assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
   /\| 会话列表与筛选 \| `ChatManager\.getConversationList`, `refreshSessionList` \| 是 \| 会话列表、本地筛选、置顶会话筛选均调用 `getConversationList`；会话列表顶部提供主动刷新入口，调用 `refreshSessionList\(\{ includeEmpty: true \}\)` 后直接展示 SDK 返回的真实会话列表。 \| 真实刷新结果以 SDK \/ 服务端返回为准；失败不读取旧接口或用本地缓存伪造成刷新成功。 \|/,
@@ -78,7 +78,7 @@ assert.match(
 assert.doesNotMatch(coverage, /未覆盖 `ChatManager\.refreshSessionList`/);
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 189 个，未覆盖 13 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
 );
 assert.match(
   casesList,

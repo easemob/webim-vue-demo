@@ -87,7 +87,6 @@ const findLocalMessageMetaById = (state, messageId) => {
     conversationId: message.conversationId,
     conversationType: message.conversationType,
     isChatThread: message.isChatThread,
-    groupId: message.groupId,
   };
 };
 
