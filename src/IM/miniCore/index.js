@@ -70,6 +70,69 @@ function getMessageLogContext(message) {
   };
 }
 
+function getMsyncPacketLogContext(packet) {
+  const data = packet?.data || packet;
+  const byteLength =
+    data?.byteLength ??
+    data?.length ??
+    (typeof data === 'string' ? data.length : 0);
+  return {
+    user: getSdkUser(miniCore),
+    packetType: packet?.type || '',
+    dataConstructor: data?.constructor?.name || typeof data,
+    byteLength,
+  };
+}
+
+function summarizeMsyncDecodeResult(result) {
+  if (!result || typeof result !== 'object') {
+    return {
+      resultType: typeof result,
+      result,
+    };
+  }
+  return {
+    resultType: typeof result,
+    constructorName: result?.constructor?.name || '',
+    ownKeys: Object.keys(result),
+    command: result.command,
+    compressAlgorimth: result.compressAlgorimth,
+    compressAlgorithm: result.compressAlgorithm,
+    rawResult: result,
+  };
+}
+
+function wrapMsyncDecodeLogger(client) {
+  const originalDecodeMSync = client?.mSync?.decodeMSync;
+  if (typeof originalDecodeMSync !== 'function') return;
+
+  client.mSync.decodeMSync = function wrappedDecodeMSync(packet, ...rest) {
+    const startTime = Date.now();
+    const context = getMsyncPacketLogContext(packet);
+    console.log('[LZ4 / MSync Decode] decodeMSync request', {
+      ...context,
+      extraArgsCount: rest.length,
+    });
+    try {
+      const result = originalDecodeMSync.call(this, packet, ...rest);
+      console.log('[LZ4 / MSync Decode] decodeMSync success', {
+        ...context,
+        durationMs: Date.now() - startTime,
+        result: summarizeMsyncDecodeResult(result),
+      });
+      return result;
+    } catch (error) {
+      console.error('[LZ4 / MSync Decode] decodeMSync failed', {
+        ...context,
+        durationMs: Date.now() - startTime,
+        errorSummary: summarizeSdkError(error),
+        error,
+      });
+      throw error;
+    }
+  };
+}
+
 function logImSdkEvent(eventName, payload = {}) {
   console.log(`[IM SDK Event] ${eventName}`, payload);
 }
@@ -220,6 +283,7 @@ const initEMClient = () => {
     multiDevice: configOptions.multiDevice,
   });
   miniCore = new MiniCore({ ...configOptions });
+  wrapMsyncDecodeLogger(miniCore);
 
   if (typeof miniCore.open === 'function') {
     const originalOpen = miniCore.open;
