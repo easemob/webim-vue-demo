@@ -470,37 +470,6 @@ const syncSdkCurrentConversation = (reason) => {
   }
 };
 
-const canClearConversationUnreadCount = (conversationType) =>
-  [
-    CONVERSATION_TYPE.SINGLE,
-    CONVERSATION_TYPE.GROUP,
-  ].includes(conversationType);
-
-const markConversationReadIfNeeded = (options = {}) => {
-  const { conversationId, conversationType } = routeQueryData.value;
-  if (!conversationId || !conversationType) return;
-  if (!canClearConversationUnreadCount(conversationType)) return;
-
-  const conversation = getCurrentConversationFromStore();
-  if (!options.force && (!conversation || conversation.unreadCount <= 0)) {
-    return;
-  }
-
-  store.dispatch('clearConversationUnreadCount', {
-    conversationId,
-    conversationType,
-  });
-};
-
-const isMessageInCurrentConversation = (message) => {
-  if (!message || !routeQueryData.value.conversationId) return false;
-  return (
-    message.conversationId === routeQueryData.value.conversationId &&
-    message.conversationType === routeQueryData.value.conversationType &&
-    message.sender?.userId !== getCurrentUserId()
-  );
-};
-
 /* warterMark */
 onMounted(() => {
   const chatContainer = document.querySelector('.chat_message_main');
@@ -541,15 +510,6 @@ const stopWatchRoute = watch(
   },
   {
     immediate: true,
-  },
-);
-
-watch(
-  () => getCurrentConversationFromStore()?.unreadCount || 0,
-  (unreadCount) => {
-    if (unreadCount > 0) {
-      markConversationReadIfNeeded();
-    }
   },
 );
 
@@ -616,6 +576,26 @@ const messageData = computed(() => {
   }
   return [];
 });
+const renderedMessageIds = ref(new Set());
+const initialHistoryRenderProcessed = ref(false);
+const initialHistoryReadAt = ref(null);
+const initialHistoryUnreadCount = ref(null);
+const resetIncomingReadReceiptTracking = (conversation) => {
+  renderedMessageIds.value = new Set();
+  initialHistoryRenderProcessed.value = false;
+  initialHistoryReadAt.value = null;
+  initialHistoryUnreadCount.value = null;
+
+  const boundary = store.state.Message.incomingReadReceiptBoundary;
+  if (
+    boundary?.conversationId === conversation?.conversationId &&
+    boundary?.conversationType === conversation?.conversationType
+  ) {
+    initialHistoryReadAt.value = boundary.readAt;
+    initialHistoryUnreadCount.value = boundary.unreadCount;
+    store.dispatch('clearIncomingReadReceiptBoundary', conversation);
+  }
+};
 const singleChatTargetUserId = computed(() => {
   if (routeQueryData.value.conversationType !== CONVERSATION_TYPE.SINGLE) {
     return '';
@@ -665,6 +645,7 @@ watch(
         newRouteQuery.isChatThread !== oldRouteQuery.isChatThread;
 
       if (isConversationChanged) {
+        resetIncomingReadReceiptTracking(newRouteQuery);
         if (oldRouteQuery?.conversationId) {
           clearSdkCurrentConversation('conversation-switch');
         }
@@ -681,7 +662,6 @@ watch(
         historyMessageCursor.value = -1;
         isMoreHistoryMsg.value = true;
         await fechHistoryMessage('fistLoad');
-        markConversationReadIfNeeded();
       }
     }
   },
@@ -714,24 +694,31 @@ watch(
     const isLoadingHistory = notScrollBottom.value;
     nextTick(() => {
       // 判断拉取漫游导致的消息变化不需要执行滚动置底
-      if (isLoadingHistory) {
-        return;
+      if (!isLoadingHistory) {
+        // 新消息到达或首次加载时滚动到底部
+        if (newLength > oldLength || oldLength === undefined) {
+          scrollMessageList('bottom');
+        }
       }
-      // 新消息到达或首次加载时滚动到底部
-      if (newLength > oldLength || oldLength === undefined) {
-        scrollMessageList('bottom');
-      }
+
+      const newlyDisplayedMessages = messageData.value.filter((message) => {
+        const messageId = message?.msgServerId || message?.msgLocalId;
+        if (!messageId || renderedMessageIds.value.has(messageId)) return false;
+        renderedMessageIds.value.add(messageId);
+        return true;
+      });
+      if (newlyDisplayedMessages.length === 0) return;
+
+      const initialHistoryRender = !initialHistoryRenderProcessed.value;
+      store.dispatch('sendIncomingMessageReadReceipt', {
+        messages: newlyDisplayedMessages,
+        initialHistoryRender,
+        readAt: initialHistoryReadAt.value,
+        unreadCount: initialHistoryUnreadCount.value,
+      });
+      initialHistoryRenderProcessed.value = true;
     });
 
-    const latestMessage = messageData.value[newLength - 1];
-    if (
-      !isLoadingHistory &&
-      oldLength !== undefined &&
-      newLength > oldLength &&
-      isMessageInCurrentConversation(latestMessage)
-    ) {
-      markConversationReadIfNeeded({ force: true });
-    }
   },
   {
     immediate: true,

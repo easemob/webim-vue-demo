@@ -218,7 +218,7 @@ const sendTextMessage = _.debounce(async () => {
     conversationId: conversationId.value,
     conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    ...(conversationType.value === CONVERSATION_TYPE.GROUP
+    ...(conversationType.value !== CONVERSATION_TYPE.CHATROOM
       ? { needReadReceipt: true }
       : {}),
     content: textContent.value,
@@ -243,7 +243,6 @@ const sendTextMessage = _.debounce(async () => {
     const messageToSend = createMessage('text', msgOptions);
     const message = await sendMessage(messageToSend, {
       ...deliverOnlineOnlyOptions.value,
-      needReadReceipt: conversationType.value === CONVERSATION_TYPE.GROUP,
     });
     await store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
@@ -271,7 +270,7 @@ const sendTextMessageByClient = _.debounce(async () => {
     conversationId: conversationId.value,
     conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
-    ...(conversationType.value === CONVERSATION_TYPE.GROUP
+    ...(conversationType.value !== CONVERSATION_TYPE.CHATROOM
       ? { needReadReceipt: true }
       : {}),
     content: textContent.value,
@@ -294,7 +293,6 @@ const sendTextMessageByClient = _.debounce(async () => {
     messageToSend = createMessage('text', msgOptions);
     const message = await sendMessageByClient(messageToSend, {
       ...deliverOnlineOnlyOptions.value,
-      needReadReceipt: conversationType.value === CONVERSATION_TYPE.GROUP,
     });
     console.log('[Message Send] ChatClient.sendMessage success', {
       messageId: message.msgServerId || message.msgLocalId,

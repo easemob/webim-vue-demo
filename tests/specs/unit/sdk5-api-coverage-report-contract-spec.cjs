@@ -18,8 +18,8 @@ const report = JSON.parse(result.stdout);
 
 assert.equal(report.sdk.majorVersion, '5.0');
 assert.equal(report.sourceRoot, 'src');
-assert.equal(report.total, 205);
-assert.equal(report.covered, 193);
+assert.equal(report.total, 204);
+assert.equal(report.covered, 192);
 assert.equal(report.uncovered, 12);
 assert.equal(report.coveragePercent, '94.1%');
 
@@ -40,6 +40,10 @@ assert.deepEqual(report.uncoveredApis, [
 
 assert.equal(
   report.excludedApis['ChatClient.refreshSessionList'],
+  '@internal declaration',
+);
+assert.equal(
+  report.excludedApis['ChatManager.refreshSessionList'],
   '@internal declaration',
 );
 assert.equal(

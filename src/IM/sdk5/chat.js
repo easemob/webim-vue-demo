@@ -1,4 +1,5 @@
 const { requireManager, getClient } = require('./client');
+const { CONVERSATION_TYPE } = require('../constant');
 
 const builders = {
   text: 'createTextMessage',
@@ -12,6 +13,21 @@ const builders = {
   combine: 'createCombineMessage',
 };
 
+function withNeedReadReceipt(params) {
+  const messageParams = { ...params };
+  const supportsReadReceipt =
+    params?.conversationType === CONVERSATION_TYPE.SINGLE ||
+    params?.conversationType === CONVERSATION_TYPE.GROUP;
+  if (!supportsReadReceipt) {
+    delete messageParams.needReadReceipt;
+    return messageParams;
+  }
+  return {
+    ...messageParams,
+    needReadReceipt: true,
+  };
+}
+
 function createMessage(type, params) {
   const builder = builders[type];
   if (!builder) throw new Error(`SDK 5.0 does not support message type ${type}`);
@@ -19,7 +35,7 @@ function createMessage(type, params) {
     throw new Error('SDK 5.0 message requires conversationId and conversationType');
   }
   return requireManager('chatManager')[builder]({
-    ...params,
+    ...withNeedReadReceipt(params),
     conversationId: params.conversationId,
     conversationType: params.conversationType,
   });

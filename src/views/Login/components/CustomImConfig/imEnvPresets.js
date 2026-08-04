@@ -25,6 +25,7 @@ const BASE_ENV_CONFIG = {
   appKey: DEFAULT_EASEMOB_APPKEY,
   isPrivate: false,
   imServer: '',
+  syncWsUrl: '',
   port: '',
   restServer: '',
 };
@@ -33,6 +34,7 @@ const PRIVATE_ENV_DEFAULTS = {
   appKey: DEFAULT_EASEMOB_APPKEY,
   isPrivate: true,
   imServer: DEFAULT_EASEMOB_SOCKET_URL,
+  syncWsUrl: '',
   port: '',
   restServer: DEFAULT_EASEMOB_REST_URL,
 };
@@ -47,6 +49,7 @@ const ENV_PRIVATE_CONFIGS = {
     appKey: 'easemob-demo#qatkeflink',
     restServer: 'https://tke-sdb-a1.easemob.com',
     imServer: 'tke-sdb-im-api-wechat.easemob.com/websocket',
+    syncWsUrl: 'wss://tke-sdb-fusion.easemob.com/ws',
   },
   [IM_ENVIRONMENTS.DEV]: {
     appKey: 'easemob-demo#sdk111',

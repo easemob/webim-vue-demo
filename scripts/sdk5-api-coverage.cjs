@@ -24,6 +24,7 @@ const topLevelApis = ['setLogLevel', 'createPlatformAdapter', 'detectRuntimePlat
 const excludedNames = new Set(['constructor', 'bind']);
 const extraInternalApis = new Set([
   'ChatClient.emitConversationListUpdate',
+  'ChatManager.refreshSessionList',
   'GroupManager.hydrateMessageProfileGroupNamecards',
 ]);
 const messageBuilderNames = new Set([

@@ -14,6 +14,7 @@ export default class CallKitMessages {
     const message = chatManager().createTextMessage({
       conversationId: targetId,
       conversationType: 'singleChat',
+      needReadReceipt: true,
       content,
       ext,
     });
@@ -24,6 +25,7 @@ export default class CallKitMessages {
     const message = chatManager().createCmdMessage({
       conversationId: targetId,
       conversationType: 'singleChat',
+      needReadReceipt: true,
       action: this.action,
       ext,
     });

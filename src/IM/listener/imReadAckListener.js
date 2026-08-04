@@ -1,6 +1,5 @@
 import { requireManager } from '../index';
 import store from '@/store';
-import { MESSAGE_STATUS_TYPE } from '@/constant';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
 const CHAT_READ_ACK_LISTENER_ID = 'aboutReadAckMessage';
@@ -13,6 +12,10 @@ export const imReadAckListener = () => {
       CHAT_READ_ACK_LISTENER_ID,
       wrapImEventHandler({
         onMessageReadReceipts: (receipts) => {
+          console.log('[Demo <- SDK 5.0 Event] ChatManager.onMessageReadReceipts', {
+            eventName: 'onMessageReadReceipts',
+            receipts,
+          });
           updateMessageReadStatus(receipts);
         },
       }),
@@ -32,10 +35,10 @@ export const imReadAckListener = () => {
       if (receipt.conversationType === 'singleChat') {
         receipt.messageIds.forEach((messageId) => {
           if (!messageId) return;
-          store.commit('UPDATE_MESSAGE_IDS_COLLECTION', {
+          store.commit('UPDATE_MESSAGE_READ', {
             messageId,
-            key: receipt.conversationId,
-            type: MESSAGE_STATUS_TYPE.READ_STATUS,
+            conversationId: receipt.conversationId,
+            conversationType: receipt.conversationType,
           });
         });
         return;

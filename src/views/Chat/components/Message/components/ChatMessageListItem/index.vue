@@ -14,7 +14,7 @@ import { useClipboard, usePermission } from '@vueuse/core';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getCurrentUserId, requireManager } from '@/IM';
 import { CONVERSATION_TYPE } from '@/IM/constant';
-import { CUSTOM_MSG_EVENT_TYPE, MESSAGE_STATUS_TYPE } from '@/constant';
+import { CUSTOM_MSG_EVENT_TYPE } from '@/constant';
 import { useGetUserMapInfo } from '@/hooks';
 import BenzAMRRecorder from 'benz-amr-recorder';
 import fileSizeFormat from '@/utils/fileSizeFormat';
@@ -31,7 +31,6 @@ import router from '@/router';
 import paseLink from '@/utils/paseLink';
 /* 默认头像 */
 import defaultAvatar from '@/assets/images/avatar/theme2x.png';
-import messageReadedIcon from '@/assets/messages/read@3x.png';
 /* components */
 import ModifyMessage from '../suit/modifyMessage.vue';
 /* vuex store */
@@ -489,61 +488,17 @@ const canRecallMessage = (msgBody) => {
   if (msgBody.conversationType === CONVERSATION_TYPE.SINGLE) return false;
   return hasConversationRecallPermission.value;
 };
-/* 获取消息id集合 */
-// 使用缓存避免重复获取getter
-const messageIdsCollection = computed(() => {
-  try {
-    // 获取稳定的引用
-    const map = store.getters.getMessageIdsCollectionMap;
-    // 如果map是稳定的对象，直接返回
-    if (map && typeof map === 'object') {
-      return map;
-    }
-  } catch (error) {
-    console.error('获取消息ID集合失败:', error);
-  }
-  return {};
-});
-
-/* 获取当前会话的消息id集合 */
-// 缓存当前会话ID，避免不必要的计算
-const currentSessionId = ref('');
-const currentMessageIds = ref(null);
-
-// 监听路由变化，更新当前会话的消息ID集合
-watch(
-  () => routeQueryData.value.conversationId,
-  (conversationId) => {
-    if (conversationId) {
-      currentSessionId.value = conversationId;
-      currentMessageIds.value = messageIdsCollection.value[conversationId] || null;
-    } else {
-      currentSessionId.value = '';
-      currentMessageIds.value = null;
-    }
-  },
-  { immediate: true },
-);
-
-// 监听messageIdsCollection变化，更新当前会话的消息ID集合
-watch(
-  () => messageIdsCollection.value,
-  (newMap) => {
-    if (currentSessionId.value) {
-      currentMessageIds.value = newMap[currentSessionId.value] || null;
-    }
-  },
-  { deep: true },
-);
-
-/* 消息已读未读逻辑 */
-//判断消息已读未读状态
-const msgReadStatus = (msgBody) => {
-  const messageId = messageIdOf(msgBody);
-  if (currentMessageIds.value && currentMessageIds.value.has(messageId)) {
-    return currentMessageIds.value.get(messageId)[MESSAGE_STATUS_TYPE.READ_STATUS];
-  }
-  return false;
+const getSingleChatReceiptText = (msgBody) => {
+  if (msgBody?.conversationType !== CONVERSATION_TYPE.SINGLE) return '';
+  if (msgBody?.isPeerRead === true) return '✓✓';
+  if (msgBody?.delivered === true) return '✓';
+  return '';
+};
+const getGroupChatReceiptText = (msgBody) => {
+  if (msgBody?.conversationType !== CONVERSATION_TYPE.GROUP) return '';
+  if (msgBody?.groupReadCount > 0) return '✓✓';
+  if (msgBody?.delivered === true) return '✓';
+  return '';
 };
 /* 文本中是否包含link */
 const isLink = (msg) => {
@@ -682,10 +637,6 @@ onUnmounted(() => {
   // 清理时间显示缓存
   timeShowCache.value.clear();
   revokeAttachmentObjectUrl();
-
-  // 清理当前会话ID和消息ID集合
-  currentSessionId.value = '';
-  currentMessageIds.value = null;
 
   // 清理其他可能的定时器
   clearTimeout(window.__chatMessageTimer__);
@@ -1574,21 +1525,34 @@ const getReactionUserAvatar = (user) => {
           </div>
           <!-- 消息状态展示 -->
           <div class="message_item_status">
-            <!-- 消息送达状态 -->
+            <!-- 单聊消息回执状态：已送达一个勾，已读两个勾。 -->
             <span
-              v-if="msgBody.delivered && isMyself(msgBody)"
+              v-if="isMyself(msgBody) && getSingleChatReceiptText(msgBody)"
+              class="message_item_chat_receipt_icon"
+              :title="msgBody?.isPeerRead === true ? '消息已读' : '消息已送达'"
+            >
+              {{ getSingleChatReceiptText(msgBody) }}
+            </span>
+            <!-- 群聊消息回执状态：已送达一个勾，至少一人已读两个勾。 -->
+            <span
+              v-if="isMyself(msgBody) && getGroupChatReceiptText(msgBody)"
+              class="message_item_chat_receipt_icon"
+              :title="msgBody?.groupReadCount > 0 ? '消息已读' : '消息已送达'"
+            >
+              {{ getGroupChatReceiptText(msgBody) }}
+            </span>
+            <!-- 聊天室消息送达状态 -->
+            <span
+              v-if="
+                msgBody.delivered &&
+                isMyself(msgBody) &&
+                msgBody.conversationType === CONVERSATION_TYPE.CHATROOM
+              "
               class="message_item_delivered_icon"
               title="消息已送达"
             >
               ✓
             </span>
-            <!-- 消息已读状态 -->
-            <img
-              class="message_item_readed_icon"
-              v-if="msgReadStatus(msgBody) && isMyself(msgBody)"
-              :src="messageReadedIcon"
-              title="消息已读"
-            />
             <!-- 群组消息已读计数 -->
             <span
               v-if="

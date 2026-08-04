@@ -1,7 +1,6 @@
 import { getCurrentUserId, requireManager } from '@/IM';
 import _ from 'lodash';
 import {
-  MESSAGE_STATUS_TYPE,
   CHANGE_MESSAGE_BODAY_TYPE,
   MAX_MESSAGE_LIST_COUNT,
 } from '@/constant';
@@ -167,12 +166,22 @@ const mergeMessagePreservingEditedText = (currentMessage, incomingMessage) => {
 const Message = {
   state: {
     messageList: {},
-    messageIdsCollection: {
-      // 'pfh':new Map(),
-      // 'pfh1':new Map(),
-    },
+    incomingReadReceiptBoundary: null,
   },
   mutations: {
+    SET_INCOMING_READ_RECEIPT_BOUNDARY: (state, boundary) => {
+      state.incomingReadReceiptBoundary = boundary;
+    },
+    CLEAR_INCOMING_READ_RECEIPT_BOUNDARY: (state, conversation) => {
+      if (
+        state.incomingReadReceiptBoundary?.conversationId ===
+          conversation?.conversationId &&
+        state.incomingReadReceiptBoundary?.conversationType ===
+          conversation?.conversationType
+      ) {
+        state.incomingReadReceiptBoundary = null;
+      }
+    },
     UPDATE_MESSAGE_LIST: (state, message) => {
       // 确保msgBody有基本属性
       if (!message?.conversationId || !message?.conversationType) {
@@ -214,24 +223,6 @@ const Message = {
           -MAX_MESSAGE_LIST_COUNT,
         );
       }
-      /**
-       * 暂只实现以单对单已读回执
-       * 群组已读回执可通过Reaction方案实现
-       */
-      if (
-        !state.messageIdsCollection[listKey] &&
-        message.conversationType === CONVERSATION_TYPE.SINGLE
-      ) {
-        state.messageIdsCollection[listKey] = new Map();
-      }
-      if (
-        message.sender?.userId === getCurrentUserId() &&
-        message.conversationType === CONVERSATION_TYPE.SINGLE
-      ) {
-        state.messageIdsCollection[listKey].set(messageId, {
-          [MESSAGE_STATUS_TYPE.READ_STATUS]: false,
-        });
-      }
     },
     UPDATE_HISTORY_MESSAGE: (state, payload) => {
       const { listKey, historyMessageList } = payload;
@@ -271,42 +262,12 @@ const Message = {
 
       state.messageList[listKey] = [...mergedHistory, ...remainedCurrent];
     },
-    UPDATE_MESSAGE_IDS_COLLECTION: (state, payload) => {
-      const { messageId, key, type } = payload;
-      switch (type) {
-        case MESSAGE_STATUS_TYPE.READ_STATUS:
-          {
-            if (state.messageIdsCollection[key]) {
-              state.messageIdsCollection[key].set(messageId, {
-                [MESSAGE_STATUS_TYPE.READ_STATUS]: true,
-              });
-            }
-          }
-          break;
-        case MESSAGE_STATUS_TYPE.CHANLE_STATUS:
-          {
-            if (state.messageIdsCollection[key]) {
-              const READ_STATUS_KEY = MESSAGE_STATUS_TYPE.READ_STATUS;
-              // 直接使用Map的forEach方法
-              state.messageIdsCollection[key].forEach((value, key) => {
-                if (value[READ_STATUS_KEY] !== true) {
-                  value[READ_STATUS_KEY] = true;
-                }
-              });
-            }
-          }
-          break;
-        default:
-          break;
-      }
-    },
     //清除某条会话消息
     CLEAR_SOMEONE_MESSAGE: (state, payload) => {
       state.messageList[payload] = [];
     },
     CLEAR_ALL_MESSAGES: (state) => {
       state.messageList = {};
-      state.messageIdsCollection = {};
     },
     //修改本地原消息【撤回、删除、编辑】
     CHANGE_MESSAGE_BODAY: (state, payload) => {
@@ -413,94 +374,137 @@ const Message = {
           (item) => messageIdOf(item) === messageId,
         );
         if (message) {
-          message.read = true;
-          if (groupReadCount !== undefined && groupReadCount !== null) {
+          if (conversationType === CONVERSATION_TYPE.SINGLE) {
+            message.isPeerRead = true;
+          }
+          if (
+            conversationType === CONVERSATION_TYPE.GROUP &&
+            groupReadCount !== undefined &&
+            groupReadCount !== null
+          ) {
             message.groupReadCount = groupReadCount;
           }
-        } else {
-          console.warn('[Message Receipt] 未找到已读回执对应消息', {
-            messageId,
-            conversationId,
-            conversationType,
-            groupReadCount,
-            listKey: key,
-          });
         }
-      } else {
-        console.warn('[Message Receipt] 已读回执对应消息列表不存在', {
-          messageId,
-          conversationId,
-          conversationType,
-          groupReadCount,
-          listKey: key,
-        });
-      }
-    },
-    // 发送消息已读回执
-    SEND_MESSAGE_READ_RECEIPT: (state, payload) => {
-      const { messageId, conversationId, conversationType } = payload;
-      const key = conversationId;
-      if (state.messageList[key]) {
-        const message = _.find(
-          state.messageList[key],
-          (item) => messageIdOf(item) === messageId,
-        );
-        if (message) {
-          if (
-            conversationType === CONVERSATION_TYPE.SINGLE ||
-            conversationType === CONVERSATION_TYPE.GROUP
-          ) {
-            chatManager()
-              .sendMessageReadReceipts({
-                conversationId,
-                conversationType,
-                messageIds: [messageId],
-              })
-              .then((result) => {
-                console.log('[Message Receipt] send read receipt success', {
-                  messageId,
-                  conversationId,
-                  conversationType,
-                  listKey: key,
-                  result,
-                });
-              })
-              .catch((error) => {
-                console.error('[Message Receipt] send read receipt failed', {
-                  messageId,
-                  conversationId,
-                  conversationType,
-                  listKey: key,
-                  error,
-                });
-              });
-          } else {
-            console.error('[Message Receipt] SDK 5.0 does not support chatroom receipts', {
-              messageId,
-              conversationId,
-              conversationType,
-              listKey: key,
-            });
-          }
-        } else {
-          console.warn('[Message Receipt] 未找到需要发送已读回执的消息', {
-            messageId,
-            conversationId,
-            conversationType,
-            listKey: key,
-          });
-        }
-      } else {
-        console.warn('[Message Receipt] 已读回执对应消息列表不存在', {
-          messageId,
-          conversationId,
-          conversationType,
-          listKey: key,
-        });
       }
     },
   },
   actions: {
+    setIncomingReadReceiptBoundary: ({ commit }, boundary) => {
+      commit('SET_INCOMING_READ_RECEIPT_BOUNDARY', boundary);
+    },
+    clearIncomingReadReceiptBoundary: ({ commit }, conversation) => {
+      commit('CLEAR_INCOMING_READ_RECEIPT_BOUNDARY', conversation);
+    },
+    // 接收端在消息页完成展示后，为请求了已读回执的 SDK 5.0 消息发送回执。
+    // 仅限单聊和群聊；不以 SDK 当前会话或页面可见性作为本地跳过条件。
+    sendIncomingMessageReadReceipt: async (_, payload) => {
+      const receiptPayload = Array.isArray(payload)
+        ? { messages: payload }
+        : payload || {};
+      const incomingMessages = Array.isArray(receiptPayload.messages)
+        ? receiptPayload.messages
+        : [];
+      const { initialHistoryRender = false, readAt, unreadCount } = receiptPayload;
+
+      const receiptCandidates = incomingMessages.filter(
+        (message) =>
+          message?.direct === 'RECEIVE' &&
+          message?.needReadReceipt === true &&
+          !!message.conversationId &&
+          !!message.msgServerId &&
+          (message.conversationType === CONVERSATION_TYPE.SINGLE ||
+            message.conversationType === CONVERSATION_TYPE.GROUP),
+      );
+      if (receiptCandidates.length === 0) return;
+
+      if (initialHistoryRender && (!Number.isFinite(readAt) || readAt <= 0)) {
+        console.error('[Message Receipt] SDK 5.0 readAt is missing or invalid for unread receipt selection', {
+          initialHistoryRender,
+          readAt,
+          unreadCount,
+          displayedMessageCount: incomingMessages.length,
+          candidateMessageCount: receiptCandidates.length,
+          candidates: receiptCandidates.map((message) => ({
+            msgServerId: message.msgServerId,
+            timestamp: message.timestamp,
+          })),
+        });
+        return;
+      }
+
+      const receiptMessages = receiptCandidates.filter(
+        (message) => !initialHistoryRender || message.timestamp > readAt,
+      );
+      if (receiptMessages.length === 0) return;
+
+      const { conversationId, conversationType } = receiptMessages[0];
+      if (
+        receiptMessages.some(
+          (message) =>
+            message.conversationId !== conversationId ||
+            message.conversationType !== conversationType,
+        )
+      ) {
+        console.error('[Message Receipt] SDK 5.0 read receipt messages span conversations', {
+          incomingMessages,
+        });
+        return;
+      }
+
+      const messageIds = [...new Set(receiptMessages.map((message) => message.msgServerId))];
+      if (messageIds.length > 50) {
+        console.error('[Message Receipt] SDK 5.0 read receipt exceeds the 50-message limit', {
+          conversationId,
+          conversationType,
+          messageIds,
+        });
+        return;
+      }
+
+      const params = {
+        conversationId,
+        conversationType,
+        messageIds,
+      };
+
+      try {
+        console.log(
+          '[Demo -> SDK 5.0 API] ChatManager.sendMessageReadReceipts request',
+          {
+            api: 'ChatManager.sendMessageReadReceipts',
+            params,
+            initialHistoryRender,
+            readAt,
+            unreadCount,
+            displayedMessageCount: incomingMessages.length,
+            selectedMessageCount: messageIds.length,
+          },
+        );
+        const response = await chatManager().sendMessageReadReceipts({
+          conversationId,
+          conversationType,
+          messageIds,
+        });
+        console.log(
+          '[Demo <- SDK 5.0 API] ChatManager.sendMessageReadReceipts response',
+          {
+            api: 'ChatManager.sendMessageReadReceipts',
+            params,
+            response,
+          },
+        );
+        return response;
+      } catch (error) {
+        console.error('[Demo <- SDK 5.0 API] ChatManager.sendMessageReadReceipts failed', {
+          api: 'ChatManager.sendMessageReadReceipts',
+          params,
+          messageIds,
+          conversationId,
+          conversationType,
+          error,
+        });
+      }
+    },
     //添加新消息
     createNewMessage: ({ dispatch, commit, state }, message) => {
       const key = message.conversationId;
@@ -512,7 +516,7 @@ const Message = {
 
       commit('UPDATE_MESSAGE_LIST', message);
       // 流式消息后续分片只更新原消息内容，不重复触发新消息副作用
-      if (shouldTriggerSideEffects) {
+      if (shouldTriggerSideEffects && !existedBefore) {
         eventEmitter.emit('newMessage', message);
       }
 
@@ -541,8 +545,23 @@ const Message = {
           cursor: cursor === -1 ? '' : String(cursor),
           searchDirection,
         };
+        console.log(
+          '[Demo -> SDK 5.0 API] ChatManager.getHistoryMessages request',
+          {
+            api: 'ChatManager.getHistoryMessages',
+            params: options,
+          },
+        );
         chatManager().getHistoryMessages(options)
           .then((res) => {
+            console.log(
+              '[Demo <- SDK 5.0 API] ChatManager.getHistoryMessages response',
+              {
+                api: 'ChatManager.getHistoryMessages',
+                params: options,
+                response: res,
+              },
+            );
             const { items: messages, cursor: nextCursor, hasMore } = res;
             const messageCount = messages.length;
             const reactionMessages = messages.filter(
@@ -577,11 +596,6 @@ const Message = {
                 },
               );
             }
-            resolve({
-              messages,
-              cursor: nextCursor,
-              hasMore,
-            });
             const reversedMessages = [...messages].reverse();
             const listKey = conversationId;
             const hasLocalConversation = !!state.messageList[listKey];
@@ -611,15 +625,19 @@ const Message = {
               lastMessageId:
                 messageCount > 0 ? messageIdOf(messages[messageCount - 1]) : '',
               listKey,
+              storedMessageCount: state.messageList[listKey]?.length || 0,
+              storedMessageIds: (state.messageList[listKey] || []).map(messageIdOf),
+            });
+            resolve({
+              messages,
+              cursor: nextCursor,
+              hasMore,
             });
           })
           .catch((error) => {
-            console.error('[History Message] getHistoryMessages failed', {
-              conversationId,
-              conversationType,
-              cursor,
-              pageSize: options.pageSize,
-              searchDirection,
+            console.error('[Demo <- SDK 5.0 API] ChatManager.getHistoryMessages failed', {
+              api: 'ChatManager.getHistoryMessages',
+              params: options,
               error,
               errorCode: error.code,
               errorDetails: error.details,
@@ -1299,7 +1317,6 @@ const Message = {
     },
   },
   getters: {
-    getMessageIdsCollectionMap: (state) => state.messageIdsCollection,
     getMessageById: (state) => (messageId) =>
       findLocalMessageMetaById(state, messageId),
   },

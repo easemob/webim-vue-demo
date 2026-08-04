@@ -5,9 +5,12 @@ import {
   fixSocketUrl,
   fixRestUrl,
 } from './config';
+import { normalizeImEnvironmentConfig } from '../views/Login/components/CustomImConfig/imEnvPresets';
 // 读取自定义配置（因demo需要自定义配置，非必须）
 const webimConfig = window.localStorage.getItem('webimConfig');
-const CUSTOM_CONFIG = (webimConfig && JSON.parse(webimConfig)) || {};
+const CUSTOM_CONFIG = normalizeImEnvironmentConfig(
+  (webimConfig && JSON.parse(webimConfig)) || {},
+);
 
 const restBase = CUSTOM_CONFIG.restServer
   ? fixRestUrl(CUSTOM_CONFIG.restServer).replace(/\/+$/, '')
@@ -30,6 +33,7 @@ const serviceConfig = !useSdkDns
         wsUrl: fixSocketUrl(
           CUSTOM_CONFIG.imServer || DEFAULT_EASEMOB_SOCKET_URL,
         ),
+        syncWsUrl: CUSTOM_CONFIG.syncWsUrl,
       },
     }
   : undefined;

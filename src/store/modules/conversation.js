@@ -246,40 +246,6 @@ const Conversation = {
         console.error('获取会话列表失败', error);
       }
     },
-    refreshConversationListFromServer: async ({ commit, dispatch }, params = {}) => {
-      const refreshParams = {
-        includeEmpty: params.includeEmpty !== false,
-      };
-      try {
-        const conversations = await chatManager().refreshSessionList(refreshParams);
-        commit('GET_CONVERSATION_LIST_FROM_SERVER', {
-          isInit: true,
-          conversationListData: conversations,
-        });
-        commit('SET_CONVERSATION_LIST_FROM_SERVER_PAGE_CURSOR', '');
-
-        const userIds = _.chain(conversations)
-          .filter({ conversationType: CONVERSATION_TYPE.SINGLE })
-          .map('conversationId')
-          .value();
-        dispatch('fetchContactsUserInfos', userIds);
-        dispatch('callGroupDetailWithConversationId', conversations);
-        console.log('[Conversation] refreshSessionList success', {
-          refreshParams,
-          count: conversations.length,
-          currentUser: getCurrentUserId(),
-          conversations,
-        });
-        return conversations;
-      } catch (error) {
-        console.error('[Conversation] refreshSessionList failed', {
-          refreshParams,
-          currentUser: getCurrentUserId(),
-          error,
-        });
-        throw error;
-      }
-    },
     //获取服务端置顶会话列表
     getServerPinnedConversations: async ({ commit }, params) => {
       try {

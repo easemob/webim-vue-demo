@@ -1,21 +1,23 @@
 # WebSDK 5.0 API 覆盖统计
 
-生成日期：2026-07-25
+生成日期：2026-07-31
 
-当前 SDK：`easemob-websdk 5.0`，来源为 `node_modules/easemob-websdk/dist/*.d.ts`。
+当前 SDK：`easemob-websdk 5.0.4`，来源为 `node_modules/easemob-websdk/dist/*.d.ts`。
 
-本文档由 `scripts/sdk5-api-coverage.cjs` 基于当前安装包的公开 TypeScript 声明和当前 `src/` 可复跑扫描生成。公开对外 API 为 `205` 个、直接调用 `193` 个；本次新增本地语音文件转写、RTC UID 映射与其他平台登录 ID 三个原始 SDK 5.0 诊断入口。
+本文档由 `scripts/sdk5-api-coverage.cjs` 基于当前安装包的公开 TypeScript 声明和当前 `src/` 可复跑扫描生成。公开对外 API 为 `204` 个、直接调用 `192` 个；`ChatManager.refreshSessionList` 已按研发反馈归为内部接口，不进入公开覆盖分母。
 
 ## 覆盖率概览
 
 | 指标 | 数值 | 口径 |
 | --- | ---: | --- |
-| API 覆盖率 | 94.1% | 按当前 `src/` 已直接调用的公开对外 API 去重数量统计，`193 / 205` |
-| 已覆盖公开对外 API | 193 | 仅统计 Demo 运行代码中的真实 SDK 5.0 调用，不包含 `tests/` |
+| API 覆盖率 | 94.1% | 按当前 `src/` 已直接调用的公开对外 API 去重数量统计，`192 / 204` |
+| 已覆盖公开对外 API | 192 | 仅统计 Demo 运行代码中的真实 SDK 5.0 调用，不包含 `tests/` |
 | 未覆盖公开对外 API | 12 | 仅包含当前 `src` 没有用户可见入口或真实调用的公开对外 API |
 | 已剔除 `@internal` / 私有入口 | 不计入 | 研发确认 `@internal` 属于私有方法，不进入覆盖率分母，不登记为未覆盖能力 |
 
 > 该覆盖率是静态调用覆盖率，不等价于真实服务端 PASS；真实结果仍以页面请求、SDK 回调和服务端响应为准。
+
+> 已读回执时序覆盖矩阵中的旧通用表述：接收方点击单聊或群聊会话时，会话列表先保留 SDK 原始 `readAt`、`unreadCount`，再调用 `clearConversationUnreadMessageCount({ conversationId, conversationType })`；消息页完成渲染后，仅以真实 `direct: 'RECEIVE'`、`needReadReceipt: true`、`msgServerId` 的单聊或群聊消息发送 `sendMessageReadReceipts`。首次历史消息严格以 `Message.timestamp > readAt` 选择回执 ID；`readAt` 缺失、非数值或为 `0` 时保留真实错误和候选消息的原始 ID/时间戳，不用 `unreadCount` 截取或猜测 ID。后续仅处理新渲染消息。不以 SDK 当前会话、浏览器可见性或 `skipped` 作为 Demo 本地跳过条件；聊天室不调用。
 
 ## 统计口径
 
@@ -32,7 +34,7 @@
 
 | 分类 | 数量 | 说明 |
 | --- | ---: | --- |
-| 公开对外 API | 205 | 本文主矩阵按功能归类覆盖，覆盖率按 API 名去重统计 |
+| 公开对外 API | 204 | 本文主矩阵按功能归类覆盖，覆盖率按 API 名去重统计 |
 | `@internal` / 私有 / 内部生命周期入口 | 不计入 | 研发确认不需要覆盖，不进入分母、不进入未覆盖项 |
 
 ## 覆盖矩阵
@@ -50,9 +52,9 @@
 | 定向消息 | `ChatManager.createTextMessage`, `ChatManager.sendMessage` with `receiverList` | 是 | 群组 / 聊天室定向文本消息使用 SDK 5.0 `conversationId`、`conversationType`、`receiverList` 创建并发送。 | 只覆盖定向文本；图片、文件、视频、语音等定向消息未单独提供入口。 |
 | 消息事件监听 | `ChatManager.addEventHandler`, `ChatManager.removeEventHandler` | 是 | 已监听消息、撤回、编辑、回执、Reaction、多设备等 Chat 事件并按 SDK 5.0 字段入库 / 展示；每个 Chat 监听注册前都会先调用 `removeEventHandler(handlerId)` 清理同 ID 监听，再调用 `addEventHandler(handlerId, handlers)` 注册。 | 真实事件下发与字段仍以 SDK / 服务端回调为准；不使用旧事件聚合、旧字段映射或重复监听兜底。 |
 | 当前会话上下文 | `ChatManager.setCurrentConversation`, `resetCurrentConversation`, `getCurrentConversation` | 是 | 进入消息页调用 `setCurrentConversation({ conversationId, conversationType })`，页面展示 `getCurrentConversation()` 的 SDK 真实返回，切换会话或离开消息页调用 `resetCurrentConversation()`。 | 用于验证 SDK 当前会话收到在线消息时不累加本地未读；真实效果仍需用单聊、群聊、聊天室在线消息分别验收并保留 console 证据。 |
-| 会话列表与筛选 | `ChatManager.getConversationList`, `refreshSessionList` | 是 | 会话列表、本地筛选、置顶会话筛选均调用 `getConversationList`；会话列表顶部提供主动刷新入口，调用 `refreshSessionList({ includeEmpty: true })` 后直接展示 SDK 返回的真实会话列表。 | 真实刷新结果以 SDK / 服务端返回为准；失败不读取旧接口或用本地缓存伪造成刷新成功。 |
+| 会话列表与筛选 | `ChatManager.getConversationList` | 是 | 会话列表、本地筛选、置顶会话筛选均调用 `getConversationList` 读取 SDK 5.0 当前会话快照。 | `refreshSessionList` 属于内部接口，不在 Demo 页面暴露，也不计入公开 API 覆盖。 |
 | 会话删除、置顶、标记、未读 | `ChatManager.deleteConversation`, `setConversationPinned`, `addConversationMark`, `removeConversationMark`, `clearConversationUnreadMessageCount`, `clearAllMessagesAndConversations`, `clearAllConversationUnreadMessageCount`, `getPinnedMessageList` | 是 | 删除会话、置顶 / 取消置顶、标星 / 取消标星、单聊和群聊单会话未读清零、全会话未读清零、清空全部消息与会话、置顶消息列表查询已接入。 | 聊天室单会话未读清零按 SDK 5.0 不支持处理，不调用。清空全部消息与会话为危险操作，页面保留确认框，但成功状态只以 SDK resolve 为准。 |
-| 消息回执 | `ChatManager.sendMessageReadReceipts`, `getGroupMessageReadUsers`, `getGroupMessageReadReceipts` | 是 | 单聊 / 群聊已读回执发送已接入；群消息右键支持查询已读用户列表和回执详情；聊天室回执不调用。 | 群消息已读详情真实失败以 SDK / 服务端返回为准，不本地补齐。 |
+| 消息回执 | `ChatManager.clearConversationUnreadMessageCount`, `sendMessageReadReceipts`, `getGroupMessageReadUsers`, `getGroupMessageReadReceipts` | 是 | 单聊 / 群聊的 `text/image/file/voice/video/location/cmd/custom/combine` 消息均在 SDK 5.0 创建参数中以 `needReadReceipt: true` 请求已读回执；EaseCallKit 直接创建的单聊文本和 CMD 消息同样传该字段。聊天室创建参数不传，聊天室回执不调用。接收方点击单聊或群聊会话时调用 `clearConversationUnreadMessageCount({ conversationId, conversationType })`；消息页完成渲染后，对真实 `direct: 'RECEIVE'`、`needReadReceipt: true`、带 `msgServerId` 的单聊或群聊消息调用 `sendMessageReadReceipts({ conversationId, conversationType, messageIds })`。不以 `getCurrentConversation()`、页面可见性或 `skipped` 作为 Demo 本地跳过条件。两次调用的失败均保留 SDK 原始错误，不互相伪造成成功或中断。发送端收到 `onMessageReadReceipts` 时输出一条原始 SDK 5.0 事件日志后更新消息状态。仅收到 SDK 5.0 真实单聊 / 群聊回执后展示绿色已读勾，群聊同时展示回执中的累计已读人数。 | 群消息已读详情真实失败以 SDK / 服务端返回为准，不本地补齐。 |
 | 历史、搜索、删除、撤回、编辑、合并解析 | `ChatManager.getHistoryMessages`, `searchMessages`, `removeHistoryMessages`, `recallMessage`, `modifyMessage`, `downloadAndParseCombineMessage` | 是 | 历史消息、服务端消息搜索、删除消息、撤回消息、文本编辑、合并消息详情解析均已有页面入口。 | 真实成功 / 失败以服务端响应为准；静态覆盖不代表每种会话类型都已真实 PASS。 |
 | 消息置顶 | `ChatManager.pinMessage`, `unpinMessage`, `getPinnedMessageList` | 是 | 消息列表项右键菜单已覆盖置顶和取消置顶；消息页头部已提供当前会话置顶消息列表抽屉，调用 `getPinnedMessageList({ conversationId, conversationType })` 并展示 SDK 返回的 `items`。 | SDK 返回空列表、缺少操作者等字段时按真实结果展示。 |
 | 附件下载 | `ChatManager.downloadAttachment` | 是 | 图片 / 视频 / 文件 / 语音消息右键支持调用 `downloadAttachment({ message })`，展示 SDK 返回的 `filename`、`mimeType`、`size`、`downloadUrl`、二进制长度，并提供基于 SDK 返回二进制的下载链接。 | 失败保留 SDK / 服务端真实错误，不退回浏览器直链作为成功。 |
@@ -90,8 +92,8 @@
 
 ## API 级缺口摘要
 
-- 当前静态统计：公开对外 API 共 `205` 个，已覆盖 `193` 个，仍有 `12` 个未覆盖；`@internal` 私有入口已剔除，不计入分母或缺口。
-- 消息：附件下载、群消息已读用户 / 回执详情、置顶消息列表、全会话未读清零、清空全部消息与会话、当前会话上下文、主动刷新会话列表、消息事件监听移除以及本地语音文件转写均已补齐；个人设置将浏览器原始 `File` 与用户明确输入的可选 `VoiceParams.format` 直接传给 `ChatManager.voiceFileToText(file, voiceParams)`，不本地转写、不伪造结果。
+- 当前静态统计：公开对外 API 共 `204` 个，已覆盖 `192` 个，仍有 `12` 个未覆盖；`@internal` 私有入口以及研发确认的内部接口不计入分母或缺口。
+- 消息：附件下载、群消息已读用户 / 回执详情、置顶消息列表、全会话未读清零、清空全部消息与会话、当前会话上下文、消息事件监听移除以及本地语音文件转写均已补齐；个人设置将浏览器原始 `File` 与用户明确输入的可选 `VoiceParams.format` 直接传给 `ChatManager.voiceFileToText(file, voiceParams)`，不本地转写、不伪造结果。
 - ChatClient：连接状态查询、REST 上下文、Token 续期、缓存管理、上传适配器、联系人快照、事件移除、RTC UID 反查及其他平台登录 ID 查询均已覆盖；仍未覆盖动态 `ChatClient.use` 注册（`1` 个）。
 - 平台适配：仍未覆盖 `createPlatformAdapter`、`detectRuntimePlatform`（`2` 个）；当前 Demo 使用 SDK 默认浏览器平台适配，未提供自定义适配入口。
 - 推送：上传 Push Token、全局免打扰、批量会话免打扰、推送语言、按提醒类型分页查询会话已覆盖；真实通过 / 失败仍以页面 SDK 调用为准。

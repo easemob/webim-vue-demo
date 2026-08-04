@@ -32,6 +32,26 @@ assert.match(
   /env\s*===\s*IM_ENVIRONMENTS\.NGI\s*\|\|\s*env\s*===\s*IM_ENVIRONMENTS\.VIP6/,
   'the VIP6 preset must not display or persist fixed private server configuration.',
 );
+assert.match(
+  environmentSource,
+  /\[IM_ENVIRONMENTS\.TKE\]:\s*\{[\s\S]*?syncWsUrl:\s*'wss:\/\/tke-sdb-fusion\.easemob\.com\/ws'/,
+  'the TKE preset must provide its real SDK 5.0 group/contact sync WebSocket URL.',
+);
+assert.match(
+  initSource,
+  /serverUrls:\s*\{[\s\S]*?syncWsUrl:\s*CUSTOM_CONFIG\.syncWsUrl,/,
+  'private SDK 5.0 serverUrls must pass the selected environment syncWsUrl through unchanged.',
+);
+assert.match(
+  initSource,
+  /import\s*\{\s*normalizeImEnvironmentConfig\s*\}\s*from\s*'\.\.\/views\/Login\/components\/CustomImConfig\/imEnvPresets';/,
+  'SDK initialization must use the selected environment preset when loading saved configuration.',
+);
+assert.match(
+  initSource,
+  /const CUSTOM_CONFIG = normalizeImEnvironmentConfig\(\s*\(webimConfig && JSON\.parse\(webimConfig\)\) \|\| \{\},\s*\);/,
+  'a saved TKE configuration without new fields must still receive its SDK 5.0 syncWsUrl preset.',
+);
 
 const onConnectedBody = listenerSource.match(/onConnected:\s*\(\)\s*=>\s*\{([\s\S]*?)\n\s*\},\n\s*onDisconnected/);
 assert.ok(onConnectedBody, 'connection onConnected handler must exist');

@@ -11,5 +11,7 @@ assert.match(source, /requireManager\('chatManager'\)/);
 assert.match(source, /requireManager\('chatThreadManager'\)/);
 assert.doesNotMatch(source, /\bEMClient\b/);
 assert.doesNotMatch(source, /\.Message\.create/);
+assert.doesNotMatch(source, /未找到已读回执对应消息/);
+assert.doesNotMatch(source, /已读回执对应消息列表不存在/);
 
 console.log('sdk5 message store contract: PASS');

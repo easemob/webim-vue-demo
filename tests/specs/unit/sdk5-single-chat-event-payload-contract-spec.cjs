@@ -16,6 +16,11 @@ assert.match(
   /onMessageReadReceipts:\s*\(receipts\)/,
   'SDK 5.0 must register the native onMessageReadReceipts event.',
 );
+assert.match(
+  readAck,
+  /\[Demo <- SDK 5\.0 Event\] ChatManager\.onMessageReadReceipts[\s\S]*eventName:\s*'onMessageReadReceipts'[\s\S]*receipts/,
+  'Sender must print the raw SDK 5.0 onMessageReadReceipts event once it is received.',
+);
 assert.doesNotMatch(
   readAck,
   /\bonMessageReceipts\b/,

@@ -141,14 +141,17 @@ const debouncedToChatMessage = _.debounce(
   },
   300,
 ); // 300毫秒内的连续触发将被防抖处理
-const toChatMessage = (conversationItem, index) => {
+const toChatMessage = async (conversationItem, index) => {
   checkedConverItemIndex.value = index;
-  const { conversationId, unreadCount, customField, conversationType } = conversationItem;
-  if (
-    unreadCount > 0 &&
-    [CONVERSATION_TYPE.SINGLE, CONVERSATION_TYPE.GROUP].includes(conversationType)
-  ) {
-    store.dispatch('clearConversationUnreadCount', {
+  const { conversationId, customField, conversationType, readAt, unreadCount } = conversationItem;
+  if ([CONVERSATION_TYPE.SINGLE, CONVERSATION_TYPE.GROUP].includes(conversationType)) {
+    store.dispatch('setIncomingReadReceiptBoundary', {
+      conversationId,
+      conversationType,
+      readAt,
+      unreadCount,
+    });
+    await store.dispatch('clearConversationUnreadCount', {
       conversationId,
       conversationType,
     });
@@ -284,7 +287,6 @@ const toggleConversationMark = async (conversationItem) => {
 const pushSettingDialogVisible = ref(false);
 const pushSettingLoading = ref(false);
 const pushSettingSaving = ref(false);
-const conversationListRefreshLoading = ref(false);
 const globalConversationClearLoading = ref('');
 const selectedPushConversation = ref(null);
 const selectedPushRemindType = ref('ALL');
@@ -375,21 +377,6 @@ const clearConversationPushSetting = async () => {
     pushSettingSaving.value = false;
   }
 };
-const refreshConversationListFromServer = async () => {
-  if (conversationListRefreshLoading.value) return;
-  conversationListRefreshLoading.value = true;
-  try {
-    await store.dispatch('refreshConversationListFromServer', { includeEmpty: true });
-    ElMessage.success('会话列表已刷新');
-  } catch (error) {
-    console.error('[Conversation] refreshSessionList UI failed', {
-      error,
-    });
-    ElMessage.error(error?.message || '会话列表刷新失败');
-  } finally {
-    conversationListRefreshLoading.value = false;
-  }
-};
 const clearAllConversationUnreadMessageCount = async () => {
   if (globalConversationClearLoading.value) return;
   globalConversationClearLoading.value = 'unread';
@@ -478,16 +465,6 @@ const onScrollToBottom = (event) => {
       <span class="plaint_icon">!</span> 网络不给力，请检查网络设置。
     </li>
     <li class="session_global_actions">
-      <el-button
-        link
-        type="primary"
-        size="small"
-        :loading="conversationListRefreshLoading"
-        :disabled="conversationListRefreshLoading"
-        @click.stop="refreshConversationListFromServer"
-      >
-        刷新会话列表
-      </el-button>
       <el-button
         link
         type="primary"
