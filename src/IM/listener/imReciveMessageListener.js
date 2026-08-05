@@ -1,4 +1,4 @@
-import { requireManager } from '../index';
+import { getCurrentUserId, requireManager } from '../index';
 import { CHANGE_MESSAGE_BODAY_TYPE } from '@/constant';
 import store from '@/store';
 import { safeSync, wrapImEventHandler } from '@/utils/safeCall';
@@ -7,6 +7,22 @@ const CHAT_MESSAGE_LISTENER_ID = 'messageListen';
 const messageIdOf = (message) => message?.msgServerId || message?.msgLocalId || '';
 
 export const imReviceMessageListener = () => {
+  const domainForConversationType = (conversationType) => {
+    if (conversationType === 'groupChat') return 'group';
+    if (conversationType === 'chatRoom') return 'chatRoom';
+    return 'singleChat';
+  };
+  const recordSdkEvent = (eventName, payload) => {
+    const primaryPayload = Array.isArray(payload) ? payload[0] : payload;
+    Promise.resolve(
+      store.dispatch('recordSdkEvent', {
+        domain: domainForConversationType(primaryPayload?.conversationType),
+        eventName,
+        payload,
+        currentUserId: getCurrentUserId(),
+      }),
+    ).catch((error) => console.error('[imReciveMessageListener.recordSdkEvent]', error));
+  };
   //接收的消息往store中push
   const pushNewMessage = (message) => {
     if (Array.isArray(message)) {
@@ -163,13 +179,16 @@ export const imReviceMessageListener = () => {
       wrapImEventHandler({
         // 全局消息监听器，接收所有类型的消息
         onMessage: function (message) {
+          recordSdkEvent('onMessage', message);
           pushNewMessage(message);
         }, // 收到所有类型的消息
 
         onStreamMessage: function (message) {
+          recordSdkEvent('onStreamMessage', message);
           pushStreamMessage(message);
         }, // 收到流式消息。
         onMessageDelivered: function (receipt) {
+          recordSdkEvent('onMessageDelivered', receipt);
           store.commit('UPDATE_MESSAGE_DELIVERED', {
             messageId: receipt.messageId,
             conversationId: receipt.conversationId,
@@ -178,10 +197,16 @@ export const imReviceMessageListener = () => {
           console.log('[Message Delivery] SDK 5.0 receipt', receipt);
         },
         onMessageRecalled: function (message) {
+          recordSdkEvent('onMessageRecalled', message);
           otherRecallMessage(message);
         }, // 收到消息撤回回执。
         onMessageUpdated: function (message) {
+          recordSdkEvent('onMessageUpdated', message);
           otherModifyMessage(message);
+        },
+        onPinnedMessageChanged: function (payload) {
+          recordSdkEvent('onPinnedMessageChanged', payload);
+          console.log('[SDK 5.0 Chat Event] onPinnedMessageChanged received', payload);
         },
       }),
     );

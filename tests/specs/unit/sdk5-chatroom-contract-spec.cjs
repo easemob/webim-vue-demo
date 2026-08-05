@@ -7,6 +7,7 @@ const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'u
 
 const chatroomIndex = read('src/views/Chat/components/Chatroom/index.vue');
 const chatroomDetails = read('src/views/Chat/components/Chatroom/ChatroomDetails.vue');
+const chatroomListener = read('src/IM/listener/imChatroomListener.js');
 const memberManagement = read(
   'src/views/Chat/components/Chatroom/ChatroomMemberManagement.vue',
 );
@@ -20,6 +21,26 @@ assert.match(
 );
 assert.match(chatroomIndex, /item\.chatRoomId/);
 assert.match(chatroomIndex, /item\?\.memberCount/);
+assert.match(
+  chatroomListener,
+  /import store from '@\/store';/,
+  '聊天室 SDK 5.0 事件必须能记录到事件中心，不能依赖未声明的全局 store。',
+);
+assert.match(
+  chatroomListener,
+  /onMembersJoined: \(payload\) => \{[\s\S]*?recordChatroomEvent\('onMembersJoined', payload\);[\s\S]*?eventEmitter\.emit\('chatroomMembersJoined', payload\);[\s\S]*?\}/,
+  '收到 SDK 5.0 onMembersJoined 后必须通知聊天室列表读取服务端最新摘要。',
+);
+assert.match(
+  chatroomIndex,
+  /eventEmitter\.on\('chatroomMembersJoined', handleChatroomMembersJoined\);[\s\S]*?eventEmitter\.off\('chatroomMembersJoined', handleChatroomMembersJoined\);/,
+  '聊天室列表必须在挂载期间响应成员加入事件，并在卸载时释放监听。',
+);
+assert.match(
+  chatroomIndex,
+  /const handleChatroomMembersJoined = \(payload\) => \{[\s\S]*?getChatrooms\(\);[\s\S]*?\};/,
+  '成员加入后必须重新调用 SDK 5.0 getChatRoomList 获取真实 memberCount，不能本地递增。',
+);
 assert.match(
   chatroomIndex,
   /<div class="desc">聊天室ID：\{\{ item\.chatRoomId \}\}<\/div>/,

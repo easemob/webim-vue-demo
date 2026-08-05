@@ -11,6 +11,9 @@ const listenerSource = read('src/IM/listener/imConnectListener.js');
 const listenerIndexSource = read('src/IM/listener/index.js');
 const appSource = read('src/App.vue');
 const loginSource = read('src/views/Login/components/LoginInput/emloginWithPasswordLogin.vue');
+const customConfigSource = read(
+  'src/views/Login/components/CustomImConfig/index.vue',
+);
 
 assert.match(
   initSource,
@@ -41,6 +44,16 @@ assert.match(
   initSource,
   /serverUrls:\s*\{[\s\S]*?syncWsUrl:\s*CUSTOM_CONFIG\.syncWsUrl,/,
   'private SDK 5.0 serverUrls must pass the selected environment syncWsUrl through unchanged.',
+);
+assert.match(
+  customConfigSource,
+  /<el-form-item\s+v-if="configForm\.isPrivate"\s+prop="syncWsUrl"\s+label="syncWsUrl"/,
+  'private SDK 5.0 login configuration must expose the raw syncWsUrl parameter.',
+);
+assert.match(
+  customConfigSource,
+  /<el-input\s+v-model="configForm\.syncWsUrl"\s+placeholder="wss:\/\/\.\.\."\s*\/>/,
+  'the syncWsUrl login configuration input must bind directly to the SDK 5.0 parameter.',
 );
 assert.match(
   initSource,

@@ -140,6 +140,13 @@ defineExpose({ centerDialogVisible, openWithEnvironment });
       >
         <el-input v-model="configForm.imServer" />
       </el-form-item>
+      <el-form-item
+        v-if="configForm.isPrivate"
+        prop="syncWsUrl"
+        label="syncWsUrl"
+      >
+        <el-input v-model="configForm.syncWsUrl" placeholder="wss://..." />
+      </el-form-item>
       <!-- <el-form-item v-if="configForm.isPrivate" prop="port" label="端口号">
         <el-input v-model="configForm.port" placeholder="8080" />
       </el-form-item> -->

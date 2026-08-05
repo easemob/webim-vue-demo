@@ -9,7 +9,7 @@ import { getCurrentImEnvironmentInfo } from '@/utils/currentImEnvironment';
 
 const dialogVisible = ref(false);
 const { isOpenPlayRing } = usePlayRing();
-const { isOpenedEMLog, donwLoadEMLog } = useSetEMLogConfig();
+const { isOpenedEMLog } = useSetEMLogConfig();
 const presencePageNum = ref(1);
 const presencePageSize = 50;
 const loadingSubscribedPresence = ref(false);
@@ -545,7 +545,7 @@ defineExpose({
         <el-tooltip
           class="item"
           effect="dark"
-          content="开启SDK日志后，会在控制台输出SDK日志,并可下载SDK缓存日志。"
+          content="开启后在浏览器 Console 输出 SDK 日志；SDK 是否自动上报由当前环境 DNS 的 enableReportLogs 配置决定。"
           placement="top"
         >
           <span>开启SDK日志</span></el-tooltip
@@ -555,15 +555,6 @@ defineExpose({
           active-text="开启"
           inactive-text="关闭"
         />
-      </div>
-      <div class="setting_main_item" v-if="isOpenedEMLog">
-        <el-button
-          class="download_log"
-          type="primary"
-          plain
-          @click="donwLoadEMLog"
-          >下载SDK缓存日志</el-button
-        >
       </div>
       <div class="setting_main_item">
         <el-tooltip

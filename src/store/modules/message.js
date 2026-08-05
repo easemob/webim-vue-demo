@@ -415,6 +415,18 @@ const Message = {
           (message.conversationType === CONVERSATION_TYPE.SINGLE ||
             message.conversationType === CONVERSATION_TYPE.GROUP),
       );
+      const selectionLogContext = {
+        api: 'ChatManager.sendMessageReadReceipts',
+        initialHistoryRender,
+        readAt,
+        unreadCount,
+        displayedMessageCount: incomingMessages.length,
+        candidateMessageCount: receiptCandidates.length,
+      };
+      console.log(
+        '[Message Receipt] sendMessageReadReceipts selection',
+        selectionLogContext,
+      );
       if (receiptCandidates.length === 0) return;
 
       if (initialHistoryRender && (!Number.isFinite(readAt) || readAt <= 0)) {
@@ -435,6 +447,14 @@ const Message = {
       const receiptMessages = receiptCandidates.filter(
         (message) => !initialHistoryRender || message.timestamp > readAt,
       );
+      const selectedMessageIds = [...new Set(
+        receiptMessages.map((message) => message.msgServerId),
+      )];
+      console.log('[Message Receipt] sendMessageReadReceipts selected messages', {
+        ...selectionLogContext,
+        selectedMessageCount: selectedMessageIds.length,
+        messageIds: selectedMessageIds,
+      });
       if (receiptMessages.length === 0) return;
 
       const { conversationId, conversationType } = receiptMessages[0];
@@ -451,7 +471,7 @@ const Message = {
         return;
       }
 
-      const messageIds = [...new Set(receiptMessages.map((message) => message.msgServerId))];
+      const messageIds = selectedMessageIds;
       if (messageIds.length > 50) {
         console.error('[Message Receipt] SDK 5.0 read receipt exceeds the 50-message limit', {
           conversationId,

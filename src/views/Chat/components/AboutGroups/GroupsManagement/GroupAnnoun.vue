@@ -56,6 +56,7 @@ const editAnnouncment = async (type, oldAnnouncment) => {
   }
 };
 onMounted(() => {
+  if (!memberRole.value) return;
   nextTick(() => {
     editAnnouncment('edit', getGroupAnnouncement.value);
   });

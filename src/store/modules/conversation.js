@@ -29,6 +29,7 @@ const sortConversationList = (conversationList) => {
 const Conversation = {
   state: {
     informDetail: [],
+    sdkEventRecords: [],
     conversationFromMethod: false, // 按文档推荐默认走服务端会话列表
     conversationListFromLocal: [],
     conversationListFromServer: [],
@@ -43,6 +44,12 @@ const Conversation = {
     //清空系统通知
     CLEAR_INFORM_LIST: (state) => {
       state.informDetail = [];
+    },
+    CLEAR_SDK_EVENT_RECORDS: (state) => {
+      state.sdkEventRecords = [];
+    },
+    RECORD_SDK_EVENT: (state, record) => {
+      state.sdkEventRecords = [record, ...state.sdkEventRecords].slice(0, 200);
     },
     //更新系统通知
     UPDATE_INFORM_LIST: (state, informBody) => {
@@ -198,13 +205,23 @@ const Conversation = {
   },
   actions: {
     // System notifications retain the original SDK 5.0 event name and payload.
-    createNewInform: ({ commit }, { eventName, payload }) => {
+    createNewInform: ({ commit }, { eventName, payload, domain, receivedAt }) => {
       commit('UPDATE_INFORM_LIST', {
         sdkEventName: eventName,
         sdkPayload: payload,
-        receivedAt: Date.now(),
+        domain,
+        receivedAt: Number.isFinite(receivedAt) ? receivedAt : Date.now(),
         untreated: 1,
         operationStatus: 0,
+      });
+    },
+    recordSdkEvent: ({ commit }, { domain, eventName, payload, currentUserId, receivedAt }) => {
+      commit('RECORD_SDK_EVENT', {
+        domain,
+        eventName,
+        payload,
+        receivedAt: Number.isFinite(receivedAt) ? receivedAt : Date.now(),
+        currentUserId,
       });
     },
     //从本地加载会话列表数据

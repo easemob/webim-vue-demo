@@ -21,7 +21,7 @@ const messageView = fs.readFileSync(
 
 assert.match(
   conversationList,
-  /const \{ conversationId, customField, conversationType, readAt, unreadCount \} = conversationItem;[\s\S]*?store\.dispatch\('setIncomingReadReceiptBoundary', \{[\s\S]*?readAt,[\s\S]*?unreadCount,[\s\S]*?\}\);[\s\S]*?await store\.dispatch\('clearConversationUnreadCount', \{\s*conversationId,\s*conversationType,\s*\}\);/s,
+  /const \{ conversationId, customField, conversationType, readAt, unreadCount \} = conversationItem;[\s\S]*?store\.dispatch\('setIncomingReadReceiptBoundary', \{[\s\S]*?readAt,[\s\S]*?unreadCount,[\s\S]*?\}\);[\s\S]*?emit\('toChatMessage', conversationId, conversationType\);[\s\S]*?store\.dispatch\('clearConversationUnreadCount', \{\s*conversationId,\s*conversationType,\s*\}\);/s,
   '接收方点击有效单聊或群聊会话时，必须先保留 SDK 5.0 原始 readAt/unreadCount，再清零会话未读数',
 );
 assert.match(

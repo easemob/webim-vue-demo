@@ -15,6 +15,7 @@ const logoutTheUser = async () => {
     return;
   }
   store.commit('CLEAR_JOINED_CHATROOM_IDS');
+  store.commit('CLEAR_SDK_EVENT_RECORDS');
   if (isClearStorage.value) {
     clearLocalStorage();
   }

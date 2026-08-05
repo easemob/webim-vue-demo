@@ -479,6 +479,8 @@ const loginUserId = getCurrentUserId();
 
 /* 消息来源是否为自己 */
 const isMyself = (msgBody) => {
+  if (msgBody?.direct === 'SEND') return true;
+  if (msgBody?.direct === 'RECEIVE') return false;
   return msgBody.sender?.userId === loginUserId;
 };
 

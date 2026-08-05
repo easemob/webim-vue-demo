@@ -42,7 +42,7 @@
 | 功能 | sdk_api | 功能覆盖 | 已覆盖内容 | 未覆盖 / 风险 |
 | --- | --- | --- | --- | --- |
 | SDK 初始化与 Manager 注册 | `ChatClient.init`, `ChatClient.use` | 部分覆盖 | `src/IM/sdk5/client.js` 通过 `ChatClient.init` 初始化并注册 `ChatManager`、`ContactManager`、`GroupManager`、`ChatRoomManager`、`ChatThreadManager`、`PresenceManager`、`PushManager`、`UserInfoManager`。 | 未单独覆盖 `ChatClient.use` 动态注册 Manager；当前 Demo 固定在初始化阶段注册。 |
-| SDK 日志等级 | `setLogLevel` | 是 | 设置页 SDK 日志开关调用 `setLogLevel('error'/'debug')`。 | SDK 日志下载无公开 API，记录在 `sdk5-unsupported-capabilities.md`。 |
+| SDK 日志等级 | `setLogLevel` | 是 | 设置页 SDK 日志开关调用 `setLogLevel('error'/'debug')`，仅控制浏览器 Console 输出。 | SDK 日志下载和手动上报均无公开 API；内部自动上报由登录时 DNS 的 `enableReportLogs` 决定，记录在 `sdk5-unsupported-capabilities.md`。 |
 | 平台适配 | `createPlatformAdapter`, `detectRuntimePlatform` | 否 | 当前 Demo 使用 SDK 默认浏览器平台适配。 | 没有平台检测 / 自定义 platform adapter 页面入口。 |
 | 登录、退出和当前用户 | `ChatClient.login`, `ChatClient.logout`, `ChatClient.getCurrentUserId`, `ChatClient.getServerUrlsConfig`, `ChatClient.addEventHandler`, `ChatClient.removeEventHandler` | 是 | Token 登录、退出登录、登录后初始化、当前用户读取、运行环境详情展示、连接事件监听与移除监听均已接入；连接监听注册前调用同 ID `removeEventHandler`。 | 真实连接事件下发以 SDK 回调为准；不保留重复监听或旧事件兜底。 |
 | 连接状态、Token 续期与上下文读取 | `ChatClient.getConnectionState`, `ChatClient.getRestContext`, `ChatClient.renewToken`, `ChatClient.getCacheManager`, `ChatClient.getUploadAdapter`, `ChatClient.getContactSnapshot`, `ChatClient.getSelfIdsOnOtherPlatform` | 是 | 个人设置页提供 ChatClient 运行诊断、Token 续期与其他平台登录 ID 查询入口；调用 SDK 5.0 公开方法读取连接状态、REST 上下文、缓存管理器、上传适配器、联系人快照、其他设备 `userId/resource`，并由用户输入新 Token 后调用 `renewToken(token)`。 | `getRestContext()` 和 `renewToken(token)` 涉及 token，页面 / 日志只展示脱敏摘要；其他平台登录 ID 直接展示 SDK 原始数组；SDK 失败按真实错误展示。 |

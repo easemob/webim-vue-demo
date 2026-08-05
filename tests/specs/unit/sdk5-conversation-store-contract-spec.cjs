@@ -46,7 +46,8 @@ assert.doesNotMatch(
 );
 assert.match(
   conversationList,
-  /\[CONVERSATION_TYPE\.SINGLE, CONVERSATION_TYPE\.GROUP\]\.includes\(conversationType\)/,
+  /const supportsReadReceipt = \[\s*CONVERSATION_TYPE\.SINGLE,\s*CONVERSATION_TYPE\.GROUP,\s*\]\.includes\(conversationType\);/s,
+  '只有单聊和群聊需要 SDK 5.0 会话未读清零与消息已读回执边界。',
 );
 assert.doesNotMatch(source, /\bCHAT_TYPE\b|\bchatType\b/);
 assert.doesNotMatch(source, /\bEMClient\b/);
@@ -58,8 +59,18 @@ assert.doesNotMatch(
 );
 assert.match(
   conversationList,
-  /const toChatMessage = async \(conversationItem, index\) => \{[\s\S]*\[CONVERSATION_TYPE\.SINGLE, CONVERSATION_TYPE\.GROUP\]\.includes\(conversationType\)[\s\S]*await store\.dispatch\('clearConversationUnreadCount', \{\s*conversationId,\s*conversationType,\s*\}\);/,
-  '点击单聊或群聊会话时必须等待 SDK 5.0 清空当前会话未读数请求；聊天室不得调用。',
+  /const toChatMessage = \(conversationItem, index\) => \{[\s\S]*const supportsReadReceipt =[\s\S]*if \(supportsReadReceipt\) \{[\s\S]*store\.dispatch\('setIncomingReadReceiptBoundary',[\s\S]*emit\('toChatMessage', conversationId, conversationType\);[\s\S]*if \(supportsReadReceipt\) \{[\s\S]*store\.dispatch\('clearConversationUnreadCount', \{\s*conversationId,\s*conversationType,\s*\}\);/,
+  '点击单聊或群聊会话时必须先同步路由，再调用 SDK 5.0 清空当前会话未读数；清零请求不得阻塞首次进入会话。',
+);
+assert.doesNotMatch(
+  conversationList,
+  /await store\.dispatch\('clearConversationUnreadCount'/,
+  'SDK 5.0 清空未读数是独立异步请求，不能阻塞首次点击会话的路由跳转。',
+);
+assert.doesNotMatch(
+  conversationList,
+  /debouncedToChatMessage|_\.debounce\(/,
+  '进入会话不得增加本地防抖等待；首次点击必须立即路由到消息页。',
 );
 assert.doesNotMatch(
   conversationList,

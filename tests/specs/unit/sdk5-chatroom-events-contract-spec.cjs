@@ -69,9 +69,17 @@ assert.match(
   'Every global chatroom event log must retain handler, event, room, current-user, and raw SDK payload context.',
 );
 for (const eventName of chatRoomEvents) {
+  const handlerStart = listener.indexOf(`${eventName}:`);
+  const nextHandlerStart = chatRoomEvents
+    .map((nextEventName) => listener.indexOf(`${nextEventName}:`, handlerStart + 1))
+    .filter((index) => index >= 0)
+    .sort((left, right) => left - right)[0];
+  const handlerBody = listener.slice(handlerStart, nextHandlerStart);
+
+  assert.notEqual(handlerStart, -1, `${eventName} must be globally registered.`);
   assert.match(
-    listener,
-    new RegExp(`${eventName}:\\s*\\(payload\\)\\s*=>\\s*recordChatroomEvent\\('${eventName}', payload\\)`),
+    handlerBody,
+    new RegExp(`recordChatroomEvent\\('${eventName}', payload\\)`),
     `${eventName} must be globally registered and logged with its raw SDK 5.0 payload.`,
   );
 }

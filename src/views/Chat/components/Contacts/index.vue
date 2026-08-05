@@ -150,7 +150,7 @@ const refreshContactsList = async () => {
             </div>
           </div>
           <div class="item_body item_main">
-            <div class="name">新通知</div>
+            <div class="name">事件中心</div>
           </div>
         </div>
 

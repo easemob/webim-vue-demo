@@ -7,6 +7,7 @@ const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'u
 
 const conversationList = read('src/views/Chat/components/Conversation/components/ConversationList.vue');
 const messageSearchDrawer = read('src/views/Chat/components/Message/components/MessageSearchDrawer.vue');
+const informDetails = read('src/views/Chat/components/InformDetails/index.vue');
 
 assert.match(
   conversationList,
@@ -24,6 +25,13 @@ assert.doesNotMatch(
   messageSearchDrawer,
   /<el-radio-button\s+:label=/,
   'Element Plus radio buttons must not use deprecated label-as-value.',
+);
+
+assert.match(informDetails, /<el-radio-button\s+[\s\S]*?:value="domain\.value"/);
+assert.doesNotMatch(
+  informDetails,
+  /<el-radio-button\s+[\s\S]*?:label=/,
+  'Event-center radio buttons must not use deprecated label-as-value.',
 );
 
 console.log('element-plus radio contract: PASS');

@@ -1,10 +1,22 @@
-import { requireManager } from '../index';
+import { getCurrentUserId, requireManager } from '../index';
 import store from '@/store';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
 const CHAT_READ_ACK_LISTENER_ID = 'aboutReadAckMessage';
 
 export const imReadAckListener = () => {
+  const recordSdkEvent = (eventName, payload) => {
+    const firstReceipt = Array.isArray(payload) ? payload[0] : payload;
+    Promise.resolve(
+      store.dispatch('recordSdkEvent', {
+        domain:
+          firstReceipt?.conversationType === 'groupChat' ? 'group' : 'singleChat',
+        eventName,
+        payload,
+        currentUserId: getCurrentUserId(),
+      }),
+    ).catch((error) => console.error('[imReadAckListener.recordSdkEvent]', error));
+  };
   const mountReadAckEventListener = () => {
     const manager = requireManager('chatManager');
     manager.removeEventHandler(CHAT_READ_ACK_LISTENER_ID);
@@ -12,6 +24,7 @@ export const imReadAckListener = () => {
       CHAT_READ_ACK_LISTENER_ID,
       wrapImEventHandler({
         onMessageReadReceipts: (receipts) => {
+          recordSdkEvent('onMessageReadReceipts', receipts);
           console.log('[Demo <- SDK 5.0 Event] ChatManager.onMessageReadReceipts', {
             eventName: 'onMessageReadReceipts',
             receipts,

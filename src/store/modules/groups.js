@@ -525,7 +525,13 @@ const Groups = {
     },
     inviteUserJoinTheGroup: async (_, { groupId, userIds }) => {
       try {
-        await groupManager().inviteUsersToGroup({ groupId, userIds });
+        const result = await groupManager().inviteUsersToGroup({ groupId, userIds });
+        console.log('[SDK 5.0 Group] inviteUsersToGroup success', {
+          groupId,
+          userIds,
+          currentUser: getCurrentUserId(),
+          result,
+        });
         ElMessage.success('群组邀请成功送出~');
       } catch (error) {
         console.error('[SDK 5.0 Group] inviteUsersToGroup failed', {

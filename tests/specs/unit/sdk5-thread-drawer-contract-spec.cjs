@@ -41,6 +41,10 @@ const messageStore = fs.readFileSync(
   path.resolve(__dirname, '../../../src/store/modules/message.js'),
   'utf8',
 );
+const messagePage = fs.readFileSync(
+  path.resolve(__dirname, '../../../src/views/Chat/components/Message/index.vue'),
+  'utf8',
+);
 const threadListener = fs.readFileSync(
   path.resolve(__dirname, '../../../src/IM/listener/imThreadListener.js'),
   'utf8',
@@ -116,6 +120,17 @@ assert.doesNotMatch(
   threadListener,
   /payload\?\.(id|name|operator|userName)\b|threadEvent\?\.(id|name|operator|userName)\b/,
   'Chat-thread listener must not read legacy event aliases.',
+);
+
+assert.match(
+  messagePage,
+  /const isPinnedMessageListVisible = computed\(\(\) => \{[\s\S]*!routeQueryData\.value\.isChatThread[\s\S]*\}\);/,
+  'Chat-thread pages must not show the normal conversation pinned-message list entry.',
+);
+assert.match(
+  messagePage,
+  /<el-tooltip\s+v-if="isPinnedMessageListVisible"[\s\S]{0,160}content="置顶消息列表"/,
+  'The pinned-message list header entry must be gated by the SDK 5.0 non-thread capability.',
 );
 
 console.log('sdk5 thread drawer contract: PASS');

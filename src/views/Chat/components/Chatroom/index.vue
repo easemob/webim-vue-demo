@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useStore } from 'vuex';
 import { ElMessage } from 'element-plus';
 import { getCurrentUserId, requireManager } from '@/IM';
@@ -13,6 +13,7 @@ import {
   redirectToLoginClearImSession,
 } from '@/utils/imAuthRedirect';
 import { getSdk5ErrorMessage } from '@/utils/sdk5ErrorInfo';
+import eventEmitter from '@/utils/eventEmitter';
 
 /** SDK IDs may be numbers or strings; normalize them for pending-operation state. */
 function normalizeChatroomId(id) {
@@ -134,6 +135,14 @@ const refreshChatroomListsFromServer = async () => {
   await getChatrooms();
 };
 
+const handleChatroomMembersJoined = (payload) => {
+  console.log('[SDK 5.0 ChatRoom Event] refresh chatroom list after members joined', {
+    chatRoomId: payload?.chatRoomId,
+    members: payload?.members,
+  });
+  getChatrooms();
+};
+
 const joinChatroom = async (chatRoomId) => {
   if (!checkLoginStatus()) return;
   if (isJoiningRoom(chatRoomId)) {
@@ -252,7 +261,12 @@ const networkStatus = computed(() => {
 });
 
 onMounted(() => {
+  eventEmitter.on('chatroomMembersJoined', handleChatroomMembersJoined);
   getChatrooms();
+});
+
+onUnmounted(() => {
+  eventEmitter.off('chatroomMembersJoined', handleChatroomMembersJoined);
 });
 </script>
 

@@ -43,6 +43,16 @@ assert.match(
 );
 assert.match(
   messageItem,
+  /const isMyself\s*=\s*\(msgBody\)\s*=>\s*\{[\s\S]*msgBody\?\.direct === 'SEND'[\s\S]*msgBody\?\.direct === 'RECEIVE'[\s\S]*msgBody\.sender\?\.userId === loginUserId[\s\S]*\};/,
+  '发送方 UI 判断必须优先使用 SDK 5.0 原始 direct 字段，避免 sender 缺失时隐藏送达/已读对勾',
+);
+assert.doesNotMatch(
+  messageItem,
+  /const isMyself\s*=\s*\(msgBody\)\s*=>\s*\{\s*return msgBody\.sender\?\.userId === loginUserId;\s*\};/,
+  '不能只依赖 sender.userId 判断自己发送的消息。',
+);
+assert.match(
+  messageItem,
   /const getSingleChatReceiptText\s*=\s*\(msgBody\)\s*=>\s*\{[\s\S]*msgBody\?\.conversationType\s*!==\s*CONVERSATION_TYPE\.SINGLE[\s\S]*msgBody\?\.isPeerRead\s*===\s*true[\s\S]*return '✓✓';[\s\S]*msgBody\?\.delivered\s*===\s*true[\s\S]*return '✓';/,
   '单聊回执必须只消费 SDK 5.0 delivered 与 isPeerRead，并将已读覆盖为第二个绿色对勾',
 );

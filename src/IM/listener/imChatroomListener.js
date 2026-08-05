@@ -1,4 +1,6 @@
 import { getCurrentUserId, requireManager } from '../index';
+import store from '@/store';
+import eventEmitter from '@/utils/eventEmitter';
 import { wrapImEventHandler } from '@/utils/safeCall';
 
 const CHATROOM_EVENT_HANDLER_ID = 'chatroomEvent';
@@ -12,6 +14,14 @@ export const imChatroomListener = () => {
       currentUserId: getCurrentUserId(),
       rawEvent: payload,
     });
+    Promise.resolve(
+      store.dispatch('recordSdkEvent', {
+        domain: 'chatRoom',
+        eventName,
+        payload,
+        currentUserId: getCurrentUserId(),
+      }),
+    ).catch((error) => console.error('[imChatroomListener.recordSdkEvent]', error));
   };
 
   const mountChatroomEventListener = () => {
@@ -21,7 +31,10 @@ export const imChatroomListener = () => {
       CHATROOM_EVENT_HANDLER_ID,
       wrapImEventHandler({
         onChatRoomDestroyed: (payload) => recordChatroomEvent('onChatRoomDestroyed', payload),
-        onMembersJoined: (payload) => recordChatroomEvent('onMembersJoined', payload),
+        onMembersJoined: (payload) => {
+          recordChatroomEvent('onMembersJoined', payload);
+          eventEmitter.emit('chatroomMembersJoined', payload);
+        },
         onMembersExited: (payload) => recordChatroomEvent('onMembersExited', payload),
         onRemovedFromChatRoom: (payload) =>
           recordChatroomEvent('onRemovedFromChatRoom', payload),

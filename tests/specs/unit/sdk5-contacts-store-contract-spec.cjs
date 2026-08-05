@@ -2,7 +2,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const sourcePath = path.resolve(__dirname, '../../../src/store/modules/contacts.js');
+const sourcePath = path.resolve(
+  __dirname,
+  '../../../src/store/modules/contacts.js',
+);
 const source = fs.readFileSync(sourcePath, 'utf8');
 const addFriendsPath = path.resolve(
   __dirname,
@@ -27,7 +30,10 @@ assert.match(
   addFriendsSource,
   /const request = \{\s*userId:\s*applyAddFriendsForm\.username,\s*message:\s*applyAddFriendsForm\.applyFriendMessage,\s*\};[\s\S]*?addContact\(request\)/s,
 );
-assert.doesNotMatch(addFriendsSource, /\breason:\s*applyAddFriendsForm\.applyFriendMessage/);
+assert.doesNotMatch(
+  addFriendsSource,
+  /\breason:\s*applyAddFriendsForm\.applyFriendMessage/,
+);
 assert.match(
   addFriendsSource,
   /\[SDK5 Contact\] addContact request/,
@@ -54,7 +60,13 @@ assert.match(
 );
 assert.match(
   contactListenerSource,
-  /store\.dispatch\('createNewInform', \{ eventName, payload \}\)/,
+  /store\.dispatch\('recordSdkEvent', \{[\s\S]*?domain:\s*'contact',[\s\S]*?eventName,[\s\S]*?payload,[\s\S]*?currentUserId:\s*getCurrentUserId\(\),[\s\S]*?receivedAt,[\s\S]*?\}\)/,
+  'A real contact callback must be recorded in the contact event domain.',
+);
+assert.match(
+  contactListenerSource,
+  /store\.dispatch\('createNewInform', \{[\s\S]*?eventName,[\s\S]*?payload,[\s\S]*?domain:\s*'contact',[\s\S]*?receivedAt,[\s\S]*?\}\)/,
+  'The contact preview must retain the same raw callback and capture time.',
 );
 assert.match(
   contactListenerSource,

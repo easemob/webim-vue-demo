@@ -6,15 +6,30 @@ const GROUP_EVENT_HANDLER_ID = 'groupEvent';
 
 export const imGroupListener = () => {
   const recordGroupEvent = (eventName, payload) => {
+    const receivedAt = Date.now();
     console.log('[SDK 5.0 Group Event] received', {
       eventName,
       groupId: payload?.groupId,
       currentUserId: getCurrentUserId(),
       rawEvent: payload,
     });
-    Promise.resolve(store.dispatch('createNewInform', { eventName, payload })).catch(
-      (error) => console.error('[imGroupListener.createNewInform]', error),
-    );
+    Promise.resolve(
+      store.dispatch('recordSdkEvent', {
+        domain: 'group',
+        eventName,
+        payload,
+        currentUserId: getCurrentUserId(),
+        receivedAt,
+      }),
+    ).catch((error) => console.error('[imGroupListener.recordSdkEvent]', error));
+    Promise.resolve(
+      store.dispatch('createNewInform', {
+        eventName,
+        payload,
+        domain: 'group',
+        receivedAt,
+      }),
+    ).catch((error) => console.error('[imGroupListener.createNewInform]', error));
   };
 
   const refreshGroupDetail = (groupId) => {

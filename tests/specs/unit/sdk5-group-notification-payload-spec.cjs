@@ -16,10 +16,17 @@ const details = fs.readFileSync(
   'utf8',
 );
 
-assert.match(listener, /store\.dispatch\('createNewInform', \{ eventName, payload \}\)/);
+assert.match(
+  listener,
+  /store\.dispatch\('recordSdkEvent', \{[\s\S]*?domain:\s*'group',[\s\S]*?eventName,[\s\S]*?payload,[\s\S]*?receivedAt,[\s\S]*?\}\)/,
+);
+assert.match(
+  listener,
+  /store\.dispatch\('createNewInform', \{[\s\S]*?eventName,[\s\S]*?payload,[\s\S]*?domain:\s*'group',[\s\S]*?receivedAt,[\s\S]*?\}\)/,
+);
 assert.match(conversation, /sdkEventName:\s*eventName/);
 assert.match(conversation, /sdkPayload:\s*payload/);
-assert.match(details, /item\.sdkEventName/);
-assert.match(details, /JSON\.stringify\(item\.sdkPayload, null, 2\)/);
+assert.match(details, /record\.eventName/);
+assert.match(details, /JSON\.stringify\(record\.payload, null, 2\)/);
 
 console.log('sdk5 group notification payload: PASS');

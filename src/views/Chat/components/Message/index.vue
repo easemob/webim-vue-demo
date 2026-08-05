@@ -52,6 +52,19 @@ const showMessageSearchDrawer = () => {
   messageSearchDrawer.value = true;
 };
 const pinnedMessageItems = computed(() => pinnedMessageListResult.value?.items || []);
+const isPinnedMessageListVisible = computed(() => {
+  return (
+    routeQueryData.value.conversationId &&
+    !routeQueryData.value.isChatThread &&
+    [
+      CONVERSATION_TYPE.SINGLE,
+      CONVERSATION_TYPE.GROUP,
+      CONVERSATION_TYPE.CHATROOM,
+    ].includes(
+      routeQueryData.value.conversationType,
+    )
+  );
+});
 const getPinnedMessagePreview = (item) => {
   const message = item?.message || {};
   const body = message.body || {};
@@ -67,6 +80,7 @@ const getPinnedMessagePreview = (item) => {
   return `[${message.type || '未知消息'}]`;
 };
 const fetchPinnedMessageList = async () => {
+  if (!isPinnedMessageListVisible.value) return;
   const { conversationId, conversationType } = routeQueryData.value || {};
   if (!conversationId || !conversationType) return;
   pinnedMessageListDrawer.value = true;
@@ -766,6 +780,7 @@ const onQuoteMessage = (message) =>
             </div>
           </el-tooltip>
           <el-tooltip
+            v-if="isPinnedMessageListVisible"
             content="置顶消息列表"
             placement="top"
             :show-after="200"

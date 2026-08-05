@@ -23,8 +23,15 @@ const conversationList = computed(() => {
 const showStarredConversations = ref(false);
 
 //路由跳转-系统通知
-const toInformDetails = () => {
-  router.push('/chat/conversation/informdetails');
+const toInformDetails = (inform) => {
+  router.push({
+    path: '/chat/conversation/informdetails',
+    query: {
+      eventName: inform.sdkEventName,
+      domain: inform.domain,
+      receivedAt: String(inform.receivedAt),
+    },
+  });
 };
 
 //路由跳转-对应好友会话
@@ -41,7 +48,7 @@ const toChatMessage = (conversationId, conversationType) => {
 // 切换标星会话筛选
 const toggleStarredFilter = async () => {
   showStarredConversations.value = !showStarredConversations.value;
-  
+
   if (showStarredConversations.value) {
     // 显示标星会话
     try {
@@ -79,10 +86,10 @@ const toggleStarredFilter = async () => {
       />
       <!-- 标星筛选按钮 -->
       <div class="conversation_filter">
-        <el-button 
-          link 
+        <el-button
+          link
           @click="toggleStarredFilter"
-          :class="{ 'active': showStarredConversations }"
+          :class="{ active: showStarredConversations }"
         >
           <span class="star-icon">⭐</span>
           {{ showStarredConversations ? '查看所有会话' : '查看标星会话' }}
@@ -117,7 +124,7 @@ const toggleStarredFilter = async () => {
       color: #606266;
       font-size: 14px;
       padding: 4px 0;
-      
+
       &.active {
         color: #409eff;
       }

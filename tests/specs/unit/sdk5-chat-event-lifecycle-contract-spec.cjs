@@ -66,7 +66,7 @@ assert.match(
   /消息事件监听生命周期必须使用 SDK 5\.0 `ChatManager\.addEventHandler\(handlerId, handlers\)` 与 `removeEventHandler\(handlerId\)` 成对处理；注册前先清理同 ID 监听，禁止恢复 SDK 4\.0 聚合事件、旧字段或重复监听兜底/,
 );
 assert.match(coverage, /\| API 覆盖率 \| 94\.1% \|/);
-assert.match(coverage, /\| 已覆盖公开对外 API \| 193 \|/);
+assert.match(coverage, /\| 已覆盖公开对外 API \| 192 \|/);
 assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
@@ -75,7 +75,7 @@ assert.match(
 assert.doesNotMatch(coverage, /未覆盖 `ChatManager\.removeEventHandler`/);
 assert.match(
   uncovered,
-  /当前 `src\/` 覆盖 193 个，未覆盖 12 个；`@internal` 私有方法已剔除/,
+  /当前 `src\/` 覆盖 192 个，未覆盖 12 个；`@internal` 私有方法/,
 );
 
 console.log('sdk5 chat event lifecycle contract: PASS');

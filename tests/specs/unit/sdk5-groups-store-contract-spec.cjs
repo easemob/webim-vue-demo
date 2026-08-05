@@ -189,6 +189,11 @@ assert.match(groupBlackList, /entry\.user\.userId/);
 assert.match(groupMuteList, /getGroupMuteListMap\.get\(groupId\.value\) \|\| \[\]/);
 assert.match(groupMuteList, /member\.user\.userId/);
 assert.match(groupAnnouncement, /getGroupAnnouncementMap\.get\(groupId\.value\)\?\.announcement/);
+assert.match(
+  groupAnnouncement,
+  /onMounted\(\(\) => \{\s*if \(!memberRole\.value\) return;\s*nextTick\(\(\) => \{\s*editAnnouncment\('edit', getGroupAnnouncement\.value\);/s,
+  'Regular members must keep group announcements read-only and must not enter the input focus flow.',
+);
 assert.match(groupSharedFiles, /getGroupSharedFilesMap\.get\(groupId\.value\) \|\| \[\]/);
 assert.match(groupMembers, /member\.user\.userId/);
 assert.match(groupDetails, /getGroupBlocklistMap\.get\(groupId\.value\)/);

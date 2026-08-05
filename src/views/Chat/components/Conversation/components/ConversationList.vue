@@ -135,32 +135,30 @@ const networkStatus = computed(() => {
 });
 //普通会话
 const checkedConverItemIndex = ref(null);
-const debouncedToChatMessage = _.debounce(
-  (conversationId, conversationType) => {
-    emit('toChatMessage', conversationId, conversationType);
-  },
-  300,
-); // 300毫秒内的连续触发将被防抖处理
-const toChatMessage = async (conversationItem, index) => {
+const toChatMessage = (conversationItem, index) => {
   checkedConverItemIndex.value = index;
   const { conversationId, customField, conversationType, readAt, unreadCount } = conversationItem;
-  if ([CONVERSATION_TYPE.SINGLE, CONVERSATION_TYPE.GROUP].includes(conversationType)) {
+  const supportsReadReceipt = [
+    CONVERSATION_TYPE.SINGLE,
+    CONVERSATION_TYPE.GROUP,
+  ].includes(conversationType);
+  if (supportsReadReceipt) {
     store.dispatch('setIncomingReadReceiptBoundary', {
       conversationId,
       conversationType,
       readAt,
       unreadCount,
     });
-    await store.dispatch('clearConversationUnreadCount', {
+  }
+  if (customField?.mention)
+    store.dispatch('clearConversationMention', conversationItem);
+  emit('toChatMessage', conversationId, conversationType);
+  if (supportsReadReceipt) {
+    store.dispatch('clearConversationUnreadCount', {
       conversationId,
       conversationType,
     });
   }
-  if (customField?.mention)
-    store.dispatch('clearConversationMention', conversationItem);
-  //跳转至对应的消息界面
-  // 使用防抖函数来跳转至对应的消息界面
-  debouncedToChatMessage(conversationId, conversationType);
 };
 //删除某条会话
 const deleteConversation = async (conversationItem) => {
@@ -493,7 +491,7 @@ const onScrollToBottom = (event) => {
         informDetail.untreated >= 1
       "
       class="session_list_item"
-      @click="$emit('toInformDetails')"
+      @click="$emit('toInformDetails', informDetail.lastInformDeatail)"
     >
       <div class="item_body item_left">
         <!-- 通知头像 -->
@@ -502,7 +500,7 @@ const onScrollToBottom = (event) => {
         </div>
       </div>
       <div class="item_body item_main">
-        <div class="name">系统通知</div>
+        <div class="name">事件中心</div>
         <div class="last_msg_body">
           {{ informDetail.lastInformDeatail.sdkEventName }}
         </div>

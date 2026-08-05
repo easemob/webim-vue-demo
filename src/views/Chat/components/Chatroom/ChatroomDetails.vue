@@ -257,60 +257,6 @@ const leaveChatroom = async () => {
     }
   }
 };
-//解散聊天室
-const destroyChatroom = async () => {
-  if (!checkLoginStatus()) return;
-  const DESTROY_CHAT_ROOM_METHOD = 'destroyChatRoom';
-  const chatRoomId = route.query.chatRoomId;
-  const destroyChatRoomParams = { chatRoomId };
-  try {
-    console.log(
-      `开始执行解散聊天室操作:`,
-      `\n目标聊天室ID:`,
-      chatRoomId,
-      `\n当前操作用户:`,
-      getCurrentUserId(),
-    );
-    await ElMessageBox.confirm(
-      '确定要解散该聊天室吗？此操作不可恢复！',
-      '警告',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      },
-    );
-    console.log(
-      `用户确认解散聊天室，开始调用接口:`,
-      `\n调用方法: ${DESTROY_CHAT_ROOM_METHOD}`,
-      `\n方法入参:`,
-      destroyChatRoomParams,
-      `\n聊天室ID:`,
-      chatRoomId,
-    );
-    throw new Error('SDK 5.0 current package does not expose destroyChatRoom; no fallback is configured.');
-  } catch (error) {
-    ElMessage.error('解散聊天室失败');
-    console.error(
-      `解散聊天室失败:`,
-      `\n调用方法: ${DESTROY_CHAT_ROOM_METHOD}`,
-      `\n方法入参:`,
-      destroyChatRoomParams,
-      `\n聊天室ID:`,
-      chatRoomId,
-      `\n错误详情:`,
-      error,
-    );
-    if (error !== 'cancel') {
-      console.error('解散聊天室失败', error);
-      if (isSdk5AuthenticationError(error)) {
-        ElMessage.error('认证失败，请重新登录');
-      } else {
-        ElMessage.error('解散聊天室失败');
-      }
-    }
-  }
-};
 
 const showEditDialog = ref(false);
 const editForm = ref({
@@ -899,9 +845,6 @@ watch(
         </el-button>
         <el-button :disabled="!canUseJoinedChatroomActions" @click="leaveChatroom">
           退出聊天室
-        </el-button>
-        <el-button v-if="isOwner" type="danger" @click="destroyChatroom">
-          解散聊天室
         </el-button>
       </div>
     </el-card>
