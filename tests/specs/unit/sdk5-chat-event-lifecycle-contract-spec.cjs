@@ -70,7 +70,7 @@ assert.match(coverage, /\| 已覆盖公开对外 API \| 192 \|/);
 assert.match(coverage, /\| 未覆盖公开对外 API \| 12 \|/);
 assert.match(
   coverage,
-  /\| 消息事件监听 \| `ChatManager\.addEventHandler`, `ChatManager\.removeEventHandler` \| 是 \| 已监听消息、撤回、编辑、回执、Reaction、多设备等 Chat 事件并按 SDK 5\.0 字段入库 \/ 展示；每个 Chat 监听注册前都会先调用 `removeEventHandler\(handlerId\)` 清理同 ID 监听，再调用 `addEventHandler\(handlerId, handlers\)` 注册。 \| 真实事件下发与字段仍以 SDK \/ 服务端回调为准；不使用旧事件聚合、旧字段映射或重复监听兜底。 \|/,
+  /\| 消息事件监听 \| `ChatManager\.addEventHandler`, `ChatManager\.removeEventHandler` \| 是 \| 已监听消息、会话列表更新、撤回、编辑、回执、Reaction、多设备等 Chat 事件并按 SDK 5\.0 字段入库 \/ 展示；每个 Chat 监听注册前都会先调用 `removeEventHandler\(handlerId\)` 清理同 ID 监听，再调用 `addEventHandler\(handlerId, handlers\)` 注册。 \| 真实事件下发与字段仍以 SDK \/ 服务端回调为准；不使用旧事件聚合、旧字段映射或重复监听兜底。 \|/,
 );
 assert.doesNotMatch(coverage, /未覆盖 `ChatManager\.removeEventHandler`/);
 assert.match(

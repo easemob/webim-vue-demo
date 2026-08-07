@@ -14,6 +14,8 @@ const chatThreadManager = () => requireManager('chatThreadManager');
 const getChatThreadEntity = (chatThreadId) =>
   chatThreadManager().getChatThread(chatThreadId);
 const messageIdOf = (message) => message?.msgServerId || message?.msgLocalId || '';
+const shouldSyncConversationListForMessage = (conversationType) =>
+  conversationType !== CONVERSATION_TYPE.CHATROOM;
 
 const updateMessageReactionByKey = (state, listKey, messageId, reactions) => {
   if (!state.messageList[listKey]) return false;
@@ -429,24 +431,10 @@ const Message = {
       );
       if (receiptCandidates.length === 0) return;
 
-      if (initialHistoryRender && (!Number.isFinite(readAt) || readAt <= 0)) {
-        console.error('[Message Receipt] SDK 5.0 readAt is missing or invalid for unread receipt selection', {
-          initialHistoryRender,
-          readAt,
-          unreadCount,
-          displayedMessageCount: incomingMessages.length,
-          candidateMessageCount: receiptCandidates.length,
-          candidates: receiptCandidates.map((message) => ({
-            msgServerId: message.msgServerId,
-            timestamp: message.timestamp,
-          })),
-        });
-        return;
-      }
-
-      const receiptMessages = receiptCandidates.filter(
-        (message) => !initialHistoryRender || message.timestamp > readAt,
-      );
+      // A receipt represents a message that the user actually saw. The manual
+      // unread-clear operation can advance ConversationItem.readAt before this
+      // page is opened, so readAt must not suppress a rendered SDK message.
+      const receiptMessages = receiptCandidates;
       const selectedMessageIds = [...new Set(
         receiptMessages.map((message) => message.msgServerId),
       )];
@@ -540,7 +528,10 @@ const Message = {
         eventEmitter.emit('newMessage', message);
       }
 
-      if (!isDirectedMessage(message)) {
+      if (
+        !isDirectedMessage(message) &&
+        shouldSyncConversationListForMessage(message.conversationType)
+      ) {
         dispatch('updateConversationList', {
           conversationId: key,
           conversationType: message.conversationType,
@@ -623,7 +614,10 @@ const Message = {
               listKey,
               historyMessageList: reversedMessages,
             });
-            if (!hasLocalConversation) {
+            if (
+              !hasLocalConversation &&
+              shouldSyncConversationListForMessage(conversationType)
+            ) {
               //提示会话列表更新
               dispatch('updateConversationList', {
                 conversationId,
@@ -672,7 +666,10 @@ const Message = {
     //已发送展示类型消息
     senedShowTypeMessage: async ({ dispatch, commit }, message) => {
       commit('UPDATE_MESSAGE_LIST', message);
-      if (!isDirectedMessage(message)) {
+      if (
+        !isDirectedMessage(message) &&
+        shouldSyncConversationListForMessage(message.conversationType)
+      ) {
         // 提示会话列表更新
         dispatch('updateConversationList', {
           conversationId: message.conversationId,
@@ -723,10 +720,12 @@ const Message = {
               key: key,
               messageId,
             });
-            dispatch('updateConversationList', {
-              conversationId: key,
-              conversationType,
-            });
+            if (shouldSyncConversationListForMessage(conversationType)) {
+              dispatch('updateConversationList', {
+                conversationId: key,
+                conversationType,
+              });
+            }
             resolve('OK');
           })
           .catch((error) => {
@@ -762,10 +761,12 @@ const Message = {
               messageId,
             });
 
-            dispatch('updateConversationList', {
-              conversationId: key,
-              conversationType,
-            });
+            if (shouldSyncConversationListForMessage(conversationType)) {
+              dispatch('updateConversationList', {
+                conversationId: key,
+                conversationType,
+              });
+            }
 
             resolve('OK');
           })
@@ -816,10 +817,12 @@ const Message = {
               messageId,
               message,
             });
-            dispatch('updateConversationList', {
-              conversationId: key,
-              conversationType,
-            });
+            if (shouldSyncConversationListForMessage(conversationType)) {
+              dispatch('updateConversationList', {
+                conversationId: key,
+                conversationType,
+              });
+            }
             resolve('OK');
           })
           .catch((error) => {

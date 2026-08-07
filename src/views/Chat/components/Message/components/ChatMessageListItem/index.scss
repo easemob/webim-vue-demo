@@ -74,6 +74,19 @@
       line-height: 18px;
       border: 1px solid #bed8ff;
     }
+    .message_offline_sync_badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 20px;
+      padding: 0 8px;
+      border: 1px solid #f0c36d;
+      border-radius: 999px;
+      background: #fff7e6;
+      color: #a05c00;
+      font-size: 11px;
+      line-height: 18px;
+    }
     .message_box_content {
       display: flex;
       align-items: center;

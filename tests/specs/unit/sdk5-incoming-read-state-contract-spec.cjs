@@ -51,13 +51,13 @@ assert.match(
 );
 assert.match(
   messageStore,
-  /initialHistoryRender\s*&&\s*\(!Number\.isFinite\(readAt\)\s*\|\|\s*readAt\s*<=\s*0\)/,
-  '历史消息缺少有效的 SDK 5.0 readAt 时不得把全部历史消息当作未读，也不得猜测未读消息 ID。',
+  /const receiptMessages\s*=\s*receiptCandidates;/,
+  '已实际渲染的合格消息必须发送已读回执，菜单清未读更新 readAt 不能把它排除。',
 );
-assert.match(
+assert.doesNotMatch(
   messageStore,
-  /!initialHistoryRender\s*\|\|\s*message\.timestamp\s*>\s*readAt/,
-  '初始历史消息回执必须严格使用 SDK 5.0 readAt 与 Message.timestamp 的真实边界。',
+  /message\.timestamp\s*>\s*readAt/,
+  'readAt 只能作为真实上下文日志，不能作为已实际查看消息的回执跳过条件。',
 );
 assert.match(
   messageStore,

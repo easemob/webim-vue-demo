@@ -1072,6 +1072,12 @@ const getReactionUserAvatar = (user) => {
               >
                 流式消息
               </span>
+              <span
+                v-if="msgBody?.isOnline === false"
+                class="message_offline_sync_badge"
+              >
+                SDK 离线同步消息
+              </span>
             </div>
             <el-dropdown
               class="message_box_content"

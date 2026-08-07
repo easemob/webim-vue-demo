@@ -3019,10 +3019,10 @@ duplexer@^0.1.2:
   resolved "https://registry.npmmirror.com/duplexer/-/duplexer-0.1.2.tgz"
   integrity sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==
 
-"easemob-websdk@file:../websdk2/easemob-websdk-5.0.6.tgz":
-  version "5.0.6"
-  resolved "file:../websdk2/easemob-websdk-5.0.6.tgz"
-  integrity sha512-/9T0wU+d1XWgys7jeTQ20FEaYabOaPUp9FekmjOfRlmoYWNu6Xwe89PMUr4zHnnJM1/BzRuh/WmnCdnfxH1cUg==
+"easemob-websdk@file:../websdk2/easemob-websdk-5.0.7.tgz":
+  version "5.0.7"
+  resolved "file:../websdk2/easemob-websdk-5.0.7.tgz"
+  integrity sha512-md6I+lb5NuTLFIeD0YCl3wWLoClWjd/xo17eoKPyyyjbKXRdedoB6lYZqB8QXeEdH2+B2TyppaGe8fSBN5q2YQ==
   dependencies:
     long "^5.2.3"
     protobufjs "^7.6.5"

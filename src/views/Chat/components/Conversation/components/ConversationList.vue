@@ -133,6 +133,11 @@ const handleLastMsgContent = (message) => {
 const networkStatus = computed(() => {
   return store.state.networkStatus;
 });
+const supportsManualUnreadClear = (conversationType) =>
+  [
+    CONVERSATION_TYPE.SINGLE,
+    CONVERSATION_TYPE.GROUP,
+  ].includes(conversationType);
 //普通会话
 const checkedConverItemIndex = ref(null);
 const toChatMessage = (conversationItem, index) => {
@@ -154,10 +159,18 @@ const toChatMessage = (conversationItem, index) => {
     store.dispatch('clearConversationMention', conversationItem);
   emit('toChatMessage', conversationId, conversationType);
   if (supportsReadReceipt) {
-    store.dispatch('clearConversationUnreadCount', {
-      conversationId,
-      conversationType,
-    });
+    void store
+      .dispatch('clearConversationUnreadCount', {
+        conversationId,
+        conversationType,
+      })
+      .catch((error) => {
+        console.error('[Conversation] automatic clearConversationUnreadCount failed', {
+          conversationId,
+          conversationType,
+          error,
+        });
+      });
   }
 };
 //删除某条会话
@@ -286,6 +299,7 @@ const pushSettingDialogVisible = ref(false);
 const pushSettingLoading = ref(false);
 const pushSettingSaving = ref(false);
 const globalConversationClearLoading = ref('');
+const conversationUnreadClearLoading = ref('');
 const selectedPushConversation = ref(null);
 const selectedPushRemindType = ref('ALL');
 const selectedDndDurationMinutes = ref(60);
@@ -388,6 +402,29 @@ const clearAllConversationUnreadMessageCount = async () => {
     ElMessage.error(error?.message || '全部会话未读数清空失败');
   } finally {
     globalConversationClearLoading.value = '';
+  }
+};
+const clearConversationUnreadFromMenu = async (conversationItem) => {
+  const { conversationId, conversationType } = conversationItem;
+  if (!supportsManualUnreadClear(conversationType)) return;
+  const loadingKey = `${conversationType}:${conversationId}`;
+  if (conversationUnreadClearLoading.value) return;
+  conversationUnreadClearLoading.value = loadingKey;
+  try {
+    await store.dispatch('clearConversationUnreadCount', {
+      conversationId,
+      conversationType,
+    });
+    ElMessage.success('会话未读数已清空');
+  } catch (error) {
+    console.error('[Conversation] clearConversationUnreadFromMenu failed', {
+      conversationId,
+      conversationType,
+      error,
+    });
+    ElMessage.error(error?.message || '会话未读数清空失败');
+  } finally {
+    conversationUnreadClearLoading.value = '';
   }
 };
 const clearAllMessagesAndConversations = async () => {
@@ -595,6 +632,18 @@ const onScrollToBottom = (event) => {
             </div>
             <div class="session_list_delete" @click="deleteConversation(item)">
               删除会话
+            </div>
+            <div
+              v-if="supportsManualUnreadClear(item.conversationType)"
+              class="session_list_clear_unread"
+              @click="clearConversationUnreadFromMenu(item)"
+            >
+              {{
+                conversationUnreadClearLoading ===
+                `${item.conversationType}:${item.conversationId}`
+                  ? '清空中...'
+                  : '清空未读'
+              }}
             </div>
             <div
               class="session_list_push"
@@ -850,6 +899,7 @@ const onScrollToBottom = (event) => {
 .session_list_pin,
 .session_list_mark,
 .session_list_delete,
+.session_list_clear_unread,
 .session_list_push {
   cursor: pointer;
   min-width: 96px;

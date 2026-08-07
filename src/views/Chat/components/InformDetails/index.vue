@@ -22,6 +22,7 @@ const eventDomains = [
   { value: 'contact', label: '联系人事件' },
   { value: 'group', label: '群组事件' },
   { value: 'chatRoom', label: '聊天室事件' },
+  { value: 'connection', label: '连接事件' },
 ];
 const selectedEventName = computed(() =>
   typeof route.query.eventName === 'string' ? route.query.eventName : '',
@@ -75,6 +76,11 @@ const eventTitle = (eventName) => eventName || '未命名 SDK 5.0 事件';
 
 const eventDomainLabel = (domain) =>
   eventDomains.find((item) => item.value === domain)?.label || '其他 SDK 事件';
+
+const formatEventPayload = (payload) => {
+  if (payload === undefined) return 'SDK 未下发 payload (undefined)';
+  return JSON.stringify(payload, null, 2);
+};
 
 const eventTarget = (record) => {
   const payload = Array.isArray(record?.payload)
@@ -221,7 +227,7 @@ const handleClickBtn = async ({ informData, index, type }) => {
                 <div><dt>当前账号</dt><dd>{{ record.currentUserId || 'SDK 未返回' }}</dd></div>
                 <div><dt>事件时间</dt><dd>{{ dateFormater('YYYY-MM-DD HH:mm:ss', record.receivedAt) }}</dd></div>
               </dl>
-              <pre class="text item sdk5-payload">{{ JSON.stringify(record.payload, null, 2) }}</pre>
+              <pre class="text item sdk5-payload">{{ formatEventPayload(record.payload) }}</pre>
               <el-dropdown
                 v-if="linkedInform(record) && canHandleEvent(linkedInform(record)) && linkedInform(record).operationStatus < 1"
                 trigger="click"

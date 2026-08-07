@@ -164,6 +164,19 @@ const Conversation = {
       sortConversationList(conversationList);
       state.conversationListFromServer = conversationList;
     },
+    APPLY_CONVERSATION_LIST_UPDATE: (state, payload) => {
+      if (!Array.isArray(payload?.items)) {
+        console.error('[Conversation] SDK 5.0 onConversationListUpdate payload missing items', {
+          payload,
+          currentUser: getCurrentUserId(),
+        });
+        return;
+      }
+      const conversationList = [...payload.items];
+      sortConversationList(conversationList);
+      state.conversationListFromServer = conversationList;
+      state.conversationListFromServerCursor = '';
+    },
     //更新会话置顶状态
     UPDATE_CONVERSATION_PIN_STATUS: (state, pinnedConversations) => {
       state.conversationListFromServer.forEach((conversation) => {
@@ -296,6 +309,23 @@ const Conversation = {
     getConversationList: async ({ dispatch }, params) => {
       // 按文档推荐：登录后初始化只拉取一次服务端会话列表
       return dispatch('getConversationListFromServer', { isInit: true });
+    },
+    applyConversationListUpdate: async ({ commit, dispatch }, payload) => {
+      console.log('[Conversation] apply SDK 5.0 conversation list update', {
+        version: payload?.version,
+        reason: payload?.reason,
+        itemCount: Array.isArray(payload?.items) ? payload.items.length : 0,
+        removed: payload?.patch?.removed,
+        upsertedCount: Array.isArray(payload?.patch?.upserted)
+          ? payload.patch.upserted.length
+          : 0,
+        currentUser: getCurrentUserId(),
+        rawPayload: payload,
+      });
+      commit('APPLY_CONVERSATION_LIST_UPDATE', payload);
+      if (Array.isArray(payload?.items)) {
+        dispatch('callGroupDetailWithConversationId', payload.items);
+      }
     },
     //更新Store中的会话列表（数据来源为本地会话插件）
     updateConversationWithLocal: async ({ commit }, params) => {
@@ -470,6 +500,7 @@ const Conversation = {
           conversationType,
           error,
         });
+        throw error;
       }
     },
     clearAllConversationUnreadMessageCount: async ({ commit }) => {

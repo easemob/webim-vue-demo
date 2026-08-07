@@ -99,7 +99,7 @@ assert.doesNotMatch(
 assert.match(
   messageStore,
   /const receiptPayload\s*=\s*Array\.isArray\(payload\)[\s\S]*?const incomingMessages\s*=\s*Array\.isArray\(receiptPayload\.messages\)[\s\S]*?const \{ initialHistoryRender = false, readAt, unreadCount \} = receiptPayload;/s,
-  '单聊已读回执 action 必须接收页面已展示的 SDK 5.0 原始消息和点击前 readAt/unreadCount 边界',
+  '单聊已读回执 action 必须接收页面已展示的 SDK 5.0 原始消息和 readAt/unreadCount 日志上下文',
 );
 assert.match(
   messageStore,
@@ -134,12 +134,12 @@ assert.match(
 assert.match(
   messageView,
   /const newlyDisplayedMessages\s*=\s*messageData\.value\.filter\([\s\S]*?store\.dispatch\('sendIncomingMessageReadReceipt', \{[\s\S]*?messages:\s*newlyDisplayedMessages,[\s\S]*?initialHistoryRender,[\s\S]*?readAt:\s*initialHistoryReadAt\.value,[\s\S]*?unreadCount:\s*initialHistoryUnreadCount\.value,/s,
-  '单聊和群聊的 SDK 5.0 接收消息必须在页面渲染完成后，仅以新展示消息和原始 readAt 边界触发已读回执',
+  '单聊和群聊的 SDK 5.0 接收消息必须在页面渲染完成后，以新展示消息触发已读回执',
 );
 assert.match(
   messageStore,
-  /const receiptMessages\s*=\s*receiptCandidates\.filter\([\s\S]*?!initialHistoryRender\s*\|\|\s*message\.timestamp\s*>\s*readAt/s,
-  '历史消息已读回执必须按 SDK 5.0 原始 readAt/timestamp 边界筛选，不能按本地 unreadCount 截取消息 ID',
+  /const receiptMessages\s*=\s*receiptCandidates;/,
+  '用户实际渲染的合格消息必须发送回执，不能由清未读后的 readAt 排除',
 );
 assert.doesNotMatch(
   messageStore,

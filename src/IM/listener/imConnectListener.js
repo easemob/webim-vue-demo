@@ -6,6 +6,18 @@ import { safeSync } from '@/utils/safeCall';
 
 const CHAT_CLIENT_EVENT_HANDLER_ID = 'connection';
 
+const recordConnectionSdkEvent = (eventName, payload) => {
+  Promise.resolve(
+    store.dispatch('recordSdkEvent', {
+      domain: 'connection',
+      eventName,
+      payload,
+      currentUserId: getCurrentUserId(),
+      receivedAt: Date.now(),
+    }),
+  ).catch((error) => console.error('[imConnectListener.recordSdkEvent]', error));
+};
+
 // SDK 5.0 在 onConnected 事件后才完成 login() Promise 的会话提交。
 // REST Manager 初始化必须由 await login() 成功后的调用方触发，不能在这里抢跑。
 export const fetchLoginUsersInitData = () => {
@@ -83,6 +95,26 @@ export const imConnectListener = () => {
       onConnectError: (error) => {
         safeSync('connection.onError', () => {
           handleSDKErrorNotifi(error?.code, error?.message, error);
+        });
+      },
+      onOfflineMessageSyncStart: () => {
+        safeSync('connection.onOfflineMessageSyncStart', () => {
+          recordConnectionSdkEvent('onOfflineMessageSyncStart');
+          console.log('[Demo <- SDK 5.0 Event] ChatClient.onOfflineMessageSyncStart', {
+            eventName: 'onOfflineMessageSyncStart',
+            currentUser: getCurrentUserId(),
+            payload: undefined,
+          });
+        });
+      },
+      onOfflineMessageSyncFinish: () => {
+        safeSync('connection.onOfflineMessageSyncFinish', () => {
+          recordConnectionSdkEvent('onOfflineMessageSyncFinish');
+          console.log('[Demo <- SDK 5.0 Event] ChatClient.onOfflineMessageSyncFinish', {
+            eventName: 'onOfflineMessageSyncFinish',
+            currentUser: getCurrentUserId(),
+            payload: undefined,
+          });
         });
       },
       onSyncDataStart: (payload) => {

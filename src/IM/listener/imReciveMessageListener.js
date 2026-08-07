@@ -1,10 +1,13 @@
 import { getCurrentUserId, requireManager } from '../index';
 import { CHANGE_MESSAGE_BODAY_TYPE } from '@/constant';
+import { CONVERSATION_TYPE } from '@/IM/constant';
 import store from '@/store';
 import { safeSync, wrapImEventHandler } from '@/utils/safeCall';
 
 const CHAT_MESSAGE_LISTENER_ID = 'messageListen';
 const messageIdOf = (message) => message?.msgServerId || message?.msgLocalId || '';
+const shouldSyncConversationListForMessage = (conversationType) =>
+  conversationType !== CONVERSATION_TYPE.CHATROOM;
 
 export const imReviceMessageListener = () => {
   const domainForConversationType = (conversationType) => {
@@ -12,11 +15,11 @@ export const imReviceMessageListener = () => {
     if (conversationType === 'chatRoom') return 'chatRoom';
     return 'singleChat';
   };
-  const recordSdkEvent = (eventName, payload) => {
+  const recordSdkEvent = (eventName, payload, domain) => {
     const primaryPayload = Array.isArray(payload) ? payload[0] : payload;
     Promise.resolve(
       store.dispatch('recordSdkEvent', {
-        domain: domainForConversationType(primaryPayload?.conversationType),
+        domain: domain || domainForConversationType(primaryPayload?.conversationType),
         eventName,
         payload,
         currentUserId: getCurrentUserId(),
@@ -54,6 +57,7 @@ export const imReviceMessageListener = () => {
       conversationType: message.conversationType,
       senderId: message.sender?.userId,
       timestamp: message.timestamp,
+      isOnline: message.isOnline,
       isChatThread: message.isChatThread,
       chatThread: message.chatThread,
       body: message.body,
@@ -126,14 +130,16 @@ export const imReviceMessageListener = () => {
         messageId: recalledMessageId,
       });
     });
-    Promise.resolve(
-      store.dispatch('updateConversationList', {
-        conversationId: key,
-        conversationType,
-      }),
-    ).catch((err) =>
-      console.error('[otherRecallMessage.updateConversationList]', err),
-    );
+    if (shouldSyncConversationListForMessage(conversationType)) {
+      Promise.resolve(
+        store.dispatch('updateConversationList', {
+          conversationId: key,
+          conversationType,
+        }),
+      ).catch((err) =>
+        console.error('[otherRecallMessage.updateConversationList]', err),
+      );
+    }
   };
   //收到消息修改指令
   const otherModifyMessage = (message) => {
@@ -161,14 +167,16 @@ export const imReviceMessageListener = () => {
         message: updatedMessage,
       });
     });
-    Promise.resolve(
-      store.dispatch('updateConversationList', {
-        conversationId: key,
-        conversationType,
-      }),
-    ).catch((err) =>
-      console.error('[otherModifyMessage.updateConversationList]', err),
-    );
+    if (shouldSyncConversationListForMessage(conversationType)) {
+      Promise.resolve(
+        store.dispatch('updateConversationList', {
+          conversationId: key,
+          conversationType,
+        }),
+      ).catch((err) =>
+        console.error('[otherModifyMessage.updateConversationList]', err),
+      );
+    }
   };
   const mountReviceMessageEventListener = () => {
     /* message 相关监听 */
@@ -207,6 +215,19 @@ export const imReviceMessageListener = () => {
         onPinnedMessageChanged: function (payload) {
           recordSdkEvent('onPinnedMessageChanged', payload);
           console.log('[SDK 5.0 Chat Event] onPinnedMessageChanged received', payload);
+        },
+        onConversationListUpdate: function (payload) {
+          recordSdkEvent('onConversationListUpdate', payload, 'conversation');
+          console.log('[SDK 5.0 Chat Event] onConversationListUpdate received', {
+            version: payload?.version,
+            reason: payload?.reason,
+            itemCount: Array.isArray(payload?.items) ? payload.items.length : 0,
+            patch: payload?.patch,
+            rawPayload: payload,
+          });
+          Promise.resolve(store.dispatch('applyConversationListUpdate', payload)).catch(
+            (error) => console.error('[onConversationListUpdate.applyConversationListUpdate]', error),
+          );
         },
       }),
     );

@@ -51,7 +51,11 @@ assert.match(
   'SDK 5.0 member-exit events must refresh the real group-member snapshot.',
 );
 assert.doesNotMatch(source, /\bchatType\b/);
-assert.match(source, /store\.dispatch\('createNewInform', \{ eventName, payload \}\)/);
+assert.match(
+  source,
+  /store\.dispatch\('createNewInform', \{[\s\S]*?eventName,[\s\S]*?payload,[\s\S]*?domain:\s*'group',[\s\S]*?receivedAt,[\s\S]*?\}\)/,
+  'Group notifications must keep the SDK 5.0 event name, payload, domain, and receivedAt timestamp.',
+);
 assert.match(
   source,
   /console\.log\('\[SDK 5\.0 Group Event\] received', \{[\s\S]*?eventName,[\s\S]*?groupId: payload\?\.groupId,[\s\S]*?currentUserId: getCurrentUserId\(\),[\s\S]*?rawEvent: payload,/,
