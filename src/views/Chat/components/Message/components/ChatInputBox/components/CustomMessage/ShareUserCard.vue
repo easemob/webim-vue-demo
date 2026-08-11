@@ -151,7 +151,7 @@ const sendShareUserCardMessage = async () => {
   setUserInfoExt(messageOptions);
   try {
     const messageToSend = createMessage('custom', messageOptions);
-    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
+    const message = await sendMessage(messageToSend);
     await store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
     console.error('发送信息卡片消息失败', error);

@@ -77,6 +77,7 @@ const sendFileMessage = async (commonFile) => {
     conversationId: conversationId.value,
     conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
+    ...deliverOnlineOnlyOptions.value,
     data: commonFile,
     filename: commonFile.name,
     filetype: commonFile.type,
@@ -107,7 +108,6 @@ const sendFileMessage = async (commonFile) => {
   try {
     const messageToSend = createMessage('file', messageOptions);
     const message = await sendMessage(messageToSend, {
-      ...deliverOnlineOnlyOptions.value,
       onFileUploadError: messageOptions.onFileUploadError,
       onFileUploadProgress: messageOptions.onFileUploadProgress,
       onFileUploadComplete: messageOptions.onFileUploadComplete,

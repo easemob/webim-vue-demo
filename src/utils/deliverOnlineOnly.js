@@ -1,6 +1,6 @@
 import { CONVERSATION_TYPE } from '@/IM/constant';
 
-export const DELIVER_ONLINE_ONLY_VALUE = 'true';
+export const DELIVER_ONLINE_ONLY_VALUE = true;
 
 export const supportsDeliverOnlineOnly = (conversationType, isChatThread = false) =>
   !isChatThread &&

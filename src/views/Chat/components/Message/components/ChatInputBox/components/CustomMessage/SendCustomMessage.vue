@@ -138,7 +138,7 @@ const sendCustomMessage = async () => {
   sending.value = true;
   try {
     const messageToSend = createMessage('custom', messageOptions);
-    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
+    const message = await sendMessage(messageToSend);
     await store.dispatch('senedShowTypeMessage', message);
     ElMessage.success('自定义消息发送成功');
     closeDialog();

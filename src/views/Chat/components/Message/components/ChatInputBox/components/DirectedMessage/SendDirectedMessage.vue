@@ -268,9 +268,7 @@ const sendDirectedMessage = async () => {
   sending.value = true;
   try {
     const messageToSend = createMessage('text', messageOptions);
-    const sentMessage = await sendMessage(messageToSend, {
-      ...deliverOnlineOnlyOptions.value,
-    });
+    const sentMessage = await sendMessage(messageToSend);
     await store.dispatch('senedShowTypeMessage', sentMessage);
     ElMessage.success('定向消息发送成功');
     closeDialog();

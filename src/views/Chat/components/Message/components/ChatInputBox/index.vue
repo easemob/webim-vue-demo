@@ -245,6 +245,7 @@ const sendPresetAudio = async () => {
       conversationId: routeQueryData.value.conversationId,
       conversationType: routeQueryData.value.conversationType,
       ...threadMessageOptions.value,
+      ...deliverOnlineOnlyOptions.value,
       data: file,
       filename: file.name,
       filetype: file.type,
@@ -263,7 +264,6 @@ const sendPresetAudio = async () => {
     setUserInfoExt(msgOptions);
     const messageToSend = createMessage('voice', msgOptions);
     const message = await sendMessage(messageToSend, {
-      ...deliverOnlineOnlyOptions.value,
       onFileUploadError: msgOptions.onFileUploadError,
       onFileUploadProgress: msgOptions.onFileUploadProgress,
       onFileUploadComplete: msgOptions.onFileUploadComplete,
@@ -292,6 +292,7 @@ const sendAudioMessages = async (audioData) => {
     conversationId: routeQueryData.value.conversationId,
     conversationType: routeQueryData.value.conversationType,
     ...threadMessageOptions.value,
+    ...deliverOnlineOnlyOptions.value,
     data: recordedAudio,
     filename: recordedAudio.name,
     filetype: recordedAudio.type,
@@ -300,7 +301,7 @@ const sendAudioMessages = async (audioData) => {
   setUserInfoExt(msgOptions);
   try {
     const messageToSend = createMessage('voice', msgOptions);
-    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
+    const message = await sendMessage(messageToSend);
     store.dispatch('senedShowTypeMessage', message);
     isShowRecordBox.value = false;
   } catch (error) {
@@ -368,6 +369,7 @@ const sendLocationMessage = async () => {
     conversationId: routeQueryData.value.conversationId,
     conversationType: routeQueryData.value.conversationType,
     ...threadMessageOptions.value,
+    ...deliverOnlineOnlyOptions.value,
     address: '四通桥东',
     buildingName: '数码大厦',
     latitude: 39,
@@ -376,7 +378,7 @@ const sendLocationMessage = async () => {
   setUserInfoExt(msgOptions);
   try {
     const messageToSend = createMessage('location', msgOptions);
-    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
+    const message = await sendMessage(messageToSend);
     console.log('[Message Send] location success', {
       messageId: message.msgServerId || message.msgLocalId,
       conversationId: message.conversationId,
@@ -430,6 +432,7 @@ const sendCombineMessage = async () => {
       conversationId: routeQueryData.value.conversationId,
       conversationType: routeQueryData.value.conversationType,
       ...threadMessageOptions.value,
+      ...deliverOnlineOnlyOptions.value,
       title: '聊天记录',
       summary: `共${recentMessages.length}条消息`,
       messageList: recentMessages,
@@ -437,7 +440,7 @@ const sendCombineMessage = async () => {
 
     // 发送合并消息
     const messageToSend = createMessage('combine', combineMsgOptions);
-    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
+    const message = await sendMessage(messageToSend);
     console.log('[Message Send] combine success', {
       messageId: message.msgServerId || message.msgLocalId,
       conversationId: message.conversationId,

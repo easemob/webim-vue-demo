@@ -107,8 +107,22 @@ assert.match(
   'Personal settings must show the SDK 5.0 error message instead of swallowing it.',
 );
 assert.match(
+  personalSettings,
+  /const refreshBlackList = async \(\) => \{[\s\S]*try \{[\s\S]*await store\.dispatch\('fetchBlackList'\);[\s\S]*catch \(error\) \{[\s\S]*console\.error\(\s*'\[PersonalsettingCard\] fetchBlackList failed'/,
+  'Personal settings must catch blocklist refresh failures so a real SDK/server 403 does not trigger the Vue dev overlay.',
+);
+assert.match(
+  personalSettings,
+  /ElMessage\.error\(error\?\.message \|\| '黑名单列表刷新失败'\)/,
+  'Personal settings must surface the SDK 5.0 blocklist error with a toast instead of leaving an unhandled promise.',
+);
+assert.match(
   casesList,
   /订阅列表查询固定从服务端接受的 `pageNum: 1` 开始；Demo 调用前将 `pageNum\/pageSize` 规范为正整数；`pageNum: 0` 的 SDK 类型注释与服务端 400 结果不一致，服务端仍拒绝时保留原始错误且不重试、不触发开发态红屏/,
+);
+assert.match(
+  casesList,
+  /系统设置打开或手动刷新黑名单列表时调用 SDK 5\.0 `ContactManager\.getBlocklist\(\)`；403 \/ Forbidden 等服务端真实失败必须保留 console 原始错误并用 toast 提示，不能触发开发态红屏，也不能伪造空黑名单作为成功/,
 );
 assert.match(
   casesList,
@@ -117,6 +131,10 @@ assert.match(
 assert.match(
   superpowers,
   /Presence 订阅列表查询必须传服务端接受的 `pageNum: 1` 并在 Demo 调用边界把 `pageNum\/pageSize` 规范为正整数；若 SDK 类型注释仍称 0 起始，与服务端 400 冲突时保留原始错误，不重试、不伪造结果；页面必须 catch 真实错误并用 toast\/console 展示，不能触发开发态红屏/,
+);
+assert.match(
+  superpowers,
+  /系统设置黑名单列表刷新必须保留真实 SDK 5\.0 结果：打开系统设置或点击刷新时调用 `ContactManager\.getBlocklist\(\)`，若返回 403 \/ Forbidden 等真实失败，只能 console 输出原始 error 并 toast 提示，不能触发开发态红屏，不能把失败伪造成空黑名单成功/,
 );
 assert.match(
   superpowers,

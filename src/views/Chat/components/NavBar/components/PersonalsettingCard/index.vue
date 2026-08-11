@@ -146,6 +146,9 @@ const refreshBlackList = async () => {
   loadingBlackList.value = true;
   try {
     await store.dispatch('fetchBlackList');
+  } catch (error) {
+    console.error('[PersonalsettingCard] fetchBlackList failed', error);
+    ElMessage.error(error?.message || '黑名单列表刷新失败');
   } finally {
     loadingBlackList.value = false;
   }

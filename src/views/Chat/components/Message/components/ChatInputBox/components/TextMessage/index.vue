@@ -218,6 +218,7 @@ const sendTextMessage = _.debounce(async () => {
     conversationId: conversationId.value,
     conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
+    ...deliverOnlineOnlyOptions.value,
     ...(conversationType.value !== CONVERSATION_TYPE.CHATROOM
       ? { needReadReceipt: true }
       : {}),
@@ -241,9 +242,7 @@ const sendTextMessage = _.debounce(async () => {
   textContent.value = '';
   try {
     const messageToSend = createMessage('text', msgOptions);
-    const message = await sendMessage(messageToSend, {
-      ...deliverOnlineOnlyOptions.value,
-    });
+    const message = await sendMessage(messageToSend);
     await store.dispatch('senedShowTypeMessage', message);
   } catch (error) {
     console.error('发送文本消息失败', error);
@@ -270,6 +269,7 @@ const sendTextMessageByClient = _.debounce(async () => {
     conversationId: conversationId.value,
     conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
+    ...deliverOnlineOnlyOptions.value,
     ...(conversationType.value !== CONVERSATION_TYPE.CHATROOM
       ? { needReadReceipt: true }
       : {}),
@@ -291,9 +291,7 @@ const sendTextMessageByClient = _.debounce(async () => {
   let messageToSend;
   try {
     messageToSend = createMessage('text', msgOptions);
-    const message = await sendMessageByClient(messageToSend, {
-      ...deliverOnlineOnlyOptions.value,
-    });
+    const message = await sendMessageByClient(messageToSend);
     console.log('[Message Send] ChatClient.sendMessage success', {
       messageId: message.msgServerId || message.msgLocalId,
       conversationId: message.conversationId,

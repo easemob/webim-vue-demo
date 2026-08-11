@@ -126,7 +126,7 @@ const sendCmdMessage = async () => {
   sending.value = true;
   try {
     const messageToSend = createMessage('cmd', messageOptions);
-    const message = await sendMessage(messageToSend, deliverOnlineOnlyOptions.value);
+    const message = await sendMessage(messageToSend);
     console.log('[Message Send] cmd success', {
       messageId: message.msgServerId || message.msgLocalId,
       conversationId: message.conversationId,

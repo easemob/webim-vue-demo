@@ -119,6 +119,13 @@ export const imConnectListener = () => {
       },
       onSyncDataStart: (payload) => {
         safeSync('connection.onSyncDataStart', () => {
+          if (payload?.dataType === 'contact') {
+            console.log('[connection.onSyncDataStart] SDK 5.0 contact sync started', {
+              currentUser: getCurrentUserId(),
+              payload,
+            });
+            return;
+          }
           if (payload?.dataType !== 'group') return;
           console.log('[connection.onSyncDataStart] SDK 5.0 group sync started', {
             currentUser: getCurrentUserId(),
@@ -128,6 +135,22 @@ export const imConnectListener = () => {
       },
       onSyncDataFinished: (payload) => {
         safeSync('connection.onSyncDataFinished', () => {
+          if (payload?.dataType === 'contact') {
+            console.log('[connection.onSyncDataFinished] SDK 5.0 contact sync finished', {
+              currentUser: getCurrentUserId(),
+              payload,
+            });
+            if (payload?.status === 'success') {
+              fetchFriendList();
+              return;
+            }
+            console.error('[connection.onSyncDataFinished] SDK 5.0 contact sync failed', {
+              currentUser: getCurrentUserId(),
+              payload,
+              error: payload?.error,
+            });
+            return;
+          }
           if (payload?.dataType !== 'group') return;
           console.log('[connection.onSyncDataFinished] SDK 5.0 group sync finished', {
             currentUser: getCurrentUserId(),

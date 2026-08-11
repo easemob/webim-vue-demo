@@ -126,6 +126,7 @@ const sendExtMessage = async () => {
     conversationId: conversationId.value,
     conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
+    ...deliverOnlineOnlyOptions.value,
     content,
     ext,
   };
@@ -134,10 +135,7 @@ const sendExtMessage = async () => {
   sending.value = true;
   try {
     const messageToSend = createMessage('text', msgOptions);
-    const sentMessage = await sendMessage(
-      messageToSend,
-      deliverOnlineOnlyOptions.value,
-    );
+    const sentMessage = await sendMessage(messageToSend);
     await store.dispatch('senedShowTypeMessage', sentMessage);
     ElMessage.success('扩展消息发送成功');
     closeDialog();

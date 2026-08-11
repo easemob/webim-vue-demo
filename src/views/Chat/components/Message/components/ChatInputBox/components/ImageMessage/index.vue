@@ -65,6 +65,7 @@ const sendImageFile = async (imgFile) => {
     conversationId: conversationId.value,
     conversationType: conversationType.value,
     ...(isChatThread.value ? { isChatThread: true } : {}),
+    ...deliverOnlineOnlyOptions.value,
     data: imgFile,
     filename: imgFile?.name,
     filetype: imgFile?.type,
@@ -113,7 +114,6 @@ const sendImageFile = async (imgFile) => {
     try {
       const messageToSend = createMessage('image', messageOptions);
       const message = await sendMessage(messageToSend, {
-        ...deliverOnlineOnlyOptions.value,
         onFileUploadError: messageOptions.onFileUploadError,
         onFileUploadProgress: messageOptions.onFileUploadProgress,
         onFileUploadComplete: messageOptions.onFileUploadComplete,

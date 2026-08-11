@@ -17,6 +17,11 @@ const contactListenerPath = path.resolve(
   '../../../src/IM/listener/imContactListener.js',
 );
 const contactListenerSource = fs.readFileSync(contactListenerPath, 'utf8');
+const connectListenerPath = path.resolve(
+  __dirname,
+  '../../../src/IM/listener/imConnectListener.js',
+);
+const connectListenerSource = fs.readFileSync(connectListenerPath, 'utf8');
 
 assert.match(source, /requireManager\('contactManager'\)/);
 assert.match(source, /requireManager\('presenceManager'\)/);
@@ -91,6 +96,20 @@ assert.match(
   source,
   /syncContactsFromSdkSnapshot:\s*async \(\{ dispatch \}\)\s*=>\s*\{\s*await dispatch\('fetchAllContactsListWithRemarkFromServer'\);/s,
   'Contact list refreshes must use the current SDK 5.0 contact snapshot, not event-field guesses.',
+);
+
+// Accepting an invitation makes the SDK refresh its contact snapshot. The Demo
+// must consume the completed SDK contact-sync event, otherwise the Vuex list
+// remains stale until a user manually refreshes the page.
+assert.match(
+  connectListenerSource,
+  /onSyncDataFinished:\s*\(payload\)\s*=>\s*\{[\s\S]*?payload\?\.dataType === 'contact'[\s\S]*?payload\?\.status === 'success'[\s\S]*?fetchFriendList\(\)/s,
+  'A successful SDK 5.0 contact sync must refresh the Demo contact list from the SDK snapshot.',
+);
+assert.match(
+  connectListenerSource,
+  /payload\?\.dataType === 'contact'[\s\S]*?payload\?\.status === 'success'[\s\S]*?fetchFriendList\(\);[\s\S]*?return;\s*\}[\s\S]*?console\.error\('\[connection\.onSyncDataFinished\] SDK 5\.0 contact sync failed', \{[\s\S]*?payload,[\s\S]*?error: payload\?\.error,[\s\S]*?\}\);[\s\S]*?return;/s,
+  'A failed SDK 5.0 contact sync must preserve the raw payload/error and stop without refreshing contacts.',
 );
 
 console.log('sdk5 contacts store contract: PASS');

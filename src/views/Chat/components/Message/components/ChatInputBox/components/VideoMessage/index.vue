@@ -189,6 +189,7 @@ async function doSendVideoFile(videoFile) {
     width: metadata.width,
     height: metadata.height,
     ...(isChatThread.value ? { isChatThread: true } : {}),
+    ...deliverOnlineOnlyOptions.value,
     onFileUploadError: (error) => {
       console.error('视频上传失败:', error);
       notifySdkSendError(error);
@@ -204,7 +205,6 @@ async function doSendVideoFile(videoFile) {
   setUserInfoExt(options);
   const messageToSend = createMessage('video', options);
   const message = await sendMessage(messageToSend, {
-    ...deliverOnlineOnlyOptions.value,
     onFileUploadError: options.onFileUploadError,
     onFileUploadProgress: options.onFileUploadProgress,
     onFileUploadComplete: options.onFileUploadComplete,
