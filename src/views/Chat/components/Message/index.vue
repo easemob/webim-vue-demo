@@ -45,6 +45,30 @@ const pinnedMessageListDrawer = ref(false);
 const pinnedMessageListLoading = ref(false);
 const pinnedMessageListResult = ref(null);
 const pinnedMessageListError = ref('');
+const roamingMessageTimeDeleteDialogVisible = ref(false);
+const roamingMessageTimeDeleteLoading = ref(false);
+const selectedRoamingMessageDeleteTimestamp = ref('');
+const isRoamingMessageTimeDeleteVisible = computed(() => {
+  const { conversationId, conversationType, isChatThread } =
+    routeQueryData.value || {};
+  return (
+    !!conversationId &&
+    !isChatThread &&
+    [CONVERSATION_TYPE.SINGLE, CONVERSATION_TYPE.GROUP].includes(
+      conversationType,
+    )
+  );
+});
+const formatRoamingMessageDeleteMinute = (beforeTimestamp) => {
+  const date = new Date(beforeTimestamp);
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+const openRoamingMessageTimeDeleteDialog = () => {
+  if (!isRoamingMessageTimeDeleteVisible.value) return;
+  selectedRoamingMessageDeleteTimestamp.value = '';
+  roamingMessageTimeDeleteDialogVisible.value = true;
+};
 const showThreadListDrawer = () => {
   threadListDrawer.value = true;
 };
@@ -533,7 +557,7 @@ const isMoreHistoryMsg = ref(true); //加载文案展示为加载更多还是已
 const notScrollBottom = ref(false); //是否滚动置底
 const historyMessageCursor = ref(-1);
 //获取历史记录
-const fechHistoryMessage = async (loadType) => {
+const fechHistoryMessage = async (loadType, { throwOnError = false } = {}) => {
   if (!routeQueryData.value) return [];
   loadingHistoryMsg.value = true;
   notScrollBottom.value = true;
@@ -576,6 +600,7 @@ const fechHistoryMessage = async (loadType) => {
   } catch (error) {
     console.error('获取历史消息失败:', error);
     isMoreHistoryMsg.value = false;
+    if (throwOnError) throw error;
     return [];
   } finally {
     loadingHistoryMsg.value = false;
@@ -749,6 +774,79 @@ watch(
   },
 );
 
+const confirmRoamingMessageTimeDelete = async () => {
+  const { conversationId, conversationType } = routeQueryData.value || {};
+  const beforeTimestamp = Number(selectedRoamingMessageDeleteTimestamp.value);
+  if (
+    !Number.isSafeInteger(beforeTimestamp) ||
+    beforeTimestamp <= 0 ||
+    beforeTimestamp % 60000 !== 0
+  ) {
+    const error = new Error('请选择精确到分钟的有效删除时间');
+    console.error('[Message Roaming Time Delete] 时间前置条件不满足', {
+      selectedRoamingMessageDeleteTimestamp:
+        selectedRoamingMessageDeleteTimestamp.value,
+      error,
+    });
+    ElMessage.error(error.message);
+    return;
+  }
+
+  const selectedMinute = formatRoamingMessageDeleteMinute(beforeTimestamp);
+  try {
+    await ElMessageBox.confirm(
+      `将删除当前会话在 ${selectedMinute} 之前的服务端漫游消息。此操作以 SDK 和服务端实际结果为准，确认继续吗？`,
+      '二次确认删除漫游消息',
+      {
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      },
+    );
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') {
+      console.error('[Message Roaming Time Delete] 二次确认弹窗失败', {
+        conversationId,
+        conversationType,
+        beforeTimestamp,
+        error,
+      });
+    }
+    return;
+  }
+
+  roamingMessageTimeDeleteLoading.value = true;
+  try {
+    await store.dispatch('removeMessageRoamingBeforeTimestamp', {
+      conversationId,
+      conversationType,
+      beforeTimestamp,
+    });
+    store.commit('CLEAR_SOMEONE_MESSAGE', conversationId);
+    historyMessageCursor.value = -1;
+    isMoreHistoryMsg.value = true;
+    await fechHistoryMessage('fistLoad', { throwOnError: true });
+    roamingMessageTimeDeleteDialogVisible.value = false;
+    ElMessage.success('SDK 删除成功，已按服务端结果重新拉取当前会话漫游消息');
+  } catch (error) {
+    console.error('[Message Roaming Time Delete] 删除或服务端重新拉取失败', {
+      conversationId,
+      conversationType,
+      beforeTimestamp,
+      error,
+      errorCode: error?.code,
+      errorDetails: error?.details,
+      errorMessage: error?.message,
+      errorStack: error?.stack,
+    });
+    ElMessage.error(
+      error?.message ||
+        'SDK 删除或服务端重新拉取失败，当前页面不能据此判定删除范围',
+    );
+  } finally {
+    roamingMessageTimeDeleteLoading.value = false;
+  }
+};
 //消息重新编辑
 const inputBoxComp = ref(null);
 const reEditMessage = (content) =>
@@ -763,6 +861,20 @@ const onQuoteMessage = (message) =>
     <ChatContainerHeader :routeQueryData="routeQueryData">
       <template v-slot:more>
         <div class="header_actions">
+          <el-tooltip
+            v-if="isRoamingMessageTimeDeleteVisible"
+            content="按时间删除漫游消息"
+            placement="top"
+            :show-after="200"
+          >
+            <div
+              class="more roaming_message_time_delete_trigger"
+              aria-label="按时间删除漫游消息"
+              @click="openRoamingMessageTimeDeleteDialog"
+            >
+              漫游删除
+            </div>
+          </el-tooltip>
           <el-tooltip
             v-if="isMessageSearchVisible"
             content="服务端消息搜索"
@@ -947,6 +1059,39 @@ const onQuoteMessage = (message) =>
       v-model="messageSearchDrawer"
       :route-query-data="routeQueryData"
     />
+    <el-dialog
+      v-model="roamingMessageTimeDeleteDialogVisible"
+      title="按时间删除漫游消息"
+      width="420px"
+      :close-on-click-modal="!roamingMessageTimeDeleteLoading"
+      :close-on-press-escape="!roamingMessageTimeDeleteLoading"
+    >
+      <p>将删除该时间点之前的服务端漫游消息。</p>
+      <el-date-picker
+        v-model="selectedRoamingMessageDeleteTimestamp"
+        type="datetime"
+        format="YYYY-MM-DD HH:mm"
+        time-format="HH:mm"
+        value-format="x"
+        placeholder="选择删除边界（精确到分钟）"
+        clearable
+      />
+      <template #footer>
+        <el-button
+          :disabled="roamingMessageTimeDeleteLoading"
+          @click="roamingMessageTimeDeleteDialogVisible = false"
+        >
+          取消
+        </el-button>
+        <el-button
+          type="danger"
+          :loading="roamingMessageTimeDeleteLoading"
+          @click="confirmRoamingMessageTimeDelete"
+        >
+          下一步
+        </el-button>
+      </template>
+    </el-dialog>
     <el-drawer
       v-model="pinnedMessageListDrawer"
       title="置顶消息列表"

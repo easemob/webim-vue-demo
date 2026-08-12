@@ -104,6 +104,9 @@ package.json
 
 本仓库当前已实现的用户可见能力，统一以 [`cases_list.md`](/Users/admin/easemob/easemob-web/demo/demo/webim_vue_demo/cases_list.md) 为准。现阶段主要覆盖：
 
+- 消息菜单的“删除漫游消息”只适用于带真实 `msgServerId` 的 SDK 5.0 单聊/群聊消息，必须调用 `ChatManager.removeHistoryMessages({ conversationId, conversationType, messageIds: [msgServerId] })`；不得把 `msgLocalId`、聊天室或 `/notify` 作为替代路径。仅在 SDK resolve 后删除当前消息行；reject 时保留消息与请求参数、原始 error，不重试、不伪造成功。`ChatManager.onMultiDeviceMessageRemoved` 只记录 SDK 实际下发的原始事件及 `conversationId`、`conversationType`、`messageIds`、`beforeTimestamp`、`deviceId`，并按原始单聊/群聊类型进入事件中心；同设备回显未下发时不补造事件。
+- 当前会话顶部“更多操作”的按时间删除漫游消息仅对非话题单聊/群聊展示；日期控件只允许选择到分钟，用户二次确认后使用该分钟起点的 `beforeTimestamp` 调用 `ChatManager.removeHistoryMessages({ conversationId, conversationType, beforeTimestamp })`。不得传 `messageIds`、调用 REST notify 接口或按本地 `timestamp` 过滤。SDK resolve 后清空该会话缓存并从首游标真实 `getHistoryMessages` 重拉；SDK delete/reload reject 或失败都必须输出原始参数和 error，且不得显示删除成功或自动重试；聊天室不展示该入口。
+- `onMultiDeviceMessageRemoved` 若 SDK 实际下发 `chatRoom`，事件中心按聊天室分类；`conversationType` 缺失或未知时必须保留原始 event 和 warning，并以“连接事件”承载该未分类记录，禁止猜成单聊或群聊。
 - Web demo 以真实暴露服务端与 SDK 行为为前提，不提供客户端伪成功兜底。
 - IM 能力唯一依赖本地 `easemob-websdk 5.0`；初始化使用 `ChatClient` 与领域 Manager，禁止恢复 SDK 4.0 客户端实例、私有子路径或兼容层。
 - 任意 WebSDK 5.0 调用前，必须以当前安装包的公开 TypeScript 类型声明和方法签名逐项核对参数名、必填项、类型和返回字段；不得传递旧 SDK 字段、同义映射或兼容参数。发现不一致时，先通过定向回归测试覆盖完整公开契约，再仅修改 Demo 调用层；不得修改 SDK tgz、SDK 源码或以本地默认值伪造服务端成功。
@@ -112,7 +115,7 @@ package.json
 - 历史消息只能以 SDK 5.0 `ChatManager.getHistoryMessages(options)` 调用；Demo 必须分别输出 `[Demo -> SDK 5.0 API]` 的真实请求参数和 `[Demo <- SDK 5.0 API]` 的原始 `HistoryMessagesResult` / 错误，且不得把这些边界日志伪称为 SDK 内部日志。成功响应必须先按原始 `items` 写入当前 `conversationId` 的 Store，再结束历史加载并返回页面；成功日志须同时输出 SDK 返回数与 Store 入库数/消息 ID。SDK 内部日志由 `setLogLevel('debug')` 开启，并以 `[Chat]` 前缀识别。
 - SDK 5.0 个人设置不提供“下载 SDK 缓存日志”或“立即上报日志”入口。日志开关只调用公开 `setLogLevel('error'/'debug')` 控制浏览器 Console 输出；SDK 内部日志是否自动上报仅由登录时 DNS 的 `enableReportLogs` 决定，Demo 不调用私有 API、REST 或本地下载兜底。
 - SDK 5.0 登录只接受环信 ID 与 Token。NGI 与线上 VIP6 必须使用 SDK DNS 获取与 AppKey 匹配的真实 REST/WS 地址；仅在 TKE/DEV/QA隔舱等用户明确选择的私有化环境传 `serviceConfig.serverUrls` 固定地址，禁止为“可用”而把 Token 强制发送到历史默认集群。私有化服务器配置窗口必须直接提供 SDK 5.0 原始 `syncWsUrl` 的可编辑项；固定环境加载已保存配置时，必须先应用当前环境预设，并把用户保存的值原样传入 `serverUrls.syncWsUrl`。TKE 默认预填 `wss://tke-sdb-fusion.easemob.com/ws`。地址缺失时保留 SDK 同步失败，不改走 REST、DNS 或本地伪造数据。
-- 不得在 SDK 5.0 `onConnected` 事件中调用依赖会话 REST 上下文的 Manager。联系人、资料、在线状态、群组与会话初始化只能在 `await client.login()` 成功后执行，并通过公开 `client.getCurrentUserId()` 获取当前用户；禁止读取 v4 风格的实例字段。登录成功后使用 SPA 路由，不刷新页面并触发第二次登录。Provision 拒绝必须输出脱敏的 AppKey、服务模式/地址、用户 ID、Token 长度及 SDK `statusCode/reason`，不得打印 Token 明文或伪造成功。
+- 不得在 SDK 5.0 `onConnected` 事件中调用依赖会话 REST 上下文的 Manager。联系人、资料、在线状态、群组与会话初始化只能在 `await client.login()` 成功后执行，并通过公开 `client.getCurrentUserId()` 获取当前用户；禁止读取 v4 风格的实例字段。登录成功后使用 SPA 路由，不刷新页面并触发第二次登录。手动 Token 登录和缓存态重新登录的 Provision 拒绝都必须输出脱敏的 AppKey、服务模式、SDK 5.0 公开 `getServerUrlsConfig()` 返回的固定地址、用户 ID、Token 长度及 SDK 原始 `statusCode/reason`，不得打印 Token 明文、重试或伪造成功。
 - 群组列表必须按 SDK 5.0 同步模型展示：`GroupManager.getJoinedGroupList()` 只读取本地同步快照，不是主动服务端拉取；登录初始化可立即读取一次快照，同时必须监听 `ChatClient.onSyncDataFinished`，仅在 `{ dataType: 'group', status: 'success' }` 后重新读取并展示快照。同步失败时保留真实 payload/error，不调用 REST 兜底、不本地伪造群组。
 - ChatClient 诊断能力必须只调用 SDK 5.0 公开 `getConnectionState()`、`getRestContext()`、`renewToken(token)`、`getCacheManager()`、`getUploadAdapter()`、`getContactSnapshot()`；REST 上下文和续期结果涉及 token 时只能展示脱敏摘要，不输出 token 明文，不改写 SDK 真实错误。ContactManager、PresenceManager、GroupManager 和 ChatClient 事件监听注册前必须先调用同一 handlerId 的 `removeEventHandler(handlerId)`，再调用 `addEventHandler(handlerId, handlers)`，禁止保留重复监听、旧聚合事件或旧字段路径。
 - SDK 消息解析空引用异常会保留原始错误日志并阻止开发态全屏错误覆盖层，不包装成成功结果。

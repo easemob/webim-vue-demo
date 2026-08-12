@@ -17,9 +17,13 @@
 
 > 该覆盖率是静态调用覆盖率，不等价于真实服务端 PASS；真实结果仍以页面请求、SDK 回调和服务端响应为准。
 
+> `ChatManager.removeHistoryMessages` 同一公开 API 只计一次：消息菜单按真实 `msgServerId` 以 `messageIds: [msgServerId]` 删除单条记录，SDK resolve 后才移除当前行；当前会话顶部的按时间删除漫游消息仅限非话题单聊/群聊，按分钟选择并二次确认后只传 `beforeTimestamp`，SDK resolve 后清缓存并从首游标真实 `getHistoryMessages` 重拉。按时间路径不得传 `messageIds`，两条路径均不能用于聊天室，也不能以 `msgLocalId`、REST notify、本地 `timestamp` 过滤或自动重试替代；delete/reload reject 或失败不显示成功，保留原始参数和 error。后者的静态覆盖和构建不等价于真实服务端 PASS，真实删除范围仍需以 SDK response 与重新拉取结果验证。
+
 > 已读回执时序覆盖矩阵中的旧通用表述：接收方点击单聊或群聊会话时，会话列表先保留 SDK 原始 `readAt`、`unreadCount`，再调用 `clearConversationUnreadMessageCount({ conversationId, conversationType })`；消息页完成渲染后，仅以真实 `direct: 'RECEIVE'`、`needReadReceipt: true`、`msgServerId` 的单聊或群聊消息发送 `sendMessageReadReceipts`。首次历史消息严格以 `Message.timestamp > readAt` 选择回执 ID；`readAt` 缺失、非数值或为 `0` 时保留真实错误和候选消息的原始 ID/时间戳，不用 `unreadCount` 截取或猜测 ID。后续仅处理新渲染消息。不以 SDK 当前会话、浏览器可见性或 `skipped` 作为 Demo 本地跳过条件；聊天室不调用。
 
 > 会话右键菜单在单聊和群聊上提供手动“清空未读”，调用 `clearConversationUnreadMessageCount({ conversationId, conversationType })`；SDK resolve 后才更新本地未读数，reject 时保留未读数和原始错误。点击进入会话的既有自动清零不变；聊天室不展示该菜单项。
+
+> `onMultiDeviceMessageRemoved` 的 `conversationType` 是 SDK 5.0 可选字段：已下发 `singleChat`、`groupChat` 或 `chatRoom` 时按原始类型进入对应事件中心；缺失或未知时保留 raw event 与 warning，并记录为“连接事件”，不以单聊或群聊补值。
 
 ## 统计口径
 
@@ -57,7 +61,7 @@
 | 会话列表与筛选 | `ChatManager.getConversationList` | 是 | 会话列表、本地筛选、置顶会话筛选均调用 `getConversationList` 读取 SDK 5.0 当前会话快照；运行期监听 SDK 5.0 `onConversationListUpdate` 并直接使用事件 `items` 作为会话列表权威快照。 | `refreshSessionList` 属于内部接口，不在 Demo 页面暴露，也不计入公开 API 覆盖；群解散后页面仅随 SDK 会话列表更新事件移除群会话，不按群事件本地伪造删除。聊天室消息不会产生会话；Demo 不因聊天室收发消息、拉取历史、撤回、编辑或删除消息本地调用 `updateConversationList` 创建 / 刷新聊天室会话；若 SDK 会话列表事件真实返回聊天室项则按原始结果暴露，不本地伪造或隐藏。 |
 | 会话删除、置顶、标记、未读 | `ChatManager.deleteConversation`, `setConversationPinned`, `addConversationMark`, `removeConversationMark`, `clearConversationUnreadMessageCount`, `clearAllMessagesAndConversations`, `clearAllConversationUnreadMessageCount`, `getPinnedMessageList` | 是 | 删除会话、置顶 / 取消置顶、标星 / 取消标星、单聊和群聊单会话未读清零、全会话未读清零、清空全部消息与会话、置顶消息列表查询已接入。 | 聊天室单会话未读清零按 SDK 5.0 不支持处理，不调用。清空全部消息与会话为危险操作，页面保留确认框，但成功状态只以 SDK resolve 为准。 |
 | 消息回执 | `ChatManager.clearConversationUnreadMessageCount`, `sendMessageReadReceipts`, `getGroupMessageReadUsers`, `getGroupMessageReadReceipts` | 是 | 单聊 / 群聊的 `text/image/file/voice/video/location/cmd/custom/combine` 消息均在 SDK 5.0 创建参数中以 `needReadReceipt: true` 请求已读回执；EaseCallKit 直接创建的单聊文本和 CMD 消息同样传该字段。聊天室创建参数不传，聊天室回执不调用。接收方点击单聊或群聊会话时调用 `clearConversationUnreadMessageCount({ conversationId, conversationType })`；消息页完成渲染后，对真实 `direct: 'RECEIVE'`、`needReadReceipt: true`、带 `msgServerId` 的单聊或群聊消息调用 `sendMessageReadReceipts({ conversationId, conversationType, messageIds })`。不以 `getCurrentConversation()`、页面可见性或 `skipped` 作为 Demo 本地跳过条件。两次调用的失败均保留 SDK 原始错误，不互相伪造成成功或中断。发送端收到 `onMessageReadReceipts` 时输出一条原始 SDK 5.0 事件日志后更新消息状态。仅收到 SDK 5.0 真实单聊 / 群聊回执后展示绿色已读勾，群聊同时展示回执中的累计已读人数。 | 群消息已读详情真实失败以 SDK / 服务端返回为准，不本地补齐。 |
-| 历史、搜索、删除、撤回、编辑、合并解析 | `ChatManager.getHistoryMessages`, `searchMessages`, `removeHistoryMessages`, `recallMessage`, `modifyMessage`, `downloadAndParseCombineMessage` | 是 | 历史消息、服务端消息搜索、删除消息、撤回消息、文本编辑、合并消息详情解析均已有页面入口。 | 真实成功 / 失败以服务端响应为准；静态覆盖不代表每种会话类型都已真实 PASS。 |
+| 历史、搜索、删除、撤回、编辑、合并解析 | `ChatManager.getHistoryMessages`, `searchMessages`, `removeHistoryMessages`, `recallMessage`, `modifyMessage`, `downloadAndParseCombineMessage` | 是 | 历史消息、服务端消息搜索、删除漫游消息、撤回消息、文本编辑、合并消息详情解析均已有页面入口。删除有两条 `removeHistoryMessages` 路径：消息菜单仅对真实 `msgServerId` 的单聊/群聊以 `messageIds: [msgServerId]` 删除单条记录，SDK resolve 后移除当前行；当前会话顶部仅对非话题单聊/群聊按分钟选择并二次确认后只传 `beforeTimestamp`，SDK resolve 后清缓存并从首游标真实 `getHistoryMessages` 重拉。 | 两条路径均不用于聊天室，不能把 `msgLocalId` 作为 ID，不得以 REST notify、本地 `timestamp` 过滤或自动重试替代；按时间路径不得传 `messageIds`。delete/reload reject 或失败保留原始参数和 error，不显示成功。真实成功、删除范围和重拉结果以 SDK / 服务端响应为准；静态覆盖和构建不等价于真实服务端 PASS；`onMultiDeviceMessageRemoved` 仅在其他 resource 收到 SDK 实际下发时记录原始事件。 |
 | 消息置顶 | `ChatManager.pinMessage`, `unpinMessage`, `getPinnedMessageList` | 是 | 消息列表项右键菜单已覆盖置顶和取消置顶；消息页头部已提供当前会话置顶消息列表抽屉，调用 `getPinnedMessageList({ conversationId, conversationType })` 并展示 SDK 返回的 `items`。 | SDK 返回空列表、缺少操作者等字段时按真实结果展示。 |
 | 附件下载 | `ChatManager.downloadAttachment` | 是 | 图片 / 视频 / 文件 / 语音消息右键支持调用 `downloadAttachment({ message })`，展示 SDK 返回的 `filename`、`mimeType`、`size`、`downloadUrl`、二进制长度，并提供基于 SDK 返回二进制的下载链接。 | 失败保留 SDK / 服务端真实错误，不退回浏览器直链作为成功。 |
 | Reaction | `ChatManager.addReaction`, `removeReaction`, `getReactionList`, `getReactionDetail` | 是 | 单聊 / 群聊 Reaction 添加、取消、列表、详情均已接入。 | 聊天室 Reaction 是否支持不在当前功能清单中。 |

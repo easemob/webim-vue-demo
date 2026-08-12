@@ -63,6 +63,14 @@ const combineMessageList = ref([]);
 const combineMessageLoading = ref(false);
 const combineMessageError = ref('');
 const messageIdOf = (message) => message?.msgServerId || message?.msgLocalId || '';
+const supportsRoamingMessageDelete = (message) => {
+  const conversationType = message?.conversationType;
+  return (
+    !!message?.msgServerId &&
+    (conversationType === CONVERSATION_TYPE.SINGLE ||
+      conversationType === CONVERSATION_TYPE.GROUP)
+  );
+};
 
 const getCombineChildMessageText = (message) => {
   const body = message?.body || {};
@@ -728,33 +736,53 @@ const showModifyMsgModal = (message) => {
     });
   });
 };
-//删除消息
-const deleteMessage = async (msgBody) => {
+// 删除服务端漫游消息
+const deleteRoamingMessage = async (msgBody) => {
+  if (!supportsRoamingMessageDelete(msgBody)) {
+    const error = new Error(
+      '删除漫游消息需要单聊或群聊消息的 msgServerId',
+    );
+    console.error('[Message Roaming Delete] 前置条件不满足', {
+      message: msgBody,
+      error,
+    });
+    ElMessage({
+      type: 'error',
+      message: error.message,
+      center: true,
+    });
+    return;
+  }
+
   try {
     await ElMessageBox.confirm(
-      '消息删除是从服务端删除，确认要删除吗？',
-      '消息删除',
+      '将从服务端删除该条漫游消息记录，确认继续吗？',
+      '删除漫游消息',
       {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning',
       },
     );
-    await store.dispatch('removeMessage', {
-      messageId: messageIdOf(msgBody),
+    await store.dispatch('removeMessageRoaming', {
+      msgServerId: msgBody.msgServerId,
       conversationId: msgBody.conversationId,
       conversationType: msgBody.conversationType,
     });
     ElMessage({
       type: 'success',
-      message: '消息已删除',
+      message: '漫游消息已删除',
       center: true,
     });
   } catch (error) {
     if (error !== 'cancel') {
+      console.error('[Message Roaming Delete] 删除失败', {
+        message: msgBody,
+        error,
+      });
       ElMessage({
         type: 'error',
-        message: '删除失败',
+        message: getSdk5ErrorMessage(error, '删除漫游消息失败'),
         center: true,
       });
     }
@@ -1457,8 +1485,11 @@ const getReactionUserAvatar = (user) => {
                   <el-dropdown-item @click="unpinMessage(msgBody)">
                     取消置顶
                   </el-dropdown-item>
-                  <el-dropdown-item @click="deleteMessage(msgBody)">
-                    删除
+                  <el-dropdown-item
+                    v-if="supportsRoamingMessageDelete(msgBody)"
+                    @click="deleteRoamingMessage(msgBody)"
+                  >
+                    删除漫游消息
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>

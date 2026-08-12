@@ -129,6 +129,16 @@ assert.doesNotMatch(
   /window\.location\.href\s*=\s*'\/chat'/,
   'interactive login must not reload and execute a duplicate SDK login.',
 );
+assert.match(
+  loginSource,
+  /console\.error\(\s*'\[IM SDK 5\.0 登录诊断\]'/,
+  'interactive login failures must emit an SDK 5.0 Provision diagnostic.',
+);
+assert.match(
+  loginSource,
+  /appKey:\s*sdk5Config\.appKey,[\s\S]*?serviceConnectionMode:\s*sdk5Config\.serviceConfig\s*\?\s*'fixed'\s*:\s*'dns',[\s\S]*?serverUrls:\s*getClient\(\)\.getServerUrlsConfig\(\),[\s\S]*?userId:\s*user,[\s\S]*?tokenLength:\s*accessToken\.length,[\s\S]*?details:\s*error\?\.details,/,
+  'interactive Provision diagnostics must expose non-sensitive routing and the raw statusCode/reason details.',
+);
 
 assert.match(
   appSource,

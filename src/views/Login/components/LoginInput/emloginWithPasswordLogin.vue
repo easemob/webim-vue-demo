@@ -1,8 +1,9 @@
 <script setup>
 import { ref, reactive, watch, computed } from 'vue';
 import { ElMessage } from 'element-plus';
-import { login } from '@/IM';
+import { getClient, login } from '@/IM';
 import { fetchLoginUsersInitData } from '@/IM/listener';
+import { sdk5Config } from '@/IM/initwebsdk';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { usePlayRing } from '@/hooks';
@@ -42,10 +43,10 @@ const loginIM = async () => {
   const { clickRing } = usePlayRing();
   clickRing();
   buttonLoading.value = true;
-  
+  const user = loginValue.username.toLowerCase();
+  const accessToken = loginValue.token.trim();
+
   try {
-    const user = loginValue.username.toLowerCase();
-    const accessToken = loginValue.token.trim();
     await login({ userId: user, token: accessToken });
     window.localStorage.setItem(
       `EASEIM_loginUser`,
@@ -58,6 +59,19 @@ const loginIM = async () => {
     await router.replace('/chat');
   } catch (error) {
     console.error('[Login] token login failed', error);
+    console.error('[IM SDK 5.0 登录诊断]', {
+      appKey: sdk5Config.appKey,
+      serviceConnectionMode: sdk5Config.serviceConfig ? 'fixed' : 'dns',
+      serverUrls: getClient().getServerUrlsConfig(),
+      userId: user,
+      tokenLength: accessToken.length,
+      error: {
+        name: error?.name,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+      },
+    });
 
     if (isImAuthFailedReason(error)) {
       ElMessage({

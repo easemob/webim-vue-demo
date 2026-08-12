@@ -677,70 +677,124 @@ const Message = {
         });
       }
     },
-    //删除消息
-    removeMessage: ({ dispatch, commit }, params) => {
-      const { messageId, conversationId, conversationType } = params;
-
-      // 验证参数
-      if (!conversationId) {
-        return Promise.reject(new Error('缺少conversationId参数'));
+    // 删除单聊或群聊的一条服务端漫游消息。
+    removeMessageRoaming: ({ dispatch, commit }, params) => {
+      const { msgServerId, conversationId, conversationType } = params;
+      const isSupportedConversation =
+        conversationType === CONVERSATION_TYPE.SINGLE ||
+        conversationType === CONVERSATION_TYPE.GROUP;
+      if (!conversationId || !msgServerId || !isSupportedConversation) {
+        const error = new Error(
+          '删除漫游消息需要单聊或群聊的 conversationId、conversationType 和 msgServerId',
+        );
+        console.error('[Message Roaming Delete] 请求前置条件不满足', {
+          params,
+          error,
+        });
+        return Promise.reject(error);
       }
 
-      const key = conversationId;
       const deleteOptions = {
         conversationId,
         conversationType,
-        messageIds: [messageId],
+        messageIds: [msgServerId],
       };
-      console.log('[Message Delete] removeHistoryMessages 请求参数', {
-        event: '聊天室/会话消息删除',
-        messageId,
-        conversationId,
-        conversationKey: key,
-        conversationType,
-        sdkOptions: deleteOptions,
-        rawMessage: params,
+      console.log('[Demo -> SDK 5.0 API] ChatManager.removeHistoryMessages', {
+        api: 'ChatManager.removeHistoryMessages',
+        params: deleteOptions,
       });
-      return new Promise((resolve, reject) => {
-        chatManager().removeHistoryMessages({
-          conversationId,
-          conversationType,
-          messageIds: [messageId],
-        })
-          .then((res) => {
-            console.log('[Message Delete] removeHistoryMessages 成功', {
-              messageId,
-              conversationId,
-              conversationKey: key,
-              conversationType,
-              response: res,
-            });
-            commit('CHANGE_MESSAGE_BODAY', {
-              type: CHANGE_MESSAGE_BODAY_TYPE.DELETE,
-              key: key,
-              messageId,
-            });
-            if (shouldSyncConversationListForMessage(conversationType)) {
-              dispatch('updateConversationList', {
-                conversationId: key,
-                conversationType,
-              });
-            }
-            resolve('OK');
-          })
-          .catch((error) => {
-            console.error('[Message Delete] removeHistoryMessages 失败', {
-              messageId,
-              conversationId,
-              conversationKey: key,
-              conversationType,
-              sdkOptions: deleteOptions,
-              rawMessage: params,
-              error,
-            });
-            reject(error);
+      return chatManager()
+        .removeHistoryMessages(deleteOptions)
+        .then((response) => {
+          console.log('[Demo <- SDK 5.0 API] ChatManager.removeHistoryMessages', {
+            api: 'ChatManager.removeHistoryMessages',
+            params: deleteOptions,
+            response,
           });
+          commit('CHANGE_MESSAGE_BODAY', {
+            type: CHANGE_MESSAGE_BODAY_TYPE.DELETE,
+            key: conversationId,
+            messageId: msgServerId,
+          });
+          dispatch('updateConversationList', {
+            conversationId,
+            conversationType,
+          });
+          return response;
+        })
+        .catch((error) => {
+          console.error(
+            '[Demo <- SDK 5.0 API] ChatManager.removeHistoryMessages failed',
+            {
+              api: 'ChatManager.removeHistoryMessages',
+              params: deleteOptions,
+              error,
+            },
+          );
+          throw error;
+        });
+    },
+    // 删除当前单聊或群聊在指定时间点之前的服务端漫游消息。
+    removeMessageRoamingBeforeTimestamp: (_, params) => {
+      const { conversationId, conversationType, beforeTimestamp } = params || {};
+      const normalizedBeforeTimestamp = Number(beforeTimestamp);
+      const isSupportedConversation =
+        conversationType === CONVERSATION_TYPE.SINGLE ||
+        conversationType === CONVERSATION_TYPE.GROUP;
+
+      if (
+        !conversationId ||
+        !isSupportedConversation ||
+        !Number.isSafeInteger(normalizedBeforeTimestamp) ||
+        normalizedBeforeTimestamp <= 0
+      ) {
+        const error = new Error(
+          '按时间删除漫游消息需要单聊或群聊的 conversationId、conversationType 和正整数 beforeTimestamp',
+        );
+        console.error('[Message Roaming Time Delete] 请求前置条件不满足', {
+          params,
+          error,
+        });
+        return Promise.reject(error);
+      }
+
+      const deleteOptions = {
+        conversationId,
+        conversationType,
+        beforeTimestamp: normalizedBeforeTimestamp,
+      };
+      console.log('[Demo -> SDK 5.0 API] ChatManager.removeHistoryMessages', {
+        api: 'ChatManager.removeHistoryMessages',
+        mode: 'beforeTimestamp',
+        params: deleteOptions,
       });
+      return chatManager()
+        .removeHistoryMessages(deleteOptions)
+        .then((response) => {
+          console.log('[Demo <- SDK 5.0 API] ChatManager.removeHistoryMessages', {
+            api: 'ChatManager.removeHistoryMessages',
+            mode: 'beforeTimestamp',
+            params: deleteOptions,
+            response,
+          });
+          return response;
+        })
+        .catch((error) => {
+          console.error(
+            '[Demo <- SDK 5.0 API] ChatManager.removeHistoryMessages failed',
+            {
+              api: 'ChatManager.removeHistoryMessages',
+              mode: 'beforeTimestamp',
+              params: deleteOptions,
+              error,
+              errorCode: error?.code,
+              errorDetails: error?.details,
+              errorMessage: error?.message,
+              errorStack: error?.stack,
+            },
+          );
+          throw error;
+        });
     },
     //撤回消息
     recallMessage: async ({ dispatch, commit }, params) => {
