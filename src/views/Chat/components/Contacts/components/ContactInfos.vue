@@ -5,11 +5,9 @@ import { CHAT_TYPE } from '@/IM/constant';
 import { useStore } from 'vuex';
 import router from '@/router';
 import { useRoute } from 'vue-router';
-import { ArrowLeft } from '@element-plus/icons-vue';
+import { ArrowLeft, MoreFilled } from '@element-plus/icons-vue';
+import { ElMessageBox, ElMessage } from 'element-plus';
 import { useGetUserMapInfo } from '@/hooks';
-/* 组件 */
-// import UserStatus from '@/components/UserStatus'
-import ContactsRemark from './ContactsRemark.vue';
 /* store */
 const store = useStore();
 /* route */
@@ -41,9 +39,12 @@ const getContactsAvatar = computed(() => {
     return getGroupAvatarByGroupId(id);
   }
 });
+const getUserRemark = computed(() => {
+  if (route.query.chatType !== CHAT_TYPE.SINGLE) return '';
+  return store.getters['UsersProfile/getDisplayRemark'](route.query.id);
+});
 /* 单人黑名单状态的处理 */
 const blackStatus = ref(false);
-const switchStatus = ref(false);
 //判断单聊联系人是否在黑名单
 const isInBlackList = computed(() => {
   const result = Array.from(store.state.Contacts.friendBlackList).includes(
@@ -66,24 +67,37 @@ watch(
 );
 //执行加入或移出黑名单
 const changeBlackStatus = async () => {
-  switchStatus.value = true;
   if (blackStatus.value && route.query.id) {
-    // 当前 removeUserFromBlackList 以及 addUsersToBlacklist 暂不支持promise 返回所以暂时获取不到其请求状态。
     EMClient.removeUserFromBlocklist({
       name: [route.query.id],
     });
     blackStatus.value = false;
-    switchStatus.value = false;
   } else {
     EMClient.addUsersToBlocklist({
       name: [route.query.id],
     });
     blackStatus.value = true;
-    switchStatus.value = false;
   }
   setTimeout(() => {
     store.dispatch('fetchBlackList');
   }, 500);
+};
+
+/* 黑名单操作弹窗 */
+const handleBlackListAction = () => {
+  const actionText = isInBlackList.value ? '移出黑名单' : '加入黑名单';
+  ElMessageBox.confirm(`确认${actionText}该好友？`, '提示', {
+    confirmButtonText: '确认',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    changeBlackStatus();
+    ElMessage({
+      message: `${actionText}成功`,
+      type: 'success',
+      center: true,
+    });
+  }).catch(() => {});
 };
 
 /* 单人删除好友 */
@@ -96,6 +110,80 @@ const delTheFriend = async () => {
     router.push('/chat/contacts');
   } catch (error) {
     console.error('>>>>删除失败');
+    ElMessage({
+      message: '删除失败',
+      type: 'error',
+      center: true,
+    });
+  }
+};
+
+/* 删除好友弹窗 */
+const handleDeleteFriend = () => {
+  ElMessageBox.confirm(
+    '删除好友后将清空聊天记录，确认删除？',
+    '删除好友',
+    {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+      confirmButtonClass: 'el-button--danger',
+    },
+  ).then(() => {
+    delTheFriend();
+  }).catch(() => {});
+};
+
+/* 备注编辑弹窗 */
+const remarkDialogVisible = ref(false);
+const remarkInput = ref('');
+const openRemarkDialog = () => {
+  remarkInput.value =
+    store.getters['UsersProfile/getDisplayRemark'](route.query.id) || '';
+  remarkDialogVisible.value = true;
+};
+const saveRemark = async () => {
+  if (remarkInput.value === store.getters['UsersProfile/getDisplayRemark'](route.query.id)) {
+    remarkDialogVisible.value = false;
+    return;
+  }
+  try {
+    await store.dispatch('setContactsRemark', {
+      userId: route.query.id,
+      remark: remarkInput.value,
+    });
+    ElMessage({
+      message: '备注保存成功',
+      type: 'success',
+      center: true,
+    });
+    remarkDialogVisible.value = false;
+  } catch (error) {
+    ElMessage({
+      message: '保存失败',
+      type: 'error',
+      center: true,
+    });
+  }
+};
+
+/* 复制ID到剪贴板 */
+const copyId = async () => {
+  const id = route.query.id;
+  if (!id) return;
+  try {
+    await navigator.clipboard.writeText(id);
+    ElMessage({
+      message: '已复制到剪贴板',
+      type: 'success',
+      center: true,
+    });
+  } catch (err) {
+    ElMessage({
+      message: '复制失败',
+      type: 'error',
+      center: true,
+    });
   }
 };
 
@@ -114,11 +202,28 @@ const toChatMessage = () => {
 <template>
   <div class="app_container">
     <el-header class="contactInfo_header">
-      <el-page-header
-        style="margin-top: 12px"
-        :icon="ArrowLeft"
-        @click="$router.back(-1)"
-      />
+      <div class="header_inner">
+        <el-page-header :icon="ArrowLeft" @click="$router.back(-1)" />
+        <el-dropdown
+          v-if="$route.query.chatType === CHAT_TYPE.SINGLE"
+          trigger="click"
+        >
+          <el-icon class="more-icon"><MoreFilled /></el-icon>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="openRemarkDialog">
+                设置备注
+              </el-dropdown-item>
+              <el-dropdown-item @click="handleBlackListAction">
+                {{ isInBlackList ? '移出黑名单' : '加入黑名单' }}
+              </el-dropdown-item>
+              <el-dropdown-item divided @click="handleDeleteFriend">
+                <span style="color: #f56c6c">删除好友</span>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
       <el-divider />
     </el-header>
     <el-main class="contactInfo_main">
@@ -132,7 +237,12 @@ const toChatMessage = () => {
               {{ getContactsName }}
             </p>
           </div>
-          <div class="contacts_id">
+          <div v-if="$route.query.chatType === CHAT_TYPE.SINGLE" class="remark">
+            <p>
+              备注：{{ getUserRemark || '暂无备注' }}
+            </p>
+          </div>
+          <div class="contacts_id" title="点击复制" @click="copyId">
             <p>
               {{
                 $route.query.chatType === CHAT_TYPE.GROUP
@@ -140,32 +250,6 @@ const toChatMessage = () => {
                   : '好友ID：'
               }}{{ $route.query.id }}
             </p>
-          </div>
-          <div class="func_box">
-            <div
-              class="single_func"
-              v-if="$route.query.chatType === CHAT_TYPE.SINGLE"
-            >
-              <ContactsRemark :userId="$route.query.id">
-                <el-divider />
-              </ContactsRemark>
-              <div class="add_black_list">
-                <p>加入黑名单</p>
-                <el-switch
-                  v-model="blackStatus"
-                  :loading="switchStatus"
-                  :before-change="changeBlackStatus"
-                />
-              </div>
-              <el-divider />
-              <div class="del_friend">
-                <el-popconfirm title="确认删除此好友?" @confirm="delTheFriend">
-                  <template #reference>
-                    <span>删除好友</span>
-                  </template>
-                </el-popconfirm>
-              </div>
-            </div>
           </div>
         </div>
         <div class="contaactInfo_btn">
@@ -191,6 +275,17 @@ const toChatMessage = () => {
         </div>
       </div>
     </el-main>
+    <el-dialog v-model="remarkDialogVisible" title="设置备注" width="400px">
+      <el-input
+        v-model.trim="remarkInput"
+        maxlength="15"
+        placeholder="请输入备注名"
+      />
+      <template #footer>
+        <el-button @click="remarkDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveRemark">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -206,6 +301,25 @@ const toChatMessage = () => {
     flex-direction: column;
     height: 60px;
     line-height: 60px;
+
+    .header_inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      margin-top: 12px;
+    }
+
+    .more-icon {
+      font-size: 20px;
+      cursor: pointer;
+      color: #606266;
+      transition: color 0.3s;
+
+      &:hover {
+        color: #409eff;
+      }
+    }
   }
 
   .contactInfo_main {
@@ -222,18 +336,18 @@ const toChatMessage = () => {
       border-radius: 5px;
       transition: all 0.5s;
 
-      &:hover {
-        background: #fff;
-        box-shadow: 12px 12px 2px 1px rgba(125, 125, 126, 0.068);
-      }
+      // &:hover {
+      //   background: #fff;
+      //   box-shadow: 12px 12px 2px 1px rgba(125, 125, 126, 0.068);
+      // }
 
       .contactInfo_box {
         width: 80%;
-        min-height: 500px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
+        padding-bottom: 60px;
 
         .avatar > .avatar_img {
           width: 80px;
@@ -244,41 +358,37 @@ const toChatMessage = () => {
           text-align: center;
           margin-top: 15px;
           font-size: 22px;
+          color: #333;
+        }
+        .remark {
+          text-align: center;
+          margin-top: 8px;
+          font-size: 14px;
+          color: #888;
         }
         .contacts_id {
           text-align: center;
-          margin-top: 15px;
+          margin-top: 10px;
           font-size: 13px;
+          color: #666;
+          cursor: pointer;
+          user-select: none;
+          transition: color 0.3s;
+
+          &:hover {
+            color: #409eff;
+          }
         }
         .func_box {
           width: 100%;
-
-          .single_func {
-            height: 100px;
-            // background: #000;
-            margin-top: 25px;
-            cursor: pointer;
-
-            .add_black_list {
-              display: flex;
-              flex-direction: row;
-              align-items: center;
-              justify-content: space-between;
-              font-size: 16px;
-            }
-
-            .del_friend {
-              width: 100%;
-              color: red;
-              transition: all 0.3s;
-            }
-          }
         }
       }
 
       .contaactInfo_btn {
         width: 80%;
         text-align: center;
+        margin-top: auto;
+        padding-bottom: 60px;
       }
     }
   }

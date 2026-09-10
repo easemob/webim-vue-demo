@@ -11,10 +11,12 @@ import {
   InvitationNotification,
   EasemobChatSingleCall,
   EasemobChatMultiCall,
-} from 'easemob-chat-callkit-vue3';
+  useCallKitCore,
+} from '@easemob-community/callkit-vue3';
 import { ElMessage } from 'element-plus';
 
 const store = useStore();
+const { updateImClient } = useCallKitCore();
 
 // 给 callkit 提供用户资料查询（从 demo 自己的用户资料库查）
 const getUserInfo = async (userIds) => {
@@ -37,6 +39,8 @@ const handleRelogin = async () => {
       username: loginUserFromStorage.user,
       accessToken: loginUserFromStorage.accessToken,
     });
+    // 账号切换/重新登录后，主动同步 IM Client 到 CallKit
+    await updateImClient(EMClient);
   } catch (error) {
     ElMessage({
       type: 'error',
@@ -65,7 +69,7 @@ const callKitInitConfig = computed(() => ({
   <EasemobChatCallKitProvider
     :chat-client="EMClient"
     :init-config="callKitInitConfig"
-    :getUserInfo="getUserInfo"
+    :get-user-info="getUserInfo"
   >
     <router-view v-slot="{ Component }">
       <transition name="slide-fade" mode="out-in" :duration="{ enter: 500, leave: 300 }">

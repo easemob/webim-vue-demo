@@ -9,7 +9,9 @@ import { ElMessage } from 'element-plus';
 import { EMClient } from '@/IM';
 import { useStore } from 'vuex';
 import { usePlayRing } from '@/hooks';
+import { useCallKitCore } from '@easemob-community/callkit-vue3';
 const store = useStore();
+const { updateImClient } = useCallKitCore();
 const loginValue = reactive({
   username: '',
   password: '',
@@ -44,6 +46,8 @@ const loginIM = async () => {
       username: loginValue.username.toLowerCase(),
       password: loginValue.password,
     });
+    // 登录成功后主动同步 IM Client 到 CallKit
+    await updateImClient(EMClient);
     window.localStorage.setItem(
       `EASEIM_loginUser`,
       JSON.stringify({

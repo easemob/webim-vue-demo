@@ -6,13 +6,25 @@ import { handleSDKErrorNotifi } from '@/utils/handleSomeData';
 import { fetchUserLoginSmsCode, fetchUserLoginToken } from '@/api/login';
 import { useStore } from 'vuex';
 import { usePlayRing } from '@/hooks';
+import { useStorage } from '@vueuse/core';
 import EmLoginWithPasswordLogin from './emloginWithPasswordLogin.vue';
 import { secret, PREFIX, SCENE_ID } from '@/private-config'
 import { encryptAES } from '@/utils/encriptAES';
+import { useCallKitCore } from '@easemob-community/callkit-vue3';
 //判断当前是否为生产环境
 const isProd = process.env.NODE_ENV === 'production'
 const isDev = !isProd
 const store = useStore();
+const { updateImClient } = useCallKitCore();
+// 读取自定义配置中的登录模式（线上测试后门配置）
+const customConfig = useStorage('EASEIM_CUSTOM_CONFIG', {});
+const isPasswordMode = computed(() => {
+  // 如果用户通过配置弹窗显式配置了 loginMode，优先使用配置值
+  if (customConfig.value?.loginMode === 'password') return true;
+  if (customConfig.value?.loginMode === 'sms') return false;
+  // 未配置过的情况下，开发环境默认密码登录，生产环境默认短信登录（向后兼容）
+  return isDev;
+});
 const emits = defineEmits(['changeToLogin']);
 const loginValue = reactive({
   phoneNumber: '',
@@ -59,10 +71,12 @@ const loginIM = async () => {
   try {
     const res = await fetchUserLoginToken(params);
     if (res?.code === 200) {
-      EMClient.open({
+      await EMClient.open({
         username: res.chatUserName.toLowerCase(),
         accessToken: res.token,
       });
+      // 登录成功后主动同步 IM Client 到 CallKit
+      await updateImClient(EMClient);
       window.localStorage.setItem(
         'EASEIM_loginUser',
         JSON.stringify({
@@ -236,8 +250,8 @@ const startCountDown = () => {
 </script>
 
 <template>
-  <!-- 开发环境下显示用户名密码登录方式 -->
-  <EmLoginWithPasswordLogin v-if="isDev" />
+  <!-- 根据自定义配置或环境变量决定登录方式 -->
+  <EmLoginWithPasswordLogin v-if="isPasswordMode" />
   <template v-else>
     <el-form :model="loginValue" :rules="rules">
       <el-form-item prop="phoneNumber">

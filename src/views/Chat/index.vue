@@ -4,7 +4,7 @@ import { ElMessage } from 'element-plus';
 import NavBar from '@/views/Chat/components/NavBar';
 
 /* 新 CallKit */
-import { useCallKitEvents, HANGUP_REASON } from 'easemob-chat-callkit-vue3';
+import { useCallKitEvents, HANGUP_REASON } from '@easemob-community/callkit-vue3';
 
 /**
  * 新 CallKit 事件监听

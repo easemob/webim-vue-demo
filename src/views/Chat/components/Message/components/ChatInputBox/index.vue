@@ -10,7 +10,7 @@ import _ from 'lodash';
 import { EMClient } from '@/IM';
 import parseDownloadResponse from '@/utils/parseDownloadResponse';
 /* 新 CallKit */
-import { useCallKit, EasemobChatGroupMemberList } from 'easemob-chat-callkit-vue3';
+import { useCallKit, EasemobChatGroupMemberList } from '@easemob-community/callkit-vue3';
 /* 组件 */
 import CollectAudio from '../suit/audio.vue';
 import PreviewSendImg from '../suit/previewSendImg.vue';
